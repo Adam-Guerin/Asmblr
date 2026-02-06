@@ -1,0 +1,11 @@
+diff --git a/mvp_repo/foundation_notes.md b/mvp_repo/foundation_notes.md
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/mvp_repo/foundation_notes.md
+@@ -0,0 +1,4 @@
++Foundation cycle initialized.
++Objective: the repo must have a baseline README and structure.
++This file captures the first automated addition.
++Follow-up cycles will elaborate on this scaffold.
++

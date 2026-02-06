@@ -1,0 +1,12 @@
+{
+  "app_name": "mvp audit",
+  "topic": "mvp audit",
+  "brief": null,
+  "stack": {
+    "frontend": "Next.js + Tailwind CSS + shadcn/ui + TypeScript",
+    "backend": "Next.js API routes + Prisma + SQLite",
+    "database": "SQLite"
+  },
+  "rationale": "Frontend: Next.js + Tailwind CSS + shadcn/ui + TypeScript. Backend: Next.js API routes + Prisma + SQLite. Primary database: SQLite. Context: mvp audit.",
+  "generated_at": "2026-02-05T23:13:55.883950"
+}

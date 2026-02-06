@@ -1,0 +1,12 @@
+{
+  "entities": [
+    {
+      "id": "seed_1",
+      "type": "sample",
+      "name": "mvp audit Seed Item",
+      "status": "draft",
+      "notes": "Replace with real records after validation."
+    }
+  ],
+  "generated_at": "2026-02-05T23:06:31.318963"
+}

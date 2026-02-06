@@ -1,0 +1,33 @@
+Build foundation (attempt 5)
+Command: npm run build
+Return code: 0
+stdout:
+> audit-mvp-pass-run@0.1.0 build
+> next build
+
+  â–² Next.js 14.2.35
+
+   Creating an optimized production build ...
+ âœ“ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/6) ...
+   Generating static pages (1/6) 
+   Generating static pages (2/6) 
+   Generating static pages (4/6) 
+ âœ“ Generating static pages (6/6)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+â”Œ â—‹ /                                    1.02 kB        88.3 kB
+â”œ â—‹ /_not-found                          873 B          88.1 kB
+â”œ â—‹ /api/health                          0 B                0 B
+â”” â—‹ /api/status                          0 B                0 B
++ First Load JS shared by all            87.2 kB
+  â”œ chunks/117-9d1bd14373689583.js       31.7 kB
+  â”œ chunks/fd9d1056-258ef7797b0e21f7.js  53.6 kB
+  â”” other shared chunks (total)          1.86 kB
+
+
+â—‹  (Static)  prerendered as static content

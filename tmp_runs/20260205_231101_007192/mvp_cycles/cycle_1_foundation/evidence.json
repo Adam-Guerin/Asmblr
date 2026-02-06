@@ -1,0 +1,121 @@
+{
+  "cycle": "foundation",
+  "ok": false,
+  "checks": [
+    {
+      "name": "build_log_clean",
+      "ok": false,
+      "path": "build.log"
+    },
+    {
+      "name": "test_log_clean",
+      "ok": false,
+      "path": "test.log"
+    },
+    {
+      "name": "smoke_log_pass",
+      "ok": false,
+      "path": "smoke_1.log"
+    },
+    {
+      "name": "repo_within_run_dir",
+      "ok": true,
+      "path": "tmp_runs\\20260205_231101_007192\\mvp_repo"
+    },
+    {
+      "name": "cycle_within_run_dir",
+      "ok": true,
+      "path": "tmp_runs\\20260205_231101_007192\\mvp_cycles\\cycle_1_foundation"
+    },
+    {
+      "name": "patch_targets_scoped",
+      "ok": true,
+      "path": "patch.diff|fix_*.diff"
+    },
+    {
+      "name": "secrets_scan_clean",
+      "ok": true,
+      "path": "mvp_repo/**"
+    },
+    {
+      "name": "forbidden_files_clean",
+      "ok": true,
+      "path": "mvp_repo/**"
+    },
+    {
+      "name": "external_symlinks_blocked",
+      "ok": true,
+      "path": "mvp_repo/**"
+    },
+    {
+      "name": "automation_log",
+      "ok": true,
+      "path": "automation.json"
+    },
+    {
+      "name": "autofix_log",
+      "ok": true,
+      "path": "autofix.log"
+    },
+    {
+      "name": "automation_summary",
+      "ok": true,
+      "path": "mvp_automation_summary.json"
+    },
+    {
+      "name": "automation_steps",
+      "ok": true,
+      "path": "automation.json"
+    },
+    {
+      "name": "ui_lint",
+      "ok": true,
+      "path": "ui_lint.json"
+    },
+    {
+      "name": "mvp_repo_exists",
+      "ok": true,
+      "path": "tmp_runs\\20260205_231101_007192\\mvp_repo"
+    },
+    {
+      "name": "package_or_python_manifest",
+      "ok": true,
+      "path": "package.json|requirements.txt|pyproject.toml"
+    },
+    {
+      "name": "readme_run_instructions",
+      "ok": true,
+      "path": "README.md"
+    },
+    {
+      "name": "landing_page",
+      "ok": true,
+      "path": "app/page.tsx"
+    },
+    {
+      "name": "dashboard_page",
+      "ok": true,
+      "path": "app/app/page.tsx"
+    },
+    {
+      "name": "marketplace_page",
+      "ok": true,
+      "path": "app/app/marketplace/page.tsx"
+    },
+    {
+      "name": "app_shell",
+      "ok": true,
+      "path": "components/layout/app-shell.tsx"
+    },
+    {
+      "name": "api_route",
+      "ok": true,
+      "path": "app/api/status|health"
+    },
+    {
+      "name": "smoke_log_exists",
+      "ok": true,
+      "path": "smoke_1.log"
+    }
+  ]
+}

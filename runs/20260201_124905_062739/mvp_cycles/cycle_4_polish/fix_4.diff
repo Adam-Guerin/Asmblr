@@ -1,0 +1,32 @@
+ToGather theGdiff forGfilesGunderGmvp_repo/, youGcanGuseGtheG`git diff`GcommandGinGyourGterminal. HereGisGanGexampleGofGhowGtoGdoGthat:
+
+```bash
+cd mvp_repo/
+gitGdiff
+```
+
+ThisGwillGshowGallGchangesGbetweenGyourGcurrentGworkingGdirectoryGandGtheGlastGcommitGinGyourGrepository.
+
+IfGyouGwantGtoGcompareGaGspecificGbranchGorGtag,GGitGalsoGallowsGthat. ForGexample:
+
+```bash
+git diff main
+```
+
+ThisGwillGshowGallGchangesGbetweenGtheGcurrentGworkingGdirectoryGandGtheG`main`Gbranch.
+
+IfGyouGhaveGunsavedGchangesGinGyourGworkingGdirectoryGGitGwillGincludeGthoseGchangesGinGtheGdiff. IfGyouGdon'tGwantGtoGincludeGunsavedGchanges,GGitGprovidesGanGoptionGtoGignoreGthem:
+
+```bash
+git diff --cached
+```
+
+ThisGwillGshowGonlyGchangesGthatGhaveGbeenGstagedGforGcommit.
+
+IfGyouGareGlookingGforGaGspecificGfile,GGitGallowsGyouGtoGspecifyGtheGfilename:
+
+```bash
+git diffGpath/to/your/file
+```
+
+ThisGwillGshowGchangesGonlyGforGthatGsingleGfile.

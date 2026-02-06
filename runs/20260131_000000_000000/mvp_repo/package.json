@@ -1,0 +1,36 @@
+{
+  "name": "audit-mvp",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.0.0",
+    "clsx": "^2.0.0",
+    "next": "14.2.35",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwind-merge": "^2.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/node": "25.1.0",
+    "autoprefixer": "^10.4.0",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^29.0.0",
+    "postcss": "^8.4.0",
+    "prisma": "7.3.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3"
+  }
+}

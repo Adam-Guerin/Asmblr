@@ -1,0 +1,100 @@
+{
+  "run_id": "20260205_230630_675244",
+  "started_at": "2026-02-05T23:06:36.481818",
+  "cycle_plan": [
+    "foundation",
+    "ux",
+    "polish"
+  ],
+  "cycles": [
+    {
+      "cycle": "foundation",
+      "index": 1,
+      "status": "fail",
+      "attempts": 2,
+      "auto_fix_attempted": true,
+      "auto_fix_attempts": 1,
+      "started_at": "2026-02-05T23:06:36.482819",
+      "finished_at": "2026-02-05T23:09:30.964483",
+      "steps": [
+        {
+          "step": "install",
+          "attempt": 1,
+          "ok": true,
+          "log": "install.log",
+          "timestamp": "2026-02-05T23:06:36.533196"
+        },
+        {
+          "step": "build",
+          "attempt": 1,
+          "ok": false,
+          "log": "build.log",
+          "timestamp": "2026-02-05T23:07:03.261465"
+        },
+        {
+          "step": "test",
+          "attempt": 1,
+          "ok": false,
+          "log": "test.log",
+          "timestamp": "2026-02-05T23:07:34.324059"
+        },
+        {
+          "step": "ui_lint",
+          "attempt": 1,
+          "ok": true,
+          "log": "ui_lint.json",
+          "timestamp": "2026-02-05T23:07:34.345424"
+        },
+        {
+          "step": "smoke",
+          "attempt": 1,
+          "ok": false,
+          "log": "smoke_1.log",
+          "timestamp": "2026-02-05T23:08:10.099386"
+        },
+        {
+          "step": "build",
+          "attempt": 2,
+          "ok": false,
+          "log": "build.log",
+          "timestamp": "2026-02-05T23:08:20.177964"
+        },
+        {
+          "step": "test",
+          "attempt": 2,
+          "ok": false,
+          "log": "test.log",
+          "timestamp": "2026-02-05T23:08:51.163879"
+        },
+        {
+          "step": "ui_lint",
+          "attempt": 2,
+          "ok": true,
+          "log": "ui_lint.json",
+          "timestamp": "2026-02-05T23:08:51.185662"
+        },
+        {
+          "step": "smoke",
+          "attempt": 1,
+          "ok": false,
+          "log": "smoke_1.log",
+          "timestamp": "2026-02-05T23:09:26.954334"
+        }
+      ],
+      "logs": {
+        "build": "build.log",
+        "test": "test.log",
+        "ui_lint": "ui_lint.json",
+        "smoke": "smoke_1.log",
+        "autofix": "autofix.log",
+        "patch": "patch.log",
+        "verdict": "verdict.json",
+        "fix_logs": [
+          "fix_1.log"
+        ],
+        "fix_diffs": []
+      }
+    }
+  ],
+  "status": "in_progress"
+}

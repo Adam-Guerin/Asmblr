@@ -1,0 +1,88 @@
+{
+  "cycle": "foundation",
+  "index": 1,
+  "status": "fail",
+  "attempts": 2,
+  "auto_fix_attempted": true,
+  "auto_fix_attempts": 1,
+  "started_at": "2026-02-05T23:11:06.779783",
+  "finished_at": "2026-02-05T23:14:06.723794",
+  "steps": [
+    {
+      "step": "install",
+      "attempt": 1,
+      "ok": true,
+      "log": "install.log",
+      "timestamp": "2026-02-05T23:11:06.824014"
+    },
+    {
+      "step": "build",
+      "attempt": 1,
+      "ok": false,
+      "log": "build.log",
+      "timestamp": "2026-02-05T23:11:40.915501"
+    },
+    {
+      "step": "test",
+      "attempt": 1,
+      "ok": false,
+      "log": "test.log",
+      "timestamp": "2026-02-05T23:12:11.952971"
+    },
+    {
+      "step": "ui_lint",
+      "attempt": 1,
+      "ok": true,
+      "log": "ui_lint.json",
+      "timestamp": "2026-02-05T23:12:11.972225"
+    },
+    {
+      "step": "smoke",
+      "attempt": 1,
+      "ok": false,
+      "log": "smoke_1.log",
+      "timestamp": "2026-02-05T23:12:47.627123"
+    },
+    {
+      "step": "build",
+      "attempt": 2,
+      "ok": false,
+      "log": "build.log",
+      "timestamp": "2026-02-05T23:12:56.089516"
+    },
+    {
+      "step": "test",
+      "attempt": 2,
+      "ok": false,
+      "log": "test.log",
+      "timestamp": "2026-02-05T23:13:27.032793"
+    },
+    {
+      "step": "ui_lint",
+      "attempt": 2,
+      "ok": true,
+      "log": "ui_lint.json",
+      "timestamp": "2026-02-05T23:13:27.053345"
+    },
+    {
+      "step": "smoke",
+      "attempt": 1,
+      "ok": false,
+      "log": "smoke_1.log",
+      "timestamp": "2026-02-05T23:14:02.765118"
+    }
+  ],
+  "logs": {
+    "build": "build.log",
+    "test": "test.log",
+    "ui_lint": "ui_lint.json",
+    "smoke": "smoke_1.log",
+    "autofix": "autofix.log",
+    "patch": "patch.log",
+    "verdict": "verdict.json",
+    "fix_logs": [
+      "fix_1.log"
+    ],
+    "fix_diffs": []
+  }
+}

@@ -1,0 +1,47 @@
+scoring_weights:
+  market_size: 0.25
+  competition: 0.20
+  differentiation: 0.20
+  build_difficulty: 0.15
+  time_to_mvp: 0.10
+  traction_signals: 0.10
+
+scoring_profiles:
+  default:
+    market_size: 0.25
+    competition: 0.20
+    differentiation: 0.20
+    build_difficulty: 0.15
+    time_to_mvp: 0.10
+    traction_signals: 0.10
+  b2b_saas:
+    market_size: 0.24
+    competition: 0.22
+    differentiation: 0.20
+    build_difficulty: 0.16
+    time_to_mvp: 0.08
+    traction_signals: 0.10
+  creator_tools:
+    market_size: 0.18
+    competition: 0.16
+    differentiation: 0.26
+    build_difficulty: 0.12
+    time_to_mvp: 0.12
+    traction_signals: 0.16
+  local_services:
+    market_size: 0.20
+    competition: 0.14
+    differentiation: 0.14
+    build_difficulty: 0.18
+    time_to_mvp: 0.18
+    traction_signals: 0.16
+
+scoring_calibration:
+  enabled: true
+  min_samples: 3
+  max_weight_shift: 0.06
+
+score_bands:
+  strong: 75
+  medium: 60
+  weak: 40

@@ -1,0 +1,41 @@
+{
+  "cycle": "polish",
+  "ok": true,
+  "checks": [
+    {
+      "name": "build_log_clean",
+      "ok": true,
+      "path": "build.log"
+    },
+    {
+      "name": "test_log_clean",
+      "ok": true,
+      "path": "test.log"
+    },
+    {
+      "name": "patch_diff_non_empty",
+      "ok": true,
+      "path": "patch.diff"
+    },
+    {
+      "name": "loading_state",
+      "ok": true,
+      "path": "app/loading.tsx"
+    },
+    {
+      "name": "empty_state",
+      "ok": true,
+      "path": "components/ui/empty-state.tsx"
+    },
+    {
+      "name": "skeleton",
+      "ok": true,
+      "path": "components/ui/skeleton.tsx"
+    },
+    {
+      "name": "animations",
+      "ok": true,
+      "path": "app/globals.css"
+    }
+  ]
+}

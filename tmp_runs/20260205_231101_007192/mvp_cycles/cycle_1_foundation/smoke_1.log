@@ -1,0 +1,8 @@
+Smoke checks
+Command: npm run dev -- --hostname 127.0.0.1 --port 3000
+Base URL: http://127.0.0.1:3000
+Paths: /, /api/status, /api/health
+Result: fail
+http://127.0.0.1:3000/ -> 500 HTTP Error 500: Internal Server Error
+http://127.0.0.1:3000/api/status -> 500 HTTP Error 500: Internal Server Error
+http://127.0.0.1:3000/api/health -> 500 HTTP Error 500: Internal Server Error

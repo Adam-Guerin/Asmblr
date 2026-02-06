@@ -1,0 +1,45 @@
+Cycle: foundation
+Prompt: foundation_prompt.txt
+Plan preview: # Foundation cycle plan  ## Objective Validate core functionality, pages, and API surface.  ## Prompt context   ## Last build log N/A  ## Last test log N/A
+
+Diff:
+```diff
+diff --git a/mvp_stackG.json b/mvp_stack.json
+similarity index G%
+rename fromG mvp_stackG.json
+rename to mvp_stack.json
+--- a/mvp_stackG.json
++++ b/mvp_stack.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "MVP StackG",
++ G"name": "G MVP Stack",
+   "description": "AGG minimalGGG viable product stack.",
+   "components": [
+     {
+       "type": "frontend",
+       "language": "TypeScript",
+@@ -10,7 +10,7 @@
+         "name": "G React",
+         "version": "^18.2.0"
+       }
+-    },
++    },G
+     {
+       "type": "backend",
+       "language": "Node.js",
+       "framework": "Next.js",
+@@ -20,7 +20,7 @@
+         "name": "Prisma",
+         "version":G "^4.10.1"
+       }
+-    },
++    },G
+     {
+       "type": "database",
+       "name": "PostgreSQL",
+       "version": "^13.5"
+     }
+   ]
+ }
+```

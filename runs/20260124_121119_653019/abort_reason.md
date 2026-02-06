@@ -1,0 +1,1 @@
+Ollama check failed: Ollama is not reachable. Install Ollama and ensure the service is running.

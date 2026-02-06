@@ -1,0 +1,15 @@
+You are improving an existing MVP repo inside mvp_repo/.
+
+Goal: UX cycle. Improve spacing, typography, layout consistency, and component reuse.
+
+Constraints:
+- Only modify files under mvp_repo/.
+- Preserve the overall layout and feature set.
+- Prefer reusable components in components/ui.
+- Do not add new dependencies.
+
+Requirements:
+- Enforce spacing + typography scales from the frontend kit.
+- Ensure headings <= 60 chars and paragraphs <= 120 chars.
+- Keep one accent color and maintain AA contrast.
+- Improve visual hierarchy and readability.

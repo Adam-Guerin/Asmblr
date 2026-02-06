@@ -1,0 +1,18 @@
+{
+  "productName": "Asmblr",
+  "branchName": "ralph/asmblr",
+  "testCommand": "pytest -q",
+  "stories": [
+    {
+      "id": "S1",
+      "title": "Example story",
+      "description": "Replace this with the next shippable slice of work.",
+      "acceptanceCriteria": [
+        "Define measurable acceptance criteria.",
+        "Ensure tests pass and changes are committed."
+      ],
+      "priority": 1,
+      "passes": false
+    }
+  ]
+}

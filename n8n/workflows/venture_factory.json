@@ -1,0 +1,46 @@
+{
+  "name": "venture_factory",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "venture-factory-run",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://localhost:8000/run",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{$json}}"
+      },
+      "name": "Trigger Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{json: {message: 'Run triggered', run: $json}}];"
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [700, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{"node": "Trigger Run", "type": "main", "index": 0}]]
+    },
+    "Trigger Run": {
+      "main": [[{"node": "Format Response", "type": "main", "index": 0}]]
+    }
+  }
+}

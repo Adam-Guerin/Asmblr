@@ -1,0 +1,17 @@
+{
+  "run_id": "20260205_231355_321868",
+  "cycle": "foundation",
+  "timestamp": "2026-02-05T23:16:52.752296",
+  "run_dir": "tmp_runs\\20260205_231355_321868",
+  "repo_dir": "tmp_runs\\20260205_231355_321868\\mvp_repo",
+  "repo_within_run_dir": true,
+  "cycle_within_run_dir": true,
+  "patch_targets": [
+    "mvp_repo/foundation_notes.md"
+  ],
+  "invalid_patch_targets": [],
+  "secrets_found": [],
+  "forbidden_files": [],
+  "external_symlinks": [],
+  "security_events": []
+}

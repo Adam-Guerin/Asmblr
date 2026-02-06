@@ -1,0 +1,26 @@
+{
+  "cycle": "stability",
+  "ok": true,
+  "checks": [
+    {
+      "name": "error_boundary",
+      "ok": true,
+      "path": "app/error.tsx"
+    },
+    {
+      "name": "not_found",
+      "ok": true,
+      "path": "app/not-found.tsx"
+    },
+    {
+      "name": "api_route",
+      "ok": true,
+      "path": "app/api/status|health"
+    },
+    {
+      "name": "status_error_handling",
+      "ok": true,
+      "path": "app/api/status/route.ts"
+    }
+  ]
+}

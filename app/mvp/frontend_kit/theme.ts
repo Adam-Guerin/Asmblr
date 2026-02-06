@@ -1,0 +1,40 @@
+export const theme = {
+  accentName: "sky",
+  colors: {
+    background: "#F8FAFC",
+    surface: "#FFFFFF",
+    text: "#0F172A",
+    muted: "#64748B",
+    border: "#E2E8F0",
+    accent: "#0EA5E9",
+    accentSoft: "#E0F2FE",
+    gradient: "linear-gradient(120deg, #E0F2FE 0%, #FFFFFF 55%, #F8FAFC 100%)",
+  },
+  radii: {
+    sm: "10px",
+    md: "14px",
+    lg: "18px",
+    xl: "24px",
+    pill: "9999px",
+  },
+  shadows: {
+    soft: "0 12px 30px rgba(15, 23, 42, 0.08)",
+    card: "0 8px 24px rgba(15, 23, 42, 0.08)",
+  },
+  spacing: {
+    xs: "0.5rem",
+    sm: "0.75rem",
+    md: "1rem",
+    lg: "1.5rem",
+    xl: "2rem",
+    "2xl": "3rem",
+  },
+  typography: {
+    display: "48px",
+    h1: "36px",
+    h2: "30px",
+    h3: "24px",
+    body: "16px",
+    small: "14px",
+  },
+};

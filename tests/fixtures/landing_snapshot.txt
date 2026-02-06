@@ -1,0 +1,9 @@
+﻿sections: Hero > Features > HowItWorks > SocialProof > Pricing > FAQ > CTA > Footer
+features: 3
+steps: 3
+testimonials: 3
+pricing: 3
+faqs: 4
+headline_max: 60
+subhead_max: 120
+support_max: 120

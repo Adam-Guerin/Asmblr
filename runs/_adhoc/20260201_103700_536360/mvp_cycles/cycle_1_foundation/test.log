@@ -1,0 +1,24 @@
+Test foundation (attempt 6)
+Command: npm run test
+Return code: 1
+stdout:
+> audit-ready-mvp@0.1.0 test
+> node scripts/smoke.mjs
+stderr:
+node:internal/child_process:420
+    throw new ErrnoException(err, 'spawn');
+          ^
+
+Error: spawn EINVAL
+    at ChildProcess.spawn (node:internal/child_process:420:11)
+    at spawn (node:child_process:753:9)
+    at file:///C:/Users/adamg/3D%20Objects/8.%20Solopreuneur/Asmblr/runs/_adhoc/20260201_103700_536360/mvp_repo/scripts/smoke.mjs:9:16
+    at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  errno: -4071,
+  code: 'EINVAL',
+  syscall: 'spawn'
+}
+
+Node.js v22.16.0

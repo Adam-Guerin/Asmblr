@@ -1,0 +1,26 @@
+{
+  "cycle": "foundation",
+  "ok": true,
+  "checks": [
+    {
+      "name": "mvp_repo_exists",
+      "ok": true,
+      "path": "runs\\_adhoc\\20260201_104525_518920\\mvp_repo"
+    },
+    {
+      "name": "package_or_python_manifest",
+      "ok": true,
+      "path": "package.json|requirements.txt|pyproject.toml"
+    },
+    {
+      "name": "readme_run_instructions",
+      "ok": true,
+      "path": "README.md"
+    },
+    {
+      "name": "api_route",
+      "ok": true,
+      "path": "app/api/status|health"
+    }
+  ]
+}

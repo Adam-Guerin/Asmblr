@@ -1,0 +1,31 @@
+{
+  "cycle": "ux",
+  "ok": true,
+  "checks": [
+    {
+      "name": "globals_css",
+      "ok": true,
+      "path": "app/globals.css"
+    },
+    {
+      "name": "component_button",
+      "ok": true,
+      "path": "components/ui/button.tsx"
+    },
+    {
+      "name": "component_card",
+      "ok": true,
+      "path": "components/ui/card.tsx"
+    },
+    {
+      "name": "component_section",
+      "ok": true,
+      "path": "components/ui/section.tsx"
+    },
+    {
+      "name": "component_badge",
+      "ok": true,
+      "path": "components/ui/badge.tsx"
+    }
+  ]
+}

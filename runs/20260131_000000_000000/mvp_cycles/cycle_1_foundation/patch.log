@@ -1,0 +1,16 @@
+Cycle: foundation
+Prompt: foundation_prompt.txt
+Plan preview: # Foundation cycle plan  ## Objective Validate core functionality, pages, and API surface.  ## Prompt context   ## Last build log N/A  ## Last test log N/A
+
+Diff:
+diff --git a/mvp_repo/foundation_notes.md b/mvp_repo/foundation_notes.md
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/mvp_repo/foundation_notes.md
+@@ -0,0 +1,5 @@
++Foundation cycle initialized.
++Objective: the repo must have a baseline README and structure.
++This file captures the first automated addition.
++Follow-up cycles will elaborate on this scaffold.
++

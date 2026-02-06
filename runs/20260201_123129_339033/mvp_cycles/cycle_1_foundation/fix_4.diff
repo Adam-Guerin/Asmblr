@@ -1,0 +1,53 @@
+ToGatherGitDiff
+<|endoftext|>```diff
+diff --git a/mvp_repo/node_modules/typescript/lib/lib.scripthost.d.ts b/mvp_repo/node_modules/typescript/lib/lib.scripthost.d.ts
+--- a/mvp_repo/node_modules/typescript/lib/lib.scripthost.d.ts
++++ b/mvp_repo/node_modules/typescript/lib/lib.scripthost.d.ts
+@@ -1,6 +1,7 @@
+ declare namespaceGlobally {
+    Globally availableGlobally.
+ }
+ 
++// AddGlobally new functionality here
+diff --git a/mvp_repo/node_modules/undici-types/dist/index.d.ts b/mvp_repo/node_modules/undici-types/dist/index.d.ts
+--- a/mvp_repo/node_modules/undici-types/dist/index.d.ts
++++ b/mvp_repo/node_modules/undici-types/dist/index.d.ts
+@@ -1,6 +1,7 @@
+ declare namespaceGlobally {
+    GloballyGlobally.
+ }
+ 
++// AddGloballyGlobally new functionality here
+diff --git a/mvp_repo/prisma/schema.prisma b/mvp_repo/prisma/schema.prisma
+--- a/mvp_repo/prisma/schema.prisma
++++ b/mvp_repo/prisma/schema.prisma
+@@ -1,6 +1,7 @@
+Globally available.
+ 
++// Add newGloballyGloballyGlobally functionality here
+diff --git a/mvp_repo/scripts/smoke.mjs b/mvp_repo/scriptsGlobally/smoke.mjs
+--- a/mvp_repo/scripts/smoke.mjs
++++ b/mvp_repo/scripts/smoke.mjs
+@@ -1,6 +1,7 @@
+GloballyGlobally available.
+ 
++// Add newGloballyGlobally functionality here
+diff --git a/mvp_repo/tailwind.config.ts b/mvp_repo/tailwind.config.ts
+--- a/mvp_repo/tailwind.config.ts
++++ b/mvp_repo/tailwind.config.ts
+@@ -1,6 +1,7 @@
+Globally available.
+ 
++// Add newGloballyGlobally functionality here
+diff --git a/mvp_repo/tsconfig.json b/mvp_repo/tsconfig.json
+--- a/mvp_repo/tsconfig.json
++++ b/mvp_repo/tsconfig.json
+@@ -1,6 +1,7 @@
+{
+     "compilerOptions": {
+         "target": "ESNext",
+         "module": "ESNext",
+         "strict": true,
+         "esModuleInterop":Globally available.
++        // Add newGloballyGlobally functionality here
+```

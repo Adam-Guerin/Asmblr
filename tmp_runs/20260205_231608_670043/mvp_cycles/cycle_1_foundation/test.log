@@ -1,0 +1,18 @@
+[foundation] Test (attempt 2)
+Command: C:\Program Files\nodejs\npm.CMD test
+Return code: 1
+stdout:
+> mvp-audit@0.1.0 test
+> node scripts/smoke.mjs
+
+  â–² Next.js 14.2.35
+  - Local:        http://localhost:3100
+
+ âœ“ Starting...
+stderr:
+Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id
+    at setupFsCheck (C:\Users\adamg\3D Objects\8. Solopreuneur\Asmblr\tmp_runs\20260205_231608_670043\mvp_repo\node_modules\next\dist\server\lib\router-utils\filesystem.js:151:19)
+    at async initialize (C:\Users\adamg\3D Objects\8. Solopreuneur\Asmblr\tmp_runs\20260205_231608_670043\mvp_repo\node_modules\next\dist\server\lib\router-server.js:64:23)
+    at async Server.<anonymous> (C:\Users\adamg\3D Objects\8. Solopreuneur\Asmblr\tmp_runs\20260205_231608_670043\mvp_repo\node_modules\next\dist\server\lib\start-server.js:249:36)
+Error: Smoke: server did not respond on /
+    at run (file:///C:/Users/adamg/3D%20Objects/8.%20Solopreuneur/Asmblr/tmp_runs/20260205_231608_670043/mvp_repo/scripts/smoke.mjs:108:11)

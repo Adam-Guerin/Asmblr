@@ -1,0 +1,11 @@
+{
+  "app_name": "Audit-ready MVP",
+  "topic": "Audit-ready MVP",
+  "brief": "Audit-ready MVP",
+  "stack": {
+    "frontend": "Next.js + Tailwind CSS + shadcn-inspired UI + TypeScript",
+    "backend": "Next.js API routes + Prisma + SQLite",
+    "database": "SQLite"
+  },
+  "generated_at": "2026-02-01T09:37:24.604027"
+}

@@ -1,0 +1,38 @@
+﻿{
+    "cycle":  "stability",
+    "index":  2,
+    "status":  "pass",
+    "attempts":  2,
+    "auto_fix_attempted":  true,
+    "auto_fix_attempts":  1,
+    "started_at":  "2026-02-01T12:30:10.7186284Z",
+    "finished_at":  "2026-02-01T12:33:05.095178",
+    "steps":  [
+                  {
+                      "step":  "build",
+                      "attempt":  1,
+                      "ok":  true,
+                      "log":  "build.log",
+                      "timestamp":  "2026-02-01T12:33:03.9388642Z"
+                  },
+                  {
+                      "step":  "test",
+                      "attempt":  1,
+                      "ok":  true,
+                      "log":  "test.log",
+                      "timestamp":  "2026-02-01T12:33:05.0874640Z"
+                  }
+              ],
+    "logs":  {
+                 "build":  "build.log",
+                 "test":  "test.log",
+                 "smoke":  null,
+                 "autofix":  "autofix.log",
+                 "patch":  "patch.log",
+                 "verdict":  "verdict.json",
+                 "fix_logs":  "fix_1.log",
+                 "fix_diffs":  {
+
+                               }
+             }
+}

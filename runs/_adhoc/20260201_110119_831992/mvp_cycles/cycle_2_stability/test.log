@@ -1,0 +1,5 @@
+Test stability (attempt 1)
+Command: node -e "console.log('tests ok')"
+Return code: 0
+stdout:
+tests ok

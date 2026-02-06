@@ -1,0 +1,13 @@
+Test foundation (attempt 1)
+Command: npm run test
+Return code: 0
+stdout:
+> audit-mvp-pass-run@0.1.0 test
+> node scripts/smoke.mjs
+
+  â–² Next.js 14.2.35
+  - Local:        http://localhost:58075
+
+ âœ“ Starting...
+ âœ“ Ready in 427ms
+Smoke: page and API responded successfully.

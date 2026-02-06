@@ -1,0 +1,46 @@
+{
+  "cycle": "ux",
+  "ok": true,
+  "checks": [
+    {
+      "name": "build_log_clean",
+      "ok": true,
+      "path": "build.log"
+    },
+    {
+      "name": "test_log_clean",
+      "ok": true,
+      "path": "test.log"
+    },
+    {
+      "name": "patch_diff_non_empty",
+      "ok": true,
+      "path": "patch.diff"
+    },
+    {
+      "name": "globals_css",
+      "ok": true,
+      "path": "app/globals.css"
+    },
+    {
+      "name": "component_button",
+      "ok": true,
+      "path": "components/ui/button.tsx"
+    },
+    {
+      "name": "component_card",
+      "ok": true,
+      "path": "components/ui/card.tsx"
+    },
+    {
+      "name": "component_section",
+      "ok": true,
+      "path": "components/ui/section.tsx"
+    },
+    {
+      "name": "component_badge",
+      "ok": true,
+      "path": "components/ui/badge.tsx"
+    }
+  ]
+}
