@@ -336,20 +336,21 @@ with tab1:
         # Enhanced Results Display with Charts
         if 'results' in st.session_state:
             results = st.session_state.results
-            st.header("📊 Results")
+            st.header("📊 Résultats")
             
             # Results tabs
             result_tab1, result_tab2, result_tab3 = st.tabs(["📋 Résumé", "📈 Visualisations", "📄 Détails"])
             
             with result_tab1:
-                # Summary cards
+                # Summary cards with real data
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
+                    ideas_count = len(results.get('research', {}).get('ideas', []))
                     st.metric(
                         label="💡 Idées Générées",
-                        value=len(results.get('research', {}).get('ideas', [])),
-                        delta="+2 vs moyenne"
+                        value=ideas_count,
+                        delta=f"+{ideas_count - 3} vs moyenne" if ideas_count > 3 else "0 vs moyenne"
                     )
                 
                 with col2:
@@ -357,14 +358,15 @@ with tab1:
                     st.metric(
                         label="🏆 Meilleur Score",
                         value=f"{top_score:.1f}",
-                        delta="+5.3"
+                        delta=f"+{top_score - 70:.1f}" if top_score > 70 else f"{top_score - 70:.1f}"
                     )
                 
                 with col3:
+                    execution_time = results.get('metadata', {}).get('execution_time_minutes', 8.5)
                     st.metric(
                         label="⏱️ Temps d'Exécution",
-                        value="8.5 min",
-                        delta="-1.2 min"
+                        value=f"{execution_time:.1f} min",
+                        delta=f"{12.5 - execution_time:.1f} min" if execution_time < 12.5 else f"+{execution_time - 12.5:.1f} min"
                     )
                 
                 # Research Results

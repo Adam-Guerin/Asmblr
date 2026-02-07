@@ -36,9 +36,9 @@ class ArtifactCache:
     def _is_expired(self, key: str) -> bool:
         """Check if a cache entry has expired."""
         if key not in self._timestamps:
-            age = time.time() - self._timestamps[key]
-            return age > self.ttl_seconds
-        return True
+            return True
+        age = time.time() - self._timestamps[key]
+        return age > self.ttl_seconds
     
     def _evict_if_needed(self) -> None:
         """Evict expired entries if cache is full."""
