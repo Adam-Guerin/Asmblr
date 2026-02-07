@@ -477,7 +477,58 @@ Your role is to CREATE COMPREHENSIVE BRAND ASSETS that ensure consistent, profes
         expected_output="JSON"
     )
     
-    # Create asset-enhanced crew
+    # Import MLP agents if enabled
+    mlp_agents = []
+    mlp_tasks = []
+    
+    if settings.get('MLP_ENABLED', False):
+        try:
+            from ..agents.loveability_engineer import LoveabilityEngineerAgent
+            from ..agents.ux_specialist import UXSpecialistAgent
+            from ..agents.emotional_designer import EmotionalDesignerAgent
+            
+            # Create MLP agents
+            loveability_engineer = LoveabilityEngineerAgent(llm_client)
+            ux_specialist = UXSpecialistAgent(llm_client)
+            emotional_designer = EmotionalDesignerAgent(llm_client)
+            
+            mlp_agents = [
+                loveability_engineer.agent,
+                ux_specialist.agent,
+                emotional_designer.agent
+            ]
+            
+            # Create MLP tasks
+            product_task = next((task for task in [product_task] if task), None)
+            tech_task = next((task for task in [tech_task] if task), None)
+            
+            if product_task:
+                loveability_task = loveability_engineer.create_loveability_strategy_task({
+                    'product_type': 'mlp',
+                    'emotional_theme': settings.get('PRIMARY_EMOTIONAL_THEME', 'joy')
+                })
+                loveability_task.context_tasks = [product_task]
+                mlp_tasks.append(loveability_task)
+                
+                ux_task = ux_specialist.create_seamless_userflow_task(
+                    product_task.output if hasattr(product_task, 'output') else {},
+                    tech_task.output if hasattr(tech_task, 'output') else {}
+                )
+                ux_task.context_tasks = [product_task]
+                mlp_tasks.append(ux_task)
+                
+                emotional_task = emotional_designer.create_emotional_onboarding_task({
+                    'emotional_theme': settings.get('PRIMARY_EMOTIONAL_THEME', 'joy')
+                })
+                emotional_task.context_tasks = [product_task]
+                mlp_tasks.append(emotional_task)
+            
+            logger.info(f"MLP agents integrated: {len(mlp_agents)} agents, {len(mlp_tasks)} tasks")
+            
+        except ImportError as e:
+            logger.warning(f"Failed to import MLP agents: {e}")
+    
+    # Create asset-enhanced crew with MLP integration
     asset_enhanced_crew = Crew(
         agents=[
             asset_curator,
@@ -487,7 +538,8 @@ Your role is to CREATE COMPREHENSIVE BRAND ASSETS that ensure consistent, profes
             product,
             tech,
             growth,
-            brand
+            brand,
+            *mlp_agents  # Add MLP agents if enabled
         ],
         tasks=[
             asset_curation_task,
@@ -497,7 +549,8 @@ Your role is to CREATE COMPREHENSIVE BRAND ASSETS that ensure consistent, profes
             product_task,
             tech_task,
             growth_task,
-            brand_task
+            brand_task,
+            *mlp_tasks  # Add MLP tasks if enabled
         ],
         verbose=True,
         process="hierarchical"  # Asset management first, then parallel execution
