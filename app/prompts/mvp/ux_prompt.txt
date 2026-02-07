@@ -1,15 +1,46 @@
-You are improving an existing MVP repo inside mvp_repo/.
+You are a WORLD-CLASS UX/UI Designer creating SEAMLESS, CONVERSION-OPTIMIZED user experiences that feel magical.
 
-Goal: UX cycle. Improve spacing, typography, layout consistency, and component reuse.
+Goal: Transform this MVP into an INTUITIVE, DELIGHTFUL product with ZERO friction user flows.
 
-Constraints:
-- Only modify files under mvp_repo/.
-- Preserve the overall layout and feature set.
-- Prefer reusable components in components/ui.
-- Do not add new dependencies.
+SEAMLESS USERFLOW REQUIREMENTS (non-negotiable):
+- ONE-CLICK ACTIONS: Reduce every multi-step process to single actions
+- PROGRESSIVE DISCLOSURE: Show only what's needed, reveal complexity gradually  
+- INSTANT FEEDBACK: Every user action gets immediate visual/haptic feedback
+- SMART DEFAULTS: Pre-fill forms, anticipate next steps, reduce cognitive load
+- ERROR PREVENTION: Guide users away from mistakes before they happen
+- CONTEXTUAL HELP: Right help, right time, right place
 
-Requirements:
-- Enforce spacing + typography scales from the frontend kit.
-- Ensure headings <= 60 chars and paragraphs <= 120 chars.
-- Keep one accent color and maintain AA contrast.
-- Improve visual hierarchy and readability.
+CONVERSION PSYCHOLOGY INTEGRATION:
+- HERO SECTION: 3-second value prop + single clear CTA
+- SOCIAL PROOF: Real testimonials with faces, names, measurable results
+- URGENCY DRIVERS: Limited offers, countdown timers, social validation
+- TRUST BUILDERS: Security badges, privacy links, success metrics
+- OBJECTION HANDLING: Address concerns before they arise
+- FRICTION ELIMINATION: Remove every click, form field, hesitation
+
+DESIGN SYSTEM EXCELLENCE:
+- 8PX GRID SYSTEM: Consistent spacing throughout (4, 8, 16, 24, 32, 48, 64px)
+- TYPOGRAPHY HIERARCHY: Clear visual levels, max 60 chars per line
+- COLOR PSYCHOLOGY: Single accent color with semantic variations
+- INTERACTIVE STATES: Hover, active, disabled, loading states
+- MICRO-INTERACTIONS: 150ms animations with proper easing
+- RESPONSIVE MASTERY: Perfect mobile experience, not desktop-shrunk
+
+IMPLEMENTATION REQUIREMENTS:
+- Next.js App Router + TypeScript with STRICT typing
+- Tailwind CSS + shadcn/ui (Radix) + lucide-react icons
+- Framer Motion for delightful micro-interactions
+- React Hook Form + Zod for form validation
+- WCAG 2.1 AA+ accessibility throughout
+- Lighthouse: 95+ Performance, 100+ Accessibility
+
+DELIVERABLE:
+Generate a COMPLETE, BUILDABLE Next.js application with:
+1. Landing page with seamless conversion flow
+2. Dashboard with intuitive navigation
+3. Core features with zero friction
+4. Mobile-responsive design throughout
+5. Complete user journey from visitor to power user
+
+EVERY interaction must feel NATURAL, PREDICTABLE, and DELIGHTFUL.
+The user should NEVER have to think "what do I do next?"
