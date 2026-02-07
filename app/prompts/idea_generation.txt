@@ -22,12 +22,13 @@ RULES
 - If missing data, write "unknown" and add explicit assumptions.
 - Each idea must link to >=1 pain (linked_pain_ids).
 - Buildable in 4-8 weeks, no paid APIs.
-- Avoid generic wording ("save time", "improve efficiency", "all-in-one").
-- Each idea must include at least one concrete validation path in the first 7 days
-  (example: landing waitlist test, design-partner outreach, interview sprint, pilot signup).
-- Target user must be specific enough to run outreach immediately.
-- Prioritize ideas with clear monetization potential and market differentiation.
-- Include market size estimate (tiny/small/medium/large) based on pain signals.
+- AVOID GENERIC TERMS: "save time", "improve efficiency", "streamline", "optimize", "all-in-one"
+- Each idea must include specific metrics and KPIs for success measurement
+- Target user must be hyper-specific (industry, company size, role, experience level)
+- Prioritize ideas with clear monetization strategy and pricing model
+- Include market size estimate with reasoning (tiny/small/medium/large)
+- Each idea MUST have at least 2 concrete validation methods for first 14 days
+- Solution must specify exact technology stack and implementation approach
 
 QUALITY CRITERIA
 - Pain specificity: Clear problem with measurable impact

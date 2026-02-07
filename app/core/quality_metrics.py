@@ -107,30 +107,45 @@ class QualityMetricsCalculator:
         score = 0.0
         max_score = 100.0
         
-        # Check for specific target user
+        # HEAVY PENALTY for generic target users
         target_user = idea.get('target_user', '').lower()
-        if any(term in target_user for term in ['developers', 'founders', 'managers', 'students']):
-            score += 25
-        elif 'users' in target_user or 'people' in target_user:
-            score += 10
+        generic_terms = ['users', 'people', 'customers', 'businesses', 'companies', 'organizations']
+        if any(term in target_user for term in generic_terms):
+            score -= 30  # Heavy penalty
         
-        # Check for concrete problem statement
-        problem = idea.get('problem', '').lower()
-        if len(problem) > 50 and any(word in problem for word in ['struggle', 'difficulty', 'challenge', 'issue']):
-            score += 25
+        # BONUS for hyper-specific target users
+        specific_indicators = ['developers', 'founders', 'managers', 'students', 'freelancers', 'startup', 'smb', 'enterprise']
+        if any(term in target_user for term in specific_indicators):
+            score += 20
         
-        # Check for specific features
-        features = idea.get('key_features', [])
-        if len(features) >= 3:
-            score += 25
-        elif len(features) >= 1:
+        # BONUS for company size/industry specificity
+        if any(size in target_user for size in ['1-10', '11-50', '51-200', '200+', 'seed', 'series a', 'enterprise']):
             score += 15
         
-        # Check validation method
-        if 'validation_method' in idea or 'assumptions' in idea:
-            score += 25
+        # PENALTY for generic problem statements
+        problem = idea.get('problem', '').lower()
+        generic_problem_terms = ['save time', 'improve efficiency', 'streamline', 'optimize', 'automate', 'simplify']
+        generic_count = sum(1 for term in generic_problem_terms if term in problem)
+        score -= generic_count * 15
         
-        return min(score, max_score)
+        # BONUS for specific problem details
+        if len(problem) > 100 and any(word in problem for word in ['struggle', 'difficulty', 'challenge', 'issue', 'pain point']):
+            score += 20
+        
+        # BONUS for concrete, numbered features
+        features = idea.get('key_features', [])
+        if len(features) >= 5:
+            score += 25
+        elif len(features) >= 3:
+            score += 15
+        
+        # BONUS for specific validation methods
+        validation = idea.get('validation_method', '').lower()
+        specific_validation = ['waitlist', 'landing page', 'interview', 'survey', 'prototype', 'mvp', 'pilot']
+        if any(method in validation for method in specific_validation):
+            score += 20
+        
+        return max(0, min(score, max_score))
     
     def _calculate_feasibility(self, idea: Dict[str, Any]) -> float:
         """Assess technical feasibility of the idea."""

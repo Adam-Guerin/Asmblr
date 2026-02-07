@@ -23,6 +23,12 @@ OUTPUT FORMAT (JSON):
 
 SPECIAL CASES:
 - If signals are missing or weak, use conservative scoring (40-60 range) and state assumptions clearly.
-- For generic ideas ("save time", "improve efficiency"), penalize heavily (20-40 range).
-- For ideas with clear validation paths, add 5-10 points bonus.
-- For B2B SaaS with clear ICP, add 5 points bonus.
+- HEAVY PENALTIES: Generic ideas ("save time", "improve efficiency", "streamline") score 15-30 maximum.
+- BONUS CRITERIA:
+  * +10 points: Hyper-specific target user with industry/company size/role
+  * +8 points: Concrete metrics and KPIs for success measurement
+  * +8 points: Specific technology stack and implementation details
+  * +8 points: Multiple validation methods (2+ approaches)
+  * +5 points: Clear monetization strategy with pricing model
+  * +5 points: B2B SaaS with well-defined ICP
+- MINIMUM REQUIREMENTS: Ideas without specific target user or concrete features cannot exceed 50 points.

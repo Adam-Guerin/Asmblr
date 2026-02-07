@@ -5,96 +5,53 @@ import re
 from pathlib import Path
 
 
+# PREMIUM QUALITY CONSTANTS - Exceeding Lovable Standards
 ALLOWED_SPACING = {
-    "0",
-    "0.5",
-    "1",
-    "1.5",
-    "2",
-    "2.5",
-    "3",
-    "3.5",
-    "4",
-    "5",
-    "6",
-    "8",
-    "10",
-    "12",
-    "14",
-    "16",
-    "20",
-    "24",
-    "28",
-    "32",
-    "36",
-    "40",
-    "44",
-    "48",
-    "52",
-    "56",
-    "60",
-    "64",
-    "72",
-    "80",
-    "96",
+    "0", "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "5", "6", "8", "10", "12", "14", "16", "20", "24", "28", "32", "36", "40", "44", "48", "52", "56", "60", "64", "72", "80", "96"
 }
-ALLOWED_BUTTON_VARIANTS = {"primary", "secondary", "ghost"}
-NEUTRAL_COLORS = {"slate", "gray", "zinc", "neutral", "stone"}
-BANNED_WORDS = {"todo", "lorem", "placeholder"}
+ALLOWED_BUTTON_VARIANTS = {"primary", "secondary", "ghost", "premium"}
+NEUTRAL_COLORS = {"neutral", "slate", "gray", "zinc", "stone"}
+BANNED_WORDS = {"todo", "lorem", "placeholder", "coming soon", "under construction"}
 JARGON_WORDS = {
-    "synergy",
-    "leverage",
-    "paradigm",
-    "disrupt",
-    "enterprise-grade",
-    "best-in-class",
-    "world-class",
-    "next-gen",
+    "synergy", "leverage", "paradigm", "disrupt", "enterprise-grade", 
+    "best-in-class", "world-class", "next-gen", "revolutionary", "innovative"
 }
 CTA_VERBS = {
-    "start",
-    "get",
-    "join",
-    "view",
-    "see",
-    "request",
-    "book",
-    "save",
-    "continue",
-    "create",
-    "build",
+    "start", "get", "join", "view", "see", "request", "book", "save", 
+    "continue", "create", "build", "try", "claim", "unlock"
 }
 TRUST_KEYWORDS = {
-    "trusted",
-    "proof",
-    "secure",
-    "privacy",
-    "compliance",
-    "reliable",
-    "customers",
-    "founders",
+    "trusted", "proof", "secure", "privacy", "compliance", "reliable", 
+    "customers", "founders", "guaranteed", "verified", "certified"
 }
 LOW_CONTRAST_CLASSES = {
-    "text-slate-200",
-    "text-slate-300",
-    "text-slate-400",
-    "text-gray-200",
-    "text-gray-300",
-    "text-gray-400",
-    "text-zinc-200",
-    "text-zinc-300",
-    "text-zinc-400",
-    "text-neutral-200",
-    "text-neutral-300",
-    "text-neutral-400",
-    "text-stone-200",
-    "text-stone-300",
-    "text-stone-400",
-    "text-white/50",
-    "text-white/60",
-    "text-black/40",
-    "text-black/50",
+    "text-neutral-200", "text-neutral-300", "text-neutral-400",
+    "text-slate-200", "text-slate-300", "text-slate-400",
+    "text-gray-200", "text-gray-300", "text-gray-400",
+    "text-zinc-200", "text-zinc-300", "text-zinc-400",
+    "text-white/50", "text-white/60", "text-black/40", "text-black/50"
 }
+
+# PREMIUM DESIGN REQUIREMENTS
+REQUIRED_BORDER_RADIUS = {"xs": "4px", "sm": "8px", "md": "12px", "lg": "16px", "xl": "20px"}
+REQUIRED_SHADOWS = {"subtle", "card", "floating", "modal", "cta"}
+REQUIRED_SPACING_SCALE = {"4px", "8px", "16px", "24px", "32px", "48px", "64px", "96px", "128px"}
+REQUIRED_COLORS = {"neutral", "accent", "success", "warning", "error"}
+
+# CONVERSION OPTIMIZATION REQUIREMENTS
+REQUIRED_LANDING_SECTIONS = {
+    "Hero", "Features", "HowItWorks", "SocialProof", "Pricing", "FAQ", "CTA", "Footer"
+}
+REQUIRED_CONVERSION_ELEMENTS = {
+    "value_proposition", "social_proof", "urgency_trigger", 
+    "risk_reversal", "primary_cta", "testimonials"
+}
+
+# PERFORMANCE REQUIREMENTS
+MAX_BUNDLE_SIZE = 200000  # 200KB gzipped
+MAX_FCP = 1500  # 1.5s First Contentful Paint
+MAX_LCP = 2500  # 2.5s Largest Contentful Paint
+MAX_CLS = 0.1  # Cumulative Layout Shift
 
 
 def run_ui_lint(repo_dir: Path, cycle_dir: Path, accent_color: str | None = None) -> dict:

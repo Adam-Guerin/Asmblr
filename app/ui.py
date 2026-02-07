@@ -472,9 +472,45 @@ else:
             if reason_file.exists():
                 st.markdown(f"### {status.upper()} reason")
                 st.markdown(reason_file.read_text(encoding="utf-8"))
+        
+        # Quality Metrics Display
+        quality_file = output_dir / "quality_metrics.json"
+        if quality_file.exists():
+            st.markdown("### 📊 Quality Metrics")
+            try:
+                import json
+                quality_data = json.loads(quality_file.read_text(encoding="utf-8"))
+                
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Idea Specificity", f"{quality_data.get('idea_specificity_score', 0):.1f}")
+                with col2:
+                    st.metric("Market Validation", f"{quality_data.get('idea_market_validation_score', 0):.1f}")
+                with col3:
+                    st.metric("Signal Quality", f"{quality_data.get('signal_diversity_score', 0):.1f}")
+                with col4:
+                    st.metric("Overall Quality", f"{quality_data.get('overall_quality_score', 0):.1f}")
+                
+                # Improvement Areas
+                improvements = quality_data.get('improvement_areas', [])
+                if improvements:
+                    st.markdown("#### 🔧 Recommended Improvements:")
+                    for improvement in improvements:
+                        st.markdown(f"- {improvement}")
+                
+                # Strengths
+                strengths = quality_data.get('strengths', [])
+                if strengths:
+                    st.markdown("#### ✅ Strengths:")
+                    for strength in strengths:
+                        st.markdown(f"- {strength}")
+                        
+            except Exception as e:
+                st.warning(f"Could not load quality metrics: {e}")
+        
         for artifact in [
             "top_idea.md",
-            "market_report.md",
+            "market_report.md", 
             "prd.md",
             "tech_spec.md",
             "launch_checklist.md",

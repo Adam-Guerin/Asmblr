@@ -43,7 +43,7 @@ class MVPBuilderError(Exception):
 
 
 class StackSelector:
-    DEFAULT_FRONTEND = "Next.js + Tailwind CSS + shadcn/ui + TypeScript"
+    DEFAULT_FRONTEND = "Next.js + Premium Tailwind + shadcn/ui + TypeScript"
 
     def select(self, topic: str | None, brief: str | None) -> StackConfig:
         context = " ".join(filter(None, [topic, brief])).strip().lower()
@@ -56,10 +56,12 @@ class StackSelector:
         else:
             backend_stack = "Next.js API routes + Prisma + SQLite"
             backend_platform = "nextjs"
+        
         summary = (
             f"Frontend: {self.DEFAULT_FRONTEND}. "
             f"Backend: {backend_stack}. "
-            f"Primary database: SQLite. Context: {context or 'core MVP flows'}."
+            f"Premium Design System: 8px grid, semantic colors, conversion-optimized. "
+            f"Database: SQLite. Context: {context or 'premium MVP'}."
         )
         return StackConfig(
             frontend_stack=self.DEFAULT_FRONTEND,
