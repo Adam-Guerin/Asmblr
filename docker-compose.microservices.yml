@@ -1,0 +1,269 @@
+# Docker Compose pour l'architecture micro-services d'Asmblr
+version: '3.8'
+
+services:
+  # API Gateway / Orchestrator
+  api-gateway:
+    build: 
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:5432/asmblr
+      - CORE_SERVICE_URL=http://asmblr-core:8001
+      - AGENTS_SERVICE_URL=http://asmblr-agents:8002
+      - MEDIA_SERVICE_URL=http://asmblr-media:8003
+      - UI_SERVICE_URL=http://asmblr-ui:3000
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+
+  # Core Service (Business Logic)
+  asmblr-core:
+    build:
+      context: ./asmblr-core
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:5432/asmblr
+      - REDIS_URL=redis://redis:6379/0
+      - API_HOST=0.0.0.0
+      - API_PORT=8001
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    volumes:
+      - core_data:/app/data
+
+  # Agents Service (AI/CrewAI)
+  asmblr-agents:
+    build:
+      context: ./asmblr-agents
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DEFAULT_MODEL=llama3.1:8b
+      - CODE_MODEL=qwen2.5-coder:7b
+      - API_HOST=0.0.0.0
+      - API_PORT=8002
+    depends_on:
+      - redis
+      - ollama
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    volumes:
+      - agents_data:/app/data
+
+  # Media Service (Generation)
+  asmblr-media:
+    build:
+      context: ./asmblr-media
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_TYPE=local
+      - STORAGE_PATH=/app/media
+      - API_HOST=0.0.0.0
+      - API_PORT=8003
+    depends_on:
+      - redis
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    volumes:
+      - media_storage:/app/media
+      - media_data:/app/data
+
+  # UI Service (Frontend)
+  asmblr-ui:
+    build:
+      context: ./asmblr-ui
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_CORE_URL=http://asmblr-core:8001
+      - NEXT_PUBLIC_AGENTS_URL=http://asmblr-agents:8002
+      - NEXT_PUBLIC_MEDIA_URL=http://asmblr-media:8003
+    depends_on:
+      - api-gateway
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+
+  # Infrastructure Services
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=asmblr
+      - POSTGRES_USER=asmblr
+      - POSTGRES_PASSWORD=asmblr_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    command: serve
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+
+  # Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api-gateway
+      - asmblr-ui
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+
+networks:
+  asmblr-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  # Database volumes
+  postgres_data:
+    driver: local
+  
+  # Cache volumes
+  redis_data:
+    driver: local
+  
+  # Application volumes
+  core_data:
+    driver: local
+  agents_data:
+    driver: local
+  media_data:
+    driver: local
+  media_storage:
+    driver: local
+  
+  # AI/LLM volumes
+  ollama_data:
+    driver: local
+  
+  # Monitoring volumes
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# Configuration pour le développement
+x-development:
+  services:
+    api-gateway:
+      volumes:
+        - ./orchestrator:/app
+        - ./shared:/app/shared
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=debug
+    
+    asmblr-core:
+      volumes:
+        - ./asmblr-core:/app
+        - ./shared:/app/shared
+      environment:
+        - DEBUG=true
+        - LOG_LEVEL=debug
+    
+    asmblr-agents:
+      volumes:
+        - ./asmblr-agents:/app
+        - ./shared:/app/shared
+      environment:
+        - DEBUG=true
+        - LOG_LEVEL=debug
+    
+    asmblr-media:
+      volumes:
+        - ./asmblr-media:/app
+        - ./shared:/app/shared
+      environment:
+        - DEBUG=true
+        - LOG_LEVEL=debug
+    
+    asmblr-ui:
+      volumes:
+        - ./asmblr-ui:/app
+        - ./shared:/app/shared
+      environment:
+        - NODE_ENV=development
+        - NEXT_PUBLIC_DEBUG=true
