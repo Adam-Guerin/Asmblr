@@ -37,6 +37,10 @@ def _patch_record(record: dict[str, Any]) -> None:
 def setup_logging() -> None:
     logger.remove()
     log_json = os.getenv("LOG_JSON", "false").lower() == "true"
+    
+    # Apply patching to logger before adding handlers
+    logger.configure(patcher=_patch_record)
+    
     if log_json:
         logger.add(
             sys.stdout,
@@ -45,7 +49,6 @@ def setup_logging() -> None:
             backtrace=False,
             diagnose=False,
             serialize=True,
-            patcher=_patch_record,
         )
     else:
         logger.add(
@@ -54,7 +57,6 @@ def setup_logging() -> None:
             enqueue=True,
             backtrace=False,
             diagnose=False,
-            patcher=_patch_record,
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | run={extra[run_id]} req={extra[request_id]} | {message}",
         )
 
