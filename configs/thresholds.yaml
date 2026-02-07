@@ -35,6 +35,27 @@ scoring_profiles:
     build_difficulty: 0.18
     time_to_mvp: 0.18
     traction_signals: 0.16
+  ai_ml_tools:
+    market_size: 0.28
+    competition: 0.18
+    differentiation: 0.24
+    build_difficulty: 0.20
+    time_to_mvp: 0.05
+    traction_signals: 0.05
+  fintech:
+    market_size: 0.26
+    competition: 0.24
+    differentiation: 0.18
+    build_difficulty: 0.22
+    time_to_mvp: 0.06
+    traction_signals: 0.04
+  healthtech:
+    market_size: 0.22
+    competition: 0.20
+    differentiation: 0.18
+    build_difficulty: 0.20
+    time_to_mvp: 0.12
+    traction_signals: 0.08
 
 scoring_calibration:
   enabled: true

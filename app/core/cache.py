@@ -52,22 +52,22 @@ class ArtifactCache:
             del self._cache[key]
             del self._timestamps[key]
             logger.debug(f"Evicted expired cache entry: {key}")
-    
-    # Evict oldest entries if cache is full
-    if len(self._cache) >= self.max_size:
-        # Sort by timestamp (oldest first)
-        sorted_items = sorted(
-            self._timestamps.items(),
-            key=lambda item: item[1],
-            reverse=True
-        )
         
-        # Remove oldest entries
-        while len(self._cache) >= self.max_size and sorted_items:
-            key, _ = sorted_items.pop()
-            del self._cache[key]
-            del self._timestamps[key]
-            logger.debug(f"Evicted old cache entry: {key}")
+        # Evict oldest entries if cache is full
+        if len(self._cache) >= self.max_size:
+            # Sort by timestamp (oldest first)
+            sorted_items = sorted(
+                self._timestamps.items(),
+                key=lambda item: item[1],
+                reverse=True
+            )
+            
+            # Remove oldest entries
+            while len(self._cache) >= self.max_size and sorted_items:
+                key, _ = sorted_items.pop()
+                del self._cache[key]
+                del self._timestamps[key]
+                logger.debug(f"Evicted old cache entry: {key}")
     
     def get(self, key: str) -> Any:
         """Get cached artifact by key."""
@@ -76,8 +76,10 @@ class ArtifactCache:
         if key in self._cache:
             # Update access time for LRU
             self._timestamps[key] = time.time()
+            logger.debug(f"Cache hit: {key}")
             return self._cache[key]
         
+        logger.debug(f"Cache miss: {key}")
         return None
     
     def set(self, key: str, value: Any) -> None:
@@ -122,7 +124,6 @@ class CachedArtifactLoader:
         # Try cache first
         cached_data = self.cache.get(cache_key)
         if cached_data is not None:
-            logger.debug(f"Cache hit for artifact: {artifact_name}")
             return cached_data
         
         # Load from disk with caching
@@ -130,7 +131,7 @@ class CachedArtifactLoader:
             with open(self.file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 self.cache.set(cache_key, data)
-                logger.debug(f"Cached artifact: {artifact_name} (size: {len(str(data))} bytes)")
+                logger.debug(f"Cached artifact: {artifact_name}")
                 return data
         except Exception as e:
             logger.error(f"Failed to load artifact {artifact_name}: {e}")
@@ -143,7 +144,6 @@ class CachedArtifactLoader:
         # Try cache first
         cached_data = self.cache.get(cache_key)
         if cached_data is not None:
-            logger.debug(f"Cache hit for artifact: {artifact_name}")
             return cached_data
         
         # Load from disk with caching
@@ -151,18 +151,18 @@ class CachedArtifactLoader:
             with open(self.file_path, 'r', encoding='utf-8') as f:
                 data = f.read()
                 self.cache.set(cache_key, data)
-                logger.debug(f"Cached artifact: {artifact_name} (size: {len(data)} bytes)")
+                logger.debug(f"Cached text artifact: {artifact_name}")
                 return data
         except Exception as e:
             logger.error(f"Failed to load artifact {artifact_name}: {e}")
-            return ""
+            return None
     
     def invalidate(self, run_id: str, artifact_name: str) -> None:
         """Invalidate cached artifact."""
         cache_key = f"{run_id}:{artifact_name}"
-        if cache_key in self._cache:
-            del self._cache[cache_key]
-            del self._timestamps[cache_key]
+        if cache_key in self.cache._cache:
+            del self.cache._cache[cache_key]
+            del self.cache._timestamps[cache_key]
             logger.debug(f"Invalidated cached artifact: {artifact_name}")
 
 

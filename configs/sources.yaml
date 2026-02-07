@@ -4,21 +4,49 @@ reddit_like_sources:
     templates:
       recent: https://news.ycombinator.com/newest
       top: https://news.ycombinator.com/best
+    recency_days: 7
+    recency_weight: 1.5
+    quality_weight: 1.3
   - name: Product Hunt
     url: https://www.producthunt.com/
     templates:
       recent: https://www.producthunt.com/
       top: https://www.producthunt.com/topics/launches
+    recency_days: 7
+    recency_weight: 1.4
+    quality_weight: 1.2
   - name: Indie Hackers
     url: https://www.indiehackers.com/
     templates:
       recent: https://www.indiehackers.com/posts
       top: https://www.indiehackers.com/posts?sort=top
+    recency_days: 14
+    recency_weight: 1.2
+    quality_weight: 1.1
   - name: r/Entrepreneur (web)
     url: https://www.reddit.com/r/Entrepreneur/
     templates:
       recent: https://www.reddit.com/r/Entrepreneur/new/
       top: https://www.reddit.com/r/Entrepreneur/top/?t=month
+    recency_days: 30
+    recency_weight: 1.0
+    quality_weight: 0.9
+  - name: BetaList
+    url: https://betalist.com/
+    templates:
+      recent: https://betalist.com/
+      top: https://betalist.com/trending
+    recency_days: 3
+    recency_weight: 1.8
+    quality_weight: 1.4
+  - name: AngelList Talent
+    url: https://angel.co/
+    templates:
+      recent: https://angel.co/job-market
+      top: https://angel.co/trending-startups
+    recency_days: 14
+    recency_weight: 1.3
+    quality_weight: 1.2
 
 pain_sources:
   - name: Reddit API r/SaaS

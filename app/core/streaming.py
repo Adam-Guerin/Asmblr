@@ -5,7 +5,7 @@ through streaming and chunked operations, reducing memory footprint.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, Iterator, Union
+from typing import Any, Dict, Iterator, List, Union
 import json
 import logging
 from pathlib import Path
@@ -33,7 +33,7 @@ class StreamingDataProcessor:
             return 0.0
         
         # Rough estimation: each item ~100 bytes + overhead
-        total_bytes = len(str(item)) * 100 for item in items
+        total_bytes = sum(len(str(item)) * 100 for item in items)
         return total_bytes / (1024 * 1024)  # Convert to MB
     
     def _should_stream(self, items: List[Any]) -> bool:

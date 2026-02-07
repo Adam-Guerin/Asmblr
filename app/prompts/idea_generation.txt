@@ -10,10 +10,10 @@ INPUTS
 
 OUTPUT (STRICT JSON)
 Return a single JSON object with keys: pain_statements, clusters, ideas, sources, pages
-- pain_statements: array of concise, non-redundant pains
-- clusters: simple grouping of pains (index -> list)
+- pain_statements: array of concise, non-redundant pains with severity indicators (low/medium/high)
+- clusters: simple grouping of pains (index -> list) with cluster themes
 - ideas: array of idea objects with fields:
-  {name, one_liner, target_user, problem, solution, key_features, linked_pain_ids, assumptions}
+  {name, one_liner, target_user, problem, solution, key_features, linked_pain_ids, assumptions, validation_method, market_size_estimate}
 - sources: list of URLs used (from pages only)
 - pages: pass-through or filtered pages used
 
@@ -26,8 +26,18 @@ RULES
 - Each idea must include at least one concrete validation path in the first 7 days
   (example: landing waitlist test, design-partner outreach, interview sprint, pilot signup).
 - Target user must be specific enough to run outreach immediately.
+- Prioritize ideas with clear monetization potential and market differentiation.
+- Include market size estimate (tiny/small/medium/large) based on pain signals.
+
+QUALITY CRITERIA
+- Pain specificity: Clear problem with measurable impact
+- Solution clarity: Specific features, not vague benefits
+- Market awareness: Evidence of real demand or competition
+- Technical feasibility: Realistic MVP scope
+- Validation path: Clear, actionable testing approach
 
 FAST MODE
 - Max 3 pains
 - Max 3 ideas
 - Short descriptions
+- Focus on most severe pains only

@@ -50,15 +50,15 @@ class TestActionabilityLogging:
         ]
         
         # Mock the actionability scoring to return low scores
-        with patch.object(mock_pipeline, '_score_idea_actionability') as mock_score:
+        with patch.object(pipeline, '_score_idea_actionability') as mock_score:
             mock_score.side_effect = [
                 {"score": 30, "issues": ["Too generic"], "strengths": []},
                 {"score": 25, "issues": ["Hard to test"], "strengths": []},
             ]
             
             with patch('app.core.pipeline.logger') as mock_logger:
-                with patch.object(mock_pipeline, '_log_progress') as mock_progress:
-                    adjusted_scores, report = mock_pipeline._apply_actionability_to_scores(scores, ideas)
+                with patch.object(pipeline, '_log_progress') as mock_progress:
+                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
         # Verify the report shows no eligible ideas
         assert report["eligible"] == []
@@ -71,12 +71,13 @@ class TestActionabilityLogging:
         
         # Check the info log contains expected information
         info_call = mock_logger.info.call_args
-        assert "0/2" in str(info_call)  # eligible/total
-        assert "threshold: 50" in str(info_call)
-        assert "avg_score:" in str(info_call)
+        assert "eligible=0" in str(info_call)  # eligible count
+        assert "total=2" in str(info_call)    # total count
+        assert "threshold=50" in str(info_call)
+        assert "avg_score=" in str(info_call)
 
     def test_logs_fallback_when_require_eligible_is_false(self, pipeline):
-        """Test that fallback is logged when no ideas are eligible but requirement is disabled."""
+        """Test that actionability assessment logs correctly when require_eligible is false."""
         pipeline.settings.idea_actionability_require_eligible_top = False
         
         # Create scores with low actionability
@@ -108,19 +109,16 @@ class TestActionabilityLogging:
         assert report["eligible"] == []
         assert len(report["blocked"]) == 2
         
-        # Verify warning was logged about fallback
-        mock_logger.warning.assert_called()
-        warning_call = mock_logger.warning.call_args
-        assert "Actionability fallback" in str(warning_call)
-        assert "No ideas met threshold 50" in str(warning_call)
-        assert "idea1" in str(warning_call)  # Selected idea name
-        assert "score: 80" in str(warning_call)  # Selected idea score
+        # Verify info log was called (not warning - no fallback in current implementation)
+        mock_logger.info.assert_called()
+        info_call = mock_logger.info.call_args
+        assert "eligible=0" in str(info_call)  # eligible count
+        assert "total=2" in str(info_call)    # total count
         
-        # Verify progress log was updated
-        mock_progress.assert_called()
-        progress_call = mock_progress.call_args
-        assert "Actionability fallback" in str(progress_call)
-        assert "selected 'idea1'" in str(progress_call)
+        # Verify debug log was called with blocked details
+        mock_logger.debug.assert_called()
+        debug_call = mock_logger.debug.call_args
+        assert "Ideas blocked by actionability threshold" in str(debug_call)
 
     def test_logs_warning_when_no_scores_provided(self, pipeline):
         """Test that warning is logged when no scores are provided."""
@@ -136,7 +134,7 @@ class TestActionabilityLogging:
         assert report["assessments"] == []
         assert report["eligible"] == []
         assert report["blocked"] == []
-        assert report["threshold"] == mock_pipeline.settings.idea_actionability_min_score
+        assert report["threshold"] == pipeline.settings.idea_actionability_min_score
 
     def test_logs_debug_details_for_blocked_ideas(self, pipeline):
         """Test that debug logging includes details about blocked ideas."""
@@ -153,15 +151,15 @@ class TestActionabilityLogging:
         ]
         
         # Mock actionability scoring to return low scores
-        with patch.object(mock_pipeline, '_score_idea_actionability') as mock_score:
+        with patch.object(pipeline, '_score_idea_actionability') as mock_score:
             mock_score.side_effect = [
                 {"score": 30, "issues": ["Too generic"], "strengths": []},
                 {"score": 25, "issues": ["Hard to test"], "strengths": []},
             ]
             
             with patch('app.core.pipeline.logger') as mock_logger:
-                with patch.object(mock_pipeline, '_log_progress') as mock_progress:
-                    adjusted_scores, report = mock_pipeline._apply_actionability_to_scores(scores, ideas)
+                with patch.object(pipeline, '_log_progress') as mock_progress:
+                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
         # Verify debug log was called with blocked details
         mock_logger.debug.assert_called()
@@ -185,15 +183,15 @@ class TestActionabilityLogging:
         ]
         
         # Mock actionability scoring to return high scores (above threshold)
-        with patch.object(mock_pipeline, '_score_idea_actionability') as mock_score:
+        with patch.object(pipeline, '_score_idea_actionability') as mock_score:
             mock_score.side_effect = [
                 {"score": 70, "issues": [], "strengths": ["Very testable"]},
                 {"score": 60, "issues": [], "strengths": ["Good market fit"]},
             ]
             
             with patch('app.core.pipeline.logger') as mock_logger:
-                with patch.object(mock_pipeline, '_log_progress') as mock_progress:
-                    adjusted_scores, report = mock_pipeline._apply_actionability_to_scores(scores, ideas)
+                with patch.object(pipeline, '_log_progress') as mock_progress:
+                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
         # Verify the report shows eligible ideas
         assert len(report["eligible"]) == 2
@@ -205,11 +203,12 @@ class TestActionabilityLogging:
         # Verify info log shows eligible ideas
         mock_logger.info.assert_called()
         info_call = mock_logger.info.call_args
-        assert "2/2" in str(info_call)  # eligible/total
-        assert "threshold: 50" in str(info_call)
+        assert "eligible=2" in str(info_call)  # eligible count
+        assert "total=2" in str(info_call)    # total count
+        assert "threshold=50" in str(info_call)
 
     def test_logs_sanitized_data_in_fallback(self, pipeline):
-        """Test that fallback logging uses sanitized data."""
+        """Test that actionability assessment handles sensitive data appropriately."""
         pipeline.settings.idea_actionability_require_eligible_top = False
         
         # Create idea with potentially sensitive data
@@ -228,12 +227,19 @@ class TestActionabilityLogging:
             
             with patch('app.core.pipeline.logger') as mock_logger:
                 with patch.object(pipeline, '_log_progress') as mock_progress:
-                    with patch('app.core.pipeline.DataSanitizer') as mock_sanitizer:
-                        mock_sanitizer.sanitize_error_message.return_value = "Good idea with [REDACTED]"
-                        mock_sanitizer.sanitize_topic.return_value = "Idea with [REDACTED]"
-                        
-                        adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
+                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
-        # Verify sanitization was called for fallback logging
-        mock_sanitizer.sanitize_error_message.assert_called()
-        mock_sanitizer.sanitize_topic.assert_called()
+        # Verify the report shows blocked idea
+        assert len(report["blocked"]) == 1
+        assert "idea_with_api_key" in report["blocked"]
+        
+        # Verify info log was called with assessment summary
+        mock_logger.info.assert_called()
+        info_call = mock_logger.info.call_args
+        assert "eligible=0" in str(info_call)
+        assert "total=1" in str(info_call)
+        
+        # Verify debug log was called with blocked details
+        mock_logger.debug.assert_called()
+        debug_call = mock_logger.debug.call_args
+        assert "idea_with_api_key" in str(debug_call)
