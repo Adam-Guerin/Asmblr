@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
-from typing import Iterable, Sequence
+from collections.abc import Sequence
 
 from loguru import logger
 

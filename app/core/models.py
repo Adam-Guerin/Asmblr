@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from typing import Any
 
 
 @dataclass
@@ -9,11 +9,11 @@ class Idea:
     target_user: str
     problem: str
     solution: str
-    key_features: List[str] = field(default_factory=list)
+    key_features: list[str] = field(default_factory=list)
     source_cluster: int | None = None
-    pain_ids: List[str] = field(default_factory=list)
-    sources: List[str] = field(default_factory=list)
-    hypotheses: List[str] = field(default_factory=list)
+    pain_ids: list[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
+    hypotheses: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -21,24 +21,24 @@ class IdeaScore:
     name: str
     score: int
     rationale: str
-    risks: List[str]
-    signals: Dict[str, Any] = field(default_factory=dict)
+    risks: list[str]
+    signals: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class RunResult:
     run_id: str
-    ideas: List[Idea]
-    scores: List[IdeaScore]
+    ideas: list[Idea]
+    scores: list[IdeaScore]
     top_idea: IdeaScore
-    artifacts: Dict[str, str]
+    artifacts: dict[str, str]
 
 
 @dataclass
 class SeedInputs:
     icp: str | None = None
-    pains: List[str] = field(default_factory=list)
-    competitors: List[str] = field(default_factory=list)
+    pains: list[str] = field(default_factory=list)
+    competitors: list[str] = field(default_factory=list)
     context: str | None = None
     theme: str | None = None
 

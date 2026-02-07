@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from app.core.config import Settings
-from app.core.critique import CritiqueException, run_devils_advocate
+from app.core.critique import run_devils_advocate
 from app.core.run_manager import RunManager
 
 

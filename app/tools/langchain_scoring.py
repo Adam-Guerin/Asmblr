@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List
+from typing import Any
 
 from langchain.tools import BaseTool
 from pydantic import BaseModel
@@ -14,8 +14,8 @@ from app.core.scoring import derive_signals, heuristic_score
 class ScoringArgs(BaseModel):
     """Arguments for scoring_engine tool."""
 
-    pain_statements: List[str]
-    ideas: List[Dict[str, Any]]
+    pain_statements: list[str]
+    ideas: list[dict[str, Any]]
     use_llm_judge: bool = True
     topic: str = ""
     market_profile: str | None = None
@@ -29,22 +29,33 @@ class ScoringEngineTool(BaseTool):
     description: str = "Score ideas (0-100) using heuristics and optional LLM judge. Returns JSON list of scores."
     args_schema: type[BaseModel] = ScoringArgs
 
-    def __init__(self, llm: LLMClient, judge_prompt: str) -> None:
+    def __init__(
+        self,
+        llm: LLMClient,
+        judge_prompt: str,
+        *,
+        primary_icp: str = "",
+        primary_icp_keywords: str = "",
+        icp_alignment_bonus_max: int = 0,
+    ) -> None:
         super().__init__()
         self._llm = llm
         self._judge_prompt = judge_prompt
+        self._primary_icp = primary_icp
+        self._primary_icp_keywords = primary_icp_keywords
+        self._icp_alignment_bonus_max = max(0, int(icp_alignment_bonus_max))
 
     def _run(
         self,
-        pain_statements: List[str],
-        ideas: List[Dict[str, Any]],
+        pain_statements: list[str],
+        ideas: list[dict[str, Any]],
         use_llm_judge: bool = True,
         topic: str = "",
         market_profile: str | None = None,
         use_calibration: bool = True,
     ) -> str:
         """Execute scoring and return JSON payload."""
-        scores: List[Dict[str, Any]] = []
+        scores: list[dict[str, Any]] = []
         for idea in ideas:
             signals = derive_signals(pain_statements)
             heuristic = heuristic_score(
@@ -54,6 +65,9 @@ class ScoringEngineTool(BaseTool):
                 idea=idea,
                 market_profile=market_profile,
                 use_calibration=use_calibration,
+                icp_focus=self._primary_icp,
+                icp_keywords=self._primary_icp_keywords,
+                icp_alignment_bonus_max=self._icp_alignment_bonus_max,
                 return_meta=True,
             )
             score, meta = heuristic if isinstance(heuristic, tuple) else (int(heuristic), {})
@@ -77,6 +91,7 @@ class ScoringEngineTool(BaseTool):
                         "market_profile": meta.get("market_profile"),
                         "adaptive_weights": meta.get("weights"),
                         "calibration": meta.get("calibration"),
+                        "icp_alignment": meta.get("icp_alignment"),
                     },
                 }
             )

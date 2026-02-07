@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable
+from collections.abc import Iterable
 
 
 def _parse_hex_color(value: str) -> tuple[int, int, int]:

@@ -75,6 +75,30 @@ docker compose up --build
 - Worker health: `GET http://localhost:8001/healthz`
 - Queue status: `GET /run/{run_id}/job`
 - Storage: `runs/` retention + `python -m app cleanup`
+- Production checklist: `python -m app doctor` (fails in prod mode if checklist is not green)
+
+## Production Mode Checklist
+
+Enable strict production checklist:
+- `PROD_MODE=true`
+- `REQUIRE_PROD_CHECKLIST=true`
+
+Required controls in prod mode:
+- `API_KEY` and `UI_PASSWORD` must be set
+- No dry-run on enabled channels:
+  - `PUBLISH_DRY_RUN=false` when `ENABLE_PUBLISHING=true`
+  - `ADS_DRY_RUN=false` when `ENABLE_ADS=true`
+  - `DEPLOY_DRY_RUN=false` when `ENABLE_DEPLOY=true`
+- Key rotation enforced (`ENFORCE_KEY_ROTATION=true` by default)
+
+Key rotation parameters:
+- `API_KEY_PREV`, `API_KEY_PREV_EXPIRES_AT` (ISO datetime)
+- `UI_PASSWORD_PREV`, `UI_PASSWORD_PREV_EXPIRES_AT` (ISO datetime)
+
+Behavior:
+- Previous keys/passwords are accepted only during their grace period.
+- Expired previous secrets are rejected by API/UI auth paths.
+- `/readyz` returns `503` in prod mode when checklist controls are failing.
 
 ## Self-healing Mode
 

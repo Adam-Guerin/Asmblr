@@ -88,3 +88,140 @@ def test_apply_learning_adjustment_prefers_matching_idea():
     second = next(item for item in adjusted if item.name == "Social Growth Bot")
     assert first.score > second.score
     assert first.signals["product_learning_adjustment"] > second.signals["product_learning_adjustment"]
+
+
+def test_adaptive_thresholds_relax_for_strong_segment(tmp_path):
+    settings = _prepare_settings(tmp_path)
+    settings.signal_quality_threshold = 45
+    settings.kill_threshold = 55
+    pipeline = VenturePipeline(settings)
+
+    feedback_path = settings.data_dir / "product_feedback.jsonl"
+    feedback_path.parent.mkdir(parents=True, exist_ok=True)
+    rows = [
+        {
+            "topic": "AI compliance automation for audit teams",
+            "learning_score": 82,
+            "confidence": 0.9,
+        },
+        {
+            "topic": "Compliance audit copilot for SMB teams",
+            "learning_score": 77,
+            "confidence": 0.85,
+        },
+        {
+            "topic": "Customer support chatbot",
+            "learning_score": 42,
+            "confidence": 0.6,
+        },
+    ]
+    feedback_path.write_text("\n".join(json.dumps(item) for item in rows) + "\n", encoding="utf-8")
+
+    adapted = pipeline._compute_adaptive_thresholds("Compliance automation for audit workflows")
+    assert adapted["segment_records"] >= 2
+    assert adapted["signal_quality_threshold"] <= 45
+    assert adapted["kill_threshold"] <= 55
+    assert "auto-adjusted" in adapted["notes"].lower()
+
+
+def test_adaptive_thresholds_keep_base_when_segment_evidence_is_thin(tmp_path):
+    settings = _prepare_settings(tmp_path)
+    settings.signal_quality_threshold = 45
+    settings.kill_threshold = 55
+    pipeline = VenturePipeline(settings)
+
+    feedback_path = settings.data_dir / "product_feedback.jsonl"
+    feedback_path.parent.mkdir(parents=True, exist_ok=True)
+    rows = [
+        {
+            "topic": "AI compliance automation for audit teams",
+            "learning_score": 35,
+            "confidence": 0.8,
+        }
+    ]
+    feedback_path.write_text("\n".join(json.dumps(item) for item in rows) + "\n", encoding="utf-8")
+
+    adapted = pipeline._compute_adaptive_thresholds("Compliance automation for audit workflows")
+    assert adapted["segment_records"] == 1
+    assert adapted["signal_quality_threshold"] == 45
+    assert adapted["kill_threshold"] == 55
+
+
+def test_historical_learning_penalizes_repeated_failure_pattern(tmp_path):
+    settings = _prepare_settings(tmp_path)
+    settings.learning_exploration_rate = 0.0
+    pipeline = VenturePipeline(settings)
+
+    feedback_path = settings.data_dir / "product_feedback.jsonl"
+    feedback_path.parent.mkdir(parents=True, exist_ok=True)
+    rows = [
+        {"topic": "Compliance automation assistant", "learning_score": 82, "confidence": 0.9},
+        {"topic": "Creator social scheduling bot", "learning_score": 32, "confidence": 0.85},
+    ]
+    feedback_path.write_text("\n".join(json.dumps(item) for item in rows) + "\n", encoding="utf-8")
+
+    failed_run_id = pipeline.manager.create_run("creator content bot")
+    pipeline.manager.write_artifact(failed_run_id, "abort_reason.md", "Weak retention and low activation from creator segment")
+    pipeline.manager.update_status(failed_run_id, "aborted")
+
+    ideas = [
+        Idea(
+            name="Compliance Copilot",
+            one_liner="Help audit teams",
+            target_user="Ops",
+            problem="Audit work is slow",
+            solution="Automate compliance evidence",
+            key_features=["compliance", "audit"],
+        ),
+        Idea(
+            name="Creator Bot",
+            one_liner="Schedule creator posts",
+            target_user="Creators",
+            problem="Content posting is hard",
+            solution="Automate social scheduling",
+            key_features=["creator", "social", "scheduling"],
+        ),
+    ]
+    scores = [
+        IdeaScore(name="Compliance Copilot", score=70, rationale="base", risks=[], signals={}),
+        IdeaScore(name="Creator Bot", score=70, rationale="base", risks=[], signals={}),
+    ]
+
+    memory = pipeline._build_historical_learning_memory("automation assistant", run_id="new_run")
+    adjusted = pipeline._apply_historical_learning_to_scores(
+        scores=scores,
+        ideas=ideas,
+        topic="automation assistant",
+        run_id="new_run",
+        memory=memory,
+    )
+    better = next(item for item in adjusted if item.name == "Compliance Copilot")
+    worse = next(item for item in adjusted if item.name == "Creator Bot")
+    assert better.score > worse.score
+    assert worse.signals["historical_failure_overlap"] >= better.signals["historical_failure_overlap"]
+
+
+def test_historical_learning_preserves_exploration_signal(tmp_path):
+    settings = _prepare_settings(tmp_path)
+    settings.learning_exploration_rate = 0.25
+    pipeline = VenturePipeline(settings)
+
+    idea = Idea(
+        name="Novel Workflow Miner",
+        one_liner="Find new pain clusters",
+        target_user="SMB teams",
+        problem="Teams miss hidden bottlenecks",
+        solution="Mine workflow telemetry",
+        key_features=["novel", "workflow", "telemetry"],
+    )
+    score = IdeaScore(name="Novel Workflow Miner", score=68, rationale="base", risks=[], signals={})
+    memory = pipeline._build_historical_learning_memory("workflow miner", run_id="r1")
+    adjusted = pipeline._apply_historical_learning_to_scores(
+        scores=[score],
+        ideas=[idea],
+        topic="workflow miner",
+        run_id="r1",
+        memory=memory,
+    )
+    assert "historical_exploration_rate" in adjusted[0].signals
+    assert adjusted[0].signals["historical_exploration_rate"] == 0.25

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict
 
 from app.loop.schemas import IterationVerdict
 
@@ -33,7 +32,7 @@ class LoopJudge:
         if not tests_pass and not dry_run:
             reasons.append('Tests failed.')
             status = 'aborted'
-        metrics: Dict[str, int | bool] = {
+        metrics: dict[str, int | bool] = {
             'iteration': iteration,
             'patch_lines': patch_lines,
             'total_patch_lines': total_lines,

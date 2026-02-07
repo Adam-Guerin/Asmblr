@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, List, Optional
+from collections.abc import Callable
 
 from app.core.config import Settings
 from app.core.llm import LLMClient, check_ollama
@@ -15,7 +15,7 @@ from app.loop.git_ops import GitOps
 from app.loop.judge import LoopJudge
 from app.loop.patcher import LoopPatcher
 from app.loop.planner import LoopPlanner
-from app.loop.schemas import IterationVerdict, LoopConfig, LoopPlan, PatchOutcome
+from app.loop.schemas import IterationVerdict, LoopConfig, LoopPlan
 from app.loop.verifier import LoopVerifier
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class LoopRunResult:
     run_id: str
     status: str
     iterations: int
-    verdict: Optional[IterationVerdict]
+    verdict: IterationVerdict | None
     run_dir: Path
 
 
@@ -35,15 +35,15 @@ class LoopRunner:
         self,
         settings: Settings,
         config: LoopConfig,
-        plan_llm: Optional[LLMClient] = None,
-        patch_llm: Optional[LLMClient] = None,
-        planner: Optional[LoopPlanner] = None,
-        patcher: Optional[LoopPatcher] = None,
-        applier: Optional[LoopApplier] = None,
-        verifier: Optional[LoopVerifier] = None,
-        judge: Optional[LoopJudge] = None,
-        git_ops: Optional[GitOps] = None,
-        approval_callback: Optional[Callable[[int], bool]] = None,
+        plan_llm: LLMClient | None = None,
+        patch_llm: LLMClient | None = None,
+        planner: LoopPlanner | None = None,
+        patcher: LoopPatcher | None = None,
+        applier: LoopApplier | None = None,
+        verifier: LoopVerifier | None = None,
+        judge: LoopJudge | None = None,
+        git_ops: GitOps | None = None,
+        approval_callback: Callable[[int], bool] | None = None,
     ) -> None:
         self.settings = settings
         self.config = config
@@ -73,7 +73,7 @@ class LoopRunner:
 
         try:
             working_root = self._preflight(loop_dir)
-        except LoopException as exc:
+        except LoopException:
             raise
 
         self._setup_components(working_root)
@@ -81,7 +81,7 @@ class LoopRunner:
         total_lines = 0
         iteration = 1
         handled_iterations = 0
-        last_verdict: Optional[IterationVerdict] = None
+        last_verdict: IterationVerdict | None = None
 
         while iteration <= self.config.max_iter:
             if self._time_exceeded(start_time):
@@ -312,7 +312,7 @@ class LoopRunner:
         iteration: int,
         apply_log: str,
         test_log: str,
-        files_touched: List[str],
+        files_touched: list[str],
         verdict: IterationVerdict,
         total_lines: int,
     ) -> None:

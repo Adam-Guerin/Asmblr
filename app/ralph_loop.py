@@ -5,7 +5,7 @@ import subprocess
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Tuple
+from typing import Any
 
 from app.core.config import Settings
 from app.core.llm import LLMClient
@@ -92,10 +92,10 @@ class RalphLoop:
                 return key
         raise RalphLoopError("PRD missing stories list (stories/userStories/tasks/items).")
 
-    def _select_story(self, prd: dict) -> Tuple[dict | None, int | None]:
+    def _select_story(self, prd: dict) -> tuple[dict | None, int | None]:
         key = self._stories_key(prd)
         stories = prd.get(key, [])
-        pending: List[Tuple[int, int, dict]] = []
+        pending: list[tuple[int, int, dict]] = []
         for idx, story in enumerate(stories):
             if story.get("passes") is True:
                 continue
@@ -138,7 +138,7 @@ class RalphLoop:
             return text.strip()
         return "\n".join(lines[-self.config.tail_lines :]).strip()
 
-    def _normalize_list(self, value: Any) -> List[str]:
+    def _normalize_list(self, value: Any) -> list[str]:
         if not value:
             return []
         if isinstance(value, list):

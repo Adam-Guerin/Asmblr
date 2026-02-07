@@ -4,14 +4,13 @@ import os
 import shlex
 import subprocess
 from pathlib import Path
-from typing import Tuple
 
 
 class LoopVerifier:
     def __init__(self, repo_root: Path) -> None:
         self.repo_root = repo_root
 
-    def run(self, command: str) -> Tuple[bool, str]:
+    def run(self, command: str) -> tuple[bool, str]:
         if not command:
             return True, 'Tests skipped (no command provided).'
         splitter = shlex.split(command, posix=(os.name != 'nt'))

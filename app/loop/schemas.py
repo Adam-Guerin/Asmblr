@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 
 @dataclass
@@ -16,14 +16,14 @@ class LoopConfig:
 
 @dataclass
 class LoopPlan:
-    steps: List[str]
+    steps: list[str]
     rationale: str
-    files_hint: List[str]
+    files_hint: list[str]
 
 
 @dataclass
 class PatchMetadata:
-    touched_files: List[str]
+    touched_files: list[str]
     line_count: int
 
 
@@ -36,5 +36,5 @@ class PatchOutcome:
 @dataclass
 class IterationVerdict:
     status: str
-    reasons: List[str]
-    metrics: Dict[str, Any]
+    reasons: list[str]
+    metrics: dict[str, Any]

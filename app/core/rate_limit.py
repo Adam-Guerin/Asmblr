@@ -3,7 +3,6 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from threading import Lock
-from typing import Dict
 
 
 @dataclass
@@ -17,7 +16,7 @@ class RateLimiter:
         self.rate_per_minute = max(0, int(rate_per_minute))
         self.burst = max(1, int(burst))
         self._lock = Lock()
-        self._buckets: Dict[str, Bucket] = {}
+        self._buckets: dict[str, Bucket] = {}
 
     def allow(self, key: str) -> bool:
         if self.rate_per_minute <= 0:

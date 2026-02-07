@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 from jinja2 import Environment, FileSystemLoader
 
 from app.core.llm import LLMClient
 
 
-def render_landing(template_dir: Path, payload: Dict[str, Any], output_dir: Path) -> None:
+def render_landing(template_dir: Path, payload: dict[str, Any], output_dir: Path) -> None:
     env = Environment(loader=FileSystemLoader(str(template_dir)))
     html_template = env.get_template("landing.html.j2")
     css_template = env.get_template("landing.css")
@@ -16,7 +16,7 @@ def render_landing(template_dir: Path, payload: Dict[str, Any], output_dir: Path
     (output_dir / "style.css").write_text(css_template.render(), encoding="utf-8")
 
 
-def generate_landing_copy(llm: LLMClient, prompt: str, fallback: Dict[str, Any]) -> Dict[str, Any]:
+def generate_landing_copy(llm: LLMClient, prompt: str, fallback: dict[str, Any]) -> dict[str, Any]:
     if llm.available():
         try:
             raw = llm.generate(prompt)
@@ -27,7 +27,7 @@ def generate_landing_copy(llm: LLMClient, prompt: str, fallback: Dict[str, Any])
     return fallback
 
 
-def generate_content_pack(llm: LLMClient, prompt: str, fallback: Dict[str, Any]) -> Dict[str, Any]:
+def generate_content_pack(llm: LLMClient, prompt: str, fallback: dict[str, Any]) -> dict[str, Any]:
     if llm.available():
         try:
             raw = llm.generate(prompt)
@@ -38,7 +38,7 @@ def generate_content_pack(llm: LLMClient, prompt: str, fallback: Dict[str, Any])
     return fallback
 
 
-def write_content_pack(output_dir: Path, pack: Dict[str, Any]) -> None:
+def write_content_pack(output_dir: Path, pack: dict[str, Any]) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "posts.md").write_text("\n\n".join(pack.get("posts", [])), encoding="utf-8")
     (output_dir / "hooks.md").write_text("\n".join(pack.get("hooks", [])), encoding="utf-8")
@@ -57,7 +57,7 @@ def write_content_pack(output_dir: Path, pack: Dict[str, Any]) -> None:
         (output_dir / "analytics_plan.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
 
-def default_landing_payload(product_name: str, fast_mode: bool = False) -> Dict[str, Any]:
+def default_landing_payload(product_name: str, fast_mode: bool = False) -> dict[str, Any]:
     if fast_mode:
         return {
             "product_name": product_name,
@@ -168,7 +168,7 @@ def default_landing_payload(product_name: str, fast_mode: bool = False) -> Dict[
     }
 
 
-def default_content_pack(product_name: str, fast_mode: bool = False) -> Dict[str, Any]:
+def default_content_pack(product_name: str, fast_mode: bool = False) -> dict[str, Any]:
     if fast_mode:
         return {
             "posts": [

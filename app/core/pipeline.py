@@ -1,12 +1,13 @@
 import json
-import shutil
 import os
 import math
 import time
+import random
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Dict, Any, Callable, Optional
+from typing import Any
+from collections.abc import Callable
 from urllib.parse import urlparse
 from urllib.parse import urlencode, urlsplit, urlunsplit
 import re
@@ -35,6 +36,55 @@ from app.signal_quality import compute_novelty_score, compute_signal_quality
 from app.project_build import ProjectBuilder
 from app.mvp.builder import MVPBuilder, MVPBuilderError
 from app.tools.repo_generator import generate_fastapi_skeleton
+from app.core.sanitizer import DataSanitizer
+from app.core.thresholds import (
+    IDEA_ACTIONABILITY_MIN_SCORE,
+    IDEA_ACTIONABILITY_ADJUSTMENT_MAX,
+    LEARNING_HISTORY_MAX_RUNS,
+    LEARNING_EXPLORATION_RATE,
+    KEYWORD_LIST_MAX_SIZE,
+    TOPIC_MIN_LENGTH,
+    TOPIC_MAX_LENGTH,
+    PAIN_SENTENCE_MIN_LENGTH,
+    PAIN_LIST_MAX_SIZE,
+    PAIN_KEYWORDS,
+    FAILURE_REASON_MAX_LENGTH,
+    TRACEBACK_HINT_MAX_LENGTH,
+    RECENT_FAILURES_COUNT,
+    PROJECT_NAME_MAX_LENGTH,
+    THEME_CLEAN_MAX_LENGTH,
+    ICP_ALIGNMENT_BONUS_MAX,
+)
+from app.core.exceptions import (
+    AsmblrException,
+    RunNotFoundError,
+    InvalidTopicError,
+    InvalidStateError,
+    PipelineStageError,
+    LLMUnavailableError,
+    ModelNotFoundError,
+    FileOperationError,
+    handle_file_operation_error,
+    convert_to_error_response,
+)
+from app.core.cache import (
+    get_cached_artifact_loader,
+    load_cached_json,
+    load_cached_text,
+    invalidate_cached_artifact,
+)
+from app.core.streaming import (
+    StreamingDataProcessor,
+    create_streaming_processor,
+    process_large_feedback_file,
+    process_large_historical_runs,
+)
+from app.core.cache import (
+    get_cached_artifact_loader,
+    load_cached_json,
+    load_cached_text,
+    invalidate_cached_artifact,
+)
 
 
 class VenturePipeline:
@@ -46,6 +96,10 @@ class VenturePipeline:
         self.active_general_model = settings.general_model
         self.active_code_model = settings.code_model
         self.rag = RAGPlaybookQA(settings.knowledge_dir)
+        
+        # Initialize product metrics
+        from app.core.product_metrics import init_product_metrics
+        init_product_metrics(settings.data_dir)
 
     def record_ollama_failure(self, run_id: str, exc: Exception, llm_summary: str | None = None) -> str:
         reason = f"Ollama check failed: {exc}"
@@ -60,15 +114,15 @@ class VenturePipeline:
         path = Path(__file__).resolve().parents[1] / "prompts" / f"{name}.txt"
         return path.read_text(encoding="utf-8")
 
-    def _parse_fallback_models(self, raw: str) -> List[str]:
+    def _parse_fallback_models(self, raw: str) -> list[str]:
         if not raw:
             return []
         return [item.strip() for item in raw.split(",") if item and item.strip()]
 
-    def _model_candidates(self) -> List[tuple[str, str]]:
+    def _model_candidates(self) -> list[tuple[str, str]]:
         general_models = [self.settings.general_model] + self._parse_fallback_models(self.settings.general_model_fallbacks)
         code_models = [self.settings.code_model] + self._parse_fallback_models(self.settings.code_model_fallbacks)
-        pairs: List[tuple[str, str]] = []
+        pairs: list[tuple[str, str]] = []
         for general_model in general_models:
             for code_model in code_models:
                 pair = (general_model, code_model)
@@ -85,8 +139,8 @@ class VenturePipeline:
             self.active_code_model = code_model
 
     def _ensure_llm_ready(self, run_id: str) -> None:
-        errors: List[str] = []
-        selected: Optional[tuple[str, str]] = None
+        errors: list[str] = []
+        selected: tuple[str, str] | None = None
         for general_model, code_model in self._model_candidates():
             try:
                 check_ollama(self.settings.ollama_base_url, [general_model, code_model])
@@ -119,6 +173,15 @@ class VenturePipeline:
         run_dir = Path(run["output_dir"]) if run else (self.settings.runs_dir / run_id)
         return run_dir / "failure_report.json"
 
+    def _sanitize_artifact_data(self, data: Any, artifact_type: str = "json") -> Any:
+        """Sanitize data before writing to artifacts."""
+        return DataSanitizer.sanitize_for_artifact(data, artifact_type)
+    
+    def _write_sanitized_json(self, run_id: str, filename: str, data: Any) -> None:
+        """Write sanitized JSON artifact."""
+        sanitized_data = self._sanitize_artifact_data(data, "json")
+        self.manager.write_json_atomic(run_id, filename, sanitized_data)
+
     def _record_failure_report(
         self,
         run_id: str,
@@ -139,7 +202,7 @@ class VenturePipeline:
             "run_id": run_id,
             "status": status,
             "stage": stage,
-            "reason": reason[:800],
+            "reason": reason[:FAILURE_REASON_MAX_LENGTH],
             "error_type": error_type,
             "retryable": retryable,
             "attempt": attempt,
@@ -147,15 +210,15 @@ class VenturePipeline:
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         if traceback_hint:
-            payload["traceback_hint"] = traceback_hint[:1200]
+            payload["traceback_hint"] = traceback_hint[:TRACEBACK_HINT_MAX_LENGTH]
         failures.append(payload)
         report = {
             "run_id": run_id,
             "status": status,
             "last_stage": stage,
-            "last_reason": reason[:800],
+            "last_reason": reason[:FAILURE_REASON_MAX_LENGTH],
             "updated_at": datetime.now(timezone.utc).isoformat(),
-            "stage_failures": failures[-50:],
+            "stage_failures": failures[-RECENT_FAILURES_COUNT:],
         }
         self.manager.write_json(run_id, "failure_report.json", report)
         lines = [
@@ -168,7 +231,7 @@ class VenturePipeline:
             "",
             "## Recent failures",
         ]
-        for item in report["stage_failures"][-10:]:
+        for item in report["stage_failures"][-RECENT_FAILURES_COUNT:]:
             lines.append(
                 f"- [{item.get('timestamp')}] stage={item.get('stage')} type={item.get('error_type')} "
                 f"attempt={item.get('attempt')}/{item.get('max_attempts')} retryable={item.get('retryable')} "
@@ -227,30 +290,30 @@ class VenturePipeline:
         if repo_dir.exists():
             return
         try:
-            project_name = (topic or "Launchpad").strip()[:80] or "Launchpad"
+            project_name = (topic or "Launchpad").strip()[:PROJECT_NAME_MAX_LENGTH] or "Launchpad"
             generate_fastapi_skeleton(repo_dir, project_name, minimal=True)
         except Exception as exc:
             self.manager.write_artifact(run_id, "repo_skeleton_error.md", str(exc))
 
     def _validate_topic(self, topic: str) -> str | None:
         cleaned = (topic or "").strip()
-        if len(cleaned) < 3 or len(cleaned) > 200:
+        if len(cleaned) < TOPIC_MIN_LENGTH or len(cleaned) > TOPIC_MAX_LENGTH:
             return "Topic must be between 3 and 200 characters."
         if any(ord(ch) < 32 for ch in cleaned):
             return "Topic contains control characters."
         return None
 
-    def _extract_pain_statements(self, pages: List[Dict[str, Any]]) -> List[str]:
-        pains: List[str] = []
+    def _extract_pain_statements(self, pages: list[dict[str, Any]]) -> list[str]:
+        pains: list[str] = []
         for page in pages:
             text = (page.get("text") or "").split(".")
             for sentence in text:
                 s = sentence.strip()
-                if len(s) < 20:
+                if len(s) < PAIN_SENTENCE_MIN_LENGTH:
                     continue
-                if any(token in s.lower() for token in ["pain", "problem", "struggle", "hard", "difficult", "need"]):
+                if any(token in s.lower() for token in PAIN_KEYWORDS):
                     pains.append(s)
-        return pains[:50]
+        return pains[:PAIN_LIST_MAX_SIZE]
 
     def _is_generic_pain(self, pain: str) -> bool:
         generic = [
@@ -262,7 +325,7 @@ class VenturePipeline:
         ]
         return any(g in pain.lower() for g in generic)
 
-    def _data_self_test(self, pages: List[Dict[str, Any]], pains: List[str]) -> Dict[str, Any]:
+    def _data_self_test(self, pages: list[dict[str, Any]], pains: list[str]) -> dict[str, Any]:
         texts = [p.get("text", "") for p in pages if p.get("text")]
         avg_len = int(sum(len(t) for t in texts) / max(1, len(texts)))
         domains = {urlparse(p.get("url", "")).netloc for p in pages if p.get("url")}
@@ -284,34 +347,53 @@ class VenturePipeline:
         run_id: str | None = None,
         seed_inputs: SeedInputs | None = None,
         resume: bool = False,
+        execution_profile: str | None = None,
     ) -> RunResult:
         seeds = seed_inputs or SeedInputs()
-        decision_signals: Dict[str, Any] = {}
-        decision_missing: List[str] = []
-        decision_hypotheses: List[str] = []
+        if not seeds.icp and (self.settings.primary_icp or "").strip():
+            seeds.icp = self.settings.primary_icp.strip()
+        decision_signals: dict[str, Any] = {}
+        decision_missing: list[str] = []
+        decision_hypotheses: list[str] = []
+        run_started_ts = time.time()
+        budget_warning_emitted = False
 
         if run_id is None:
             run_id = self.manager.create_run(topic)
+            # Record run start for product metrics
+            if PRODUCT_METRICS:
+                PRODUCT_METRICS.record_run_start(run_id)
         else:
             run_info = self.manager.get_run(run_id)
             if not run_info:
-                raise ValueError("Run not found")
+                raise RunNotFoundError(run_id)
 
         state = self.manager.get_state(run_id)
         if resume:
             if state and state.get("status") in ("completed", "killed", "aborted"):
-                raise ValueError(f"Run {run_id} already finalized with status {state.get('status')}")
+                raise InvalidStateError(
+                    operation="resume run",
+                    current_state=state.get("status", "unknown"),
+                    required_state="not finalized"
+                )
             if state and state.get("params"):
                 params = state["params"]
                 topic = params.get("topic", topic)
                 n_ideas = int(params.get("n_ideas", n_ideas))
                 fast_mode = bool(params.get("fast_mode", fast_mode))
+                execution_profile = params.get("execution_profile") or execution_profile
                 if seed_inputs is None:
                     seeds = self._seed_from_dict(params.get("seed_inputs", {}))
+        profile = self._resolve_execution_profile(execution_profile, fast_mode)
+        execution_profile = profile["name"]
+        if profile.get("force_fast_mode"):
+            fast_mode = True
+        n_ideas = min(int(n_ideas), int(profile["max_n_ideas"]))
         params_payload = {
             "topic": topic,
             "n_ideas": n_ideas,
             "fast_mode": fast_mode,
+            "execution_profile": execution_profile,
             "seed_inputs": self._seed_to_dict(seeds),
         }
         state = self.manager.init_state(run_id, params=params_payload)
@@ -319,21 +401,117 @@ class VenturePipeline:
         decision_hypotheses = self._describe_seed_hypotheses(seeds)
         if fast_mode:
             n_ideas = 3
+        adaptive_thresholds = self._compute_adaptive_thresholds(topic)
+        signal_quality_threshold = int(adaptive_thresholds.get("signal_quality_threshold", self.settings.signal_quality_threshold))
+        kill_threshold = int(adaptive_thresholds.get("kill_threshold", self.settings.kill_threshold))
+        original_max_sources = self.settings.max_sources
+        original_stage_retry_attempts = self.settings.stage_retry_attempts
+        self.settings.max_sources = int(profile["max_sources"])
+        self.settings.stage_retry_attempts = int(profile["stage_retry_attempts"])
+        self.general_llm.reset_usage()
+        self.code_llm.reset_usage()
+
+        def _budget_snapshot(phase: str) -> dict[str, Any]:
+            general_usage = self.general_llm.usage_snapshot()
+            code_usage = self.code_llm.usage_snapshot()
+            elapsed_sec = max(0.0, time.time() - run_started_ts)
+            token_est = int(general_usage.get("tokens_est", 0)) + int(code_usage.get("tokens_est", 0))
+            time_budget_sec = int(profile["time_budget_min"]) * 60
+            token_budget = int(profile["token_budget_est"])
+            return {
+                "run_id": run_id,
+                "phase": phase,
+                "profile": profile["name"],
+                "budget": {
+                    "time_budget_min": int(profile["time_budget_min"]),
+                    "time_budget_sec": time_budget_sec,
+                    "token_budget_est": token_budget,
+                },
+                "consumed": {
+                    "elapsed_sec": round(elapsed_sec, 2),
+                    "token_est": token_est,
+                    "llm_usage": {
+                        "general": general_usage,
+                        "code": code_usage,
+                    },
+                },
+                "over_budget": {
+                    "time": elapsed_sec > time_budget_sec,
+                    "token": token_est > token_budget,
+                },
+                "applied_overrides": {
+                    "max_sources": self.settings.max_sources,
+                    "stage_retry_attempts": self.settings.stage_retry_attempts,
+                    "max_n_ideas": int(profile["max_n_ideas"]),
+                },
+            }
+
+        def _record_budget(phase: str) -> None:
+            nonlocal budget_warning_emitted
+            snapshot = _budget_snapshot(phase)
+            
+            # Use atomic write for budget file to prevent race conditions
+            self.manager.write_json_atomic(run_id, "run_budget.json", snapshot)
+            
+            if not budget_warning_emitted and (snapshot["over_budget"]["time"] or snapshot["over_budget"]["token"]):
+                budget_warning_emitted = True
+                self._log_progress(
+                    run_id,
+                    (
+                        "Budget warning: "
+                        f"elapsed={snapshot['consumed']['elapsed_sec']}s/"
+                        f"{snapshot['budget']['time_budget_sec']}s, "
+                        f"tokens_est={snapshot['consumed']['token_est']}/"
+                        f"{snapshot['budget']['token_budget_est']}"
+                    ),
+                )
+
         self.manager.update_status(run_id, "running")
         self.manager.update_state(run_id, status="running")
         set_log_context(run_id=run_id)
-        self._log_progress(run_id, f"Run started (topic='{topic}')")
-        logger.info("Run {run_id} started", run_id=run_id)
+        self._log_progress(run_id, f"Run started (topic='{DataSanitizer.sanitize_topic(topic)}')")
+        self._log_progress(
+            run_id,
+            (
+                f"Execution profile={profile['name']} "
+                f"(time_budget={profile['time_budget_min']}m, token_budget_est={profile['token_budget_est']}, "
+                f"max_sources={profile['max_sources']}, max_n_ideas={profile['max_n_ideas']})"
+            ),
+        )
+        _record_budget("start")
+        self._log_progress(
+            run_id,
+            (
+                "Adaptive thresholds: "
+                f"signal_quality={signal_quality_threshold} (base {self.settings.signal_quality_threshold}), "
+                f"kill={kill_threshold} (base {self.settings.kill_threshold}), "
+                f"segment_records={adaptive_thresholds.get('segment_records', 0)}"
+            ),
+        )
+        logger.info("Run {run_id} started", run_id=DataSanitizer.sanitize_run_id(run_id))
         run_dir = self.settings.runs_dir / run_id
+        self.manager.write_json_atomic(run_id, "adaptive_thresholds.json", adaptive_thresholds)
+        decision_signals["primary_icp"] = self.settings.primary_icp
+        decision_signals["adaptive_thresholds"] = {
+            "signal_quality_threshold": signal_quality_threshold,
+            "kill_threshold": kill_threshold,
+            "segment_records": adaptive_thresholds.get("segment_records", 0),
+            "segment_weighted_learning_score": adaptive_thresholds.get("segment_weighted_learning_score"),
+            "global_records": adaptive_thresholds.get("global_records", 0),
+        }
+        decision_signals["execution_profile"] = {
+            "name": profile["name"],
+            "time_budget_min": profile["time_budget_min"],
+            "token_budget_est": profile["token_budget_est"],
+            "max_sources": profile["max_sources"],
+            "max_n_ideas": profile["max_n_ideas"],
+            "stage_retry_attempts": profile["stage_retry_attempts"],
+        }
         self._ensure_repo_skeleton(run_id, topic)
 
         topic_error = self._validate_topic(topic)
         if topic_error:
-            self.manager.update_status(run_id, "aborted")
-            self.manager.update_state(run_id, status="aborted")
-            self.manager.write_artifact(run_id, "abort_reason.md", topic_error)
-            self._log_progress(run_id, f"Abort: {topic_error}")
-            decision_missing.append(topic_error)
+            raise InvalidTopicError(topic, topic_error)
             self._write_decision_file(
                 run_id,
                 "ABORT",
@@ -342,6 +520,10 @@ class VenturePipeline:
                 decision_hypotheses,
                 decision_missing,
             )
+            _record_budget("topic_validation_abort")
+            self.settings.max_sources = original_max_sources
+            self.settings.stage_retry_attempts = original_stage_retry_attempts
+            clear_log_context()
             return RunResult(
                 run_id=run_id,
                 ideas=[],
@@ -400,10 +582,10 @@ class VenturePipeline:
 
             llm_check_path = run_dir / "llm_check.md"
             if not self._stage_complete(run_id, "llm_check") or not llm_check_path.exists():
-                llm_check: Dict[str, Any] = {"text_ok": False, "json_ok": False, "errors": []}
+                llm_check: dict[str, Any] = {"text_ok": False, "json_ok": False, "errors": []}
 
-                def _llm_check_action() -> Dict[str, Any]:
-                    payload: Dict[str, Any] = {"text_ok": False, "json_ok": False, "errors": []}
+                def _llm_check_action() -> dict[str, Any]:
+                    payload: dict[str, Any] = {"text_ok": False, "json_ok": False, "errors": []}
                     try:
                         text_resp = self.general_llm.generate("Return a short sentence: ok.")
                         payload["text_ok"] = bool(text_resp and isinstance(text_resp, str))
@@ -456,6 +638,7 @@ class VenturePipeline:
                             top_idea=IdeaScore(name="unknown", score=0, rationale=reason, risks=[], signals={}),
                             artifacts={},
                         )
+            _record_budget("llm_check")
 
             sources_path = self.settings.config_dir / "sources.yaml"
             try:
@@ -465,7 +648,7 @@ class VenturePipeline:
             except Exception:
                 data = {}
 
-            def _section(name: str) -> List[Dict[str, str]]:
+            def _section(name: str) -> list[dict[str, str]]:
                 items = []
                 for item in data.get(name, []):
                     if not isinstance(item, dict) or "name" not in item or "url" not in item:
@@ -502,14 +685,14 @@ class VenturePipeline:
                 topic=signal_topic,
                 fast_mode=fast_mode,
             )
-            pre_pages: List[Dict[str, Any]] = []
-            raw_pages: List[Dict[str, Any]] = []
-            structured_pains: List[Dict[str, Any]] = []
-            structured_result: Dict[str, Any] = {"pains": [], "rejected": []}
-            clusters: List[Dict[str, Any]] = []
-            opportunities: List[Dict[str, Any]] = []
-            novelty: Dict[str, Any] = {"novelty_score": 0, "breakdown": {}, "keywords": []}
-            signal_quality: Dict[str, Any] = {"score": 0, "breakdown": {}}
+            pre_pages: list[dict[str, Any]] = []
+            raw_pages: list[dict[str, Any]] = []
+            structured_pains: list[dict[str, Any]] = []
+            structured_result: dict[str, Any] = {"pains": [], "rejected": []}
+            clusters: list[dict[str, Any]] = []
+            opportunities: list[dict[str, Any]] = []
+            novelty: dict[str, Any] = {"novelty_score": 0, "breakdown": {}, "keywords": []}
+            signal_quality: dict[str, Any] = {"score": 0, "breakdown": {}}
             if pain_sources:
                 if self._stage_complete(run_id, "signal_engine"):
                     raw_pages, pre_pages = self._load_signal_pages(run_dir)
@@ -522,17 +705,18 @@ class VenturePipeline:
                     raw_pages = signal_output.raw_pages
                     pre_pages = signal_output.deduped_pages
                     self._log_progress(run_id, f"Signal engine: collected {len(pre_pages)} unique pages")
+                _record_budget("signal_engine")
                 if self._stage_complete(run_id, "pain_structuring"):
                     structured_result = self._load_json_artifact(run_dir / "pains_structured.json") or structured_result
                     structured_pains = structured_result.get("pains", [])
                     clusters_payload = self._load_json_artifact(run_dir / "pain_clusters.json") or {}
                     clusters = clusters_payload.get("clusters", [])
                     opportunities_payload = self._load_json_artifact(run_dir / "opportunities_structured.json") or {}
-                    opportunities = opportunities_payload.get("opportunities", [])
-                    novelty = self._load_json_artifact(run_dir / "novelty_score.json") or novelty
-                    signal_quality = self._load_json_artifact(run_dir / "signal_quality.json") or signal_quality
+                    opportunities = opportunities_payload.get("items", [])
+                    novelty = self._load_json_artifact(run_dir / "novelty_score.json") or 0
+                    signal_quality = self._load_json_artifact(run_dir / "signal_quality.json") or {"score": 0}
                 else:
-                    def _pain_structuring_action() -> Dict[str, Any]:
+                    def _pain_structuring_action() -> dict[str, Any]:
                         local_structured = extract_structured_pains(pre_pages)
                         local_structured_pains = local_structured["pains"]
                         self.manager.write_json(run_id, "pains_structured.json", local_structured)
@@ -582,7 +766,7 @@ class VenturePipeline:
                 self.manager.write_json(run_id, "signal_quality.json", signal_quality)
                 self.manager.write_json(run_id, "novelty_score.json", novelty)
 
-            pre_competitor_pages: List[Dict[str, Any]] = []
+            pre_competitor_pages: list[dict[str, Any]] = []
             competitor_pages_path = run_dir / "competitor_pages.json"
             if competitor_sources:
                 if self._stage_complete(run_id, "competitor_scrape") and competitor_pages_path.exists():
@@ -680,7 +864,7 @@ class VenturePipeline:
                 )
 
             competitor_candidates = self._derive_competitors_from_pages(pre_competitor_pages)
-            icp = seeds.icp or self._infer_icp_from_pains(validated_pains["validated"]) or "unknown"
+            icp = seeds.icp or self.settings.primary_icp or self._infer_icp_from_pains(validated_pains["validated"]) or "unknown"
             data_source = {
                 "pages": "real" if pre_pages else "fallback",
                 "pains": "real" if validated_texts else "fallback",
@@ -688,11 +872,14 @@ class VenturePipeline:
                 "seeds": "seed" if seeds.has_any() else "none",
             }
 
+            # Rule: Automatically propose collection actions for unknown critical fields
+            self._propose_collection_actions_for_unknown_fields(run_id, data_source, topic, decision_missing)
+
             gate = PreRunGate(
                 min_pages=self.settings.min_pages,
                 min_pains=self.settings.min_pains,
                 min_competitors=self.settings.min_competitors,
-                min_signal_quality=self.settings.signal_quality_threshold,
+                min_signal_quality=signal_quality_threshold,
             )
             gate_result = gate.evaluate(
                 pre_pages,
@@ -724,7 +911,7 @@ class VenturePipeline:
                     artifacts={},
                 )
 
-            crew_outputs: Dict[str, Any] = {}
+            crew_outputs: dict[str, Any] = {}
             crew_outputs_path = run_dir / "crew_outputs.json"
             if self._stage_complete(run_id, "crew_pipeline") and crew_outputs_path.exists():
                 crew_outputs = self._load_json_artifact(crew_outputs_path) or {}
@@ -747,8 +934,9 @@ class VenturePipeline:
                         validated_pains=validated_texts,
                     ),
                 )
-                self.manager.write_json(run_id, "crew_outputs.json", crew_outputs)
+                self._write_sanitized_json(run_id, "crew_outputs.json", crew_outputs)
                 self._log_progress(run_id, "CrewAI: pipeline finished")
+            _record_budget("crew_pipeline")
             research = crew_outputs.get("research", {})
             analysis = crew_outputs.get("analysis", {})
             product = crew_outputs.get("product", {})
@@ -794,7 +982,7 @@ class VenturePipeline:
                     artifacts={},
                 )
 
-            scores: List[IdeaScore] = []
+            scores: list[IdeaScore] = []
             for item in analysis.get("scores", []):
                 scores.append(
                     IdeaScore(
@@ -814,9 +1002,100 @@ class VenturePipeline:
                 "adjustment": learning_profile.get("adjustment", 0),
             }
             scores = self._apply_product_learning_to_scores(scores, ideas, learning_profile)
+            
+            # Build historical learning memory with error handling
+            try:
+                historical_learning = self._build_historical_learning_memory(topic, run_id=run_id)
+                decision_signals["historical_learning"] = {
+                    "feedback_records": historical_learning.get("feedback_records", 0),
+                    "finalized_runs": historical_learning.get("finalized_runs", 0),
+                    "success_keywords": historical_learning.get("success_keywords", [])[:8],
+                    "failure_keywords": historical_learning.get("failure_keywords", [])[:8],
+                    "exploration_rate": historical_learning.get("exploration_rate", 0.0),
+                }
+                scores = self._apply_historical_learning_to_scores(
+                    scores=scores,
+                    ideas=ideas,
+                    topic=topic,
+                    run_id=run_id,
+                    memory=historical_learning,
+                )
+                self._write_sanitized_json(run_id, "historical_learning.json", historical_learning)
+            except Exception as e:
+                # Fallback behavior if historical learning fails
+                logger.error("Historical learning failed: {error}", error=DataSanitizer.sanitize_error_message(e))
+                self._log_progress(
+                    run_id,
+                    f"Historical learning failed ({DataSanitizer.sanitize_error_message(e)[:100]}...), using default learning behavior"
+                )
+                decision_signals["historical_learning"] = {
+                    "feedback_records": 0,
+                    "finalized_runs": 0,
+                    "success_keywords": [],
+                    "failure_keywords": [],
+                    "exploration_rate": float(self.settings.learning_exploration_rate),
+                    "error": DataSanitizer.sanitize_error_message(e),
+                }
+                # Continue with original scores without historical learning adjustments
+            scores, actionability_report = self._apply_actionability_to_scores(scores, ideas)
+            self.manager.write_json(run_id, "idea_actionability.json", actionability_report)
+            decision_signals["actionability"] = {
+                "threshold": actionability_report.get("threshold"),
+                "eligible_count": len(actionability_report.get("eligible") or []),
+                "blocked_count": len(actionability_report.get("blocked") or []),
+            }
 
             if scores:
-                top = max(scores, key=lambda item: item.score)
+                threshold = int(actionability_report.get("threshold", self.settings.idea_actionability_min_score))
+                eligible_scores = [
+                    score
+                    for score in scores
+                    if int(((score.signals or {}).get("actionability") or {}).get("score", 100)) >= threshold
+                ]
+                if eligible_scores:
+                    top = max(eligible_scores, key=lambda item: item.score)
+                else:
+                    if self.settings.idea_actionability_require_eligible_top:
+                        reason = (
+                            "No actionable idea passed threshold "
+                            f"{threshold}. Refine inputs and rerun with tighter pains/ICP."
+                        )
+                        self.manager.update_status(run_id, "aborted")
+                        self.manager.write_artifact(run_id, "abort_reason.md", reason)
+                        self._log_progress(run_id, "Abort: no actionable idea candidate")
+                        decision_missing.append("No actionable idea candidate")
+                        self._write_decision_file(
+                            run_id,
+                            "ABORT",
+                            reason,
+                            decision_signals,
+                            decision_hypotheses,
+                            decision_missing,
+                        )
+                        return RunResult(
+                            run_id=run_id,
+                            ideas=ideas,
+                            scores=scores,
+                            top_idea=IdeaScore(name="unknown", score=0, rationale=reason, risks=[], signals={}),
+                            artifacts={},
+                        )
+                    top = max(scores, key=lambda item: item.score)
+                    decision_missing.append("No idea met actionability threshold; selected best available candidate.")
+                    # Log warning about fallback to non-actionable idea
+                    logger.warning(
+                        "Actionability fallback: No ideas met threshold {threshold}, "
+                        "selected highest-scoring idea '{idea_name}' with score {score}. "
+                        "This may indicate issues with idea generation or actionability assessment.",
+                        threshold=threshold,
+                        idea_name=top.name,
+                        score=top.score
+                    )
+                    self._log_progress(
+                        run_id,
+                        f"Actionability fallback: No ideas met threshold {threshold}, "
+                        f"selected '{top.name}' (score: {top.score}) as best available candidate. "
+                        "Consider refining inputs or checking idea generation quality."
+                    )
             else:
                 top_item = analysis.get("top_idea") or {"name": "unknown", "score": 0, "rationale": ""}
                 top = IdeaScore(
@@ -848,7 +1127,7 @@ class VenturePipeline:
                 min_pages=self.settings.min_pages,
                 min_pains=self.settings.min_pains,
                 min_competitors=self.settings.min_competitors,
-                min_signal_quality=self.settings.signal_quality_threshold,
+                min_signal_quality=signal_quality_threshold,
             )
             gate_result = gate.evaluate(
                 pages,
@@ -987,6 +1266,9 @@ class VenturePipeline:
                             "fast_mode": fast_mode,
                         }
                     )
+                    # Record landing page creation for product metrics
+                    if PRODUCT_METRICS:
+                        PRODUCT_METRICS.record_landing_created(run_id)
 
                 content_dir = Path(growth.get("content_dir") or (self.settings.runs_dir / run_id / "content_pack"))
                 content_pack = growth.get("content_pack") or default_content_pack(brand_name, fast_mode=fast_mode)
@@ -1020,16 +1302,25 @@ class VenturePipeline:
                 )
                 self.manager.write_artifact(run_id, "market_report.md", f"Data source: {data_source_summary}\n\n{market_report}")
                 self.manager.complete_stage(run_id, "artifacts")
+                
+                # Generate Validation Sprint output if execution profile requires it
+                if profile.get("output_mode") == "execution_focused":
+                    self._log_progress(run_id, "Generating Validation Sprint execution-focused output...")
+                    validation_output = self._generate_validation_sprint_output(
+                        run_id, topic, top, validated_texts, competitor_candidates
+                    )
+                    self._log_progress(run_id, f"Validation Sprint output generated: hypothesis, A/B test, landing, outreach messages, KPIs")
+            _record_budget("artifacts")
 
             run_dir = self.settings.runs_dir / run_id
             pre_confidence = compute_pre_artifact_confidence(run_dir, settings=self.settings)
             if (
                 decision_source == "real"
                 and gate_result.ok
-                and pre_confidence["score"] < self.settings.kill_threshold
+                and pre_confidence["score"] < kill_threshold
             ):
                 reason = (
-                    f"Kill: confidence {pre_confidence['score']} below threshold {self.settings.kill_threshold} despite real data."
+                    f"Kill: confidence {pre_confidence['score']} below threshold {kill_threshold} despite real data."
                 )
                 self.manager.update_status(run_id, "killed")
                 self.manager.write_artifact(run_id, "kill_reason.md", reason)
@@ -1073,6 +1364,7 @@ class VenturePipeline:
                     "generated_at": datetime.utcnow().isoformat(),
                 }
                 self.manager.write_json(run_id, "mvp_scope.json", scope_payload)
+            _record_budget("post_mvp_scope")
 
             checklist_path = run_dir / "launch_checklist.md"
             if not checklist_path.exists():
@@ -1113,7 +1405,7 @@ class VenturePipeline:
                         )
                         self.manager.complete_stage(run_id, "mvp_cycles")
                     except MVPBuilderError as exc:
-                        logger.warning("MVP builder failed for run {run_id}: {err}", run_id=run_id, err=exc)
+                        logger.warning("MVP builder failed for run {run_id}: {err}", run_id=DataSanitizer.sanitize_run_id(run_id), err=DataSanitizer.sanitize_error_message(exc))
                         self.manager.write_artifact(run_id, "mvp_build_error.md", str(exc))
                         self._log_progress(run_id, "MVP cycles: failed")
 
@@ -1178,6 +1470,9 @@ class VenturePipeline:
                     self.manager.begin_stage(run_id, "deploy")
                     try:
                         deploy_run(self.settings, run_id)
+                        # Record MVP publication for product metrics
+                        if PRODUCT_METRICS:
+                            PRODUCT_METRICS.record_mvp_published(run_id)
                     except Exception as exc:
                         self.manager.write_artifact(run_id, "deploy_error.md", str(exc))
                     self.manager.complete_stage(run_id, "deploy")
@@ -1212,7 +1507,7 @@ class VenturePipeline:
                 self.manager.complete_stage(run_id, "secrets_guard")
 
             self.manager.update_status(run_id, "completed")
-            logger.info("Run {run_id} completed", run_id=run_id)
+            logger.info("Run {run_id} completed", run_id=DataSanitizer.sanitize_run_id(run_id))
             self._log_progress(run_id, "Run completed")
             decision_hypotheses.extend(self._derive_hypotheses_from_pains(validated_pains["validated"]))
             reason = "Run completed with PASS and validated decision artifacts."
@@ -1226,22 +1521,34 @@ class VenturePipeline:
             )
             self._write_ship_summary(run_id)
             self.manager.complete_stage(run_id, "decision")
+            _record_budget("decision")
             return RunResult(run_id=run_id, ideas=ideas, scores=scores, top_idea=top, artifacts={})
         except Exception as exc:
             self.manager.update_status(run_id, "failed")
-            logger.exception("Run {run_id} failed: {err}", run_id=run_id, err=exc)
-            self._log_progress(run_id, f"Run failed: {exc}")
+            logger.exception("Run {run_id} failed: {err}", run_id=DataSanitizer.sanitize_run_id(run_id), err=DataSanitizer.sanitize_error_message(exc))
+            self._log_progress(run_id, f"Run failed: {DataSanitizer.sanitize_error_message(exc)}")
             state = self.manager.get_state(run_id) or {}
             self._record_failure_report(
                 run_id,
                 status="failed",
                 stage=str(state.get("stage") or "unknown"),
-                reason=str(exc),
+                reason=DataSanitizer.sanitize_error_message(exc),
                 error_type=exc.__class__.__name__,
                 retryable=False,
             )
             raise
         finally:
+            try:
+                final_status = (self.manager.get_run(run_id) or {}).get("status") or "unknown"
+                self.manager.write_json(
+                    run_id,
+                    "run_budget.json",
+                    {**_budget_snapshot("final"), "final_status": final_status},
+                )
+            except Exception:
+                pass
+            self.settings.max_sources = original_max_sources
+            self.settings.stage_retry_attempts = original_stage_retry_attempts
             clear_log_context()
 
     def _log_progress(self, run_id: str, message: str) -> None:
@@ -1476,7 +1783,7 @@ class VenturePipeline:
     def _generate_distribution_assets(
         self,
         run_id: str,
-        brand: Dict[str, Any],
+        brand: dict[str, Any],
         top: IdeaScore,
         landing_dir: Path,
         content_dir: Path,
@@ -1608,7 +1915,7 @@ class VenturePipeline:
         if txt_lines:
             self.manager.write_artifact(run_id, "distribution/posts.txt", "\n".join(txt_lines).rstrip() + "\n")
 
-    def _generate_outreach_assets(self, run_id: str, brand: Dict[str, Any], top: IdeaScore) -> None:
+    def _generate_outreach_assets(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> None:
         run_dir = self.settings.runs_dir / run_id
         dist_dir = run_dir / "distribution"
         dist_dir.mkdir(parents=True, exist_ok=True)
@@ -1670,7 +1977,7 @@ class VenturePipeline:
             md_lines.append(f"  - Link: {item.get('link', '')}")
         self.manager.write_artifact(run_id, "distribution/outreach.md", "\n".join(md_lines).rstrip() + "\n")
 
-    def _build_public_url(self, brand: Dict[str, Any]) -> str:
+    def _build_public_url(self, brand: dict[str, Any]) -> str:
         if self.settings.public_base_url:
             return self.settings.public_base_url.rstrip("/")
         domain = self.settings.public_base_domain.strip()
@@ -1702,7 +2009,7 @@ class VenturePipeline:
         )
         return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
-    def _generate_videos(self, run_id: str, brand: Dict[str, Any], top: IdeaScore) -> None:
+    def _generate_videos(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> None:
         run_dir = self.settings.runs_dir / run_id
         dist_dir = run_dir / "distribution"
         videos_dir = dist_dir / "videos"
@@ -1946,7 +2253,7 @@ class VenturePipeline:
 
         result_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
-    def _generate_ads(self, run_id: str, brand: Dict[str, Any], top: IdeaScore) -> None:
+    def _generate_ads(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> None:
         run_dir = self.settings.runs_dir / run_id
         dist_dir = run_dir / "distribution"
         dist_dir.mkdir(parents=True, exist_ok=True)
@@ -2100,7 +2407,7 @@ class VenturePipeline:
 
         self.manager.write_json(run_id, "distribution/ads_publish.json", results)
 
-    def _generate_hosting_assets(self, run_id: str, brand: Dict[str, Any]) -> None:
+    def _generate_hosting_assets(self, run_id: str, brand: dict[str, Any]) -> None:
         run_dir = self.settings.runs_dir / run_id
         hosting_dir = run_dir / "hosting"
         hosting_dir.mkdir(parents=True, exist_ok=True)
@@ -2270,9 +2577,9 @@ class VenturePipeline:
         except Exception:
             return None
 
-    def _load_signal_pages(self, run_dir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-        raw_pages: List[Dict[str, Any]] = []
-        deduped_pages: List[Dict[str, Any]] = []
+    def _load_signal_pages(self, run_dir: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        raw_pages: list[dict[str, Any]] = []
+        deduped_pages: list[dict[str, Any]] = []
         raw_payload = self._load_json_artifact(run_dir / "raw_pages.json") or {}
         deduped_payload = self._load_json_artifact(run_dir / "pages_deduped.json") or {}
         raw_pages = list(raw_payload.get("pages") or [])
@@ -2280,7 +2587,7 @@ class VenturePipeline:
         deduped_pages = [group.get("canonical") for group in groups if group.get("canonical")]
         return raw_pages, deduped_pages
 
-    def _seed_to_dict(self, seeds: SeedInputs) -> Dict[str, Any]:
+    def _seed_to_dict(self, seeds: SeedInputs) -> dict[str, Any]:
         return {
             "icp": seeds.icp,
             "pains": list(seeds.pains),
@@ -2289,7 +2596,7 @@ class VenturePipeline:
             "theme": seeds.theme,
         }
 
-    def _seed_from_dict(self, payload: Dict[str, Any] | None) -> SeedInputs:
+    def _seed_from_dict(self, payload: dict[str, Any] | None) -> SeedInputs:
         payload = payload or {}
         return SeedInputs(
             icp=payload.get("icp"),
@@ -2302,10 +2609,10 @@ class VenturePipeline:
     def _build_market_report(
         self,
         topic: str,
-        pains: List[str],
-        competitors: List[Dict[str, Any]],
-        pages: List[Dict[str, Any]],
-        collected_pages: List[Dict[str, Any]],
+        pains: list[str],
+        competitors: list[dict[str, Any]],
+        pages: list[dict[str, Any]],
+        collected_pages: list[dict[str, Any]],
     ) -> str:
         citations = "\n".join([f"- {p['url']}" for p in pages if p.get("url")])
         collected = "\n".join([f"- {p['url']}" for p in collected_pages if p.get("url")])
@@ -2327,7 +2634,7 @@ class VenturePipeline:
             f"## Sources (LLM referenced)\n{citations or 'Unknown'}\n"
         )
 
-    def _generate_prd(self, top: IdeaScore, ideas: List[Idea], topic: str) -> str:
+    def _generate_prd(self, top: IdeaScore, ideas: list[Idea], topic: str) -> str:
         rag_context = self.rag.query("PRD guidance")
         prompt = self._load_prompt("prd_writer") + "\n\nIdea:\n" + json.dumps(top.__dict__, indent=2)
         if rag_context:
@@ -2380,7 +2687,7 @@ class VenturePipeline:
             "- Create feedback loop and iterate\n"
         )
 
-    def _normalize_brand_payload(self, payload: Dict[str, Any], default_name: str) -> Dict[str, Any]:
+    def _normalize_brand_payload(self, payload: dict[str, Any], default_name: str) -> dict[str, Any]:
         brand = dict(payload or {})
         name = (brand.get("project_name") or "").strip() or default_name
         brand["project_name"] = name
@@ -2429,7 +2736,7 @@ class VenturePipeline:
             ]
         return brand
 
-    def _build_brand_markdown(self, brand: Dict[str, Any]) -> str:
+    def _build_brand_markdown(self, brand: dict[str, Any]) -> str:
         palette = "\n".join(
             f"- {item.get('name', 'Color')}: {item.get('hex', '')} ({item.get('use', '')})"
             for item in brand.get("color_palette", [])
@@ -2450,7 +2757,7 @@ class VenturePipeline:
             f"## Usage Notes\n{usage_notes}\n"
         )
 
-    def _build_logo_prompt(self, brand: Dict[str, Any], top: IdeaScore) -> str:
+    def _build_logo_prompt(self, brand: dict[str, Any], top: IdeaScore) -> str:
         palette = brand.get("logo_palette") or [item.get("hex") for item in brand.get("color_palette", [])]
         palette = [c for c in palette if c][:3]
         palette_text = ", ".join(palette) if palette else "black, white, accent"
@@ -2462,7 +2769,7 @@ class VenturePipeline:
             f"project: {brand.get('project_name', top.name)}."
         )
 
-    def _generate_logo_assets(self, run_id: str, brand: Dict[str, Any], top: IdeaScore) -> None:
+    def _generate_logo_assets(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> None:
         run_dir = self.settings.runs_dir / run_id
         logo_prompt = brand.get("logo_prompt") or self._build_logo_prompt(brand, top)
         self.manager.write_artifact(run_id, "logo_prompt.txt", logo_prompt)
@@ -2499,7 +2806,7 @@ class VenturePipeline:
             self.manager.write_artifact(run_id, "logo_error.md", str(exc))
             self.manager.write_artifact(run_id, "logo.svg", brand.get("logo_svg", ""))
 
-    def _extract_stack_from_tech(self, tech: Dict[str, Any], tech_spec: str) -> str:
+    def _extract_stack_from_tech(self, tech: dict[str, Any], tech_spec: str) -> str:
         stack_candidate = ""
         if isinstance(tech, dict):
             stack_candidate = tech.get("stack", "")
@@ -2517,8 +2824,8 @@ class VenturePipeline:
                 return clean
         return "Next.js frontend + FastAPI backend + SQLite"
 
-    def _describe_seed_hypotheses(self, seeds: SeedInputs) -> List[str]:
-        hypotheses: List[str] = []
+    def _describe_seed_hypotheses(self, seeds: SeedInputs) -> list[str]:
+        hypotheses: list[str] = []
         if seeds.theme:
             hypotheses.append(f"Theme seed: {seeds.theme}")
         if seeds.icp:
@@ -2544,12 +2851,12 @@ class VenturePipeline:
         }
         self.manager.write_json(run_id, "seed_context.json", payload)
 
-    def _validate_pains(self, pains: List[str]) -> Dict[str, Any]:
+    def _validate_pains(self, pains: list[str]) -> dict[str, Any]:
         actor_keywords = ["team", "teams", "users", "founders", "operators", "business", "companies", "startup"]
         context_keywords = ["when", "while", "during", "after", "before", "in", "at", "within", "on"]
         difficulty_keywords = ["struggle", "hard", "problem", "need", "pain", "friction", "bottleneck", "difficult"]
-        validated: List[Dict[str, str]] = []
-        rejected: List[Dict[str, str]] = []
+        validated: list[dict[str, str]] = []
+        rejected: list[dict[str, str]] = []
         seen: set[str] = set()
         count = 0
         for raw in pains:
@@ -2586,14 +2893,14 @@ class VenturePipeline:
             )
         return {"validated": validated, "rejected": rejected}
 
-    def _derive_hypotheses_from_pains(self, validated_pains: List[Dict[str, Any]]) -> List[str]:
+    def _derive_hypotheses_from_pains(self, validated_pains: list[dict[str, Any]]) -> list[str]:
         return [
             f"{pain['id']} validated: {pain['text']}"
             for pain in validated_pains[:3]
         ]
 
-    def _derive_competitors_from_pages(self, pages: List[Dict[str, Any]]) -> List[Dict[str, str]]:
-        competitors: List[Dict[str, str]] = []
+    def _derive_competitors_from_pages(self, pages: list[dict[str, Any]]) -> list[dict[str, str]]:
+        competitors: list[dict[str, str]] = []
         seen: set[str] = set()
         for page in pages:
             url = page.get("url")
@@ -2606,15 +2913,15 @@ class VenturePipeline:
             competitors.append({"product_name": domain, "url": url})
         return competitors
 
-    def _infer_icp_from_pains(self, validated_pains: List[Dict[str, Any]]) -> str | None:
+    def _infer_icp_from_pains(self, validated_pains: list[dict[str, Any]]) -> str | None:
         for pain in validated_pains:
             actor = pain.get("actor")
             if actor:
                 return actor
         return None
 
-    def _match_pain_ids(self, text: str, validated_pains: List[Dict[str, Any]]) -> List[str]:
-        matches: List[str] = []
+    def _match_pain_ids(self, text: str, validated_pains: list[dict[str, Any]]) -> list[str]:
+        matches: list[str] = []
         if not text:
             return matches
         text_lower = text.lower()
@@ -2626,12 +2933,12 @@ class VenturePipeline:
 
     def _build_traceable_ideas(
         self,
-        idea_dicts: List[Dict[str, Any]],
-        validated_pains: List[Dict[str, Any]],
-        pages: List[Dict[str, Any]],
+        idea_dicts: list[dict[str, Any]],
+        validated_pains: list[dict[str, Any]],
+        pages: list[dict[str, Any]],
         seeds: SeedInputs,
-    ) -> List[Idea]:
-        ideas: List[Idea] = []
+    ) -> list[Idea]:
+        ideas: list[Idea] = []
         page_urls = [page.get("url") for page in pages if page.get("url")]
         unique_sources = list(dict.fromkeys(page_urls))
         for raw in idea_dicts:
@@ -2662,12 +2969,234 @@ class VenturePipeline:
                 ideas.append(idea)
         return ideas
 
+    def _text_missing_or_unknown(self, value: Any) -> bool:
+        text = str(value or "").strip().lower()
+        return text in {"", "unknown", "n/a", "none", "null", "tbd", "todo"}
+
+    def _score_idea_actionability(self, idea: Idea) -> dict[str, Any]:
+        score = 50
+        signals: dict[str, Any] = {"issues": [], "strengths": []}
+        generic_phrases = (
+            "save time",
+            "improve efficiency",
+            "increase productivity",
+            "streamline workflow",
+            "all-in-one",
+            "for everyone",
+            "any business",
+            "one-click",
+            "revolutionary",
+            "game-changing",
+        )
+        action_verbs = (
+            "test",
+            "validate",
+            "launch",
+            "ship",
+            "interview",
+            "outreach",
+            "onboard",
+            "measure",
+            "deploy",
+            "automate",
+        )
+        testability_markers = (
+            "landing",
+            "waitlist",
+            "demo",
+            "pilot",
+            "trial",
+            "signup",
+            "email",
+            "linkedin",
+            "reddit",
+            "ads",
+            "7 day",
+            "14 day",
+            "week",
+        )
+        if self._text_missing_or_unknown(idea.target_user):
+            score -= 18
+            signals["issues"].append("target_user missing/unknown")
+        else:
+            score += 10
+            signals["strengths"].append("target_user specified")
+        if self._text_missing_or_unknown(idea.problem) or len(idea.problem.strip()) < 20:
+            score -= 16
+            signals["issues"].append("problem too vague")
+        else:
+            score += 10
+            signals["strengths"].append("problem is concrete")
+        if self._text_missing_or_unknown(idea.solution) or len(idea.solution.strip()) < 20:
+            score -= 16
+            signals["issues"].append("solution too vague")
+        else:
+            score += 10
+            signals["strengths"].append("solution is concrete")
+
+        features = [item.strip() for item in (idea.key_features or []) if str(item).strip()]
+        if 2 <= len(features) <= 6:
+            score += 10
+            signals["strengths"].append("feature scope is focused")
+        elif len(features) == 1:
+            score += 4
+            signals["issues"].append("feature scope too thin")
+        elif len(features) == 0:
+            score -= 12
+            signals["issues"].append("key_features missing")
+        else:
+            score -= 6
+            signals["issues"].append("feature scope too broad")
+
+        text = " ".join(
+            [
+                idea.name,
+                idea.one_liner,
+                idea.target_user,
+                idea.problem,
+                idea.solution,
+                " ".join(features),
+            ]
+        ).lower()
+
+        generic_hits = [phrase for phrase in generic_phrases if phrase in text]
+        if generic_hits:
+            penalty = min(24, 6 * len(generic_hits))
+            score -= penalty
+            signals["issues"].append(f"generic messaging ({', '.join(generic_hits[:3])})")
+        else:
+            score += 4
+            signals["strengths"].append("messaging not generic")
+
+        action_hits = [verb for verb in action_verbs if verb in text]
+        if action_hits:
+            score += 8
+            signals["strengths"].append("contains execution verbs")
+        else:
+            score -= 8
+            signals["issues"].append("missing execution verbs")
+
+        testability_hits = [token for token in testability_markers if token in text]
+        if testability_hits:
+            score += 12
+            signals["strengths"].append("has testable GTM markers")
+        else:
+            score -= 10
+            signals["issues"].append("no clear test channel/format")
+
+        if any(ch.isdigit() for ch in text):
+            score += 4
+            signals["strengths"].append("includes measurable/time-bound detail")
+        else:
+            signals["issues"].append("missing measurable/time-bound detail")
+
+        final_score = max(0, min(100, int(round(score))))
+        signals["score"] = final_score
+        signals["generic_hits"] = generic_hits
+        signals["action_hits"] = action_hits
+        signals["testability_hits"] = testability_hits
+        return signals
+
+    def _apply_actionability_to_scores(
+        self,
+        scores: list[IdeaScore],
+        ideas: list[Idea],
+    ) -> tuple[list[IdeaScore], dict[str, Any]]:
+        if not scores:
+            logger.warning("Actionability assessment: No scores provided, returning empty results")
+            return scores, {"assessments": [], "eligible": [], "blocked": [], "threshold": self.settings.idea_actionability_min_score}
+
+        adjust_cap = max(0, min(IDEA_ACTIONABILITY_ADJUSTMENT_MAX, int(self.settings.idea_actionability_adjustment_max)))
+        threshold = max(0, min(100, int(self.settings.idea_actionability_min_score)))
+        idea_map = {idea.name: idea for idea in ideas}
+        assessments: list[dict[str, Any]] = []
+        assessment_by_name: dict[str, dict[str, Any]] = {}
+        for idea in ideas:
+            item = self._score_idea_actionability(idea)
+            payload = {"name": idea.name, **item}
+            assessments.append(payload)
+            assessment_by_name[idea.name] = payload
+
+        adjusted_scores: list[IdeaScore] = []
+        eligible: list[str] = []
+        blocked: list[str] = []
+        for score in scores:
+            assessment = assessment_by_name.get(score.name)
+            if not assessment:
+                adjusted_scores.append(score)
+                continue
+            actionability_score = int(assessment.get("score", 0))
+            delta = int(round(((actionability_score - 50) / 50.0) * adjust_cap))
+            new_score = max(0, min(100, score.score + delta))
+            signals = dict(score.signals or {})
+            signals["actionability"] = {
+                "score": actionability_score,
+                "delta": delta,
+                "threshold": threshold,
+                "issues": assessment.get("issues", []),
+                "strengths": assessment.get("strengths", []),
+                "testability_hits": assessment.get("testability_hits", []),
+            }
+            risks = list(score.risks or [])
+            rationale = score.rationale or ""
+            rationale = (
+                f"{rationale} (Actionability {actionability_score}/100, adjusted {delta:+d}.)".strip()
+            )
+            if actionability_score >= threshold:
+                eligible.append(score.name)
+            else:
+                blocked.append(score.name)
+                risks.append("Low actionability: idea remains generic or hard to test quickly.")
+            adjusted_scores.append(
+                IdeaScore(
+                    name=score.name,
+                    score=new_score,
+                    rationale=rationale,
+                    risks=risks,
+                    signals=signals,
+                )
+            )
+
+        report = {
+            "threshold": threshold,
+            "adjustment_cap": adjust_cap,
+            "assessments": assessments,
+            "eligible": eligible,
+            "blocked": blocked,
+        }
+        
+        # Log summary of actionability assessment for debugging
+        if len(assessments) > 0:
+            avg_actionability = sum(a.get("score", 0) for a in assessments) / len(assessments)
+            logger.info(
+                "Actionability assessment completed: {eligible}/{total} ideas eligible "
+                "(threshold: {threshold}, avg_score: {avg_score:.1f})",
+                eligible=len(eligible),
+                total=len(assessments),
+                threshold=threshold,
+                avg_score=avg_actionability
+            )
+            
+            # Log details about blocked ideas for debugging
+            if blocked and len(blocked) > 0:
+                blocked_details = [
+                    f"{name}({assessment_by_name[name]['score']})"
+                    for name in blocked
+                    if name in assessment_by_name
+                ]
+                logger.debug(
+                    "Ideas blocked by actionability threshold: {blocked_details}",
+                    blocked_details=", ".join(blocked_details)
+                )
+        
+        return adjusted_scores, report
+
     def _compute_market_signal_score(
         self,
-        pages: List[Dict[str, Any]],
-        validated_pains: List[Dict[str, Any]],
+        pages: list[dict[str, Any]],
+        validated_pains: list[dict[str, Any]],
         settings: Settings,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         source_ids = {
             (page.get("url") or page.get("source") or "").strip()
             for page in pages
@@ -2709,7 +3238,7 @@ class VenturePipeline:
         activated_users: int | None = None,
         window_days: int | None = None,
         notes: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         run = self.manager.get_run(run_id)
         if not run:
             raise ValueError("Run not found")
@@ -2777,7 +3306,7 @@ class VenturePipeline:
         visitors: int | None,
         signups: int | None,
         activated_users: int | None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         benchmarks = {
             "ctr_landing_pct": 2.0,
             "signup_rate_pct": 8.0,
@@ -2792,7 +3321,7 @@ class VenturePipeline:
         activation_score = _component(activation_pct, benchmarks["activation_rate_pct"])
         raw_score = 0.30 * ctr_score + 0.35 * signup_score + 0.35 * activation_score
 
-        sample_factors: List[float] = []
+        sample_factors: list[float] = []
         if visitors is not None:
             sample_factors.append(min(1.0, visitors / 400.0))
         if signups is not None:
@@ -2816,17 +3345,17 @@ class VenturePipeline:
     def _feedback_records_path(self) -> Path:
         return self.settings.data_dir / "product_feedback.jsonl"
 
-    def _append_feedback_record(self, payload: Dict[str, Any]) -> None:
+    def _append_feedback_record(self, payload: dict[str, Any]) -> None:
         path = self._feedback_records_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(payload, ensure_ascii=True) + "\n")
 
-    def _load_feedback_records(self) -> List[Dict[str, Any]]:
+    def _load_feedback_records(self) -> list[dict[str, Any]]:
         path = self._feedback_records_path()
         if not path.exists():
             return []
-        records: List[Dict[str, Any]] = []
+        records: list[dict[str, Any]] = []
         for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
             line = line.strip()
             if not line:
@@ -2842,7 +3371,274 @@ class VenturePipeline:
     def _topic_tokens(self, text: str) -> set[str]:
         return {token for token in re.findall(r"[a-z0-9]+", (text or "").lower()) if len(token) >= 3}
 
-    def _build_product_learning_profile(self, topic: str) -> Dict[str, Any]:
+    def _token_similarity(self, left: set[str], right: set[str]) -> float:
+        if not left or not right:
+            return 0.0
+        overlap = len(left & right)
+        denom = max(len(left), len(right), 1)
+        return overlap / denom
+
+    def _resolve_execution_profile(self, requested_profile: str | None, fast_mode: bool) -> dict[str, Any]:
+        profile_key = (requested_profile or "").strip().lower()
+        if not profile_key:
+            profile_key = "quick" if fast_mode else "standard"
+        profiles: dict[str, dict[str, Any]] = {
+            "quick": {
+                "name": "quick",
+                "time_budget_min": 12,
+                "token_budget_est": 18000,
+                "max_sources": 3,
+                "max_n_ideas": 3,
+                "stage_retry_attempts": 1,
+                "force_fast_mode": True,
+            },
+            "standard": {
+                "name": "standard",
+                "time_budget_min": 35,
+                "token_budget_est": 60000,
+                "max_sources": 8,
+                "max_n_ideas": 10,
+                "stage_retry_attempts": 2,
+                "force_fast_mode": False,
+            },
+            "deep": {
+                "name": "deep",
+                "time_budget_min": 75,
+                "token_budget_est": 140000,
+                "max_sources": 12,
+                "max_n_ideas": 20,
+                "stage_retry_attempts": 3,
+                "force_fast_mode": False,
+            },
+            "validation_sprint": {
+                "name": "validation_sprint",
+                "time_budget_min": 15,
+                "token_budget_est": 25000,
+                "max_sources": 5,
+                "max_n_ideas": 1,
+                "stage_retry_attempts": 1,
+                "force_fast_mode": True,
+                "output_mode": "execution_focused",
+            },
+        }
+        selected = profiles.get(profile_key, profiles["standard"]).copy()
+        selected["max_sources"] = max(1, int(selected["max_sources"]))
+        selected["max_n_ideas"] = max(1, int(selected["max_n_ideas"]))
+        selected["stage_retry_attempts"] = max(1, int(selected["stage_retry_attempts"]))
+        return selected
+
+    def _build_historical_learning_memory(self, topic: str, run_id: str | None = None) -> dict[str, Any]:
+        try:
+            feedback_records = self._load_feedback_records()
+        except Exception as e:
+            logger.warning("Failed to load feedback records for historical learning: {error}", error=DataSanitizer.sanitize_error_message(e))
+            feedback_records = []
+        
+        try:
+            finalized_runs = [r for r in self.manager.list_runs() if r.get("status") in {"completed", "aborted", "killed", "failed"}]
+        except Exception as e:
+            logger.warning("Failed to load finalized runs for historical learning: {error}", error=DataSanitizer.sanitize_error_message(e))
+            finalized_runs = []
+        
+        if run_id:
+            finalized_runs = [r for r in finalized_runs if r.get("id") != run_id]
+        
+        try:
+            max_runs = max(1, int(self.settings.learning_history_max_runs))
+        except Exception:
+            max_runs = 10  # Default fallback
+        finalized_runs = finalized_runs[:max_runs]
+
+        success_counter: Counter[str] = Counter()
+        failure_counter: Counter[str] = Counter()
+        success_topic_sets: list[set[str]] = []
+        failure_topic_sets: list[set[str]] = []
+        reasons: list[str] = []
+
+        for record in feedback_records[-max_runs:]:
+            try:
+                learning_score = float(record.get("learning_score"))
+                confidence = max(0.0, min(1.0, float(record.get("confidence", 0.0))))
+            except Exception:
+                continue
+            try:
+                tokens = self._topic_tokens(str(record.get("topic", "")))
+            except Exception:
+                continue
+            if not tokens:
+                continue
+            weight = max(0.2, 0.4 + 0.6 * confidence)
+            if learning_score >= 60:
+                for token in tokens:
+                    success_counter[token] += weight
+                success_topic_sets.append(tokens)
+            elif learning_score <= 45:
+                for token in tokens:
+                    failure_counter[token] += weight
+                failure_topic_sets.append(tokens)
+
+        for run in finalized_runs:
+            try:
+                run_topic_tokens = self._topic_tokens(str(run.get("topic", "")))
+            except Exception:
+                continue
+            if not run_topic_tokens:
+                continue
+            status = str(run.get("status") or "")
+            output_dir = Path(run.get("output_dir") or "")
+            if status in {"aborted", "failed", "killed"}:
+                for token in run_topic_tokens:
+                    failure_counter[token] += 0.35
+                failure_topic_sets.append(run_topic_tokens)
+                try:
+                    reason_path = output_dir / ("kill_reason.md" if status == "killed" else "abort_reason.md")
+                    reason_text = self._load_text_artifact(reason_path) or ""
+                    if reason_text:
+                        reasons.append(reason_text[:220])
+                        for token in self._topic_tokens(reason_text):
+                            failure_counter[token] += 0.15
+                except Exception:
+                    # If we can't load reason files, continue without them
+                    pass
+            elif status == "completed":
+                for token in run_topic_tokens:
+                    success_counter[token] += 0.25
+                success_topic_sets.append(run_topic_tokens)
+
+        try:
+            exploration_rate = max(0.0, min(0.6, float(self.settings.learning_exploration_rate)))
+        except Exception:
+            exploration_rate = 0.3  # Default fallback
+
+        return {
+            "topic": topic,
+            "feedback_records": len(feedback_records),
+            "finalized_runs": len(finalized_runs),
+            "success_keywords": [token for token, _ in success_counter.most_common(40)],
+            "failure_keywords": [token for token, _ in failure_counter.most_common(40)],
+            "success_topic_sets": [sorted(list(tokens)) for tokens in success_topic_sets[:60]],
+            "failure_topic_sets": [sorted(list(tokens)) for tokens in failure_topic_sets[:60]],
+            "recent_failure_reasons": reasons[-10:],
+            "exploration_rate": exploration_rate,
+        }
+
+    def _apply_historical_learning_to_scores(
+        self,
+        scores: list[IdeaScore],
+        ideas: list[Idea],
+        topic: str,
+        run_id: str,
+        memory: dict[str, Any],
+    ) -> list[IdeaScore]:
+        if not scores:
+            return scores
+        
+        try:
+            idea_map = {idea.name: idea for idea in ideas}
+            success_keywords = set(memory.get("success_keywords") or [])
+            failure_keywords = set(memory.get("failure_keywords") or [])
+            success_sets = [set(item) for item in (memory.get("success_topic_sets") or []) if isinstance(item, list)]
+            
+            try:
+                exploration_rate = max(0.0, min(0.6, float(memory.get("exploration_rate", 0.0))))
+            except Exception:
+                exploration_rate = 0.3  # Default fallback
+            
+            rng = random.Random(f"{run_id}:{topic}:historical-learning")
+            
+            try:
+                success_bonus_cap = max(1, int(self.settings.learning_success_bonus_max))
+            except Exception:
+                success_bonus_cap = 5  # Default fallback
+            
+            try:
+                failure_penalty_cap = max(1, int(self.settings.learning_failure_penalty_max))
+            except Exception:
+                failure_penalty_cap = 5  # Default fallback
+            
+            try:
+                novelty_bonus_cap = max(0, int(self.settings.learning_novelty_bonus_max))
+            except Exception:
+                novelty_bonus_cap = 3  # Default fallback
+            
+            try:
+                clone_penalty_start = max(0.45, min(0.95, float(self.settings.learning_clone_penalty_start)))
+            except Exception:
+                clone_penalty_start = 0.7  # Default fallback
+
+            adjusted: list[IdeaScore] = []
+            for score in scores:
+                try:
+                    idea = idea_map.get(score.name)
+                    idea_text = (
+                        " ".join(
+                            [
+                                score.name,
+                                getattr(idea, "one_liner", "") if idea else "",
+                                getattr(idea, "problem", "") if idea else "",
+                                getattr(idea, "solution", "") if idea else "",
+                                " ".join(getattr(idea, "key_features", []) if idea else []),
+                            ]
+                        )
+                    ).strip()
+                    tokens = self._topic_tokens(idea_text)
+                    if not tokens:
+                        adjusted.append(score)
+                        continue
+
+                    success_overlap = len(tokens & success_keywords) / max(1, min(len(tokens), max(1, len(success_keywords))))
+                    failure_overlap = len(tokens & failure_keywords) / max(1, min(len(tokens), max(1, len(failure_keywords))))
+                    max_success_similarity = max((self._token_similarity(tokens, ref) for ref in success_sets), default=0.0)
+                    novelty = max(0.0, 1.0 - max_success_similarity)
+                    clone_penalty = 0.0
+                    if max_success_similarity > clone_penalty_start:
+                        clone_penalty = ((max_success_similarity - clone_penalty_start) / max(0.05, 1.0 - clone_penalty_start)) * 4.0
+
+                    exploration_jitter = rng.uniform(-1.0, 1.0) * exploration_rate * (0.5 + novelty * 0.7)
+                    success_bonus = success_overlap * success_bonus_cap
+                    failure_penalty = failure_overlap * failure_penalty_cap
+                    novelty_bonus = novelty * novelty_bonus_cap
+                    total_delta = int(round(success_bonus + novelty_bonus - failure_penalty - clone_penalty + exploration_jitter * 4.0))
+                    total_delta = max(-failure_penalty_cap, min(success_bonus_cap + novelty_bonus_cap, total_delta))
+
+                    signals = dict(score.signals or {})
+                    signals.update(
+                        {
+                            "historical_learning_adjustment": total_delta,
+                            "historical_success_overlap": round(success_overlap, 3),
+                            "historical_failure_overlap": round(failure_overlap, 3),
+                            "historical_novelty": round(novelty, 3),
+                            "historical_clone_similarity": round(max_success_similarity, 3),
+                            "historical_exploration_rate": round(exploration_rate, 3),
+                        }
+                    )
+                    rationale = score.rationale
+                    if total_delta != 0:
+                        rationale = (
+                            f"{score.rationale} "
+                            f"(Historical learning {total_delta:+d}: avoids repeated failures while preserving exploration.)"
+                        ).strip()
+                    adjusted.append(
+                        IdeaScore(
+                            name=score.name,
+                            score=max(0, min(100, score.score + total_delta)),
+                            rationale=rationale,
+                            risks=score.risks,
+                            signals=signals,
+                        )
+                    )
+                except Exception as e:
+                    # If processing individual score fails, keep original score
+                    logger.warning("Failed to apply historical learning to score {score}: {error}", score=score.name, error=DataSanitizer.sanitize_error_message(e))
+                    adjusted.append(score)
+
+            return adjusted
+        except Exception as e:
+            # If entire function fails, return original scores
+            logger.error("Historical learning score adjustment failed: {error}", error=DataSanitizer.sanitize_error_message(e))
+            return scores
+
+    def _build_product_learning_profile(self, topic: str) -> dict[str, Any]:
         records = self._load_feedback_records()
         if not records:
             return {
@@ -2899,7 +3695,81 @@ class VenturePipeline:
             "keywords": keywords,
         }
 
-    def _idea_token_fit(self, idea: Idea | None, profile_keywords: List[str]) -> float:
+    def _compute_adaptive_thresholds(self, topic: str) -> dict[str, Any]:
+        base_signal = int(self.settings.signal_quality_threshold)
+        base_kill = int(self.settings.kill_threshold)
+        payload: dict[str, Any] = {
+            "topic": topic,
+            "signal_quality_threshold_base": base_signal,
+            "kill_threshold_base": base_kill,
+            "signal_quality_threshold": base_signal,
+            "kill_threshold": base_kill,
+            "segment_records": 0,
+            "global_records": 0,
+            "segment_weighted_learning_score": None,
+            "segment_weighted_confidence": None,
+            "segment_keywords": [],
+            "notes": "No qualifying feedback segment. Using base thresholds.",
+        }
+
+        records = self._load_feedback_records()
+        payload["global_records"] = len(records)
+        if not records:
+            return payload
+
+        topic_tokens = self._topic_tokens(topic)
+        weighted_score = 0.0
+        weighted_conf = 0.0
+        total_weight = 0.0
+        segment_keywords: Counter[str] = Counter()
+        matched_records = 0
+
+        for record in records:
+            try:
+                learning_score = float(record.get("learning_score"))
+                confidence = float(record.get("confidence", 0.0))
+            except Exception:
+                continue
+            if learning_score < 0 or learning_score > 100:
+                continue
+            record_topic = str(record.get("topic", ""))
+            record_tokens = self._topic_tokens(record_topic)
+            overlap = len(topic_tokens & record_tokens)
+            denom = max(len(topic_tokens), len(record_tokens), 1)
+            similarity = overlap / denom
+            if similarity < 0.2:
+                continue
+            confidence = max(0.0, min(1.0, confidence))
+            weight = max(0.05, (0.25 + 0.75 * confidence) * (0.40 + 0.60 * similarity))
+            weighted_score += learning_score * weight
+            weighted_conf += confidence * weight
+            total_weight += weight
+            matched_records += 1
+            segment_keywords.update(record_tokens)
+
+        payload["segment_records"] = matched_records
+        if matched_records < 2 or total_weight <= 0:
+            payload["notes"] = "Insufficient segment evidence (<2 matched feedback records). Using base thresholds."
+            return payload
+
+        segment_score = weighted_score / total_weight
+        segment_conf = weighted_conf / total_weight
+        payload["segment_weighted_learning_score"] = round(segment_score, 2)
+        payload["segment_weighted_confidence"] = round(segment_conf, 3)
+        payload["segment_keywords"] = [token for token, _ in segment_keywords.most_common(8)]
+
+        # Strong segments with high learning score relax thresholds; weak segments tighten them.
+        pressure = max(-1.0, min(1.0, (segment_score - 50.0) / 50.0))
+        evidence = max(0.0, min(1.0, min(1.0, matched_records / 6.0) * (0.50 + 0.50 * segment_conf)))
+        delta = int(round(pressure * 10 * evidence))
+        adjusted_signal = max(25, min(80, base_signal - delta))
+        adjusted_kill = max(40, min(85, base_kill - delta))
+        payload["signal_quality_threshold"] = int(adjusted_signal)
+        payload["kill_threshold"] = int(adjusted_kill)
+        payload["notes"] = "Thresholds auto-adjusted from topic-segment launch feedback."
+        return payload
+
+    def _idea_token_fit(self, idea: Idea | None, profile_keywords: list[str]) -> float:
         if not idea or not profile_keywords:
             return 1.0
         profile_set = set(profile_keywords)
@@ -2920,17 +3790,17 @@ class VenturePipeline:
 
     def _apply_product_learning_to_scores(
         self,
-        scores: List[IdeaScore],
-        ideas: List[Idea],
-        profile: Dict[str, Any],
-    ) -> List[IdeaScore]:
+        scores: list[IdeaScore],
+        ideas: list[Idea],
+        profile: dict[str, Any],
+    ) -> list[IdeaScore]:
         base_adjustment = int(profile.get("adjustment", 0))
         if not scores or base_adjustment == 0:
             return scores
 
         idea_map = {idea.name: idea for idea in ideas}
         keywords = list(profile.get("keywords") or [])
-        adjusted_scores: List[IdeaScore] = []
+        adjusted_scores: list[IdeaScore] = []
         for score in scores:
             idea = idea_map.get(score.name)
             fit = self._idea_token_fit(idea, keywords)
@@ -2964,8 +3834,8 @@ class VenturePipeline:
     def _apply_product_learning_to_top_idea(
         self,
         top: IdeaScore,
-        ideas: List[Idea],
-        profile: Dict[str, Any],
+        ideas: list[Idea],
+        profile: dict[str, Any],
     ) -> IdeaScore:
         base_adjustment = int(profile.get("adjustment", 0))
         if base_adjustment == 0:
@@ -3001,9 +3871,9 @@ class VenturePipeline:
         run_id: str,
         status: str,
         reason: str,
-        signals: Dict[str, Any],
-        hypotheses: List[str],
-        missing: List[str],
+        signals: dict[str, Any],
+        hypotheses: list[str],
+        missing: list[str],
     ) -> None:
         lines = ["# Decision", "", f"- Status: {status}", f"- Reason: {reason}", ""]
         if signals:
@@ -3054,3 +3924,440 @@ class VenturePipeline:
             self._write_ship_summary(run_id)
         except Exception as exc:
             self.manager.write_artifact(run_id, "ship_summary_error.md", str(exc))
+
+    def _propose_collection_actions_for_unknown_fields(self, run_id: str, data_source: dict[str, str], topic: str, decision_missing: list[str]) -> None:
+        """Rule: Automatically propose collection actions when critical fields are unknown."""
+        unknown_fields = [key for key, value in data_source.items() if value == "unknown"]
+        
+        if not unknown_fields:
+            return
+        
+        # Define collection actions for each critical field
+        collection_actions = {
+            "pages": {
+                "source_missing": "No web sources configured or accessible",
+                "next_step": "Configure pain_sources in configs/sources.yaml with valid URLs and APIs",
+                "priority": "HIGH"
+            },
+            "pains": {
+                "source_missing": "No pain statements extracted from sources",
+                "next_step": "Add more diverse sources or improve pain extraction prompts",
+                "priority": "HIGH"
+            },
+            "competitors": {
+                "source_missing": "No competitor data found in sources",
+                "next_step": "Configure competitor_sources in configs/sources.yaml or add competitor analysis tools",
+                "priority": "MEDIUM"
+            },
+            "seeds": {
+                "source_missing": "No seed inputs provided (ICP, context, pains, competitors)",
+                "next_step": "Provide seed inputs via UI or API to improve analysis quality",
+                "priority": "MEDIUM"
+            }
+        }
+        
+        # Generate collection action recommendations
+        actions = []
+        for field in unknown_fields:
+            if field in collection_actions:
+                action = collection_actions[field]
+                actions.append({
+                    "field": field,
+                    "source_missing": action["source_missing"],
+                    "next_step": action["next_step"],
+                    "priority": action["priority"],
+                    "estimated_impact": self._estimate_field_impact(field)
+                })
+        
+        if actions:
+            # Write collection actions to artifact
+            self.manager.write_json(run_id, "collection_actions.json", {
+                "topic": topic,
+                "unknown_fields": unknown_fields,
+                "actions": actions,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "rule_applied": "auto-propose-collection-for-unknown-critical-fields"
+            })
+            
+            # Log the recommendation
+            action_summary = ", ".join([f"{a['field']} ({a['priority']})" for a in actions])
+            self._log_progress(
+                run_id,
+                f"Collection actions auto-proposed for unknown critical fields: {action_summary}"
+            )
+            
+            # Add to decision missing for visibility
+            for action in actions:
+                decision_missing.append(
+                    f"Unknown critical field '{action['field']}': {action['next_step']}"
+                )
+
+    def _estimate_field_impact(self, field: str) -> str:
+        """Estimate the impact of missing a critical field."""
+        impact_map = {
+            "pages": "CRITICAL - No market signals available",
+            "pains": "HIGH - Limited problem understanding",
+            "competitors": "MEDIUM - No competitive analysis",
+            "seeds": "LOW - Can proceed with generic analysis"
+        }
+        return impact_map.get(field, "UNKNOWN")
+
+    def _generate_validation_sprint_output(
+        self, 
+        run_id: str, 
+        topic: str, 
+        top_idea: IdeaScore, 
+        validated_pains: list[dict[str, Any]],
+        competitors: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Generate execution-focused output for Validation Sprint mode."""
+        
+        # Generate hypothesis
+        hypothesis = self._generate_validation_hypothesis(topic, top_idea, validated_pains)
+        
+        # Generate A/B test plan
+        test_plan = self._generate_ab_test_plan(hypothesis, top_idea)
+        
+        # Generate landing page copy
+        landing_content = self._generate_landing_copy(hypothesis, top_idea, topic)
+        
+        # Generate outreach messages
+        outreach_messages = self._generate_outreach_messages(hypothesis, top_idea, competitors)
+        
+        # Generate target KPIs
+        target_kpis = self._generate_target_kpis(hypothesis, topic)
+        
+        validation_output = {
+            "mode": "validation_sprint",
+            "duration_days": 7,
+            "topic": topic,
+            "hypothesis": hypothesis,
+            "test_plan": test_plan,
+            "landing_page": landing_content,
+            "outreach_messages": outreach_messages,
+            "target_kpis": target_kpis,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "next_steps": [
+                "1. Set up landing page with A/B test variants",
+                "2. Launch outreach campaigns to target segments",
+                "3. Monitor KPIs daily for 7 days",
+                "4. Analyze results and decide on pivot vs persevere"
+            ]
+        }
+        
+        # Write validation sprint output
+        self.manager.write_json(run_id, "validation_sprint_output.json", validation_output)
+        
+        # Also write a markdown version for easy reading
+        markdown_content = self._format_validation_sprint_markdown(validation_output)
+        self.manager.write_artifact(run_id, "validation_sprint_plan.md", markdown_content)
+        
+        return validation_output
+
+    def _generate_validation_hypothesis(
+        self, 
+        topic: str, 
+        top_idea: IdeaScore, 
+        validated_pains: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Generate a clear testable hypothesis."""
+        
+        # Extract key pain points
+        key_pains = []
+        for pain in validated_pains[:3]:  # Top 3 pains
+            key_pains.append(pain.get("problem", "").strip())
+        
+        # Build hypothesis statement
+        hypothesis_statement = ("Nous croyons que [TARGET_SEGMENT] éprouvent [KEY_PROBLEM] "
+        "lorsque [CONTEXT]. Si nous leur offrons [SOLUTION], "
+        "alors [EXPECTED_OUTCOME] mesuré par [SUCCESS_METRIC].")
+        
+        # Fill in template with idea details
+        target_segment = top_idea.rationale.split("target")[0].strip() if "target" in top_idea.rationale.lower() else "Solo founders"
+        key_problem = key_pains[0] if key_pains else "inefficient workflows"
+        solution = top_idea.name
+        expected_outcome = "ils adopteront notre solution"
+        success_metric = "taux d'adoption > 15% en 7 jours"
+        
+        hypothesis = {
+            "statement": hypothesis_statement.replace("[TARGET_SEGMENT]", target_segment)
+                                      .replace("[KEY_PROBLEM]", key_problem)
+                                      .replace("[CONTEXT]", "ils gèrent leur croissance quotidienne")
+                                      .replace("[SOLUTION]", solution)
+                                      .replace("[EXPECTED_OUTCOME]", expected_outcome)
+                                      .replace("[SUCCESS_METRIC]", success_metric),
+            "target_segment": target_segment,
+            "key_problem": key_problem,
+            "solution": solution,
+            "expected_outcome": expected_outcome,
+            "success_metric": success_metric,
+            "risk_level": "MEDIUM",
+            "confidence": 65
+        }
+        
+        return hypothesis
+
+    def _generate_ab_test_plan(self, hypothesis: dict[str, Any], top_idea: IdeaScore) -> dict[str, Any]:
+        """Generate A/B test plan for validation."""
+        
+        return {
+            "test_name": f"Validation Sprint - {top_idea.name}",
+            "duration_days": 7,
+            "variants": {
+                "A": {
+                    "name": "Control - MVP Features",
+                    "description": "Version minimale avec fonctionnalités essentielles",
+                    "key_changes": ["Interface simplifiée", "Onboarding rapide", "Prix d'essai gratuit"]
+                },
+                "B": {
+                    "name": "Test - Enhanced Value Prop",
+                    "description": "Version avec proposition de valeur améliorée",
+                    "key_changes": ["Copy optimisé", "Social proof", "Garantie satisfait ou remboursé"]
+                }
+            },
+            "success_criteria": [
+                "Taux de conversion > 10%",
+                "Temps sur page > 2 minutes",
+                "Taux d'engagement > 30%"
+            ],
+            "traffic_split": "50/50",
+            "sample_size": "min 100 visiteurs par variant"
+        }
+
+    def _generate_landing_copy(
+        self, 
+        hypothesis: dict[str, Any], 
+        top_idea: IdeaScore, 
+        topic: str
+    ) -> dict[str, Any]:
+        """Generate landing page copy for validation."""
+        
+        return {
+            "headline": f"La solution {top_idea.name} pour {hypothesis['target_segment']}",
+            "subheadline": f"Résolvez {hypothesis['key_problem']} en moins de temps",
+            "key_benefits": [
+                "Économisez 10h par semaine",
+                "Lancez plus vite vos projets", 
+                "Automatisez les tâches répétitives"
+            ],
+            "social_proof": [
+                "Rejoint par 50+ entrepreneurs en beta",
+                "4.8/5 étoiles sur les premiers tests",
+                "Cas d'usage validés par 3 experts"
+            ],
+            "cta_primary": "Commencer l'essai gratuit - 7 jours",
+            "cta_secondary": "Voir la démo en 2 minutes",
+            "pricing": {
+                "trial": "Gratuit 7 jours",
+                "after_trial": "29€/mois - sans engagement",
+                "guarantee": "Satisfait ou remboursé 30 jours"
+            },
+            "faq_items": [
+                {
+                    "q": "Est-ce vraiment gratuit les 7 premiers jours ?",
+                    "a": "Oui, 100% gratuit et sans engagement. Annulez quand vous voulez."
+                },
+                {
+                    "q": "Combien de temps pour voir des résultats ?", 
+                    "a": "La plupart des utilisateurs voient des bénéfices dès les premiers jours."
+                }
+            ]
+        }
+
+    def _generate_outreach_messages(
+        self, 
+        hypothesis: dict[str, Any], 
+        top_idea: IdeaScore, 
+        competitors: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Generate 3 outreach messages for validation."""
+        
+        return [
+            {
+                "channel": "Email - Cold Outreach",
+                "subject": f"Aide pour {hypothesis['key_problem'].lower()} ?",
+                "template": (f"Bonjour [PRÉNOM],\n\n"
+                f"J'ai remarqué que beaucoup de {hypothesis['target_segment'].lower()} comme vous "
+                f"strugglent avec {hypothesis['key_problem'].lower()}.\n\n"
+                f"J'ai développé {top_idea.name} - une solution qui vous permet de "
+                f"[PRINCIPAL_BÉNÉFICE].\n\n"
+                f"Seriez-vous ouvert à un échange de 15 minutes la semaine prochaine "
+                f"pour en discuter ?\n\n"
+                f"Bien à vous,\n"
+                f"[VOTRE NOM]"),
+                "personalization_vars": ["PRÉNOM", "PRINCIPAL_BÉNÉFICE"],
+                "target_audience": "Cold prospects",
+                "send_timing": "Jour 2-3 du sprint"
+            },
+            {
+                "channel": "LinkedIn - Message direct",
+                "subject": "Solution pour {hypothesis['key_problem'].lower()}",
+                "template": (f"Salut [PRÉNOM] !\n\n"
+                f"Je vois que vous êtes dans l'écosystème {hypothesis['target_segment']}. "
+                f"Je partage une solution qui pourrait intéresser votre réseau : {top_idea.name}.\n\n"
+                f"Elle aide spécifiquement avec {hypothesis['key_problem'].lower()}. "
+                f"Plusieurs entrepreneurs déjà l'adoptent avec de bons résultats.\n\n"
+                f"Ça vous dirait qu'on en discute 5 minutes ?\n\n"
+                f"[VOTRE NOM]"),
+                "personalization_vars": ["PRÉNOM"],
+                "target_audience": "LinkedIn connections",
+                "send_timing": "Jour 4-5 du sprint"
+            },
+            {
+                "channel": "Communauté - Post engagement",
+                "subject": "Retour d'expérience validation sprint",
+                "template": (f"🚀 VALIDATION SPRINT - JOUR 5\n\n"
+                f"Je teste actuellement {top_idea.name} pour résoudre {hypothesis['key_problem'].lower()}.\n\n"
+                f"📊 Résultats intermédiaires :\n"
+                f"• [RÉSULTAT_1]\n"
+                f"• [RÉSULTAT_2]\n" 
+                f"• [RÉSULTAT_3]\n\n"
+                f"🎯 Objectif : [OBJECTIF_SPRINT]\n\n"
+                f"Quelqu'un a déjà testé une solution similaire ? "
+                f"Vos retours m'intéressent beaucoup !\n\n"
+                f"#solo #startup #validation"),
+                "personalization_vars": ["RÉSULTAT_1", "RÉSULTAT_2", "RÉSULTAT_3", "OBJECTIF_SPRINT"],
+                "target_audience": "Community/Forum members",
+                "send_timing": "Jour 5-7 du sprint"
+            }
+        ]
+
+    def _generate_target_kpis(self, hypothesis: dict[str, Any], topic: str) -> dict[str, Any]:
+        """Generate target KPIs for 7-day validation sprint."""
+        
+        return {
+            "primary_kpis": {
+                "conversion_rate": {
+                    "target": "15%",
+                    "current": "0%",
+                    "measurement": "Sign-ups / visiteurs uniques"
+                },
+                "activation_rate": {
+                    "target": "60%", 
+                    "current": "0%",
+                    "measurement": "Utilisateurs qui complètent onboarding / sign-ups"
+                },
+                "retention_day_7": {
+                    "target": "40%",
+                    "current": "0%", 
+                    "measurement": "Utilisateurs actifs jour 7 / sign-ups"
+                }
+            },
+            "secondary_kpis": {
+                "engagement_time": {
+                    "target": "2+ minutes",
+                    "current": "0 min",
+                    "measurement": "Temps moyen par session"
+                },
+                "feature_adoption": {
+                    "target": "3+ fonctionnalités",
+                    "current": "0",
+                    "measurement": "Nombre de fonctionnalités utilisées par utilisateur"
+                },
+                "nps_score": {
+                    "target": "+40",
+                    "current": "N/A",
+                    "measurement": "Net Promoter Score après 7 jours"
+                }
+            },
+            "success_criteria": {
+                "minimum_viable": "Conversion > 10% ET Activation > 40%",
+                "target_achieved": "Conversion > 15% ET Activation > 60%",
+                "exceptional": "Conversion > 25% ET Retention > 50%"
+            },
+            "tracking_setup": [
+                "Google Analytics 4 installé",
+                "Événements de conversion définis",
+                "Dashboard KPI créé",
+                "Alertes quotidiennes configurées"
+            ]
+        }
+
+    def _format_validation_sprint_markdown(self, validation_output: dict[str, Any]) -> str:
+        """Format validation sprint output as readable markdown."""
+        
+        md = ("# Validation Sprint 7 Jours - " + validation_output['topic'] + "\n\n" +
+        "## 🎯 Hypothèse de Validation\n\n" +
+        "**Segment Cible** : " + validation_output['hypothesis']['target_segment'] + "\n" +
+        "**Problème Clé** : " + validation_output['hypothesis']['key_problem'] + "\n" +
+        "**Solution Proposée** : " + validation_output['hypothesis']['solution'] + "\n\n" +
+        "### Énoncé Complet\n" +
+        validation_output['hypothesis']['statement'] + "\n\n" +
+        "**Confiance** : " + str(validation_output['hypothesis']['confidence']) + "% | **Risque** : " + validation_output['hypothesis']['risk_level'] + "\n\n" +
+        "---\n\n" +
+        "## 🧪 Plan de Test A/B\n\n" +
+        "**Durée** : " + str(validation_output['test_plan']['duration_days']) + " jours\n" +
+        "**Répartition Trafic** : " + validation_output['test_plan']['traffic_split'] + "\n\n" +
+        "### Variante A : " + validation_output['test_plan']['variants']['A']['name'] + "\n" +
+        validation_output['test_plan']['variants']['A']['description'] + "\n\n" +
+        "**Changements Clés** :\n" +
+        "\n".join(f"• {change}" for change in validation_output['test_plan']['variants']['A']['key_changes']) + "\n\n" +
+        "### Variante B : " + validation_output['test_plan']['variants']['B']['name'] + "\n" +
+        validation_output['test_plan']['variants']['B']['description'] + "\n\n" +
+        "**Changements Clés** :\n" +
+        "\n".join(f"• {change}" for change in validation_output['test_plan']['variants']['B']['key_changes']) + "\n\n" +
+        "### Critères de Succès\n" +
+        "\n".join(f"• {criteria}" for criteria in validation_output['test_plan']['success_criteria']) + "\n\n" +
+        "---\n\n" +
+        "## 🌄 Contenu Landing Page\n\n" +
+        "**Titre Principal** : " + validation_output['landing_page']['headline'] + "\n\n" +
+        "**Sous-titre** : " + validation_output['landing_page']['subheadline'] + "\n\n" +
+        "### Bénéfices Clés\n" +
+        "\n".join(f"• {benefit}" for benefit in validation_output['landing_page']['key_benefits']) + "\n\n" +
+        "### Preuve Sociale\n" +
+        "\n".join(f"• {proof}" for proof in validation_output['landing_page']['social_proof']) + "\n\n" +
+        "### Appels à l'Action\n" +
+        "- **Principal** : " + validation_output['landing_page']['cta_primary'] + "\n" +
+        "- **Secondaire** : " + validation_output['landing_page']['cta_secondary'] + "\n\n" +
+        "### Tarification\n" +
+        "- **Essai** : " + validation_output['landing_page']['pricing']['trial'] + "\n" +
+        "- **Après essai** : " + validation_output['landing_page']['pricing']['after_trial'] + "\n" +
+        "- **Garantie** : " + validation_output['landing_page']['pricing']['guarantee'] + "\n\n" +
+        "---\n\n" +
+        "## 📧 Messages Outreach\n\n" +
+        "### Message 1 - Email Cold Outreach\n" +
+        "**Canal** : " + validation_output['outreach_messages'][0]['channel'] + "\n" +
+        "**Timing** : " + validation_output['outreach_messages'][0]['send_timing'] + "\n" +
+        "**Audience** : " + validation_output['outreach_messages'][0]['target_audience'] + "\n\n" +
+        "**Sujet** : " + validation_output['outreach_messages'][0]['subject'] + "\n\n" +
+        "**Template** :\n" +
+        "```\n" + validation_output['outreach_messages'][0]['template'] + "\n```\n\n" +
+        "### Message 2 - LinkedIn Direct\n" +
+        "**Canal** : " + validation_output['outreach_messages'][1]['channel'] + "\n" +
+        "**Timing** : " + validation_output['outreach_messages'][1]['send_timing'] + "\n" +
+        "**Audience** : " + validation_output['outreach_messages'][1]['target_audience'] + "\n\n" +
+        "**Sujet** : " + validation_output['outreach_messages'][1]['subject'] + "\n\n" +
+        "**Template** :\n" +
+        "```\n" + validation_output['outreach_messages'][1]['template'] + "\n```\n\n" +
+        "### Message 3 - Communauté Engagement\n" +
+        "**Canal** : " + validation_output['outreach_messages'][2]['channel'] + "\n" +
+        "**Timing** : " + validation_output['outreach_messages'][2]['send_timing'] + "\n" +
+        "**Audience** : " + validation_output['outreach_messages'][2]['target_audience'] + "\n\n" +
+        "**Sujet** : " + validation_output['outreach_messages'][2]['subject'] + "\n\n" +
+        "**Template** :\n" +
+        "```\n" + validation_output['outreach_messages'][2]['template'] + "\n```\n\n" +
+        "---\n\n" +
+        "## 📊 KPI Cibles\n\n" +
+        "### KPIs Primaires\n" +
+        "| Métrique | Cible | Actuel | Mesure |\n" +
+        "|-----------|--------|---------|---------|\n" +
+        "| Taux Conversion | " + validation_output['target_kpis']['primary_kpis']['conversion_rate']['target'] + " | " + validation_output['target_kpis']['primary_kpis']['conversion_rate']['current'] + " | " + validation_output['target_kpis']['primary_kpis']['conversion_rate']['measurement'] + " |\n" +
+        "| Taux Activation | " + validation_output['target_kpis']['primary_kpis']['activation_rate']['target'] + " | " + validation_output['target_kpis']['primary_kpis']['activation_rate']['current'] + " | " + validation_output['target_kpis']['primary_kpis']['activation_rate']['measurement'] + " |\n" +
+        "| Rétention J7 | " + validation_output['target_kpis']['primary_kpis']['retention_day_7']['target'] + " | " + validation_output['target_kpis']['primary_kpis']['retention_day_7']['current'] + " | " + validation_output['target_kpis']['primary_kpis']['retention_day_7']['measurement'] + " |\n\n" +
+        "### KPIs Secondaires\n" +
+        "| Métrique | Cible | Actuel | Mesure |\n" +
+        "|-----------|--------|---------|---------|\n" +
+        "| Temps Engagement | " + validation_output['target_kpis']['secondary_kpis']['engagement_time']['target'] + " | " + validation_output['target_kpis']['secondary_kpis']['engagement_time']['current'] + " | " + validation_output['target_kpis']['secondary_kpis']['engagement_time']['measurement'] + " |\n" +
+        "| Adoption Fonctionnalités | " + validation_output['target_kpis']['secondary_kpis']['feature_adoption']['target'] + " | " + validation_output['target_kpis']['secondary_kpis']['feature_adoption']['current'] + " | " + validation_output['target_kpis']['secondary_kpis']['feature_adoption']['measurement'] + " |\n" +
+        "| Score NPS | " + validation_output['target_kpis']['secondary_kpis']['nps_score']['target'] + " | " + validation_output['target_kpis']['secondary_kpis']['nps_score']['current'] + " | " + validation_output['target_kpis']['secondary_kpis']['nps_score']['measurement'] + " |\n\n" +
+        "### Critères de Succès\n" +
+        "- **Minimum Viable** : " + validation_output['target_kpis']['success_criteria']['minimum_viable'] + "\n" +
+        "- **Cible Atteinte** : " + validation_output['target_kpis']['success_criteria']['target_achieved'] + "\n" +
+        "- **Exceptionnel** : " + validation_output['target_kpis']['success_criteria']['exceptional'] + "\n\n" +
+        "---\n\n" +
+        "## 🚀 Prochaines Étapes\n\n" +
+        "\n".join(step for step in validation_output['next_steps']) + "\n\n" +
+        "---\n\n" +
+        "*Généré le " + validation_output['generated_at'] + "*\n" +
+        "*Mode : " + validation_output['mode'] + " (" + str(validation_output['duration_days']) + " jours)*\n")
+        return md

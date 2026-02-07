@@ -2,27 +2,27 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from typing import Any, Dict, List, Set
+from typing import Any
 
 from app.core.config import Settings
 
 
-def _tokenize(text: str) -> List[str]:
+def _tokenize(text: str) -> list[str]:
     text = text.lower() or ""
     tokens = re.findall(r"\b[a-z]{5,}\b", text)
     return tokens
 
 
 def compute_novelty_score(
-    raw_pages: List[Dict[str, Any]],
-    structured_pains: List[Dict[str, Any]],
+    raw_pages: list[dict[str, Any]],
+    structured_pains: list[dict[str, Any]],
     settings: Settings,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     token_counts: Counter[str] = Counter()
     for page in raw_pages:
         token_counts.update(_tokenize(page.get("text", "")))
 
-    novel_keywords: List[str] = [
+    novel_keywords: list[str] = [
         token for token, count in token_counts.items() if count == 1
     ]
     novel_keywords = novel_keywords[: settings.signal_novel_keywords_target]
@@ -73,12 +73,12 @@ def compute_novelty_score(
 
 
 def compute_signal_quality(
-    raw_pages: List[Dict[str, Any]],
-    structured_pains: List[Dict[str, Any]],
-    clusters: List[Dict[str, Any]],
+    raw_pages: list[dict[str, Any]],
+    structured_pains: list[dict[str, Any]],
+    clusters: list[dict[str, Any]],
     novelty_score: int,
     settings: Settings,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     unique_sources = {page.get("source_name") for page in raw_pages if page.get("source_name")}
     volume = len(raw_pages)
     unique_pains = {

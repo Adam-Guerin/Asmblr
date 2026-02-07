@@ -3,11 +3,11 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from loguru import logger
 
-from app.core.config import Settings, get_settings
+from app.core.config import Settings
 from app.core.llm import LLMClient, check_ollama
 from app.core.run_manager import RunManager
 
@@ -20,7 +20,7 @@ class CritiqueResult:
     json_path: Path
     markdown_path: Path
     summary: str
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
 
 
 class CritiqueException(Exception):
@@ -37,7 +37,7 @@ def _read_text(path: Path) -> str:
         return ""
 
 
-def _read_json(path: Path) -> Dict[str, Any]:
+def _read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
@@ -50,7 +50,7 @@ def _read_json(path: Path) -> Dict[str, Any]:
 def _collect_directory_text(path: Path) -> str:
     if not path.exists():
         return ""
-    snippets: List[str] = []
+    snippets: list[str] = []
     for child in sorted(path.glob("*.md")):
         snippet = _read_text(child)
         if snippet:
@@ -61,7 +61,7 @@ def _collect_directory_text(path: Path) -> str:
     return "\n".join(snippets)
 
 
-def _split_json_and_markdown(raw: str) -> Tuple[str, str]:
+def _split_json_and_markdown(raw: str) -> tuple[str, str]:
     marker = "\n---\n"
     json_part = raw
     markdown = ""
@@ -74,8 +74,8 @@ def _split_json_and_markdown(raw: str) -> Tuple[str, str]:
     return json_str.strip(), markdown.strip()
 
 
-def _build_context_snippets(run_dir: Path) -> Dict[str, str]:
-    snippets: Dict[str, str] = {}
+def _build_context_snippets(run_dir: Path) -> dict[str, str]:
+    snippets: dict[str, str] = {}
     candidates = [
         ("market_report.md", run_dir / "market_report.md"),
         ("prd.md", run_dir / "prd.md"),
@@ -104,9 +104,9 @@ def _build_context_snippets(run_dir: Path) -> Dict[str, str]:
 def _build_prompt(
     run_id: str,
     mode: str,
-    context: Dict[str, str],
+    context: dict[str, str],
     confidence_score: int,
-    evidence_notes: List[str],
+    evidence_notes: list[str],
 ) -> str:
     lines = [
         "You are the Devil's Advocate for an internal Asmblr run. You only rely on the provided evidences.",
@@ -139,11 +139,11 @@ def _build_prompt(
 
 
 def _enforce_caps(
-    payload: Dict[str, Any],
+    payload: dict[str, Any],
     confidence_score: int,
-    context: Dict[str, str],
-) -> Tuple[Dict[str, Any], List[str]]:
-    caps: List[str] = []
+    context: dict[str, str],
+) -> tuple[dict[str, Any], list[str]]:
+    caps: list[str] = []
     if confidence_score < 50:
         caps.append(f"Confidence {confidence_score} < 50 forces non-GO verdict")
         if payload.get("verdict") == "GO":
@@ -180,7 +180,7 @@ def run_devils_advocate(settings: Settings, run_id: str, mode: str = "standard")
     confidence_data = _read_json(run_dir / "confidence.json")
     confidence_score = confidence_data.get("score", 0)
     context = _build_context_snippets(run_dir)
-    evidence_notes: List[str] = []
+    evidence_notes: list[str] = []
     if (run_dir / "landing_page").exists():
         evidence_notes.append("Landing page directory present")
     if (run_dir / "content_pack").exists():

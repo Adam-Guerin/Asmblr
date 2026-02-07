@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import math
 import re
 from collections import Counter
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -20,7 +19,7 @@ WORKAROUND_PATTERN = re.compile(
 )
 
 
-def _split_sentences(text: str) -> List[str]:
+def _split_sentences(text: str) -> list[str]:
     candidate = re.split(r"[.!?\n]+", text or "")
     return [sentence.strip() for sentence in candidate if len(sentence.strip()) > 30]
 
@@ -56,8 +55,8 @@ def _score_frequency(text: str, counts: Counter) -> int:
     return min(100, frequency * 10)
 
 
-def extract_structured_pains(pages: List[Dict[str, Any]]) -> Dict[str, Any]:
-    sentences: List[Tuple[str, Dict[str, Any]]] = []
+def extract_structured_pains(pages: list[dict[str, Any]]) -> dict[str, Any]:
+    sentences: list[tuple[str, dict[str, Any]]] = []
     for page in pages:
         text = page.get("text", "")
         for sentence in _split_sentences(text):
@@ -65,8 +64,8 @@ def extract_structured_pains(pages: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     counts = Counter(sentence.lower() for sentence, _ in sentences)
 
-    pains: List[Dict[str, Any]] = []
-    rejected: List[Dict[str, Any]] = []
+    pains: list[dict[str, Any]] = []
+    rejected: list[dict[str, Any]] = []
     seen: set[str] = set()
     counter = 0
     for sentence, page in sentences:
@@ -110,7 +109,7 @@ def extract_structured_pains(pages: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {"pains": pains, "rejected": rejected}
 
 
-def cluster_pains(pains: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def cluster_pains(pains: list[dict[str, Any]]) -> list[dict[str, Any]]:
     problems = [pain["problem"] for pain in pains if pain.get("problem")]
     if not problems:
         return []
@@ -125,7 +124,7 @@ def cluster_pains(pains: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     labels = model.fit_predict(matrix)
     feature_names = vectorizer.get_feature_names_out()
 
-    clusters: List[Dict[str, Any]] = []
+    clusters: list[dict[str, Any]] = []
     for cluster_id in sorted(set(labels)):
         cluster_pains = [
             pains[idx] for idx, label in enumerate(labels) if label == cluster_id
@@ -151,10 +150,10 @@ def cluster_pains(pains: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 
 def generate_opportunities(
-    clusters: List[Dict[str, Any]], pains: List[Dict[str, Any]]
-) -> List[Dict[str, Any]]:
+    clusters: list[dict[str, Any]], pains: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     pain_map = {pain["id"]: pain for pain in pains}
-    opportunities: List[Dict[str, Any]] = []
+    opportunities: list[dict[str, Any]] = []
 
     for cluster in clusters:
         linked = cluster.get("pain_ids", [])

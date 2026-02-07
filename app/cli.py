@@ -69,6 +69,7 @@ def main() -> None:
     run_cmd.add_argument("--theme", help="Theme to bias idea generation")
     run_cmd.add_argument("--deploy", action="store_true", help="Trigger deployment after MVP build")
     run_cmd.add_argument("--deploy-live", action="store_true", help="Run deployment without dry-run")
+    run_cmd.add_argument("--profile", choices=["quick", "standard", "deep"], help="Execution profile with time/token budget")
 
     ship_cmd = sub.add_parser("ship", help="Run full pipeline and attempt deploy")
     ship_cmd.add_argument("--topic", required=True)
@@ -80,6 +81,7 @@ def main() -> None:
     ship_cmd.add_argument("--seed-context", help="Additional context or hypotheses")
     ship_cmd.add_argument("--theme", help="Theme to bias idea generation")
     ship_cmd.add_argument("--live", action="store_true", help="Run deployment without dry-run")
+    ship_cmd.add_argument("--profile", choices=["quick", "standard", "deep"], help="Execution profile with time/token budget")
 
     sub.add_parser("doctor", help="Run environment diagnostics")
 
@@ -167,7 +169,7 @@ def main() -> None:
             theme=args.theme,
         )
         n_ideas = args.n_ideas or settings.default_n_ideas
-        pipeline.run(topic, n_ideas, fast_mode=args.fast, seed_inputs=seed_inputs)
+        pipeline.run(topic, n_ideas, fast_mode=args.fast, seed_inputs=seed_inputs, execution_profile=args.profile)
     elif args.command == "ship":
         topic = (args.topic or "").strip()
         if len(topic) < 3 or len(topic) > 200:
@@ -191,7 +193,7 @@ def main() -> None:
             theme=args.theme,
         )
         n_ideas = args.n_ideas or settings.default_n_ideas
-        pipeline.run(topic, n_ideas, fast_mode=args.fast, seed_inputs=seed_inputs)
+        pipeline.run(topic, n_ideas, fast_mode=args.fast, seed_inputs=seed_inputs, execution_profile=args.profile)
     elif args.command == "doctor":
         settings = get_settings()
         from app.core.doctor import run_doctor

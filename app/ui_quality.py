@@ -4,14 +4,14 @@ import json
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import streamlit as st
 
 from app.core.config import Settings
 from app.core.run_manager import RunManager
 
-ARTIFACT_CHECKS: List[tuple[str, str]] = [
+ARTIFACT_CHECKS: list[tuple[str, str]] = [
     ("prd.md", "PRD"),
     ("tech_spec.md", "Tech spec"),
     ("market_report.md", "Market report"),
@@ -22,7 +22,7 @@ ARTIFACT_CHECKS: List[tuple[str, str]] = [
 ]
 
 
-def _safe_read_text(path: Path) -> Optional[str]:
+def _safe_read_text(path: Path) -> str | None:
     if not path.exists():
         return None
     try:
@@ -31,7 +31,7 @@ def _safe_read_text(path: Path) -> Optional[str]:
         return None
 
 
-def _safe_load_json(path: Path) -> Dict[str, Any]:
+def _safe_load_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
@@ -40,7 +40,7 @@ def _safe_load_json(path: Path) -> Dict[str, Any]:
         return {}
 
 
-def _extract_decision_status(text: Optional[str]) -> Optional[str]:
+def _extract_decision_status(text: str | None) -> str | None:
     if not text:
         return None
     for line in text.splitlines():
@@ -49,7 +49,7 @@ def _extract_decision_status(text: Optional[str]) -> Optional[str]:
     return None
 
 
-def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
+def _parse_datetime(value: str | None) -> datetime | None:
     if not value:
         return None
     try:
@@ -61,10 +61,23 @@ def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
             return None
 
 
-def _format_datetime(value: Optional[datetime]) -> str:
+def _format_datetime(value: datetime | None) -> str:
     if not value:
         return "unknown"
     return value.strftime("%Y-%m-%d %H:%M UTC")
+
+
+def _format_duration(seconds: float | None) -> str:
+    if seconds is None:
+        return "N/A"
+    total = max(0, int(seconds))
+    mins, sec = divmod(total, 60)
+    hrs, mins = divmod(mins, 60)
+    if hrs:
+        return f"{hrs}h {mins}m"
+    if mins:
+        return f"{mins}m {sec}s"
+    return f"{sec}s"
 
 
 def _run_uri(run_dir: Path) -> str:
@@ -74,7 +87,7 @@ def _run_uri(run_dir: Path) -> str:
         return str(run_dir)
 
 
-def load_run_metrics(run_dir: Path, run_meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def load_run_metrics(run_dir: Path, run_meta: dict[str, Any] | None = None) -> dict[str, Any]:
     run_meta = run_meta or {}
     run_id = run_meta.get("id") or run_dir.name
     status_meta = (run_meta.get("status") or "").lower() if run_meta.get("status") else "unknown"
@@ -82,6 +95,8 @@ def load_run_metrics(run_dir: Path, run_meta: Optional[Dict[str, Any]] = None) -
     created_at = run_meta.get("created_at")
     created_dt = _parse_datetime(created_at)
     created_display = _format_datetime(created_dt) if created_dt else created_at or "unknown"
+    updated_at = run_meta.get("updated_at")
+    updated_dt = _parse_datetime(updated_at)
 
     decision_text = _safe_read_text(run_dir / "decision.md")
     decision_status = _extract_decision_status(decision_text) or run_meta.get("status", "").upper() or "UNKNOWN"
@@ -91,8 +106,15 @@ def load_run_metrics(run_dir: Path, run_meta: Optional[Dict[str, Any]] = None) -
     market_data = _safe_load_json(run_dir / "market_signal_score.json")
     devils = _safe_load_json(run_dir / "devils_advocate.json")
     failure_report = _safe_load_json(run_dir / "failure_report.json")
+    feedback = _safe_load_json(run_dir / "post_launch_metrics.json")
+    feedback_metrics = feedback.get("metrics") if isinstance(feedback.get("metrics"), dict) else {}
+    cycle_time_sec = None
+    if created_dt and updated_dt:
+        delta = (updated_dt - created_dt).total_seconds()
+        if delta >= 0:
+            cycle_time_sec = delta
 
-    missing_artifacts: List[str] = []
+    missing_artifacts: list[str] = []
     for path_suffix, label in ARTIFACT_CHECKS:
         candidate = run_dir / path_suffix
         if not candidate.exists():
@@ -104,6 +126,7 @@ def load_run_metrics(run_dir: Path, run_meta: Optional[Dict[str, Any]] = None) -
         "topic": topic,
         "created_at": created_at,
         "created_display": created_display,
+        "updated_at": updated_at,
         "confidence_score": confidence.get("score"),
         "confidence_breakdown": confidence.get("breakdown") or {},
         "confidence_caps": confidence.get("caps") or [],
@@ -118,10 +141,18 @@ def load_run_metrics(run_dir: Path, run_meta: Optional[Dict[str, Any]] = None) -
         "failure_report": failure_report,
         "run_uri": _run_uri(run_dir),
         "created_dt": created_dt,
+        "updated_dt": updated_dt,
+        "cycle_time_sec": cycle_time_sec,
+        "feedback_signup_rate_pct": feedback_metrics.get("signup_rate_pct"),
+        "feedback_activation_rate_pct": feedback_metrics.get("activation_rate_pct"),
+        "feedback_ctr_landing_pct": feedback_metrics.get("ctr_landing_pct"),
+        "feedback_visitors": feedback_metrics.get("visitors"),
+        "feedback_signups": feedback_metrics.get("signups"),
+        "feedback_activated_users": feedback_metrics.get("activated_users"),
     }
 
 
-def aggregate_dashboard_metrics(metrics: List[Dict[str, Any]]) -> Dict[str, Any]:
+def aggregate_dashboard_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
     total = len(metrics)
     if total == 0:
         return {
@@ -133,6 +164,14 @@ def aggregate_dashboard_metrics(metrics: List[Dict[str, Any]]) -> Dict[str, Any]
             "top_missing_artifacts": [],
             "runs_table": [],
             "metrics_by_run": {},
+            "avg_mvp_ready_sec": None,
+            "abort_rate_pct": None,
+            "kill_rate_pct": None,
+            "feedback_runs_count": 0,
+            "avg_signup_rate_pct": None,
+            "avg_activation_rate_pct": None,
+            "post_launch_signup_conversion_pct": None,
+            "post_launch_activation_conversion_pct": None,
         }
 
     status_counts = Counter(m.get("status") or "unknown" for m in metrics)
@@ -148,6 +187,76 @@ def aggregate_dashboard_metrics(metrics: List[Dict[str, Any]]) -> Dict[str, Any]
         round(sum(m["confidence_score"] for m in completed_metrics) / len(completed_metrics), 1)
         if completed_metrics
         else None
+    )
+    completed_runs = [m for m in metrics if m.get("status") == "completed"]
+    avg_mvp_ready_sec = (
+        sum(m["cycle_time_sec"] for m in completed_runs if isinstance(m.get("cycle_time_sec"), (int, float)))
+        / len([m for m in completed_runs if isinstance(m.get("cycle_time_sec"), (int, float))])
+        if any(isinstance(m.get("cycle_time_sec"), (int, float)) for m in completed_runs)
+        else None
+    )
+
+    finalized_statuses = {"completed", "aborted", "killed", "failed"}
+    finalized_runs = [m for m in metrics if (m.get("status") or "unknown") in finalized_statuses]
+    finalized_count = len(finalized_runs)
+    abort_rate_pct = (
+        round((sum(1 for m in finalized_runs if m.get("status") == "aborted") / finalized_count) * 100, 1)
+        if finalized_count
+        else None
+    )
+    kill_rate_pct = (
+        round((sum(1 for m in finalized_runs if m.get("status") == "killed") / finalized_count) * 100, 1)
+        if finalized_count
+        else None
+    )
+
+    feedback_runs = [
+        m
+        for m in metrics
+        if any(
+            isinstance(m.get(field), (int, float))
+            for field in ("feedback_signup_rate_pct", "feedback_activation_rate_pct", "feedback_ctr_landing_pct")
+        )
+    ]
+    avg_signup_rate_pct = (
+        round(
+            sum(float(m["feedback_signup_rate_pct"]) for m in feedback_runs if isinstance(m.get("feedback_signup_rate_pct"), (int, float)))
+            / len([m for m in feedback_runs if isinstance(m.get("feedback_signup_rate_pct"), (int, float))]),
+            2,
+        )
+        if any(isinstance(m.get("feedback_signup_rate_pct"), (int, float)) for m in feedback_runs)
+        else None
+    )
+    avg_activation_rate_pct = (
+        round(
+            sum(float(m["feedback_activation_rate_pct"]) for m in feedback_runs if isinstance(m.get("feedback_activation_rate_pct"), (int, float)))
+            / len([m for m in feedback_runs if isinstance(m.get("feedback_activation_rate_pct"), (int, float))]),
+            2,
+        )
+        if any(isinstance(m.get("feedback_activation_rate_pct"), (int, float)) for m in feedback_runs)
+        else None
+    )
+
+    total_visitors = sum(
+        int(m.get("feedback_visitors") or 0)
+        for m in feedback_runs
+        if isinstance(m.get("feedback_visitors"), int) and m.get("feedback_visitors") is not None
+    )
+    total_signups = sum(
+        int(m.get("feedback_signups") or 0)
+        for m in feedback_runs
+        if isinstance(m.get("feedback_signups"), int) and m.get("feedback_signups") is not None
+    )
+    total_activated = sum(
+        int(m.get("feedback_activated_users") or 0)
+        for m in feedback_runs
+        if isinstance(m.get("feedback_activated_users"), int) and m.get("feedback_activated_users") is not None
+    )
+    post_launch_signup_conversion_pct = (
+        round((total_signups / total_visitors) * 100, 2) if total_visitors > 0 else None
+    )
+    post_launch_activation_conversion_pct = (
+        round((total_activated / total_signups) * 100, 2) if total_signups > 0 else None
     )
 
     abort_reasons = Counter(
@@ -168,7 +277,7 @@ def aggregate_dashboard_metrics(metrics: List[Dict[str, Any]]) -> Dict[str, Any]
         reverse=True,
     )
 
-    table_entries: List[Dict[str, Any]] = []
+    table_entries: list[dict[str, Any]] = []
     for entry in sorted_metrics:
         table_entries.append(
             {
@@ -194,12 +303,20 @@ def aggregate_dashboard_metrics(metrics: List[Dict[str, Any]]) -> Dict[str, Any]
         "runs_table": table_entries,
         "ordered_run_ids": [entry["run_id"] for entry in sorted_metrics],
         "metrics_by_run": metrics_map,
+        "avg_mvp_ready_sec": round(avg_mvp_ready_sec, 1) if isinstance(avg_mvp_ready_sec, (int, float)) else None,
+        "abort_rate_pct": abort_rate_pct,
+        "kill_rate_pct": kill_rate_pct,
+        "feedback_runs_count": len(feedback_runs),
+        "avg_signup_rate_pct": avg_signup_rate_pct,
+        "avg_activation_rate_pct": avg_activation_rate_pct,
+        "post_launch_signup_conversion_pct": post_launch_signup_conversion_pct,
+        "post_launch_activation_conversion_pct": post_launch_activation_conversion_pct,
     }
 
 
-def persist_metrics_index(runs_dir: Path, metrics: List[Dict[str, Any]]) -> None:
+def persist_metrics_index(runs_dir: Path, metrics: list[dict[str, Any]]) -> None:
     index_path = runs_dir / "_metrics_index.json"
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "generated_at": datetime.utcnow().isoformat(),
         "runs": {},
     }
@@ -220,7 +337,7 @@ def persist_metrics_index(runs_dir: Path, metrics: List[Dict[str, Any]]) -> None
 
 
 def render_quality_dashboard(
-    settings: Settings, manager: RunManager, runs: Optional[List[Dict[str, Any]]] = None
+    settings: Settings, manager: RunManager, runs: list[dict[str, Any]] | None = None
 ) -> None:
     runs = runs or manager.list_runs()
     if not runs:
@@ -234,6 +351,30 @@ def render_quality_dashboard(
 
     aggregated = aggregate_dashboard_metrics(metrics)
     persist_metrics_index(settings.runs_dir, metrics)
+
+    st.subheader("Product KPIs")
+    kpi_cols = st.columns(5)
+    kpi_cols[0].metric("Avg topic -> MVP ready", _format_duration(aggregated.get("avg_mvp_ready_sec")))
+    abort_rate = aggregated.get("abort_rate_pct")
+    kill_rate = aggregated.get("kill_rate_pct")
+    kpi_cols[1].metric("ABORT rate", f"{abort_rate:.1f}%" if isinstance(abort_rate, (int, float)) else "N/A")
+    kpi_cols[2].metric("KILL rate", f"{kill_rate:.1f}%" if isinstance(kill_rate, (int, float)) else "N/A")
+    signup_conv = aggregated.get("post_launch_signup_conversion_pct")
+    activation_conv = aggregated.get("post_launch_activation_conversion_pct")
+    kpi_cols[3].metric(
+        "Post-launch signup conv.",
+        f"{signup_conv:.2f}%" if isinstance(signup_conv, (int, float)) else "N/A",
+        f"{aggregated.get('feedback_runs_count', 0)} run(s) with feedback",
+    )
+    kpi_cols[4].metric(
+        "Post-launch activation conv.",
+        f"{activation_conv:.2f}%" if isinstance(activation_conv, (int, float)) else "N/A",
+    )
+
+    st.caption(
+        "Conversion post-launch is computed from `/feedback-metrics` payloads (`post_launch_metrics.json`) "
+        "across runs with available visitor/signup data."
+    )
 
     st.subheader("Quality KPIs")
     cols = st.columns(4)

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from langchain.tools import BaseTool
 from pydantic import BaseModel
@@ -47,8 +47,8 @@ class LandingArgs(BaseModel):
     product_name: str
     output_dir: str
     template_dir: str
-    prompt: Optional[str] = None
-    payload: Optional[Dict[str, Any]] = None
+    prompt: str | None = None
+    payload: dict[str, Any] | None = None
     fast_mode: bool = False
 
 
@@ -68,8 +68,8 @@ class LandingGeneratorTool(BaseTool):
         product_name: str,
         output_dir: str,
         template_dir: str,
-        prompt: Optional[str] = None,
-        payload: Optional[Dict[str, Any]] = None,
+        prompt: str | None = None,
+        payload: dict[str, Any] | None = None,
         fast_mode: bool = False,
     ) -> str:
         """Render landing assets and return output directory."""
@@ -122,8 +122,8 @@ class ContentArgs(BaseModel):
 
     product_name: str
     output_dir: str
-    prompt: Optional[str] = None
-    content_pack: Optional[Dict[str, Any]] = None
+    prompt: str | None = None
+    content_pack: dict[str, Any] | None = None
     fast_mode: bool = False
 
 
@@ -142,8 +142,8 @@ class ContentGeneratorTool(BaseTool):
         self,
         product_name: str,
         output_dir: str,
-        prompt: Optional[str] = None,
-        content_pack: Optional[Dict[str, Any]] = None,
+        prompt: str | None = None,
+        content_pack: dict[str, Any] | None = None,
         fast_mode: bool = False,
     ) -> str:
         """Generate the content pack and return output directory."""

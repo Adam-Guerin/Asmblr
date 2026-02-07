@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from loguru import logger
 
@@ -40,7 +40,7 @@ class LoopPlanner:
             files_hint=[str(f) for f in files_hint],
         )
 
-    def _generate(self, prompt: str) -> Dict[str, Any]:
+    def _generate(self, prompt: str) -> dict[str, Any]:
         for attempt in range(2):
             candidate = self.llm.generate_json(prompt)
             if self._valid(candidate):

@@ -155,7 +155,7 @@ def test_loop_aborts_on_invalid_patch(tmp_path: Path):
             encoding="utf-8"
         )
     )
-    assert "aborted" == verdict["status"]
+    assert verdict["status"] == "aborted"
     assert any("Patch apply failed" in reason for reason in verdict["reasons"])
 
 

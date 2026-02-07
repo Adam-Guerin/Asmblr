@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Sequence
+from collections.abc import Sequence
 
 from app.loop.errors import LoopException
 

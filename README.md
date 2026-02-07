@@ -9,7 +9,7 @@ Local, multi-agent venture pipeline built on CrewAI + LangChain, running on Olla
 python setup.py
 
 # 2. Start the UI
-streamlit run ui.py
+streamlit run app/ui.py
 
 # 3. Open http://localhost:8501 and generate your first MVP!
 ```
@@ -31,6 +31,22 @@ The setup script will:
 - **FastAPI API** + CLI interface
 - **SQLite + file artifacts** in `/runs`
 - **Configurable sources, prompts, thresholds`
+
+## ICP Focus (Niche-first)
+Asmblr can enforce one primary ICP across idea generation, scoring, PRD, and growth copy.
+
+Set in `.env`:
+```bash
+PRIMARY_ICP="Founders B2B SaaS pre-seed"
+PRIMARY_ICP_KEYWORDS="founder,founders,b2b,saas,pre-seed,startup,startups,small team,operators"
+ICP_ALIGNMENT_BONUS_MAX=8
+IDEA_ACTIONABILITY_MIN_SCORE=55
+IDEA_ACTIONABILITY_ADJUSTMENT_MAX=12
+IDEA_ACTIONABILITY_REQUIRE_ELIGIBLE_TOP=false
+```
+
+This adds an ICP alignment bonus/malus during scoring and pushes agents to keep outputs tied to that segment.
+It also computes `idea_actionability.json` and downranks generic ideas that lack a clear early validation path.
 
 ## Frontend Quality: Lovable-grade
 Every MVP ships with a deterministic frontend kit and UI quality gates:
@@ -127,13 +143,13 @@ python -m app run --topic "Internal Audit Gate" --fast
 Use one command for lint + tests + smoke MVP generation:
 
 ```bash
-python scripts/test_all.py --mode full
+python scripts/test_all.py --mode quick
 ```
 
-Shorter local cycle:
+Run full suite:
 
 ```bash
-python scripts/test_all.py --mode quick
+python scripts/test_all.py --mode full
 ```
 
 If `make` is available:
@@ -219,6 +235,8 @@ ollama pull qwen2.5-coder:7b
 ```bash
 python -m app run --topic "Customer support automation" --n_ideas 10
 python -m app run --topic "FinOps insights" --fast
+python -m app run --topic "Founder workflow automation" --profile quick
+python -m app run --topic "B2B procurement intelligence" --profile deep
 python -m app golden-run --topic "Audit-ready topic"
 ```
 
@@ -228,6 +246,21 @@ Fast mode reduces cost/time by:
 - limiting sources to 3
 - generating a minimal repo skeleton
 - shorter landing and content pack (3 posts, 2 hooks, 1 ad)
+
+## Execution Profiles (Predictable Local Cost)
+Each run can use one explicit execution profile with fixed budgets:
+
+- `quick`: 12 min, ~18k token est, max 3 ideas, max 3 sources
+- `standard`: 35 min, ~60k token est, max 10 ideas, max 8 sources
+- `deep`: 75 min, ~140k token est, max 20 ideas, max 12 sources
+
+How to use:
+- CLI: `python -m app run --topic "..." --profile quick|standard|deep`
+- API: pass `execution_profile` in `POST /run`
+- UI: select `Execution profile` in `New run (guided)`
+
+Per-run budget telemetry is written to:
+- `runs/<run_id>/run_budget.json`
 
 ## Onboarding (<10 min to first value)
 In the Streamlit UI (`New run (guided)`), use one of the 3 onboarding paths:

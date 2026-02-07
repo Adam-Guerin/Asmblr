@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
 
 from app.core.llm import LLMClient
 from app.loop.errors import LoopException
@@ -30,7 +29,7 @@ class LoopPatcher:
             raise LoopException('LLM patch output was empty.')
         if 'Binary files' in patch_text or 'GIT binary patch' in patch_text:
             raise LoopException('Binary patch detected, refusing to apply.')
-        touched: List[str] = []
+        touched: list[str] = []
         lines = patch_text.splitlines()
         line_count = 0
         for raw in lines:
@@ -40,9 +39,7 @@ class LoopPatcher:
                 if file_path and file_path not in touched:
                     touched.append(file_path)
                 continue
-            if raw.startswith('+') and not raw.startswith('+++'):
-                line_count += 1
-            elif raw.startswith('-') and not raw.startswith('---'):
+            if raw.startswith('+') and not raw.startswith('+++') or raw.startswith('-') and not raw.startswith('---'):
                 line_count += 1
         if not touched:
             raise LoopException('Patch did not touch any repository files.')

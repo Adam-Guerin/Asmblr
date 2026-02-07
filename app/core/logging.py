@@ -3,9 +3,10 @@ from __future__ import annotations
 import os
 import sys
 from contextvars import ContextVar
-from typing import Any, Dict
+from typing import Any
 
 from loguru import logger
+from app.core.config import redact_value
 
 _RUN_ID: ContextVar[str] = ContextVar("run_id", default="-")
 _REQUEST_ID: ContextVar[str] = ContextVar("request_id", default="-")
@@ -23,9 +24,14 @@ def clear_log_context() -> None:
     _REQUEST_ID.set("-")
 
 
-def _patch_record(record: Dict[str, Any]) -> None:
+def _patch_record(record: dict[str, Any]) -> None:
     record["extra"].setdefault("run_id", _RUN_ID.get())
     record["extra"].setdefault("request_id", _REQUEST_ID.get())
+    record["message"] = str(redact_value(record.get("message", "")))
+    redacted_extra: dict[str, Any] = {}
+    for key, value in record["extra"].items():
+        redacted_extra[key] = redact_value(value)
+    record["extra"] = redacted_extra
 
 
 def setup_logging() -> None:

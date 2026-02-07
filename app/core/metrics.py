@@ -5,7 +5,7 @@ import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Any
 
 
 @dataclass
@@ -20,7 +20,7 @@ class TimerSample:
         if duration_ms > self.max_ms:
             self.max_ms = duration_ms
 
-    def snapshot(self) -> Dict[str, float]:
+    def snapshot(self) -> dict[str, float]:
         avg = self.total_ms / self.count if self.count else 0.0
         return {"count": self.count, "avg_ms": round(avg, 2), "max_ms": round(self.max_ms, 2)}
 
@@ -30,12 +30,12 @@ class MetricsRegistry:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._api_counts: Dict[str, int] = defaultdict(int)
-        self._api_status: Dict[str, int] = defaultdict(int)
-        self._api_timers: Dict[str, TimerSample] = defaultdict(TimerSample)
-        self._llm_counts: Dict[str, int] = defaultdict(int)
-        self._llm_failures: Dict[str, int] = defaultdict(int)
-        self._llm_timers: Dict[str, TimerSample] = defaultdict(TimerSample)
+        self._api_counts: dict[str, int] = defaultdict(int)
+        self._api_status: dict[str, int] = defaultdict(int)
+        self._api_timers: dict[str, TimerSample] = defaultdict(TimerSample)
+        self._llm_counts: dict[str, int] = defaultdict(int)
+        self._llm_failures: dict[str, int] = defaultdict(int)
+        self._llm_timers: dict[str, TimerSample] = defaultdict(TimerSample)
         self._started_at = time.time()
 
     def record_api(self, path: str, status: int, duration_ms: float) -> None:
@@ -53,7 +53,7 @@ class MetricsRegistry:
                 self._llm_failures[key] += 1
             self._llm_timers[key].add(duration_ms)
 
-    def snapshot(self) -> Dict[str, Any]:
+    def snapshot(self) -> dict[str, Any]:
         with self._lock:
             api = {
                 "counts": dict(self._api_counts),

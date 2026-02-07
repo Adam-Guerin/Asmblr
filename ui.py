@@ -1,7 +1,5 @@
 import streamlit as st
-import json
 import time
-from pathlib import Path
 from datetime import datetime
 
 from app.core.config import Settings
@@ -52,7 +50,7 @@ def check_ollama_status():
     except Exception as e:
         return False, f"❌ Ollama error: {str(e)}"
 
-def run_asmblr_pipeline(topic, n_ideas, fast_mode, seed_inputs):
+def run_asmblr_pipeline(topic, n_ideas, fast_mode, validation_sprint_mode, seed_inputs):
     """Run the Asmblr pipeline and return results."""
     settings = Settings()
     llm_client = LLMClient(settings.ollama_base_url, settings.general_model)
@@ -61,6 +59,9 @@ def run_asmblr_pipeline(topic, n_ideas, fast_mode, seed_inputs):
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:18]
     
     try:
+        # Determine execution profile
+        execution_profile = "validation_sprint" if validation_sprint_mode else ("fast" if fast_mode else "standard")
+        
         results = run_crewai_pipeline(
             topic=topic,
             settings=settings,
@@ -68,7 +69,8 @@ def run_asmblr_pipeline(topic, n_ideas, fast_mode, seed_inputs):
             run_id=run_id,
             n_ideas=n_ideas,
             fast_mode=fast_mode,
-            seed_inputs=seed_inputs
+            seed_inputs=seed_inputs,
+            execution_profile=execution_profile
         )
         return True, results, run_id
     except Exception as e:
@@ -90,7 +92,17 @@ with st.sidebar:
     st.subheader("🔧 Pipeline Settings")
     topic = st.text_input("Topic/Domain", placeholder="e.g., productivity tools for remote teams")
     n_ideas = st.slider("Number of Ideas", 3, 15, 5)
-    fast_mode = st.checkbox("Fast Mode", help="Use fewer sources and simpler analysis")
+    
+    # Execution Mode Selection
+    execution_mode = st.selectbox(
+        "Execution Mode",
+        options=["Standard", "Fast", "Validation Sprint 7 jours"],
+        index=0,
+        help="Choose execution mode: Standard (full analysis), Fast (quick results), or Validation Sprint (7-day execution focused output)"
+    )
+    
+    fast_mode = execution_mode == "Fast"
+    validation_sprint_mode = execution_mode == "Validation Sprint 7 jours"
     
     # Seed Inputs
     st.subheader("🌱 Seed Data")
@@ -107,11 +119,14 @@ with st.sidebar:
             competitors=[c.strip() for c in competitors.split('\n') if c.strip()]
         )
 
-# Main Content
-col1, col2 = st.columns([2, 1])
+# Main Content with Tabs
+tab1, tab2 = st.tabs(["🎯 Generate MVP", "📊 Dashboard"])
 
-with col1:
-    st.header("🎯 Generate MVP")
+with tab1:
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.header("🎯 Generate MVP")
     
     if st.button("🚀 Start Generation", type="primary", disabled=not ollama_ok):
         with st.spinner("🔄 Running Asmblr pipeline..."):
@@ -138,7 +153,7 @@ with col1:
                 status_text.text("Finalizing...")
                 progress.progress(100)
                 
-                success, results, run_id = run_asmblr_pipeline(topic, n_ideas, fast_mode, seed_inputs)
+                success, results, run_id = run_asmblr_pipeline(topic, n_ideas, fast_mode, validation_sprint_mode, seed_inputs)
                 
                 if success:
                     st.success(f"✅ Pipeline completed successfully! Run ID: {run_id}")
@@ -238,6 +253,9 @@ with col2:
         - Try with Fast Mode enabled
         - Reduce number of ideas
         """)
+
+with tab2:
+    show_dashboard()
 
 # Footer
 st.markdown("---")

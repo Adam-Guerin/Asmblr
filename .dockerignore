@@ -1,0 +1,35 @@
+.git
+.gitignore
+.dockerignore
+
+# Python cache / virtualenv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+
+# Runtime artifacts
+runs/
+tmp_runs/
+tmp_data/
+data/cache/
+data/backups/
+

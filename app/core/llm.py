@@ -4,7 +4,7 @@ from copy import deepcopy
 import time
 import random
 import httpx
-from typing import Any, Dict, List
+from typing import Any
 from loguru import logger
 
 from app.core.metrics import METRICS
@@ -29,6 +29,12 @@ class LLMClient:
         self._client = None
         self._cache: OrderedDict[str, Any] = OrderedDict()
         self._cache_max = 256
+        self._usage: dict[str, int] = {
+            "requests": 0,
+            "cache_hits": 0,
+            "prompt_chars": 0,
+            "output_chars": 0,
+        }
         if ChatOllama is not None:
             try:
                 self._client = ChatOllama(base_url=base_url, model=model, temperature=0.3)
@@ -46,12 +52,16 @@ class LLMClient:
         cached = self._cache_get(cache_key)
         if cached is not None:
             logger.debug("llm_cache_hit model={model} flavor=text", model=self.model)
+            self._usage["cache_hits"] += 1
             return cached
+        self._usage["prompt_chars"] += len(prompt or "")
         content = self._with_retry(lambda: self._client([HumanMessage(content=prompt)]).content)
+        self._usage["requests"] += 1
+        self._usage["output_chars"] += len(str(content or ""))
         self._cache_set(cache_key, content)
         return content
 
-    def generate_json(self, prompt: str) -> Dict[str, Any]:
+    def generate_json(self, prompt: str) -> dict[str, Any]:
         cache_key = self._cache_key("json", prompt)
         cached = self._cache_get(cache_key)
         if cached is not None:
@@ -104,8 +114,25 @@ class LLMClient:
                 logger.warning("LLM retry {attempt}/{total} after error: {err}", attempt=attempt, total=attempts, err=exc)
                 time.sleep(delay)
 
+    def reset_usage(self) -> None:
+        self._usage = {
+            "requests": 0,
+            "cache_hits": 0,
+            "prompt_chars": 0,
+            "output_chars": 0,
+        }
 
-def check_ollama(base_url: str, models: List[str]) -> Dict[str, Any]:
+    def usage_snapshot(self) -> dict[str, int]:
+        snapshot = dict(self._usage)
+        prompt_tokens_est = max(0, int(round(snapshot["prompt_chars"] / 4)))
+        output_tokens_est = max(0, int(round(snapshot["output_chars"] / 4)))
+        snapshot["prompt_tokens_est"] = prompt_tokens_est
+        snapshot["output_tokens_est"] = output_tokens_est
+        snapshot["tokens_est"] = prompt_tokens_est + output_tokens_est
+        return snapshot
+
+
+def check_ollama(base_url: str, models: list[str]) -> dict[str, Any]:
     """Verify Ollama is reachable and required models are available."""
     try:
         resp = httpx.get(f"{base_url}/api/tags", timeout=5.0)

@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 from app.mvp_cycles import MVPProgression

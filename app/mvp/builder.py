@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
-from typing import Callable
+from collections.abc import Callable
 
 from loguru import logger
 

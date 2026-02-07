@@ -6,8 +6,10 @@ import shutil
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Dict, Any, Iterable
+from typing import Any
+from collections.abc import Iterable
 import httpx
+import tempfile
 
 
 class RunManager:
@@ -70,7 +72,7 @@ class RunManager:
             except Exception:
                 pass
 
-    def get_run(self, run_id: str) -> Optional[Dict[str, Any]]:
+    def get_run(self, run_id: str) -> dict[str, Any] | None:
         with sqlite3.connect(self.db_path) as conn:
             row = conn.execute("SELECT id, topic, status, created_at, updated_at, output_dir FROM runs WHERE id=?", (run_id,)).fetchone()
         if not row:
@@ -78,7 +80,7 @@ class RunManager:
         keys = ["id", "topic", "status", "created_at", "updated_at", "output_dir"]
         return dict(zip(keys, row))
 
-    def list_runs(self) -> list[Dict[str, Any]]:
+    def list_runs(self) -> list[dict[str, Any]]:
         with sqlite3.connect(self.db_path) as conn:
             rows = conn.execute("SELECT id, topic, status, created_at, updated_at, output_dir FROM runs ORDER BY created_at DESC").fetchall()
         keys = ["id", "topic", "status", "created_at", "updated_at", "output_dir"]
@@ -96,6 +98,45 @@ class RunManager:
 
     def write_json(self, run_id: str, relative_path: str, payload: Any) -> Path:
         return self.write_artifact(run_id, relative_path, json.dumps(payload, indent=2))
+
+    def write_json_atomic(self, run_id: str, relative_path: str, payload: Any) -> Path:
+        """Write JSON file atomically to prevent race conditions."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+        output_dir = Path(run["output_dir"])
+        target = output_dir / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Create temporary file in the same directory to ensure atomic rename works
+        temp_fd, temp_path = tempfile.mkstemp(
+            suffix=".tmp", 
+            prefix=target.name + ".", 
+            dir=target.parent
+        )
+        
+        try:
+            with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, indent=2)
+            
+            # On Windows, we need to remove the target file first if it exists
+            if target.exists():
+                target.unlink()
+            
+            # Atomic rename
+            os.rename(temp_path, target)
+            
+        except Exception:
+            # Clean up temp file if something went wrong
+            try:
+                if os.path.exists(temp_path):
+                    os.unlink(temp_path)
+            except Exception:
+                pass
+            # Fallback to non-atomic write
+            target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        
+        return target
 
     def append_log(self, run_id: str, message: str) -> Path:
         run = self.get_run(run_id)
@@ -120,7 +161,7 @@ class RunManager:
         output_dir = Path(run["output_dir"])
         return output_dir / "run_state.json"
 
-    def get_state(self, run_id: str) -> Dict[str, Any] | None:
+    def get_state(self, run_id: str) -> dict[str, Any] | None:
         try:
             path = self._state_path(run_id)
         except ValueError:
@@ -132,7 +173,7 @@ class RunManager:
         except Exception:
             return None
 
-    def init_state(self, run_id: str, params: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    def init_state(self, run_id: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         now = datetime.utcnow().isoformat()
         state = self.get_state(run_id) or {
             "run_id": run_id,
@@ -148,18 +189,54 @@ class RunManager:
             state["params"] = params
         state["updated_at"] = now
         path = self._state_path(run_id)
-        path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        
+        # Use atomic write for state file
+        temp_path = path.with_suffix(".tmp")
+        try:
+            temp_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+            # On Windows, we need to remove the target file first if it exists
+            if path.exists():
+                path.unlink()
+            temp_path.rename(path)
+        except Exception:
+            # Clean up temp file if something went wrong
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except Exception:
+                    pass
+            # Fallback to non-atomic write
+            path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        
         return state
 
-    def update_state(self, run_id: str, **fields: Any) -> Dict[str, Any]:
+    def update_state(self, run_id: str, **fields: Any) -> dict[str, Any]:
         state = self.get_state(run_id) or self.init_state(run_id)
         state.update(fields)
         state["updated_at"] = datetime.utcnow().isoformat()
         path = self._state_path(run_id)
-        path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        
+        # Use atomic write for state file
+        temp_path = path.with_suffix(".tmp")
+        try:
+            temp_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+            # On Windows, we need to remove the target file first if it exists
+            if path.exists():
+                path.unlink()
+            temp_path.rename(path)
+        except Exception:
+            # Clean up temp file if something went wrong
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except Exception:
+                    pass
+            # Fallback to non-atomic write
+            path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        
         return state
 
-    def begin_stage(self, run_id: str, stage: str) -> Dict[str, Any]:
+    def begin_stage(self, run_id: str, stage: str) -> dict[str, Any]:
         state = self.get_state(run_id) or self.init_state(run_id)
         attempts = state.get("attempts") or {}
         attempts[stage] = int(attempts.get(stage, 0)) + 1
@@ -167,7 +244,7 @@ class RunManager:
         state["stage"] = stage
         return self.update_state(run_id, stage=stage, attempts=attempts)
 
-    def complete_stage(self, run_id: str, stage: str) -> Dict[str, Any]:
+    def complete_stage(self, run_id: str, stage: str) -> dict[str, Any]:
         state = self.get_state(run_id) or self.init_state(run_id)
         completed = list(state.get("completed") or [])
         if stage not in completed:

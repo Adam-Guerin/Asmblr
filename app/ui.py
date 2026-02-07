@@ -5,11 +5,10 @@ import html
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.core.config import get_settings
+from app.core.config import get_settings, previous_secret_allowed
 from app.core.llm import check_ollama
 from app.core.models import SeedInputs
 from app.core.run_manager import RunManager
-from app.core.pipeline import VenturePipeline
 from app.ui_quality import render_quality_dashboard
 from app.core.rate_limit import RateLimiter
 from app.core.audit import write_audit_event
@@ -192,6 +191,7 @@ def _init_onboarding_state() -> None:
     st.session_state.setdefault("new_run_seed_context", "")
     st.session_state.setdefault("new_run_n_ideas", settings.default_n_ideas)
     st.session_state.setdefault("new_run_fast_mode", settings.fast_mode)
+    st.session_state.setdefault("new_run_execution_profile", "quick" if settings.fast_mode else "standard")
 
 if settings.ui_password:
     if "ui_authenticated" not in st.session_state:
@@ -202,10 +202,23 @@ if settings.ui_password:
             password = st.text_input("Password", type="password")
             submitted = st.form_submit_button("Sign in")
         if submitted:
-            if password == settings.ui_password or (settings.ui_password_prev and password == settings.ui_password_prev):
+            if password == settings.ui_password:
                 st.session_state.ui_authenticated = True
                 st.success("Authenticated.")
                 st.rerun()
+            elif settings.ui_password_prev and password == settings.ui_password_prev:
+                prev_allowed, _reason = previous_secret_allowed(
+                    previous_value=settings.ui_password_prev,
+                    current_value=settings.ui_password,
+                    expires_at=settings.ui_password_prev_expires_at,
+                    enforce_rotation=settings.enforce_key_rotation,
+                )
+                if prev_allowed:
+                    st.session_state.ui_authenticated = True
+                    st.success("Authenticated.")
+                    st.rerun()
+                else:
+                    st.error("Previous password is expired or invalid. Use the current UI password.")
             else:
                 st.error("Invalid password.")
         st.stop()
@@ -316,6 +329,12 @@ with st.expander("New run (guided)", expanded=False):
     seed_context = st.text_area("Seed context (optional)", key="new_run_seed_context", height=80)
     n_ideas = st.number_input("Number of ideas", min_value=1, max_value=20, key="new_run_n_ideas")
     fast_mode = st.checkbox("Fast mode", key="new_run_fast_mode")
+    execution_profile = st.selectbox(
+        "Execution profile",
+        ["quick", "standard", "deep"],
+        key="new_run_execution_profile",
+        help="Defines explicit run budgets (time/token) and run depth.",
+    )
     start_run = st.button("Start run")
 
     if start_run:
@@ -342,6 +361,7 @@ with st.expander("New run (guided)", expanded=False):
                 fast=fast_mode,
                 seeds=seeds,
                 webhook_url=None,
+                execution_profile=execution_profile,
             )
             manager.update_status(run_id, "queued")
             job = _job_status(run_id)
@@ -360,6 +380,7 @@ with st.expander("New run (guided)", expanded=False):
                     "seed_competitors": _parse_seed_items(seed_competitors),
                     "seed_context": seed_context.strip() or None,
                     "onboarding_path": selected_template_id,
+                    "execution_profile": execution_profile,
                     "actor": "ui",
                     "job_id": job.get("job_id"),
                 },
@@ -370,6 +391,7 @@ with st.expander("New run (guided)", expanded=False):
                     "event": "run_queued",
                     "run_id": run_id,
                     "job_id": job.get("job_id"),
+                    "execution_profile": execution_profile,
                     "actor": "ui",
                 },
             )

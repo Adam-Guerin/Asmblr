@@ -3,9 +3,9 @@ import platform
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
-from app.core.config import BASE_DIR, Settings
+from app.core.config import BASE_DIR, Settings, validate_prod_mode
 from app.core.llm import LLMClient, check_ollama
 
 
@@ -15,7 +15,7 @@ class DoctorResult:
     report: str
 
 
-def _env_info() -> Dict[str, Any]:
+def _env_info() -> dict[str, Any]:
     return {
         "os": platform.platform(),
         "python": sys.version.split()[0],
@@ -41,8 +41,8 @@ def _env_file_status() -> str:
     return f"missing (copy .env.example to {env_path})"
 
 
-def _format_fix_steps(system: str, settings: Settings) -> List[str]:
-    lines: List[str] = []
+def _format_fix_steps(system: str, settings: Settings) -> list[str]:
+    lines: list[str] = []
     if system.lower().startswith("win"):
         lines.append("### Fix commands (Windows PowerShell)")
         lines.append("```powershell")
@@ -80,7 +80,7 @@ def _format_fix_steps(system: str, settings: Settings) -> List[str]:
 
 
 def run_doctor(settings: Settings) -> DoctorResult:
-    lines: List[str] = ["# Doctor Report", ""]
+    lines: list[str] = ["# Doctor Report", ""]
     info = _env_info()
     lines.append("## Environment")
     lines.append(f"- OS: {info['os']}")
@@ -124,7 +124,7 @@ def run_doctor(settings: Settings) -> DoctorResult:
     llm_client = LLMClient(settings.ollama_base_url, settings.general_model)
     text_ok = False
     json_ok = False
-    llm_errors: List[str] = []
+    llm_errors: list[str] = []
     if not llm_client.available():
         llm_errors.append("LLM client not initialized (langchain community dependency missing)")
     try:
@@ -156,6 +156,23 @@ def run_doctor(settings: Settings) -> DoctorResult:
     lines.append(f"- {diag_dir}: {'writable' if runs_ok else 'not writable'}")
     lines.append(f"- {settings.data_dir}: {'writable' if data_ok else 'not writable'}")
     if not runs_ok or not data_ok:
+        ok = False
+
+    lines.append("")
+    lines.append("## Production checklist")
+    prod_checks = validate_prod_mode(settings)
+    if settings.prod_mode:
+        lines.append("- PROD_MODE: enabled")
+    else:
+        lines.append("- PROD_MODE: disabled")
+    if settings.prod_mode and settings.require_prod_checklist:
+        lines.append("- Checklist enforcement: enabled")
+    else:
+        lines.append("- Checklist enforcement: disabled")
+    for check in prod_checks.get("checks", []):
+        status = "ok" if check.get("ok") else "fail"
+        lines.append(f"- [{status}] {check.get('name')}: {check.get('detail')}")
+    if settings.prod_mode and settings.require_prod_checklist and not prod_checks.get("ok"):
         ok = False
 
     report = "\n".join(lines) + "\n"

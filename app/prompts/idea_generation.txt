@@ -22,6 +22,10 @@ RULES
 - If missing data, write "unknown" and add explicit assumptions.
 - Each idea must link to >=1 pain (linked_pain_ids).
 - Buildable in 4-8 weeks, no paid APIs.
+- Avoid generic wording ("save time", "improve efficiency", "all-in-one").
+- Each idea must include at least one concrete validation path in the first 7 days
+  (example: landing waitlist test, design-partner outreach, interview sprint, pilot signup).
+- Target user must be specific enough to run outreach immediately.
 
 FAST MODE
 - Max 3 pains

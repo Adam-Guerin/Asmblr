@@ -19,6 +19,7 @@ SCORING CRITERIA (0-100 each)
 - differentiation
 - technical_complexity
 - time_to_mvp
+- actionability_for_7_day_validation
 
 OUTPUT (STRICT JSON)
 Return JSON object with keys: ideas, scores, top_idea, competitors
@@ -30,6 +31,7 @@ Return JSON object with keys: ideas, scores, top_idea, competitors
 RULES
 - Do NOT invent competitors.
 - If missing data: use "unknown" and add assumptions.
+- Penalize ideas with generic claims and no clear early validation path.
 
 FAST MODE
 - Analyze only the top 1 idea

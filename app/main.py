@@ -7,7 +7,7 @@ from pathlib import Path
 import time
 import httpx
 
-from app.core.config import get_settings
+from app.core.config import get_settings, previous_secret_allowed, validate_prod_mode
 from app.core.pipeline import VenturePipeline
 from app.core.llm import check_ollama
 from app.core.logging import setup_logging, set_log_context, clear_log_context
@@ -51,8 +51,19 @@ def _require_api_key(request: Request) -> None:
     if not settings.api_key:
         return
     provided = request.headers.get("X-API-Key", "")
-    if provided != settings.api_key and (not settings.api_key_prev or provided != settings.api_key_prev):
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    if provided == settings.api_key:
+        return
+    if settings.api_key_prev and provided == settings.api_key_prev:
+        prev_allowed, reason = previous_secret_allowed(
+            previous_value=settings.api_key_prev,
+            current_value=settings.api_key,
+            expires_at=settings.api_key_prev_expires_at,
+            enforce_rotation=settings.enforce_key_rotation,
+        )
+        if prev_allowed:
+            return
+        raise HTTPException(status_code=401, detail=f"Unauthorized (previous key {reason})")
+    raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 class RunRequest(BaseModel):
@@ -67,6 +78,7 @@ class RunRequest(BaseModel):
     webhook_url: str | None = Field(default=None, max_length=300)
     deploy: bool = False
     deploy_dry_run: bool = True
+    execution_profile: str | None = Field(default=None, max_length=20)
 
 
 class FeedbackMetricsRequest(BaseModel):
@@ -85,6 +97,15 @@ def _normalize_seed_list(value: list[str] | None) -> list[str]:
         return []
     trimmed = [item.strip() for item in value if item and item.strip()]
     return trimmed[:12]
+
+
+def _normalize_execution_profile(value: str | None) -> str | None:
+    if not value:
+        return None
+    cleaned = value.strip().lower()
+    if cleaned in {"quick", "standard", "deep"}:
+        return cleaned
+    raise HTTPException(status_code=422, detail="execution_profile must be one of: quick, standard, deep")
 
 
 def _notify_webhook(url: str, payload: dict) -> None:
@@ -116,6 +137,7 @@ def start_run(req: RunRequest, background: BackgroundTasks, request: Request):
             "seed_pains": req.seed_pains,
             "seed_competitors": req.seed_competitors,
             "seed_context": req.seed_context,
+            "execution_profile": req.execution_profile,
             "webhook": bool(req.webhook_url),
             "actor": request.headers.get("X-Actor", "api"),
             "client_ip": request.client.host if request.client else None,
@@ -142,6 +164,7 @@ def start_run(req: RunRequest, background: BackgroundTasks, request: Request):
         context=req.seed_context,
         theme=req.theme,
     )
+    execution_profile = _normalize_execution_profile(req.execution_profile)
 
     job_id = enqueue_run(
         run_id=run_id,
@@ -152,6 +175,7 @@ def start_run(req: RunRequest, background: BackgroundTasks, request: Request):
         webhook_url=req.webhook_url,
         deploy=req.deploy,
         deploy_dry_run=req.deploy_dry_run,
+        execution_profile=execution_profile,
     )
     pipeline.manager.update_status(run_id, "queued")
     write_audit_event(
@@ -160,10 +184,17 @@ def start_run(req: RunRequest, background: BackgroundTasks, request: Request):
             "event": "run_queued",
             "run_id": run_id,
             "job_id": job_id,
+            "execution_profile": execution_profile,
             "actor": request.headers.get("X-Actor", "api"),
         },
     )
-    return {"run_id": run_id, "status": "queued", "job_id": job_id, "webhook": bool(req.webhook_url)}
+    return {
+        "run_id": run_id,
+        "status": "queued",
+        "job_id": job_id,
+        "webhook": bool(req.webhook_url),
+        "execution_profile": execution_profile or ("quick" if req.fast else "standard"),
+    }
 
 
 @app.post("/run/{run_id}/resume")
@@ -325,6 +356,12 @@ def healthz():
 
 @app.get("/readyz")
 def readyz():
+    if settings.prod_mode and settings.require_prod_checklist:
+        prod_checks = validate_prod_mode(settings)
+        if not prod_checks.get("ok"):
+            failing = next((item for item in prod_checks.get("checks", []) if not item.get("ok")), None)
+            detail = failing.get("detail") if failing else "Production checklist failed"
+            raise HTTPException(status_code=503, detail=f"Prod checklist failed: {detail}")
     errors = []
     for general_model, code_model in pipeline._model_candidates():
         try:

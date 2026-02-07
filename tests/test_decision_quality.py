@@ -3,7 +3,7 @@ from pathlib import Path
 
 from app.cli import run_golden_topic
 from app.core.config import Settings
-from app.core.models import SeedInputs
+from app.core.models import SeedInputs, Idea, IdeaScore
 from app.core.pipeline import VenturePipeline
 from app.signal_engine import SignalEngineResult
 
@@ -158,6 +158,65 @@ def test_pain_validation_rejects_generic(tmp_path):
     validated = pipeline._validate_pains(generic_pains)
     assert validated["validated"] == []
     assert all("generic" in entry["reason"] for entry in validated["rejected"])
+
+
+def test_idea_actionability_scores_specific_higher_than_generic(tmp_path):
+    settings = _prepare_settings(tmp_path)
+    pipeline = VenturePipeline(settings)
+    specific = Idea(
+        name="Founder Interview Sprint",
+        one_liner="Run a 7-day founder outreach sprint with a waitlist landing page.",
+        target_user="B2B SaaS founders with 2-10 employees",
+        problem="Founders struggle to validate positioning before building.",
+        solution="Generate outreach copy, launch landing page, and track interview-to-signup conversion.",
+        key_features=["linkedin outreach", "waitlist landing", "interview tracker"],
+    )
+    generic = Idea(
+        name="Productivity Booster",
+        one_liner="Save time and improve efficiency for everyone.",
+        target_user="unknown",
+        problem="Teams are not productive.",
+        solution="All-in-one AI workflow.",
+        key_features=["automation"],
+    )
+    specific_score = pipeline._score_idea_actionability(specific)
+    generic_score = pipeline._score_idea_actionability(generic)
+    assert specific_score["score"] > generic_score["score"]
+
+
+def test_actionability_adjusts_scores_and_marks_blocked(tmp_path):
+    settings = _prepare_settings(tmp_path)
+    settings.idea_actionability_min_score = 60
+    settings.idea_actionability_adjustment_max = 12
+    pipeline = VenturePipeline(settings)
+    ideas = [
+        Idea(
+            name="Specific",
+            one_liner="Validate with 7-day waitlist test.",
+            target_user="B2B SaaS founders",
+            problem="Founders cannot prioritize which pain to validate first.",
+            solution="Launch interview + waitlist workflow in one week.",
+            key_features=["waitlist", "interviews", "outreach"],
+        ),
+        Idea(
+            name="Generic",
+            one_liner="Improve efficiency for teams.",
+            target_user="unknown",
+            problem="Productivity is low.",
+            solution="All-in-one AI tool.",
+            key_features=["automation"],
+        ),
+    ]
+    scores = [
+        IdeaScore(name="Specific", score=70, rationale="base", risks=[], signals={}),
+        IdeaScore(name="Generic", score=70, rationale="base", risks=[], signals={}),
+    ]
+    adjusted, report = pipeline._apply_actionability_to_scores(scores, ideas)
+    specific = next(item for item in adjusted if item.name == "Specific")
+    generic = next(item for item in adjusted if item.name == "Generic")
+    assert specific.score > generic.score
+    assert "Generic" in report["blocked"]
+    assert "actionability" in generic.signals
 
 
 def test_idea_traceability_required(tmp_path, monkeypatch):

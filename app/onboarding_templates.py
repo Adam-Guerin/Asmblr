@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Dict, Any
+from typing import Any
 
 
-ONBOARDING_TEMPLATES: Dict[str, Dict[str, Any]] = {
+ONBOARDING_TEMPLATES: dict[str, dict[str, Any]] = {
     "idee_floue": {
         "label": "Idee floue",
         "description": "Tu as une intuition mais pas encore de persona ou de douleur bien qualifies.",
@@ -68,11 +68,11 @@ ONBOARDING_TEMPLATES: Dict[str, Dict[str, Any]] = {
 }
 
 
-def get_onboarding_templates() -> Dict[str, Dict[str, Any]]:
+def get_onboarding_templates() -> dict[str, dict[str, Any]]:
     return deepcopy(ONBOARDING_TEMPLATES)
 
 
-def get_onboarding_template(template_id: str) -> Dict[str, Any]:
+def get_onboarding_template(template_id: str) -> dict[str, Any]:
     template = ONBOARDING_TEMPLATES.get(template_id)
     if not template:
         raise KeyError(f"Unknown onboarding template: {template_id}")

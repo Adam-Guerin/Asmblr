@@ -3,7 +3,6 @@ from __future__ import annotations
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Tuple
 
 from app.loop.errors import LoopException
 
@@ -15,7 +14,7 @@ class LoopApplier:
         if not self.git:
             raise LoopException('git is required for the loop runner.')
 
-    def apply_patch(self, patch_text: str, dry_run: bool) -> Tuple[str, bool]:
+    def apply_patch(self, patch_text: str, dry_run: bool) -> tuple[str, bool]:
         cmd = [self.git, 'apply', '--whitespace=nowarn']
         if dry_run:
             cmd.append('--check')

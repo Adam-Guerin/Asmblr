@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
 from pathlib import Path
 
 from datetime import timedelta
@@ -26,9 +25,10 @@ def enqueue_run(
     n_ideas: int,
     fast: bool,
     seeds: SeedInputs,
-    webhook_url: Optional[str],
+    webhook_url: str | None,
     deploy: bool = False,
     deploy_dry_run: bool = True,
+    execution_profile: str | None = None,
 ) -> str:
     q = _queue()
     job = q.enqueue(
@@ -47,6 +47,7 @@ def enqueue_run(
         webhook_url=webhook_url,
         deploy=deploy,
         deploy_dry_run=deploy_dry_run,
+        execution_profile=execution_profile,
     )
     RunManager(get_settings().runs_dir, get_settings().data_dir).update_state(run_id, job_id=job.id)
     return job.id
@@ -98,9 +99,10 @@ def run_job(
     n_ideas: int,
     fast: bool,
     seed_payload: dict,
-    webhook_url: Optional[str],
+    webhook_url: str | None,
     deploy: bool = False,
     deploy_dry_run: bool = True,
+    execution_profile: str | None = None,
 ) -> None:
     from app.core.logging import set_log_context, clear_log_context
     from app.core.pipeline import VenturePipeline
@@ -121,6 +123,7 @@ def run_job(
             "event": "run_started",
             "run_id": run_id,
             "job_id": manager.get_state(run_id).get("job_id") if manager.get_state(run_id) else None,
+            "execution_profile": execution_profile,
             "actor": "worker",
         },
     )
@@ -142,6 +145,7 @@ def run_job(
                 fast=fast,
                 seed_payload=seed_payload,
                 webhook_url=webhook_url,
+                execution_profile=execution_profile,
             )
             manager.update_status(run_id, "queued")
             write_audit_event(
@@ -165,7 +169,7 @@ def run_job(
             theme=seed_payload.get("theme"),
         )
         try:
-            pipeline.run(topic, n_ideas, fast, run_id, seed_inputs=seeds)
+            pipeline.run(topic, n_ideas, fast, run_id, seed_inputs=seeds, execution_profile=execution_profile)
         finally:
             run_info = RunManager(settings.runs_dir, settings.data_dir).get_run(run_id) or {}
             write_audit_event(
@@ -175,6 +179,7 @@ def run_job(
                     "run_id": run_id,
                     "job_id": manager.get_state(run_id).get("job_id") if manager.get_state(run_id) else None,
                     "final_status": run_info.get("status"),
+                    "execution_profile": execution_profile,
                     "actor": "worker",
                 },
             )

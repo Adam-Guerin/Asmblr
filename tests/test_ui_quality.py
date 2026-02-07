@@ -87,3 +87,72 @@ def test_dashboard_aggregation_counts(tmp_path: Path) -> None:
     assert "PRD" in missing_names or "Tech spec" in missing_names
     abort_metrics = next(item for item in metrics if item["run_id"] == "run_abort")
     assert abort_metrics["failure_report"]["last_stage"] == "crew_pipeline"
+
+
+def test_dashboard_business_kpis(tmp_path: Path) -> None:
+    runs_dir = tmp_path / "runs"
+    run_complete = runs_dir / "run_complete"
+    run_abort = runs_dir / "run_abort"
+    run_kill = runs_dir / "run_kill"
+    run_complete.mkdir(parents=True)
+    run_abort.mkdir(parents=True)
+    run_kill.mkdir(parents=True)
+
+    (run_complete / "post_launch_metrics.json").write_text(
+        json.dumps(
+            {
+                "metrics": {
+                    "ctr_landing_pct": 4.5,
+                    "signup_rate_pct": 12.0,
+                    "activation_rate_pct": 35.0,
+                    "visitors": 200,
+                    "signups": 24,
+                    "activated_users": 8,
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    metrics = [
+        load_run_metrics(
+            run_complete,
+            {
+                "id": "run_complete",
+                "status": "completed",
+                "topic": "launch analytics",
+                "created_at": "2026-01-25T12:00:00",
+                "updated_at": "2026-01-25T12:10:00",
+            },
+        ),
+        load_run_metrics(
+            run_abort,
+            {
+                "id": "run_abort",
+                "status": "aborted",
+                "topic": "weak signal",
+                "created_at": "2026-01-25T12:00:00",
+                "updated_at": "2026-01-25T12:05:00",
+            },
+        ),
+        load_run_metrics(
+            run_kill,
+            {
+                "id": "run_kill",
+                "status": "killed",
+                "topic": "bad economics",
+                "created_at": "2026-01-25T12:00:00",
+                "updated_at": "2026-01-25T12:08:00",
+            },
+        ),
+    ]
+
+    aggregated = aggregate_dashboard_metrics(metrics)
+    assert aggregated["avg_mvp_ready_sec"] == 600.0
+    assert aggregated["abort_rate_pct"] == 33.3
+    assert aggregated["kill_rate_pct"] == 33.3
+    assert aggregated["feedback_runs_count"] == 1
+    assert aggregated["avg_signup_rate_pct"] == 12.0
+    assert aggregated["avg_activation_rate_pct"] == 35.0
+    assert aggregated["post_launch_signup_conversion_pct"] == 12.0
+    assert aggregated["post_launch_activation_conversion_pct"] == 33.33

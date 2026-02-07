@@ -5,7 +5,6 @@ Installs dependencies and sets up Ollama
 """
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 def run_command(cmd, description="", check=True):

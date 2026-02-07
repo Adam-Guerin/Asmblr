@@ -1,0 +1,88 @@
+{
+  "rule_name": "auto-propose-collection-for-unknown-critical-fields",
+  "description": "Automatically propose collection actions when critical fields are unknown",
+  "trigger_condition": "Any critical field in data_source has value 'unknown'",
+  "implementation": {
+    "location": "app/core/pipeline.py",
+    "method": "_propose_collection_actions_for_unknown_fields",
+    "call_site": "After data_source creation, before PreRunGate evaluation"
+  },
+  "supported_critical_fields": {
+    "pages": {
+      "priority": "HIGH",
+      "impact": "CRITICAL - No market signals available",
+      "next_step": "Configure pain_sources in configs/sources.yaml with valid URLs and APIs"
+    },
+    "pains": {
+      "priority": "HIGH", 
+      "impact": "HIGH - Limited problem understanding",
+      "next_step": "Add more diverse sources or improve pain extraction prompts"
+    },
+    "competitors": {
+      "priority": "MEDIUM",
+      "impact": "MEDIUM - No competitive analysis", 
+      "next_step": "Configure competitor_sources in configs/sources.yaml or add competitor analysis tools"
+    },
+    "seeds": {
+      "priority": "MEDIUM",
+      "impact": "LOW - Can proceed with generic analysis",
+      "next_step": "Provide seed inputs via UI or API to improve analysis quality"
+    }
+  },
+  "output": {
+    "file": "collection_actions.json",
+    "format": "JSON",
+    "fields": [
+      "topic",
+      "unknown_fields", 
+      "actions",
+      "generated_at",
+      "rule_applied"
+    ],
+    "action_structure": {
+      "field": "string",
+      "source_missing": "string",
+      "next_step": "string", 
+      "priority": "HIGH|MEDIUM",
+      "estimated_impact": "string"
+    }
+  },
+  "integration_points": {
+    "decision_missing": "Actions are added to decision_missing list for visibility",
+    "progress_logging": "Actions are logged to pipeline progress",
+    "confidence_scoring": "Unknown fields already penalize confidence score"
+  },
+  "examples": [
+    {
+      "scenario": "pages and competitors unknown",
+      "data_source": {
+        "pages": "unknown",
+        "pains": "real",
+        "competitors": "unknown", 
+        "seeds": "none"
+      },
+      "expected_actions": 2,
+      "expected_priorities": ["HIGH", "MEDIUM"]
+    },
+    {
+      "scenario": "all fields real",
+      "data_source": {
+        "pages": "real",
+        "pains": "real",
+        "competitors": "real",
+        "seeds": "seed"
+      },
+      "expected_actions": 0
+    }
+  ],
+  "test_coverage": {
+    "file": "tests/test_collection_actions_rule.py",
+    "tests": [
+      "test_collection_actions_proposed_for_unknown_fields",
+      "test_no_collection_actions_for_all_real_fields", 
+      "test_field_impact_estimation",
+      "test_collection_actions_json_structure"
+    ],
+    "status": "PASSING"
+  }
+}

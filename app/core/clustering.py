@@ -1,9 +1,8 @@
-from typing import List, Dict
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 
 
-def cluster_texts(texts: List[str], n_clusters: int = 5) -> Dict[int, List[str]]:
+def cluster_texts(texts: list[str], n_clusters: int = 5) -> dict[int, list[str]]:
     if not texts:
         return {}
     n_clusters = min(n_clusters, max(1, len(texts)))
@@ -13,7 +12,7 @@ def cluster_texts(texts: List[str], n_clusters: int = 5) -> Dict[int, List[str]]
         n_clusters = tfidf.shape[0]
     model = KMeans(n_clusters=n_clusters, n_init=5, random_state=42)
     labels = model.fit_predict(tfidf)
-    clusters: Dict[int, List[str]] = {}
+    clusters: dict[int, list[str]] = {}
     for text, label in zip(texts, labels):
         clusters.setdefault(int(label), []).append(text)
     return clusters

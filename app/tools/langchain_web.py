@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from langchain.tools import BaseTool
 from loguru import logger
-from pydantic import BaseModel, conint, validator
+from pydantic import BaseModel, conint, field_validator
 
 from app.core.constants import DEFAULT_CACHE_DIR
 from app.tools.competitor import extract_competitors
@@ -26,7 +26,7 @@ def is_valid_url(url: str) -> bool:
 class WebSearchArgs(BaseModel):
     """Arguments for web_search_and_summarize tool."""
 
-    sources: List[Dict[str, str]]
+    sources: list[dict[str, str]]
     max_sources: conint(ge=1, le=50) = 8
     cache_dir: str
     timeout: conint(ge=5, le=60) = 20
@@ -35,11 +35,12 @@ class WebSearchArgs(BaseModel):
     retry_min_wait: conint(ge=1, le=10) = 1
     retry_max_wait: conint(ge=1, le=30) = 6
 
-    @validator("sources")
-    def validate_sources(cls, value: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    @field_validator("sources")
+    @classmethod
+    def validate_sources(cls, value: list[dict[str, str]]) -> list[dict[str, str]]:
         if not value:
             raise ValueError("sources must not be empty")
-        cleaned: List[Dict[str, str]] = []
+        cleaned: list[dict[str, str]] = []
         for entry in value:
             name = (entry or {}).get("name", "").strip()
             url = (entry or {}).get("url", "").strip()
@@ -58,7 +59,7 @@ class WebSearchAndSummarizeTool(BaseTool):
 
     def _run(
         self,
-        sources: List[Dict[str, str]],
+        sources: list[dict[str, str]],
         max_sources: int,
         cache_dir: str,
         timeout: int,
@@ -89,17 +90,18 @@ class WebSearchAndSummarizeTool(BaseTool):
 class CompetitorArgs(BaseModel):
     """Arguments for competitor_extractor tool."""
 
-    pages: Optional[List[Dict[str, Any]]] = None
-    urls: Optional[List[str]] = None
-    cache_dir: Optional[str] = None
+    pages: list[dict[str, Any]] | None = None
+    urls: list[str] | None = None
+    cache_dir: str | None = None
     timeout: conint(ge=5, le=60) = 20
     rate_limit_per_domain: conint(ge=1, le=10) = 2
     retry_max_attempts: conint(ge=1, le=6) = 3
     retry_min_wait: conint(ge=1, le=10) = 1
     retry_max_wait: conint(ge=1, le=30) = 6
 
-    @validator("urls")
-    def validate_urls(cls, value: Optional[List[str]]) -> Optional[List[str]]:
+    @field_validator("urls")
+    @classmethod
+    def validate_urls(cls, value: list[str] | None) -> list[str] | None:
         if value is None:
             return value
         cleaned = [u.strip() for u in value if u and u.strip()]
@@ -120,9 +122,9 @@ class CompetitorExtractorTool(BaseTool):
 
     def _run(
         self,
-        pages: Optional[List[Dict[str, Any]]] = None,
-        urls: Optional[List[str]] = None,
-        cache_dir: Optional[str] = None,
+        pages: list[dict[str, Any]] | None = None,
+        urls: list[str] | None = None,
+        cache_dir: str | None = None,
         timeout: int = 20,
         rate_limit_per_domain: int = 2,
         retry_max_attempts: int = 3,

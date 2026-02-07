@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 import httpx
 
@@ -21,7 +21,7 @@ class AdsConfig:
     timeout_s: int = 30
 
 
-def _post_json(url: str, payload: Dict[str, Any], token: str, timeout_s: int) -> Dict[str, Any]:
+def _post_json(url: str, payload: dict[str, Any], token: str, timeout_s: int) -> dict[str, Any]:
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     with httpx.Client(timeout=timeout_s) as client:
         resp = client.post(url, json=payload, headers=headers)
@@ -31,23 +31,21 @@ def _post_json(url: str, payload: Dict[str, Any], token: str, timeout_s: int) ->
         return {"status": "ok", "text": resp.text}
 
 
-def create_google_ads_campaign(config: AdsConfig, payload: Dict[str, Any]) -> Dict[str, Any]:
+def create_google_ads_campaign(config: AdsConfig, payload: dict[str, Any]) -> dict[str, Any]:
     if config.dry_run:
         return {"dry_run": True, "payload": payload}
-    url = "https://googleads.googleapis.com/v16/customers/{customer_id}/googleAds:mutate".format(
-        customer_id=config.google_customer_id
-    )
+    url = f"https://googleads.googleapis.com/v16/customers/{config.google_customer_id}/googleAds:mutate"
     return _post_json(url, payload, config.google_dev_token, config.timeout_s)
 
 
-def create_meta_ads_campaign(config: AdsConfig, payload: Dict[str, Any]) -> Dict[str, Any]:
+def create_meta_ads_campaign(config: AdsConfig, payload: dict[str, Any]) -> dict[str, Any]:
     if config.dry_run:
         return {"dry_run": True, "payload": payload}
     url = f"https://graph.facebook.com/v19.0/act_{config.meta_ad_account_id}/campaigns"
     return _post_json(url, payload, config.meta_access_token, config.timeout_s)
 
 
-def create_tiktok_ads_campaign(config: AdsConfig, payload: Dict[str, Any]) -> Dict[str, Any]:
+def create_tiktok_ads_campaign(config: AdsConfig, payload: dict[str, Any]) -> dict[str, Any]:
     if config.dry_run:
         return {"dry_run": True, "payload": payload}
     url = "https://business-api.tiktok.com/open_api/v1.3/campaign/create/"

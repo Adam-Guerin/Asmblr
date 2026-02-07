@@ -1,5 +1,7 @@
 import os
+import re
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -51,6 +53,21 @@ class Settings:
     signal_novel_keywords_target: int = int(os.getenv("SIGNAL_NOVEL_KEYWORDS_TARGET", "8"))
     signal_quality_threshold: int = int(os.getenv("SIGNAL_QUALITY_THRESHOLD", "45"))
     signal_recency_days: int = int(os.getenv("SIGNAL_RECENCY_DAYS", "365"))
+    idea_actionability_min_score: int = int(os.getenv("IDEA_ACTIONABILITY_MIN_SCORE", "55"))
+    idea_actionability_adjustment_max: int = int(os.getenv("IDEA_ACTIONABILITY_ADJUSTMENT_MAX", "12"))
+    idea_actionability_require_eligible_top: bool = os.getenv("IDEA_ACTIONABILITY_REQUIRE_ELIGIBLE_TOP", "false").lower() == "true"
+    learning_history_max_runs: int = int(os.getenv("LEARNING_HISTORY_MAX_RUNS", "200"))
+    learning_exploration_rate: float = float(os.getenv("LEARNING_EXPLORATION_RATE", "0.18"))
+    learning_success_bonus_max: int = int(os.getenv("LEARNING_SUCCESS_BONUS_MAX", "8"))
+    learning_failure_penalty_max: int = int(os.getenv("LEARNING_FAILURE_PENALTY_MAX", "10"))
+    learning_novelty_bonus_max: int = int(os.getenv("LEARNING_NOVELTY_BONUS_MAX", "6"))
+    learning_clone_penalty_start: float = float(os.getenv("LEARNING_CLONE_PENALTY_START", "0.75"))
+    primary_icp: str = os.getenv("PRIMARY_ICP", "Founders B2B SaaS pre-seed")
+    primary_icp_keywords: str = os.getenv(
+        "PRIMARY_ICP_KEYWORDS",
+        "founder,founders,b2b,saas,pre-seed,startup,startups,small team,operators",
+    )
+    icp_alignment_bonus_max: int = int(os.getenv("ICP_ALIGNMENT_BONUS_MAX", "8"))
     enable_self_healing: bool = os.getenv("ENABLE_SELF_HEALING", "true").lower() == "true"
     stage_retry_attempts: int = int(os.getenv("STAGE_RETRY_ATTEMPTS", "2"))
     stage_retry_backoff_sec: float = float(os.getenv("STAGE_RETRY_BACKOFF_SEC", "1.0"))
@@ -74,9 +91,14 @@ class Settings:
     ui_port: int = int(os.getenv("UI_PORT", "8501"))
     ui_password: str = os.getenv("UI_PASSWORD", "")
     ui_password_prev: str = os.getenv("UI_PASSWORD_PREV", "")
+    ui_password_prev_expires_at: str = os.getenv("UI_PASSWORD_PREV_EXPIRES_AT", "")
     kill_threshold: int = int(os.getenv("KILL_THRESHOLD", "55"))
     api_key: str = os.getenv("API_KEY", "")
     api_key_prev: str = os.getenv("API_KEY_PREV", "")
+    api_key_prev_expires_at: str = os.getenv("API_KEY_PREV_EXPIRES_AT", "")
+    enforce_key_rotation: bool = os.getenv("ENFORCE_KEY_ROTATION", "true").lower() == "true"
+    prod_mode: bool = os.getenv("PROD_MODE", "false").lower() == "true"
+    require_prod_checklist: bool = os.getenv("REQUIRE_PROD_CHECKLIST", "true").lower() == "true"
     run_rate_limit_per_min: int = int(os.getenv("RUN_RATE_LIMIT_PER_MIN", "6"))
     run_rate_limit_burst: int = int(os.getenv("RUN_RATE_LIMIT_BURST", "3"))
     run_retention_days: int = int(os.getenv("RUN_RETENTION_DAYS", "30"))
@@ -166,6 +188,158 @@ class Settings:
 
 def get_settings() -> Settings:
     return Settings()
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    """
+    Parse ISO datetime string with validation.
+    
+    Args:
+        value: ISO datetime string to parse
+        
+    Returns:
+        Parsed datetime with UTC timezone or None if invalid
+        
+    Expected formats:
+        - 2024-01-31T12:34:56 (ISO 8601 basic)
+        - 2024-01-31T12:34:56Z (with UTC)
+        - 2024-01-31T12:34:56+00:00 (with timezone)
+        - 20240131T123456 (compact)
+    """
+    if not value:
+        return None
+    
+    # Basic format validation
+    if not isinstance(value, str):
+        return None
+    
+    # Check for reasonable length (ISO datetime should be around 16-25 chars)
+    if len(value) < 10 or len(value) > 35:
+        return None
+    
+    # Check for valid ISO datetime patterns
+    iso_patterns = [
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$',  # 2024-01-31T12:34:56
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$',  # 2024-01-31T12:34:56Z
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$',  # 2024-01-31T12:34:56+00:00
+        r'^\d{8}T\d{6}$',  # 20240131T123456
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,3}$',  # 2024-01-31T12:34:56.789
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,3}Z$',  # 2024-01-31T12:34:56.789Z
+    ]
+    
+    if not any(re.match(pattern, value) for pattern in iso_patterns):
+        return None
+    
+    try:
+        # Use datetime.fromisoformat which handles most ISO 8601 formats
+        parsed = datetime.fromisoformat(value)
+        
+        # Additional validation: check if the parsed date is reasonable
+        now = datetime.now(timezone.utc)
+        # Don't allow dates more than 10 years in the past
+        past_boundary = now.replace(year=now.year - 10)
+        # Ensure both datetimes are timezone-aware for comparison
+        if parsed.tzinfo is None:
+            parsed_utc = parsed.replace(tzinfo=timezone.utc)
+        else:
+            parsed_utc = parsed.astimezone(timezone.utc)
+            
+        if parsed_utc < past_boundary.replace(tzinfo=timezone.utc):
+            return None
+        # Don't allow dates more than 10 years in the future
+        future_boundary = now.replace(year=now.year + 10)
+        if parsed_utc > future_boundary.replace(tzinfo=timezone.utc):
+            return None
+        
+        # Ensure timezone is set, default to UTC if not
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+            
+        return parsed
+    except ValueError as e:
+        # Log specific parsing error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to parse ISO datetime '{value}': {e}")
+        return None
+    except Exception as e:
+        # Catch any other unexpected errors
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected error parsing ISO datetime '{value}': {e}")
+        return None
+
+
+def previous_secret_allowed(
+    *,
+    previous_value: str,
+    current_value: str,
+    expires_at: str,
+    enforce_rotation: bool,
+) -> tuple[bool, str]:
+    if not previous_value:
+        return False, "not_configured"
+    if previous_value == current_value:
+        return False, "same_as_current"
+    if not enforce_rotation:
+        return True, "allowed_legacy"
+    expiry = _parse_iso_datetime(expires_at)
+    if expiry is None:
+        return False, "missing_or_invalid_expiry"
+    now = datetime.now(timezone.utc)
+    if now >= expiry:
+        return False, "expired"
+    return True, "within_grace_period"
+
+
+_SENSITIVE_KEY_PATTERNS = (
+    "password",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "authorization",
+    "bearer",
+    "cookie",
+)
+
+
+def _mask_secret(value: str) -> str:
+    if not value:
+        return "***"
+    if len(value) <= 6:
+        return "***"
+    return f"{value[:2]}***{value[-2:]}"
+
+
+def redact_value(value):
+    if isinstance(value, dict):
+        out = {}
+        for key, item in value.items():
+            key_text = str(key).lower()
+            if any(pattern in key_text for pattern in _SENSITIVE_KEY_PATTERNS):
+                out[key] = _mask_secret(str(item))
+            else:
+                out[key] = redact_value(item)
+        return out
+    if isinstance(value, list):
+        return [redact_value(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(redact_value(item) for item in value)
+    if isinstance(value, str):
+        text = value
+        text = re.sub(
+            r"(?i)\b(api[_-]?key|token|secret|password)\b\s*[:=]\s*['\"]?([A-Za-z0-9_\-\.=+/]{6,})['\"]?",
+            lambda m: f"{m.group(1)}={_mask_secret(m.group(2))}",
+            text,
+        )
+        text = re.sub(
+            r"(?i)\b(bearer)\s+([A-Za-z0-9_\-\.=+/]{6,})",
+            lambda m: f"{m.group(1)} {_mask_secret(m.group(2))}",
+            text,
+        )
+        return text
+    return value
 
 
 def validate_secrets(settings: Settings) -> dict:
@@ -282,4 +456,74 @@ def validate_secrets(settings: Settings) -> dict:
         _check("hosting", False, {}, "Hosting disabled.")
 
     overall_ok = all(item["ok"] for item in checks if item["enabled"])
+    return {"ok": overall_ok, "checks": checks}
+
+
+def validate_prod_mode(settings: Settings) -> dict:
+    checks: list[dict] = []
+
+    def _check(name: str, ok: bool, detail: str) -> None:
+        checks.append({"name": name, "ok": bool(ok), "detail": detail})
+
+    if not settings.prod_mode:
+        _check("prod_mode", True, "PROD_MODE=false (checklist not enforced).")
+        return {"ok": True, "checks": checks}
+
+    _check("api_key_present", bool(settings.api_key), "API_KEY must be set in prod mode.")
+    _check("ui_password_present", bool(settings.ui_password), "UI_PASSWORD must be set in prod mode.")
+
+    if settings.enable_publishing:
+        _check("publish_dry_run_disabled", not settings.publish_dry_run, "Set PUBLISH_DRY_RUN=false in prod mode.")
+    if settings.enable_ads:
+        _check("ads_dry_run_disabled", not settings.ads_dry_run, "Set ADS_DRY_RUN=false in prod mode.")
+    if settings.enable_deploy:
+        _check("deploy_dry_run_disabled", not settings.deploy_dry_run, "Set DEPLOY_DRY_RUN=false in prod mode.")
+
+    api_prev_ok, api_prev_reason = previous_secret_allowed(
+        previous_value=settings.api_key_prev,
+        current_value=settings.api_key,
+        expires_at=settings.api_key_prev_expires_at,
+        enforce_rotation=settings.enforce_key_rotation,
+    )
+    if settings.api_key_prev:
+        _check(
+            "api_key_prev_rotation",
+            api_prev_ok,
+            (
+                "API_KEY_PREV must differ from API_KEY and have a valid future "
+                "API_KEY_PREV_EXPIRES_AT while rotation is enforced."
+                if not api_prev_ok
+                else f"Previous API key accepted ({api_prev_reason})."
+            ),
+        )
+
+    ui_prev_ok, ui_prev_reason = previous_secret_allowed(
+        previous_value=settings.ui_password_prev,
+        current_value=settings.ui_password,
+        expires_at=settings.ui_password_prev_expires_at,
+        enforce_rotation=settings.enforce_key_rotation,
+    )
+    if settings.ui_password_prev:
+        _check(
+            "ui_password_prev_rotation",
+            ui_prev_ok,
+            (
+                "UI_PASSWORD_PREV must differ from UI_PASSWORD and have a valid future "
+                "UI_PASSWORD_PREV_EXPIRES_AT while rotation is enforced."
+                if not ui_prev_ok
+                else f"Previous UI password accepted ({ui_prev_reason})."
+            ),
+        )
+
+    secret_validation = validate_secrets(settings)
+    for item in secret_validation.get("checks", []):
+        if item.get("enabled"):
+            missing = item.get("missing") or []
+            _check(
+                f"secrets_{item.get('name')}",
+                bool(item.get("ok")),
+                item.get("note") or (f"Missing: {', '.join(missing)}" if missing else "ok"),
+            )
+
+    overall_ok = all(item["ok"] for item in checks)
     return {"ok": overall_ok, "checks": checks}

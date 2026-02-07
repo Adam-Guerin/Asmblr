@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -12,7 +11,7 @@ class RAGPlaybookQA:
         self.vectorizer = TfidfVectorizer(stop_words="english")
         self.matrix = self.vectorizer.fit_transform(self.docs) if self.docs else None
 
-    def _load_docs(self) -> List[str]:
+    def _load_docs(self) -> list[str]:
         docs = []
         for path in self.knowledge_dir.glob("*.md"):
             docs.append(path.read_text(encoding="utf-8"))

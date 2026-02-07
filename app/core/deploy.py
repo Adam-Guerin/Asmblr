@@ -4,7 +4,6 @@ import json
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from app.core.config import Settings, validate_secrets
 from app.core.run_manager import RunManager

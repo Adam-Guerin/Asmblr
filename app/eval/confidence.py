@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.core.config import Settings, get_settings
 
 
-def _read_json(path: Path) -> Dict[str, Any]:
+def _read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
@@ -16,7 +16,7 @@ def _read_json(path: Path) -> Dict[str, Any]:
         return {}
 
 
-def _parse_embedded_json(path: Path) -> Dict[str, Any]:
+def _parse_embedded_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
@@ -33,7 +33,7 @@ def _parse_embedded_json(path: Path) -> Dict[str, Any]:
         return {}
 
 
-def _read_decision_status(run_dir: Path, override: Optional[str]) -> Optional[str]:
+def _read_decision_status(run_dir: Path, override: str | None) -> str | None:
     if override:
         return override.upper()
     path = run_dir / "decision.md"
@@ -47,7 +47,7 @@ def _read_decision_status(run_dir: Path, override: Optional[str]) -> Optional[st
     return None
 
 
-def _score_llm_health(run_dir: Path) -> Dict[str, Any]:
+def _score_llm_health(run_dir: Path) -> dict[str, Any]:
     path = run_dir / "llm_check.md"
     data = _parse_embedded_json(path)
     if not data:
@@ -66,13 +66,13 @@ def _score_llm_health(run_dir: Path) -> Dict[str, Any]:
     return {"score": score, "details": details or "LLM self-test issues", "reasons": reasons}
 
 
-def _score_data_coverage(run_dir: Path, settings: Settings) -> Dict[str, Any]:
+def _score_data_coverage(run_dir: Path, settings: Settings) -> dict[str, Any]:
     path = run_dir / "data_check.md"
     data = _parse_embedded_json(path)
     pages = data.get("pages_count", 0)
     avg_len = data.get("avg_text_len", 0)
     unique_domains = data.get("unique_domains", 0)
-    components: List[float] = []
+    components: list[float] = []
     if settings.min_pages > 0:
         components.append(min(1.0, pages / max(1, settings.min_pages)))
     else:
@@ -93,7 +93,7 @@ def _score_data_coverage(run_dir: Path, settings: Settings) -> Dict[str, Any]:
         components.append(market_score)
     ratio = sum(components) / len(components)
     score = int(round(25 * ratio))
-    reasons: List[str] = []
+    reasons: list[str] = []
     if ratio < 1:
         reasons.append("Data coverage below configured targets")
     if market_data and market_score < 0.5:
@@ -102,7 +102,7 @@ def _score_data_coverage(run_dir: Path, settings: Settings) -> Dict[str, Any]:
     return {"score": score, "details": details, "reasons": reasons}
 
 
-def _score_pain_quality(run_dir: Path, settings: Settings) -> Dict[str, Any]:
+def _score_pain_quality(run_dir: Path, settings: Settings) -> dict[str, Any]:
     path = run_dir / "pains_validated.json"
     data = _read_json(path)
     validated = data.get("validated") or []
@@ -121,7 +121,7 @@ def _score_pain_quality(run_dir: Path, settings: Settings) -> Dict[str, Any]:
     return {"score": score, "details": details, "reasons": reasons}
 
 
-def _score_competitor_evidence(run_dir: Path, data_source: Dict[str, Any]) -> Dict[str, Any]:
+def _score_competitor_evidence(run_dir: Path, data_source: dict[str, Any]) -> dict[str, Any]:
     path = run_dir / "competitor_analysis.json"
     data = _read_json(path)
     comps = data.get("competitors") or data.get("items") or []
@@ -137,7 +137,7 @@ def _score_competitor_evidence(run_dir: Path, data_source: Dict[str, Any]) -> Di
     return {"score": score, "details": f"entries={len(comps)}", "reasons": reasons}
 
 
-def _score_traceability(run_dir: Path) -> Dict[str, Any]:
+def _score_traceability(run_dir: Path) -> dict[str, Any]:
     path = run_dir / "opportunities.json"
     data = _read_json(path)
     items = data.get("items") or []
@@ -159,7 +159,7 @@ def _score_traceability(run_dir: Path) -> Dict[str, Any]:
     return {"score": score, "details": details, "reasons": reasons}
 
 
-def _score_artifact_integrity(run_dir: Path) -> Dict[str, Any]:
+def _score_artifact_integrity(run_dir: Path) -> dict[str, Any]:
     files = [("prd.md", "PRD"), ("tech_spec.md", "Tech spec")]
     good = 0
     reasons = []
@@ -181,11 +181,11 @@ def _score_artifact_integrity(run_dir: Path) -> Dict[str, Any]:
 
 def compute_pre_artifact_confidence(
     run_dir: Path, settings: Settings | None = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     settings = settings or get_settings()
-    breakdown: Dict[str, Dict[str, Any]] = {}
+    breakdown: dict[str, dict[str, Any]] = {}
     total = 0
-    reasons: List[str] = []
+    reasons: list[str] = []
 
     llm = _score_llm_health(run_dir)
     breakdown["llm_health"] = {"score": llm["score"], "max": 10, "details": llm["details"]}
@@ -227,13 +227,13 @@ def compute_pre_artifact_confidence(
 
 
 def compute_confidence(
-    run_dir: Path, settings: Settings | None = None, status: Optional[str] = None
-) -> Dict[str, Any]:
+    run_dir: Path, settings: Settings | None = None, status: str | None = None
+) -> dict[str, Any]:
     settings = settings or get_settings()
     run_status = _read_decision_status(run_dir, status)
-    reasons: List[str] = []
-    caps: List[str] = []
-    breakdown: Dict[str, Dict[str, Any]] = {}
+    reasons: list[str] = []
+    caps: list[str] = []
+    breakdown: dict[str, dict[str, Any]] = {}
 
     if run_status == "ABORT":
         reasons.append("Run aborted before completion")

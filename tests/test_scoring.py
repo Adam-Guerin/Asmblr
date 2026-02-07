@@ -71,3 +71,38 @@ def test_heuristic_score_calibration_from_feedback(tmp_path: Path):
     assert meta["calibration"]["applied"] is True
     assert 0 <= no_calib <= 100
     assert 0 <= with_calib <= 100
+
+
+def test_heuristic_score_icp_alignment_bonus():
+    signals = {
+        "market_size": 65,
+        "competition": 45,
+        "differentiation": 60,
+        "build_difficulty": 45,
+        "time_to_mvp": 70,
+        "traction_signals": 60,
+    }
+    aligned_idea = {
+        "name": "Founder Pipeline Ops",
+        "target_user": "B2B SaaS founders",
+        "problem": "Pre-seed teams struggle to validate quickly",
+        "solution": "Lean validation workflow",
+        "key_features": ["startup experiments"],
+    }
+    off_idea = {
+        "name": "Local Salon Booking",
+        "target_user": "Neighborhood salons",
+        "problem": "Appointment scheduling friction",
+        "solution": "Booking assistant",
+        "key_features": ["calendar sync"],
+    }
+    common_kwargs = {
+        "topic": "Founders B2B SaaS pre-seed",
+        "icp_focus": "Founders B2B SaaS pre-seed",
+        "icp_keywords": "founder,b2b,saas,pre-seed,startup",
+        "icp_alignment_bonus_max": 8,
+        "use_calibration": False,
+    }
+    aligned = heuristic_score(signals, idea=aligned_idea, **common_kwargs)
+    off = heuristic_score(signals, idea=off_idea, **common_kwargs)
+    assert aligned > off

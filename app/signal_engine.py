@@ -6,7 +6,8 @@ import re
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
+from collections.abc import Callable
 from urllib.parse import quote_plus
 from datetime import datetime, timezone, timedelta
 
@@ -14,7 +15,7 @@ from app.core.config import Settings
 from app.tools.web import WebSearchAndSummarize, WebSource
 from loguru import logger
 
-Fetcher = Callable[[str, List[Dict[str, str]], int, str], List[Dict[str, Any]]]
+Fetcher = Callable[[str, list[dict[str, str]], int, str], list[dict[str, Any]]]
 
 
 def _simhash(text: str, bits: int = 64) -> int:
@@ -38,7 +39,7 @@ def _hamming(a: int, b: int) -> int:
     return bin(a ^ b).count("1")
 
 
-def _score_text(text: str, pass_type: str, weight_map: Optional[Dict[str, float]] = None) -> int:
+def _score_text(text: str, pass_type: str, weight_map: dict[str, float] | None = None) -> int:
     weight_map = weight_map or {"recent": 1.0, "top": 1.2, "search": 1.1}
     weight = weight_map.get(pass_type, 1.0)
     words = re.findall(r"\w+", text) if text else []
@@ -47,9 +48,9 @@ def _score_text(text: str, pass_type: str, weight_map: Optional[Dict[str, float]
 
 @dataclass
 class SignalEngineResult:
-    raw_pages: List[Dict[str, Any]]
-    deduped_pages: List[Dict[str, Any]]
-    groups: List[Dict[str, Any]]
+    raw_pages: list[dict[str, Any]]
+    deduped_pages: list[dict[str, Any]]
+    groups: list[dict[str, Any]]
 
 
 class SignalEngine:
@@ -61,7 +62,7 @@ class SignalEngine:
         output_dir: Path,
         topic: str,
         fast_mode: bool = False,
-        fetcher: Optional[Fetcher] = None,
+        fetcher: Fetcher | None = None,
     ) -> None:
         self.settings = settings
         self.output_dir = Path(output_dir)
@@ -70,9 +71,9 @@ class SignalEngine:
         self.fetcher = fetcher or self._default_fetcher
         self._hamming_threshold = 10
 
-    def run(self, sources: List[Dict[str, str]]) -> SignalEngineResult:
+    def run(self, sources: list[dict[str, str]]) -> SignalEngineResult:
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        raw_pages: List[Dict[str, Any]] = []
+        raw_pages: list[dict[str, Any]] = []
         if not self.topic or not isinstance(self.topic, str):
             logger.warning("Signal engine topic is empty or invalid.")
         max_sources = max(1, self.settings.max_sources)
@@ -87,7 +88,7 @@ class SignalEngine:
         deduped_pages = [group["canonical"] for group in groups]
         return SignalEngineResult(raw_pages=raw_pages, deduped_pages=deduped_pages, groups=groups)
 
-    def _run_pass(self, pass_type: str, sources: List[Dict[str, str]], limit: int) -> List[Dict[str, Any]]:
+    def _run_pass(self, pass_type: str, sources: list[dict[str, str]], limit: int) -> list[dict[str, Any]]:
         if not sources:
             return []
         per_source_limit = max(1, limit // len(sources))
@@ -103,7 +104,7 @@ class SignalEngine:
                     normalized.append(page)
         return normalized
 
-    def _normalize_entry(self, entry: Dict[str, Any], source: Dict[str, str], pass_type: str) -> Dict[str, Any]:
+    def _normalize_entry(self, entry: dict[str, Any], source: dict[str, str], pass_type: str) -> dict[str, Any]:
         text = str(entry.get("text") or entry.get("summary") or "")
         fingerprint = entry.get("fingerprint")
         if fingerprint is None:
@@ -138,8 +139,8 @@ class SignalEngine:
         }
         return page
 
-    def _dedupe(self, pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        groups: List[Dict[str, Any]] = []
+    def _dedupe(self, pages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        groups: list[dict[str, Any]] = []
         for page in pages:
             fingerprint = page.get("fingerprint", 0)
             group = next(
@@ -183,7 +184,7 @@ class SignalEngine:
         published_at: str | None,
         upvotes: Any,
         comments_count: Any,
-        source: Dict[str, Any] | None = None,
+        source: dict[str, Any] | None = None,
     ) -> int:
         source = source or {}
         words = re.findall(r"\w+", text) if text else []
@@ -228,7 +229,7 @@ class SignalEngine:
         total = length_score + engagement_score + recency_score
         return int(round(max(0.0, min(100.0, total))))
 
-    def _default_fetcher(self, pass_type: str, sources: List[Dict[str, str]], limit: int, topic: str) -> List[Dict[str, Any]]:
+    def _default_fetcher(self, pass_type: str, sources: list[dict[str, str]], limit: int, topic: str) -> list[dict[str, Any]]:
         primary_source = sources[0] if sources else {}
         source_api = str(primary_source.get("api") or "").strip().lower()
         if source_api == "reddit":
@@ -247,7 +248,7 @@ class SignalEngine:
             retry_max_wait=self.settings.retry_max_wait,
         )
         if pass_type == "search":
-            results: List[Dict[str, Any]] = []
+            results: list[dict[str, Any]] = []
             per_source_limit = max(1, limit // max(1, len(sources)))
             for source in sources:
                 if not source.get("url"):
@@ -255,7 +256,7 @@ class SignalEngine:
                 query = f"site:{source['url']} {topic}".strip()
                 results.extend(tool.search_bing(query, limit=per_source_limit))
             return results
-        expanded_sources: List[WebSource] = []
+        expanded_sources: list[WebSource] = []
         for source in sources:
             urls = self._expand_source_urls(tool, source, pass_type, topic, limit)
             for url in urls:
@@ -266,12 +267,12 @@ class SignalEngine:
     def _expand_source_urls(
         self,
         tool: WebSearchAndSummarize,
-        source: Dict[str, Any],
+        source: dict[str, Any],
         pass_type: str,
         topic: str,
         limit: int,
-    ) -> List[str]:
-        urls: List[str] = []
+    ) -> list[str]:
+        urls: list[str] = []
         base_url = source.get("url")
         if base_url:
             urls.append(self._build_pass_url(base_url, pass_type, topic, source))
@@ -300,7 +301,7 @@ class SignalEngine:
         deduped = list(dict.fromkeys([url for url in urls if url]))
         return deduped[:limit]
 
-    def _is_recent_enough(self, page: Dict[str, Any], source: Dict[str, Any]) -> bool:
+    def _is_recent_enough(self, page: dict[str, Any], source: dict[str, Any]) -> bool:
         strict_recency = bool(source.get("strict_recency"))
         published_at = page.get("published_at")
         if not published_at:
@@ -321,7 +322,7 @@ class SignalEngine:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         return dt >= cutoff
 
-    def _fetch_reddit_api(self, source: Dict[str, Any], pass_type: str, limit: int, topic: str) -> List[Dict[str, Any]]:
+    def _fetch_reddit_api(self, source: dict[str, Any], pass_type: str, limit: int, topic: str) -> list[dict[str, Any]]:
         cache_root = self.settings.data_dir / "cache" / "signal_engine" / "reddit"
         tool = WebSearchAndSummarize(
             [],
@@ -343,7 +344,7 @@ class SignalEngine:
         except Exception:
             return []
         children = (((payload or {}).get("data") or {}).get("children") or [])
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for child in children[: max(1, limit)]:
             data = (child or {}).get("data") or {}
             title = str(data.get("title") or "").strip()
@@ -365,7 +366,7 @@ class SignalEngine:
             )
         return results
 
-    def _fetch_github_issues_api(self, source: Dict[str, Any], limit: int, topic: str) -> List[Dict[str, Any]]:
+    def _fetch_github_issues_api(self, source: dict[str, Any], limit: int, topic: str) -> list[dict[str, Any]]:
         cache_root = self.settings.data_dir / "cache" / "signal_engine" / "github_issues"
         tool = WebSearchAndSummarize(
             [],
@@ -404,7 +405,7 @@ class SignalEngine:
         except Exception:
             return []
         items = (payload or {}).get("items") or []
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for item in items[: max(1, limit)]:
             if not isinstance(item, dict):
                 continue
@@ -427,7 +428,7 @@ class SignalEngine:
         return results
 
     def _build_pass_url(
-        self, base_url: str, pass_type: str, topic: str, source: Dict[str, Any] | None = None
+        self, base_url: str, pass_type: str, topic: str, source: dict[str, Any] | None = None
     ) -> str:
         source = source or {}
         templates = source.get("templates") or {}
@@ -448,6 +449,6 @@ class SignalEngine:
             return f"https://www.bing.com/search?q=site:{quote_plus(base_url)}+{quote_plus(topic)}"
         return base_url
 
-    def _write_json(self, payload: Dict[str, Any], filename: str) -> None:
+    def _write_json(self, payload: dict[str, Any], filename: str) -> None:
         path = self.output_dir / filename
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")

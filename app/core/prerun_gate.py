@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import Any
 
 
 @dataclass
 class PreRunGateResult:
     ok: bool
-    reasons: List[str]
+    reasons: list[str]
 
 
 class PreRunGate:
@@ -23,14 +23,14 @@ class PreRunGate:
 
     def evaluate(
         self,
-        pages: List[Dict[str, Any]],
-        pains: List[str],
-        competitors: List[Dict[str, Any]],
+        pages: list[dict[str, Any]],
+        pains: list[str],
+        competitors: list[dict[str, Any]],
         icp: str,
-        data_source: Dict[str, str],
-        signal_quality: Dict[str, Any] | None = None,
+        data_source: dict[str, str],
+        signal_quality: dict[str, Any] | None = None,
     ) -> PreRunGateResult:
-        reasons: List[str] = []
+        reasons: list[str] = []
 
         if data_source.get("pages") == "fallback":
             reasons.append("pages are fallback")

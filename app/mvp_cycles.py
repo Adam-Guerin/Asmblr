@@ -11,7 +11,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
 
 from loguru import logger
 
@@ -20,9 +20,9 @@ from app.core.llm import LLMClient
 from app.mvp.ui_lint import count_components, count_pages, run_ui_lint
 
 
-CycleInput = Tuple[str, str, str]
-BuildRunner = Callable[[str, Path, int], Tuple[bool, str]]
-TestRunner = Callable[[str, Path, int], Tuple[bool, str]]
+CycleInput = tuple[str, str, str]
+BuildRunner = Callable[[str, Path, int], tuple[bool, str]]
+TestRunner = Callable[[str, Path, int], tuple[bool, str]]
 
 
 class MVPProgressionError(Exception):
@@ -30,7 +30,7 @@ class MVPProgressionError(Exception):
 
 
 class MVPProgression:
-    CYCLES: List[CycleInput] = [
+    CYCLES: list[CycleInput] = [
         ("foundation", "foundation_prompt.txt", "Establish layout, core pages, navigation, and a buildable baseline."),
         ("ux", "ux_prompt.txt", "Apply typography hierarchy, spacing rhythm, and component consistency."),
         ("polish", "polish_prompt.txt", "Add loading/empty/error states, toasts, and microcopy polish."),
@@ -41,9 +41,9 @@ class MVPProgression:
         run_id: str,
         run_dir: Path,
         settings: Settings,
-        build_runner: Optional[BuildRunner] = None,
-        test_runner: Optional[TestRunner] = None,
-        llm_client: Optional[LLMClient] = None,
+        build_runner: BuildRunner | None = None,
+        test_runner: TestRunner | None = None,
+        llm_client: LLMClient | None = None,
         max_auto_fixes: int = 5,
         cycle_keys: list[str] | None = None,
         llm_enabled: bool | None = None,
@@ -223,7 +223,7 @@ class MVPProgression:
             patch_path.write_text(diff, encoding="utf-8")
             self._write_patch_log(cycle_dir, cycle_key, prompt_file, plan, diff)
 
-    def run_build(self, cycle_key: str, cycle_dir: Path, attempt: int) -> Tuple[bool, str]:
+    def run_build(self, cycle_key: str, cycle_dir: Path, attempt: int) -> tuple[bool, str]:
         result, log = self.build_runner(cycle_key, cycle_dir, attempt)
         log_path = cycle_dir / "build.log"
         log_path.write_text(log, encoding="utf-8")
@@ -236,7 +236,7 @@ class MVPProgression:
         )
         return result, log
 
-    def run_tests(self, cycle_key: str, cycle_dir: Path, attempt: int) -> Tuple[bool, str]:
+    def run_tests(self, cycle_key: str, cycle_dir: Path, attempt: int) -> tuple[bool, str]:
         result, log = self.test_runner(cycle_key, cycle_dir, attempt)
         log_path = cycle_dir / "test.log"
         log_path.write_text(log, encoding="utf-8")
@@ -249,7 +249,7 @@ class MVPProgression:
         )
         return result, log
 
-    def run_ui_lint(self, cycle_key: str, cycle_dir: Path, attempt: int) -> Tuple[bool, str]:
+    def run_ui_lint(self, cycle_key: str, cycle_dir: Path, attempt: int) -> tuple[bool, str]:
         result = run_ui_lint(self.repo_dir, cycle_dir)
         ok = bool(result.get("ok"))
         self._record_cycle_step(
@@ -263,7 +263,7 @@ class MVPProgression:
         summary = f"UI lint {'pass' if ok else 'fail'}"
         return ok, summary
 
-    def run_install(self, cycle_dir: Path) -> Tuple[bool, str]:
+    def run_install(self, cycle_dir: Path) -> tuple[bool, str]:
         if self._install_done:
             return True, "Install skipped (already completed)."
         result, log = self.install_runner("foundation", cycle_dir, attempt=1)
@@ -283,7 +283,7 @@ class MVPProgression:
         self,
         cycle_key: str,
         cycle_dir: Path,
-    ) -> Tuple[bool, int, str | None]:
+    ) -> tuple[bool, int, str | None]:
         for attempt_index in range(1, self.max_auto_fixes + 1):
             attempt_number = attempt_index + 1
             fix_path = cycle_dir / f"fix_{attempt_index}.log"
@@ -322,14 +322,14 @@ class MVPProgression:
         return "cycle had unknown failure"
 
     def _make_command_runner(self, command_name: str, command: str) -> BuildRunner:
-        def runner(cycle_key: str, cycle_dir: Path, attempt: int) -> Tuple[bool, str]:
+        def runner(cycle_key: str, cycle_dir: Path, attempt: int) -> tuple[bool, str]:
             return self._run_shell_command(command, command_name, cycle_key, attempt)
 
         return runner
 
     def _run_shell_command(
         self, command: str, command_name: str, cycle_key: str, attempt: int
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         message = f"{command_name.title()} {cycle_key} (attempt {attempt})"
         if not command:
             return True, f"{message} skipped because MVP_{command_name.upper()}_COMMAND is empty."
@@ -1161,7 +1161,7 @@ index 0000000..e69de29
                 process.kill()
             dev_log.close()
 
-    def _probe_url(self, url: str) -> tuple[Optional[int], Optional[str]]:
+    def _probe_url(self, url: str) -> tuple[int | None, str | None]:
         try:
             with urllib.request.urlopen(url, timeout=4) as response:
                 return response.getcode(), None
@@ -1689,8 +1689,8 @@ def progressive_cycles(
     run_id: str,
     run_dir: Path,
     settings: Settings,
-    build_runner: Optional[BuildRunner] = None,
-    test_runner: Optional[TestRunner] = None,
+    build_runner: BuildRunner | None = None,
+    test_runner: TestRunner | None = None,
 ) -> None:
     if not settings.enable_progressive_cycles:
         return

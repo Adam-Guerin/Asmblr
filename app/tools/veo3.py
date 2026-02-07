@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 import httpx
 
@@ -18,11 +18,11 @@ class Veo3Config:
     download_path: str = "/download/{job_id}"
 
 
-def _auth_headers(api_key: str) -> Dict[str, str]:
+def _auth_headers(api_key: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {api_key}"}
 
 
-def submit_video_job(config: Veo3Config, payload: Dict[str, Any]) -> str:
+def submit_video_job(config: Veo3Config, payload: dict[str, Any]) -> str:
     url = config.base_url.rstrip("/") + config.submit_path
     with httpx.Client(timeout=config.timeout_s) as client:
         resp = client.post(url, json=payload, headers=_auth_headers(config.api_key))
@@ -34,7 +34,7 @@ def submit_video_job(config: Veo3Config, payload: Dict[str, Any]) -> str:
     return str(job_id)
 
 
-def wait_for_video_job(config: Veo3Config, job_id: str) -> Dict[str, Any]:
+def wait_for_video_job(config: Veo3Config, job_id: str) -> dict[str, Any]:
     url = config.base_url.rstrip("/") + config.status_path.format(job_id=job_id)
     deadline = time.time() + config.timeout_s
     with httpx.Client(timeout=config.timeout_s) as client:

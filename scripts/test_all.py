@@ -2,7 +2,7 @@ import argparse
 import os
 import subprocess
 import sys
-from typing import Sequence
+from collections.abc import Sequence
 
 
 def _run(cmd: Sequence[str], env: dict | None = None) -> int:
@@ -18,12 +18,41 @@ def main() -> int:
         default="full",
         help="quick skips heavy/full suite and keeps lint + core + smoke.",
     )
+    parser.add_argument(
+        "--strict-progressive",
+        action="store_true",
+        help="Fail when the progressive Ruff pass still reports issues.",
+    )
+    parser.add_argument(
+        "--progressive-select",
+        default="F401,F841,E722,E711,E712,E721,UP,SIM,B",
+        help="Comma-separated Ruff rule groups for progressive debt reduction.",
+    )
     args = parser.parse_args()
 
     # Keep lint blocking but pragmatic: fail on critical correctness classes first.
     # (Repo still contains legacy style/unused-import debt outside current scope.)
     if _run([sys.executable, "-m", "ruff", "check", ".", "--select", "E9,F63,F7,F82"]) != 0:
         return 1
+
+    # Progressive pass: broader checks without blocking by default.
+    # In local runs (non-CI), apply safe autofixes to chip away at debt.
+    progressive_cmd = [
+        sys.executable,
+        "-m",
+        "ruff",
+        "check",
+        ".",
+        "--select",
+        args.progressive_select,
+    ]
+    if os.getenv("CI", "").lower() not in {"1", "true", "yes"}:
+        progressive_cmd.append("--fix")
+    progressive_rc = _run(progressive_cmd)
+    if progressive_rc != 0 and args.strict_progressive:
+        return 1
+    if progressive_rc != 0:
+        print("Progressive Ruff pass found remaining issues (non-blocking).")
 
     if _run([sys.executable, "scripts/check_syntax.py"]) != 0:
         return 1
@@ -43,8 +72,9 @@ def main() -> int:
             return 1
 
     smoke_tests = [
-        "tests/test_smoke_doctor_and_run.py::test_smoke_doctor_and_run",
-        "tests/test_build_mvp.py::test_smoke_build_mvp_repo",
+        "tests/test_generators.py::test_landing_generator_creates_html_files",
+        "tests/test_generators.py::test_content_generator_creates_pack_files",
+        "tests/test_project_build.py::test_project_builder_creates_documents_and_app",
     ]
     env = os.environ.copy()
     env.setdefault("FAST_MODE", "true")

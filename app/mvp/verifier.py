@@ -4,7 +4,7 @@ import json
 import subprocess
 import shutil
 from pathlib import Path
-from typing import Iterable
+from collections.abc import Iterable
 
 
 class MVPVerifier:

@@ -1,7 +1,7 @@
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from loguru import logger
 
@@ -20,6 +20,80 @@ from app.core.config import Settings
 from app.core.models import SeedInputs
 from app.core.llm import LLMClient
 from app.langchain_tools import build_toolbox
+
+
+def _validate_icp_settings(primary_icp: str, primary_icp_keywords: str) -> tuple[str, str]:
+    """
+    Validate and normalize ICP settings.
+    
+    Args:
+        primary_icp: The primary ICP string from settings
+        primary_icp_keywords: The comma-separated keywords string
+        
+    Returns:
+        Tuple of (validated_icp, validated_keywords)
+        
+    Raises:
+        ValueError: If ICP settings are invalid
+    """
+    # Validate primary_icp
+    if not primary_icp or not primary_icp.strip():
+        raise ValueError("PRIMARY_ICP cannot be empty or whitespace only")
+    
+    primary_icp = primary_icp.strip()
+    
+    # Basic validation - ICP should contain meaningful content
+    if len(primary_icp) < 10:
+        raise ValueError("PRIMARY_ICP is too short (minimum 10 characters)")
+    
+    if len(primary_icp) > 200:
+        raise ValueError("PRIMARY_ICP is too long (maximum 200 characters)")
+    
+    # Check for obviously invalid content
+    invalid_patterns = ["test", "example", "dummy", "placeholder", "none", "unknown"]
+    icp_lower = primary_icp.lower()
+    if any(pattern in icp_lower for pattern in invalid_patterns):
+        # Only flag if the ICP is primarily made of these invalid words
+        words = icp_lower.split()
+        if any(word in invalid_patterns for word in words):
+            raise ValueError(f"PRIMARY_ICP contains invalid placeholder value: '{primary_icp}'")
+    
+    # Validate primary_icp_keywords
+    if not primary_icp_keywords or not primary_icp_keywords.strip():
+        raise ValueError("PRIMARY_ICP_KEYWORDS cannot be empty or whitespace only")
+    
+    primary_icp_keywords = primary_icp_keywords.strip()
+    
+    # Parse and validate keywords
+    keywords = [k.strip() for k in primary_icp_keywords.split(",") if k.strip()]
+    
+    if len(keywords) < 3:
+        raise ValueError("PRIMARY_ICP_KEYWORDS must contain at least 3 valid keywords")
+    
+    if len(keywords) > 20:
+        raise ValueError("PRIMARY_ICP_KEYWORDS contains too many keywords (maximum 20)")
+    
+    # Validate individual keywords
+    for keyword in keywords:
+        if len(keyword) < 2:
+            raise ValueError(f"Keyword '{keyword}' is too short (minimum 2 characters)")
+        if len(keyword) > 50:
+            raise ValueError(f"Keyword '{keyword}' is too long (maximum 50 characters)")
+        # Allow letters, numbers, hyphens, underscores, and spaces
+        if not keyword.replace("-", "").replace("_", "").replace(" ", "").isalnum():
+            raise ValueError(f"Keyword '{keyword}' contains invalid characters (only letters, numbers, hyphens, underscores, and spaces allowed)")
+    
+    # Reconstruct clean keywords string
+    clean_keywords = ",".join(keywords)
+    
+    logger.info(
+        "ICP settings validated",
+        icp=primary_icp,
+        keyword_count=len(keywords),
+        keywords_sample=keywords[:3]  # Log first 3 keywords for debugging
+    )
+    
+    return primary_icp, clean_keywords
 
 
 class FallbackChatModel(BaseChatModel):
@@ -75,7 +149,7 @@ def _load_prompt(name: str) -> str:
 def _format_seed_summary(seeds: SeedInputs | None) -> str:
     if not seeds:
         return ""
-    parts: List[str] = []
+    parts: list[str] = []
     if seeds.theme:
         parts.append(f"Theme: {seeds.theme}")
     if seeds.icp:
@@ -89,7 +163,7 @@ def _format_seed_summary(seeds: SeedInputs | None) -> str:
     return "\n".join(parts)
 
 
-def _parse_json_safe(text: str) -> Dict[str, Any]:
+def _parse_json_safe(text: str) -> dict[str, Any]:
     if not text:
         return {}
     try:
@@ -104,7 +178,7 @@ def _parse_json_safe(text: str) -> Dict[str, Any]:
     return {}
 
 
-def _load_sources(settings: Settings) -> List[Dict[str, str]]:
+def _load_sources(settings: Settings) -> list[dict[str, str]]:
     sources_path = settings.config_dir / "sources.yaml"
     try:
         import yaml
@@ -129,11 +203,11 @@ def run_crewai_pipeline(
     run_id: str,
     n_ideas: int,
     fast_mode: bool,
-    seed_pages: List[Dict[str, Any]] | None = None,
-    seed_competitor_pages: List[Dict[str, Any]] | None = None,
+    seed_pages: list[dict[str, Any]] | None = None,
+    seed_competitor_pages: list[dict[str, Any]] | None = None,
     seed_inputs: SeedInputs | None = None,
-    validated_pains: List[str] | None = None,
-) -> Dict[str, Any]:
+    validated_pains: list[str] | None = None,
+) -> dict[str, Any]:
     if Agent is None or Task is None or Crew is None:
         logger.warning("CrewAI not available; returning empty outputs")
         return {"errors": "CrewAI not available"}
@@ -146,6 +220,31 @@ def run_crewai_pipeline(
     validated_pains = validated_pains or []
     seed_summary = _format_seed_summary(seeds)
     validated_hint = ", ".join(validated_pains[:5]) if validated_pains else "none"
+    
+    # Validate ICP settings
+    try:
+        primary_icp_raw = (getattr(settings, "primary_icp", "") or "").strip()
+        primary_icp_keywords_raw = (getattr(settings, "primary_icp_keywords", "") or "").strip()
+        
+        if primary_icp_raw or primary_icp_keywords_raw:
+            # Only validate if at least one ICP setting is provided
+            primary_icp, primary_icp_keywords = _validate_icp_settings(
+                primary_icp_raw, primary_icp_keywords_raw
+            )
+        else:
+            # No ICP configured - use defaults
+            primary_icp = ""
+            primary_icp_keywords = ""
+            logger.warning("No ICP settings configured - using generic approach")
+    except ValueError as e:
+        logger.error("ICP validation failed: {error}", error=str(e))
+        # Fall back to defaults but log the issue
+        primary_icp = ""
+        primary_icp_keywords = ""
+        logger.warning("Falling back to generic approach due to invalid ICP settings")
+    
+    icp_focus_hint = primary_icp or "none"
+    icp_keyword_hint = primary_icp_keywords or "none"
 
     judge_prompt = _load_prompt("llm_judge_scoring")
     toolbox = build_toolbox(settings, llm_client, judge_prompt)
@@ -199,6 +298,13 @@ def run_crewai_pipeline(
     template_dir = str(Path(__file__).resolve().parents[2] / "templates")
 
     idea_prompt = _load_prompt("idea_generation").replace("{{n_ideas}}", str(n_ideas))
+    if primary_icp:
+        idea_prompt += (
+            "\n\nICP FOCUS\n"
+            f"- Primary ICP: {primary_icp}\n"
+            f"- ICP keywords to prefer in naming, target_user, problem framing: {icp_keyword_hint}\n"
+            "- Reject ideas that are not clearly relevant to this ICP."
+        )
     prd_prompt = _load_prompt("prd_writer")
     tech_prompt = _load_prompt("tech_spec_writer")
     landing_prompt = _load_prompt("landing_copy")
@@ -256,6 +362,7 @@ def run_crewai_pipeline(
             f"\"rate_limit_per_domain\": {settings.rate_limit_per_domain}}}. "
             f"Pre-collected pages (if any): {seed_pages_json}. "
             f"Seed hypotheses (data_source=seed): {seed_summary or 'none provided'}. "
+            f"Primary ICP focus: {icp_focus_hint}. ICP keywords: {icp_keyword_hint}. "
             f"Validated pains: {validated_hint}. "
             "Extract at least 30 pain statements (or fewer if fast mode). Cluster them. "
             "Use `rag_playbook_qa` with question 'idea generation playbook' for guidance. "
@@ -271,6 +378,7 @@ def run_crewai_pipeline(
         description=(
             "You are the Analyst. Use pain_statements and ideas from the Researcher. "
             f"Seed hypotheses (data_source=seed): {seed_summary or 'none provided'}. "
+            f"Primary ICP focus: {icp_focus_hint}. ICP keywords: {icp_keyword_hint}. "
             f"Validated pains to weigh: {validated_hint}. "
             "Call `scoring_engine` with {pain_statements, ideas}. "
             "First call `web_search_and_summarize` on competitor sources, then pass the returned pages to "
@@ -286,6 +394,7 @@ def run_crewai_pipeline(
     product_task = Task(
         description=(
             "You are the Product agent. Use top_idea and pain statements from Analyst/Researcher. "
+            f"Primary ICP to enforce in PRD scope and language: {icp_focus_hint}. "
             f"Write a PRD using this prompt:\n{prd_prompt}\n"
             "Return JSON with key prd_markdown."
         ),
@@ -309,6 +418,7 @@ def run_crewai_pipeline(
     growth_task = Task(
         description=(
             "You are the Growth agent. Use top_idea to generate landing copy and content pack. "
+            f"Primary ICP to enforce in messaging: {icp_focus_hint}. "
             f"Prompt for landing:\n{landing_prompt}\nPrompt for content:\n{content_prompt}\n"
             f"Call `landing_generator` with {{\"product_name\": top_idea.name, \"output_dir\": \"{runs_dir}/landing_page\", "
             f"\"template_dir\": \"{template_dir}\", \"prompt\": landing_prompt, \"fast_mode\": {str(fast_mode).lower()}}}. "

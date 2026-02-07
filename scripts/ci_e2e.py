@@ -1,12 +1,11 @@
 import os
 import subprocess
 import sys
-from typing import List
 
 import httpx
 
 
-def _ollama_ready(base_url: str, models: List[str]) -> bool:
+def _ollama_ready(base_url: str, models: list[str]) -> bool:
     try:
         timeout = httpx.Timeout(5.0, connect=3.0, read=5.0, write=5.0, pool=3.0)
         with httpx.Client(timeout=timeout) as client:

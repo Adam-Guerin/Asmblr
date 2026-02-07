@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Any
 
 try:
     import yaml
@@ -23,7 +23,7 @@ SIGNAL_KEYS = (
     "time_to_mvp",
     "traction_signals",
 )
-DEFAULT_WEIGHTS: Dict[str, float] = {
+DEFAULT_WEIGHTS: dict[str, float] = {
     "market_size": 0.25,
     "competition": 0.20,
     "differentiation": 0.20,
@@ -33,7 +33,67 @@ DEFAULT_WEIGHTS: Dict[str, float] = {
 }
 
 
-def _safe_load_yaml(path: Path) -> Dict[str, Any]:
+def _tokenize_text(value: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9]+", (value or "").lower()))
+
+
+def _parse_keywords(raw: str | list[str] | None) -> list[str]:
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        items = [part.strip().lower() for part in re.split(r"[,;\n]", raw) if part and part.strip()]
+    else:
+        items = [str(part).strip().lower() for part in raw if str(part).strip()]
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        if item not in seen:
+            cleaned.append(item)
+            seen.add(item)
+    return cleaned
+
+
+def _compute_icp_alignment(
+    *,
+    idea: dict[str, Any] | None,
+    topic: str,
+    pain_statements: list[str] | None,
+    icp_focus: str,
+    icp_keywords: str | list[str] | None,
+) -> float:
+    if not icp_focus and not icp_keywords:
+        return 0.0
+    terms = _parse_keywords(icp_keywords)
+    if icp_focus:
+        terms.extend(_parse_keywords(icp_focus))
+    term_tokens: set[str] = set()
+    for term in terms:
+        term_tokens.update(_tokenize_text(term))
+    if not term_tokens:
+        return 0.0
+
+    text_parts = [topic or ""]
+    if pain_statements:
+        text_parts.extend(pain_statements)
+    if idea:
+        text_parts.extend(
+            [
+                str(idea.get("name", "")),
+                str(idea.get("one_liner", "")),
+                str(idea.get("target_user", "")),
+                str(idea.get("problem", "")),
+                str(idea.get("solution", "")),
+                " ".join(idea.get("key_features", []) or []),
+            ]
+        )
+    candidate_tokens = _tokenize_text(" ".join(text_parts))
+    if not candidate_tokens:
+        return 0.0
+    overlap = len(candidate_tokens & term_tokens)
+    return max(0.0, min(1.0, overlap / max(1, len(term_tokens))))
+
+
+def _safe_load_yaml(path: Path) -> dict[str, Any]:
     if yaml is None or not path.exists():
         return {}
     try:
@@ -43,7 +103,7 @@ def _safe_load_yaml(path: Path) -> Dict[str, Any]:
         return {}
 
 
-def _normalize_weights(weights: Dict[str, Any]) -> Dict[str, float]:
+def _normalize_weights(weights: dict[str, Any]) -> dict[str, float]:
     data = {key: float(weights.get(key, DEFAULT_WEIGHTS[key])) for key in SIGNAL_KEYS}
     for key in SIGNAL_KEYS:
         data[key] = max(0.01, min(0.90, data[key]))
@@ -53,7 +113,7 @@ def _normalize_weights(weights: Dict[str, Any]) -> Dict[str, float]:
     return {key: value / total for key, value in data.items()}
 
 
-def detect_market_profile(topic: str = "", pain_statements: list[str] | None = None, idea: Dict[str, Any] | None = None) -> str:
+def detect_market_profile(topic: str = "", pain_statements: list[str] | None = None, idea: dict[str, Any] | None = None) -> str:
     text_parts = [topic or ""]
     if pain_statements:
         text_parts.extend(pain_statements)
@@ -121,7 +181,7 @@ def detect_market_profile(topic: str = "", pain_statements: list[str] | None = N
     return "default"
 
 
-def _load_profile_weights(profile: str, threshold_path: Path | None = None) -> Dict[str, float]:
+def _load_profile_weights(profile: str, threshold_path: Path | None = None) -> dict[str, float]:
     threshold_path = threshold_path or DEFAULT_THRESHOLD_PATH
     payload = _safe_load_yaml(threshold_path)
     profiles = payload.get("scoring_profiles") or {}
@@ -145,11 +205,11 @@ def _load_profile_weights(profile: str, threshold_path: Path | None = None) -> D
     return _normalize_weights(merged)
 
 
-def _load_feedback_records(path: Path | None = None) -> list[Dict[str, Any]]:
+def _load_feedback_records(path: Path | None = None) -> list[dict[str, Any]]:
     path = path or DEFAULT_FEEDBACK_PATH
     if not path.exists():
         return []
-    records: list[Dict[str, Any]] = []
+    records: list[dict[str, Any]] = []
     for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
         line = line.strip()
         if not line:
@@ -164,11 +224,11 @@ def _load_feedback_records(path: Path | None = None) -> list[Dict[str, Any]]:
 
 
 def _calibrate_weights(
-    profile_weights: Dict[str, float],
+    profile_weights: dict[str, float],
     profile: str,
     feedback_path: Path | None = None,
     threshold_path: Path | None = None,
-) -> Tuple[Dict[str, float], Dict[str, Any]]:
+) -> tuple[dict[str, float], dict[str, Any]]:
     payload = _safe_load_yaml(threshold_path or DEFAULT_THRESHOLD_PATH)
     cfg = payload.get("scoring_calibration") if isinstance(payload.get("scoring_calibration"), dict) else {}
     enabled = bool(cfg.get("enabled", True))
@@ -179,7 +239,7 @@ def _calibrate_weights(
         return profile_weights, {"enabled": False, "applied": False, "reason": "disabled"}
 
     records = _load_feedback_records(feedback_path)
-    profile_records: list[Dict[str, Any]] = []
+    profile_records: list[dict[str, Any]] = []
     for rec in records:
         topic = str(rec.get("topic", ""))
         if detect_market_profile(topic=topic) == profile:
@@ -231,17 +291,20 @@ def _calibrate_weights(
 
 
 def heuristic_score(
-    signals: Dict[str, Any],
+    signals: dict[str, Any],
     *,
     topic: str = "",
     pain_statements: list[str] | None = None,
-    idea: Dict[str, Any] | None = None,
+    idea: dict[str, Any] | None = None,
     market_profile: str | None = None,
     use_calibration: bool = True,
     threshold_path: Path | None = None,
     feedback_path: Path | None = None,
+    icp_focus: str = "",
+    icp_keywords: str | list[str] | None = None,
+    icp_alignment_bonus_max: int = 0,
     return_meta: bool = False,
-) -> int | Tuple[int, Dict[str, Any]]:
+) -> int | tuple[int, dict[str, Any]]:
     market = float(signals.get("market_size", 50))
     competition = float(signals.get("competition", 50))
     differentiation = float(signals.get("differentiation", 50))
@@ -272,6 +335,15 @@ def heuristic_score(
         time * weights["time_to_mvp"] +
         traction * weights["traction_signals"]
     )
+    icp_fit = _compute_icp_alignment(
+        idea=idea,
+        topic=topic,
+        pain_statements=pain_statements,
+        icp_focus=icp_focus,
+        icp_keywords=icp_keywords,
+    )
+    capped_bonus = max(0, min(20, int(icp_alignment_bonus_max)))
+    score += capped_bonus * ((2.0 * icp_fit) - 1.0)
     result = max(0, min(100, int(round(score))))
     if not return_meta:
         return result
@@ -279,10 +351,15 @@ def heuristic_score(
         "market_profile": profile,
         "weights": {key: round(value, 6) for key, value in weights.items()},
         "calibration": calibration_meta,
+        "icp_alignment": {
+            "focus": icp_focus,
+            "fit": round(icp_fit, 4),
+            "bonus_max": capped_bonus,
+        },
     }
 
 
-def derive_signals(pain_statements: list[str]) -> Dict[str, int]:
+def derive_signals(pain_statements: list[str]) -> dict[str, int]:
     text = " ".join(pain_statements).lower()
     market = 50 + 10 * text.count("team") + 5 * text.count("company")
     competition = 50 + 5 * text.count("existing") + 5 * text.count("already")

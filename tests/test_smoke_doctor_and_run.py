@@ -86,19 +86,52 @@ def test_smoke_doctor_and_run(tmp_path: Path, monkeypatch):
 
 def test_doctor_ok(monkeypatch):
     from app.core.doctor import run_doctor
+    settings = Settings()
+    settings.prod_mode = False
+    settings.require_prod_checklist = False
 
     def fake_get(url, timeout=5):
         class Resp:
             def raise_for_status(self):
                 return None
             def json(self):
-                return {"models": [{"name": "llama3.1:8b"}, {"name": "qwen2.5-coder:7b"}]}
+                return {"models": [{"name": settings.general_model}, {"name": settings.code_model}]}
         return Resp()
 
     monkeypatch.setattr("httpx.get", fake_get)
     monkeypatch.setattr("app.core.llm.LLMClient.generate", lambda self, prompt: "ok")
     monkeypatch.setattr("app.core.llm.LLMClient.generate_json", lambda self, prompt: {"ok": True})
     monkeypatch.setattr("app.core.llm.LLMClient.available", lambda self: True)
-    settings = Settings()
     result = run_doctor(settings)
     assert result.ok is True
+
+
+def test_doctor_prod_checklist_fails_when_dry_run_enabled(monkeypatch):
+    from app.core.doctor import run_doctor
+
+    def fake_get(url, timeout=5):
+        class Resp:
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"models": [{"name": "llama3.1:8b"}, {"name": "qwen2.5-coder:7b"}]}
+
+        return Resp()
+
+    monkeypatch.setattr("httpx.get", fake_get)
+    monkeypatch.setattr("app.core.llm.LLMClient.generate", lambda self, prompt: "ok")
+    monkeypatch.setattr("app.core.llm.LLMClient.generate_json", lambda self, prompt: {"ok": True})
+    monkeypatch.setattr("app.core.llm.LLMClient.available", lambda self: True)
+
+    settings = Settings()
+    settings.prod_mode = True
+    settings.require_prod_checklist = True
+    settings.api_key = "prod_key_123"
+    settings.ui_password = "prod_pwd_123"
+    settings.enable_publishing = True
+    settings.publish_dry_run = True
+
+    result = run_doctor(settings)
+    assert result.ok is False
+    assert "publish_dry_run_disabled" in result.report

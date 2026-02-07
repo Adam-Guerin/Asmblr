@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import random
 import ipaddress
-from typing import List, Dict, Any
+from typing import Any
 from urllib.parse import urlparse, quote_plus
 from urllib.robotparser import RobotFileParser
 
@@ -49,7 +49,7 @@ def _raise_for_status(resp: httpx.Response) -> None:
 class WebSearchAndSummarize:
     def __init__(
         self,
-        sources: List[WebSource],
+        sources: list[WebSource],
         cache_dir: Path,
         timeout: int = 20,
         rate_limit_per_domain: int = 2,
@@ -68,11 +68,11 @@ class WebSearchAndSummarize:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
         except Exception as exc:
             logger.warning("Failed to create cache dir {dir}: {err}", dir=self.cache_dir, err=exc)
-        self._last_request: Dict[str, float] = {}
-        self._robots_cache: Dict[str, RobotFileParser] = {}
+        self._last_request: dict[str, float] = {}
+        self._robots_cache: dict[str, RobotFileParser] = {}
         self._lock = threading.Lock()
         self._timeout_config = self._normalize_timeout(self.timeout)
-        self._rate_state: Dict[str, Dict[str, float]] = {}
+        self._rate_state: dict[str, dict[str, float]] = {}
 
     def _normalize_timeout(self, timeout: int) -> httpx.Timeout:
         if not isinstance(timeout, int) or timeout <= 0:
@@ -171,7 +171,7 @@ class WebSearchAndSummarize:
         cache_path.write_text(json.dumps({"url": url, "text": text}), encoding="utf-8")
         return text
 
-    def fetch_url(self, url: str, headers: Dict[str, str] | None = None) -> str:
+    def fetch_url(self, url: str, headers: dict[str, str] | None = None) -> str:
         @retry(
             stop=stop_after_attempt(self.retry_max_attempts),
             wait=wait_exponential(min=self.retry_min_wait, max=self.retry_max_wait),
@@ -356,15 +356,15 @@ class WebSearchAndSummarize:
         summary = ". ".join([s.strip() for s in sentences if s.strip()][:max_sentences])
         return summary
 
-    def run(self, max_sources: int = 8) -> List[Dict[str, Any]]:
+    def run(self, max_sources: int = 8) -> list[dict[str, Any]]:
         sources = [s for s in self.sources[:max_sources] if s.url and self._is_valid_url(s.url)]
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         if not sources:
             return results
         max_workers = min(WEB_MAX_WORKERS, len(sources))
         logger.debug("web_run sources=%d workers=%d", len(sources), max_workers)
 
-        def _work(source: WebSource) -> Dict[str, Any] | None:
+        def _work(source: WebSource) -> dict[str, Any] | None:
             try:
                 html = self.fetch(source.url)
                 if not html:
@@ -396,7 +396,7 @@ class WebSearchAndSummarize:
                     results.append(item)
         return results
 
-    def search_bing(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    def search_bing(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         if not query:
             return []
         search_url = f"https://www.bing.com/search?q={quote_plus(query)}"
@@ -404,7 +404,7 @@ class WebSearchAndSummarize:
         if not html:
             return []
         soup = BeautifulSoup(html, "html.parser")
-        links: List[str] = []
+        links: list[str] = []
         for item in soup.select("li.b_algo h2 a"):
             href = item.get("href")
             if not href or not self._is_valid_url(href):
@@ -413,7 +413,7 @@ class WebSearchAndSummarize:
                 links.append(href)
             if len(links) >= limit:
                 break
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for url in links:
             try:
                 page_html = self.fetch(url)
@@ -440,7 +440,7 @@ class WebSearchAndSummarize:
                 logger.warning("bing_result failed url={url} error={err}", url=url, err=exc)
         return results
 
-    def extract_rss_links(self, rss_url: str, limit: int = 20) -> List[str]:
+    def extract_rss_links(self, rss_url: str, limit: int = 20) -> list[str]:
         if not rss_url:
             return []
         try:
@@ -448,7 +448,7 @@ class WebSearchAndSummarize:
             if not xml_text:
                 return []
             soup = BeautifulSoup(xml_text, "xml")
-            links: List[str] = []
+            links: list[str] = []
             for item in soup.find_all("item"):
                 link = item.find("link")
                 if link and link.text:
@@ -465,7 +465,7 @@ class WebSearchAndSummarize:
             logger.warning("rss parse failed url={url} error={err}", url=rss_url, err=exc)
             return []
 
-    def extract_sitemap_links(self, sitemap_url: str, limit: int = 50) -> List[str]:
+    def extract_sitemap_links(self, sitemap_url: str, limit: int = 50) -> list[str]:
         if not sitemap_url:
             return []
         try:
@@ -473,7 +473,7 @@ class WebSearchAndSummarize:
             if not xml_text:
                 return []
             soup = BeautifulSoup(xml_text, "xml")
-            links: List[str] = []
+            links: list[str] = []
             sitemap_locs = [loc.text.strip() for loc in soup.find_all("loc") if loc and loc.text]
             # If this is a sitemap index, fetch nested sitemaps.
             if soup.find("sitemapindex"):
