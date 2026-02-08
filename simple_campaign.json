@@ -1,0 +1,60 @@
+{
+  "name": "Asmblr AI Platform",
+  "brand_name": "Asmblr AI",
+  "target_audience": "Tech Companies",
+  "total_duration": 4.5,
+  "scenes": [
+    {
+      "name": "logo_intro",
+      "duration": 2.0,
+      "assets": [
+        "logo.png"
+      ],
+      "transitions": [
+        {
+          "type": "fade_in",
+          "duration": 0.5
+        },
+        {
+          "type": "zoom_in",
+          "duration": 0.3
+        }
+      ]
+    },
+    {
+      "name": "text_innovation",
+      "duration": 1.5,
+      "assets": [
+        "logo.png"
+      ],
+      "transitions": [
+        {
+          "type": "typewriter",
+          "duration": 1.5
+        }
+      ]
+    },
+    {
+      "name": "call_to_action",
+      "duration": 1.0,
+      "assets": [
+        "logo.png"
+      ],
+      "transitions": [
+        {
+          "type": "bounce",
+          "duration": 0.5
+        }
+      ]
+    }
+  ],
+  "brand_guidelines": {
+    "primary": "#2563EB",
+    "secondary": "#FF6B6B",
+    "accent": "#FFC107",
+    "text": "#FFFFFF",
+    "background": "#F8F9FA"
+  },
+  "created_at": "2026-02-08T00:34:42.217950",
+  "status": "draft"
+}
