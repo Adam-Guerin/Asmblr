@@ -323,14 +323,14 @@ class ConsoleNotifier:
                 AlertSeverity.CRITICAL: "🚨"
             }.get(alert.severity, "📢")
             
-            print(f"\n{severity_symbol} [{timestamp}] ALERT: {alert.name}")
-            print(f"   Severity: {alert.severity.value.upper()}")
-            print(f"   Message: {alert.message}")
-            print(f"   Condition: {alert.condition}")
-            print(f"   Threshold: {alert.threshold}")
-            print(f"   Trigger Count: {alert.trigger_count}")
+            logger.info(f"\n{severity_symbol} [{timestamp}] ALERT: {alert.name}")
+            logger.info(f"   Severity: {alert.severity.value.upper()}")
+            logger.info(f"   Message: {alert.message}")
+            logger.info(f"   Condition: {alert.condition}")
+            logger.info(f"   Threshold: {alert.threshold}")
+            logger.info(f"   Trigger Count: {alert.trigger_count}")
             if alert.last_triggered:
-                print(f"   Last Triggered: {alert.last_triggered.strftime('%Y-%m-%d %H:%M:%S')}")
+                logger.info(f"   Last Triggered: {alert.last_triggered.strftime('%Y-%m-%d %H:%M:%S')}")
             print()
             
             logger.info(f"Console alert displayed for {alert.name}")

@@ -148,10 +148,10 @@ def main() -> None:
     if args.command == "run":
         topic = (args.topic or "").strip()
         if len(topic) < 3 or len(topic) > 200:
-            print("Invalid topic: must be between 3 and 200 characters.")
+            logger.info("Invalid topic: must be between 3 and 200 characters.")
             raise SystemExit(1)
         if any(ord(ch) < 32 for ch in topic):
-            print("Invalid topic: control characters are not allowed.")
+            logger.info("Invalid topic: control characters are not allowed.")
             raise SystemExit(1)
         settings = get_settings()
         if args.deploy:
@@ -173,10 +173,10 @@ def main() -> None:
     elif args.command == "ship":
         topic = (args.topic or "").strip()
         if len(topic) < 3 or len(topic) > 200:
-            print("Invalid topic: must be between 3 and 200 characters.")
+            logger.info("Invalid topic: must be between 3 and 200 characters.")
             raise SystemExit(1)
         if any(ord(ch) < 32 for ch in topic):
-            print("Invalid topic: control characters are not allowed.")
+            logger.info("Invalid topic: control characters are not allowed.")
             raise SystemExit(1)
         settings = get_settings()
         settings.enable_deploy = True
@@ -203,7 +203,7 @@ def main() -> None:
         report_dir.mkdir(parents=True, exist_ok=True)
         report_path = report_dir / "doctor_report.md"
         report_path.write_text(result.report, encoding="utf-8")
-        print(result.report)
+        logger.info(result.report)
         raise SystemExit(0 if result.ok else 1)
     elif args.command == "loop":
         settings = get_settings()
@@ -220,10 +220,10 @@ def main() -> None:
         runner = LoopRunner(settings, config, plan_llm=plan_llm, patch_llm=patch_llm)
         try:
             result = runner.run()
-            print(f"Loop {result.run_id} completed with status {result.status} (iterations: {result.iterations})")
+            logger.info(f"Loop {result.run_id} completed with status {result.status} (iterations: {result.iterations})")
             raise SystemExit(0 if result.status == "completed" else 1)
         except LoopException as exc:
-            print(f"Loop failed: {exc}")
+            logger.info(f"Loop failed: {exc}")
             raise SystemExit(1)
     elif args.command == "build-mvp":
         settings = get_settings()
@@ -248,33 +248,33 @@ def main() -> None:
                     force=args.force,
                     frontend_style=args.frontend_style,
                 )
-            print(f"MVP repo ready at {result.run_dir / 'mvp_repo'}")
-            print(f"Summary available at {result.run_dir / 'mvp_build_summary.md'}")
-            print(f"Data source: {result.data_source.get('data_source')}")
+            logger.info(f"MVP repo ready at {result.run_dir / 'mvp_repo'}")
+            logger.info(f"Summary available at {result.run_dir / 'mvp_build_summary.md'}")
+            logger.info(f"Data source: {result.data_source.get('data_source')}")
             raise SystemExit(0 if result.success else 1)
         except MVPBuilderError as exc:
-            print(f"build-mvp failed: {exc}")
+            logger.info(f"build-mvp failed: {exc}")
             raise SystemExit(1)
     elif args.command == "golden-run":
         settings = get_settings()
         try:
             golden_dir = run_golden_topic(args.topic, settings)
             if golden_dir:
-                print(f"Golden run saved to {golden_dir}")
+                logger.info(f"Golden run saved to {golden_dir}")
                 raise SystemExit(0)
-            print("Run did not complete (ABORT). Golden run not created.")
+            logger.info("Run did not complete (ABORT). Golden run not created.")
             raise SystemExit(1)
         except Exception as exc:
-            print(f"Golden run failed: {exc}")
+            logger.info(f"Golden run failed: {exc}")
             raise SystemExit(1)
     elif args.command == "critique":
         settings = get_settings()
         try:
             result = run_devils_advocate(settings, args.run_id, mode=args.mode)
-            print(f"Critique verdict {result.verdict} written to {result.markdown_path} and {result.json_path}")
+            logger.info(f"Critique verdict {result.verdict} written to {result.markdown_path} and {result.json_path}")
             raise SystemExit(0)
         except CritiqueException as exc:
-            print(f"Critique failed: {exc}")
+            logger.info(f"Critique failed: {exc}")
             raise SystemExit(1)
     elif args.command == "resume":
         settings = get_settings()
@@ -283,7 +283,7 @@ def main() -> None:
         pipeline = VenturePipeline(settings)
         run_info = pipeline.manager.get_run(args.run_id)
         if not run_info:
-            print("Run not found.")
+            logger.info("Run not found.")
             raise SystemExit(1)
         pipeline.run(
             run_info["topic"],
@@ -304,7 +304,7 @@ def main() -> None:
             compress_after_days=args.compress_after_days,
             archive_dirs=archive_dirs,
         )
-        print(json.dumps(result, indent=2))
+        logger.info(json.dumps(result, indent=2))
     elif args.command == "backup":
         settings = get_settings()
         from app.core.backup import create_snapshot, prune_backups
@@ -313,11 +313,11 @@ def main() -> None:
         snapshot_dir = create_snapshot(settings.data_dir, settings.runs_dir, backup_root=backup_root)
         retention = args.retention_days if args.retention_days is not None else settings.backup_retention_days
         removed = prune_backups(backup_root, retention)
-        print(json.dumps({"snapshot": str(snapshot_dir), "pruned": removed}, indent=2))
+        logger.info(json.dumps({"snapshot": str(snapshot_dir), "pruned": removed}, indent=2))
     elif args.command == "loop-rollback":
         settings = get_settings()
         run_loop_rollback(settings, args.run_id, args.to_iter)
-        print(f"Rolled back {args.run_id} to iteration {args.to_iter}")
+        logger.info(f"Rolled back {args.run_id} to iteration {args.to_iter}")
     elif args.command == "ralph-loop":
         settings = get_settings()
         config = RalphConfig(
@@ -333,19 +333,19 @@ def main() -> None:
             status = run_ralph_loop(settings, config)
             raise SystemExit(status)
         except RalphLoopError as exc:
-            print(f"Ralph loop failed: {exc}")
+            logger.info(f"Ralph loop failed: {exc}")
             raise SystemExit(1)
     elif args.command == "deploy":
         settings = get_settings()
         try:
             result = deploy_run(settings, args.run_id, dry_run=True if args.dry_run else None)
-            print(f"Deploy result: {result.message}")
-            print(f"Deploy log: {result.deploy_log}")
+            logger.info(f"Deploy result: {result.message}")
+            logger.info(f"Deploy log: {result.deploy_log}")
             if result.deployed_url:
-                print(f"Deployed URL: {result.deployed_url}")
+                logger.info(f"Deployed URL: {result.deployed_url}")
             raise SystemExit(0 if result.ok else 1)
         except Exception as exc:
-            print(f"Deploy failed: {exc}")
+            logger.info(f"Deploy failed: {exc}")
             raise SystemExit(1)
     else:
         parser.print_help()

@@ -70,7 +70,7 @@ def run_pipeline(
     use_shared_assets = should_use_shared_assets(settings)
     
     if use_shared_assets:
-        print("🎨 Using ASSET-ENHANCED crew with collaborative resource management")
+        logger.info("🎨 Using ASSET-ENHANCED crew with collaborative resource management")
         return run_asset_enhanced_crewai_pipeline(
             topic=topic,
             settings=settings,
@@ -84,7 +84,7 @@ def run_pipeline(
             validated_pains=validated_pains
         )
     elif use_peer_review:
-        print("🔍 Using PEER REVIEW-ENHANCED crew with collaborative quality assurance")
+        logger.info("🔍 Using PEER REVIEW-ENHANCED crew with collaborative quality assurance")
         return run_peer_review_enhanced_crewai_pipeline(
             topic=topic,
             settings=settings,
@@ -98,7 +98,7 @@ def run_pipeline(
             validated_pains=validated_pains
         )
     elif use_shared_knowledge:
-        print("🧠 Using KNOWLEDGE-ENHANCED crew with shared intelligence base")
+        logger.info("🧠 Using KNOWLEDGE-ENHANCED crew with shared intelligence base")
         return run_knowledge_enhanced_crewai_pipeline(
             topic=topic,
             settings=settings,
@@ -112,7 +112,7 @@ def run_pipeline(
             validated_pains=validated_pains
         )
     elif use_feedback_loops:
-        print("🔄 Using FEEDBACK-ENHANCED crew with continuous improvement loops")
+        logger.info("🔄 Using FEEDBACK-ENHANCED crew with continuous improvement loops")
         return run_feedback_enhanced_crewai_pipeline(
             topic=topic,
             settings=settings,
@@ -126,7 +126,7 @@ def run_pipeline(
             validated_pains=validated_pains
         )
     elif use_enhanced_crew:
-        print("🤝 Using ENHANCED crew with facilitator agents for improved synergy")
+        logger.info("🤝 Using ENHANCED crew with facilitator agents for improved synergy")
         return run_enhanced_crewai_pipeline(
             topic=topic,
             settings=settings,
@@ -140,7 +140,7 @@ def run_pipeline(
             validated_pains=validated_pains
         )
     else:
-        print("🔄 Using standard crew system")
+        logger.info("🔄 Using standard crew system")
         return run_crewai_pipeline(
             topic=topic,
             settings=settings,

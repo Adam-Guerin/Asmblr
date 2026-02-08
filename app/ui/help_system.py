@@ -694,7 +694,7 @@ class HelpSystem:
                 
                 # Top idées
                 top_ideas = df.nlargest(10, 'score')
-                print(top_ideas[['name', 'score']])
+                logger.info(top_ideas[['name', 'score']])
                 
                 # Tendances temporelles
                 df['date'] = pd.to_datetime(df['timestamp'])

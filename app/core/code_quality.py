@@ -68,8 +68,8 @@ class CodeQualityAnalyzer:
         self.code_smells = [
             (r'len\(\s*\)\s*==\s*0', "Utilisez 'if not obj:' au lieu de 'if len(obj) == 0'"),
             (r'len\(\s*\)\s*>\s*0', "Utilisez 'if obj:' au lieu de 'if len(obj) > 0'"),
-            (r'if\s+True\s*:', "Condition 'if True:' inutile"),
-            (r'if\s+False\s*:', "Condition 'if False:' inutile"),
+            (r'if\s+True\s*:', "Condition '# if True:' inutile"),
+            (r'if\s+False\s*:', "Condition '# if False:' inutile"),
             (r'for\s+i\s+in\s+range\s*\(\s*len\s*\(', "Utilisez 'for item in iterable:' au lieu de 'for i in range(len())'"),
         ]
     
@@ -560,8 +560,8 @@ class CodeQualityFixer:
             fixes = {
                 r'len\(\s*\)\s*==\s*0': 'not obj',
                 r'len\(\s*\)\s*>\s*0': 'obj',
-                r'if\s+True\s*:': '# if True:',
-                r'if\s+False\s*:': '# if False:',
+                r'if\s+True\s*:': '# # if True:',
+                r'if\s+False\s*:': '# # if False:',
             }
             
             fixed_line = original_line

@@ -165,7 +165,7 @@ class ProjectBuilder:
             )
         return (
             "def main():\n"
-            f"    print('Project {self.idea.name} scaffolded with stack: {self.stack}')\n\n"
+            f"    logger.info('Project {self.idea.name} scaffolded with stack: {self.stack}')\n\n"
             "if __name__ == '__main__':\n"
             "    main()\n"
         )

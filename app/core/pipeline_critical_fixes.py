@@ -216,11 +216,11 @@ if __name__ == "__main__":
     # Démonstration des corrections
     improvements = apply_pipeline_fixes()
     
-    print("=== Corrections critiques du pipeline ===")
-    print("\n📋 Recommandations:")
+    logger.info("=== Corrections critiques du pipeline ===")
+    logger.info("\n📋 Recommandations:")
     for i, rec in enumerate(improvements['recommendations'], 1):
-        print(f"{i}. {rec}")
+        logger.info(f"{i}. {rec}")
     
-    print("\n🔄 Étapes de migration:")
+    logger.info("\n🔄 Étapes de migration:")
     for i, step in enumerate(improvements['migration_steps'], 1):
-        print(f"{i}. {step}")
+        logger.info(f"{i}. {step}")

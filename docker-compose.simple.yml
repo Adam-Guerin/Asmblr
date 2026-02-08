@@ -1,0 +1,49 @@
+# Docker Compose simplifié pour Asmblr - Version de test
+services:
+  # Base de données
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=asmblr
+      - POSTGRES_USER=asmblr
+      - POSTGRES_PASSWORD=asmblr_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - asmblr-network
+
+  # Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - asmblr-network
+
+  # LLM Service (Ollama)
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - asmblr-network
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+
+networks:
+  asmblr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local

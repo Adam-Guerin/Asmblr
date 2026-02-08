@@ -43,7 +43,7 @@ class RalphLoop:
             prd = self._load_prd()
             story, story_idx = self._select_story(prd)
             if story is None:
-                print("<promise>COMPLETE</promise>")
+                logger.info("<promise>COMPLETE</promise>")
                 return 0
 
             goal = self._render_goal(prd, story)

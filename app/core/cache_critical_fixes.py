@@ -195,11 +195,11 @@ if __name__ == "__main__":
     # Démonstration des corrections
     improvements = apply_cache_fixes()
     
-    print("=== Corrections critiques du cache ===")
-    print("\n📊 Gains de performance attendus:")
+    logger.info("=== Corrections critiques du cache ===")
+    logger.info("\n📊 Gains de performance attendus:")
     for metric, gain in improvements['performance_gains'].items():
-        print(f"  {metric}: {gain}")
+        logger.info(f"  {metric}: {gain}")
     
-    print("\n📋 Recommandations:")
+    logger.info("\n📋 Recommandations:")
     for i, rec in enumerate(improvements['recommendations'], 1):
-        print(f"{i}. {rec}")
+        logger.info(f"{i}. {rec}")
