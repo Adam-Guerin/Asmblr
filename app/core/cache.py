@@ -13,6 +13,12 @@ import time
 import hashlib
 import logging
 
+# Import du smart logger pour logging optimisé
+try:
+    from app.core.smart_logger import get_smart_logger, LogLevel, LogCategory
+    SMART_LOGGER_AVAILABLE = True
+except ImportError:
+    SMART_LOGGER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +57,19 @@ class ArtifactCache:
         for key in expired_keys:
             del self._cache[key]
             del self._timestamps[key]
-            logger.debug(f"Evicted expired cache entry: {key}")
+            # Optimisation: utiliser le smart logger si disponible
+            if SMART_LOGGER_AVAILABLE:
+                smart_logger = get_smart_logger()
+                if len(expired_keys) > 0:
+                    smart_logger.debug(
+                        LogCategory.CACHE,
+                        f"Evicted {len(expired_keys)} expired cache entries",
+                        {"evicted_count": len(expired_keys)}
+                    )
+            else:
+                # Fallback vers logging standard
+                if logger.level <= 10:  # DEBUG level
+                    logger.debug(f"Evicted {len(expired_keys)} expired cache entries")
         
         # Evict oldest entries if cache is full
         if len(self._cache) >= self.max_size:
@@ -63,11 +81,16 @@ class ArtifactCache:
             )
             
             # Remove oldest entries
+            evicted_count = 0
             while len(self._cache) >= self.max_size and sorted_items:
                 key, _ = sorted_items.pop()
                 del self._cache[key]
                 del self._timestamps[key]
-                logger.debug(f"Evicted old cache entry: {key}")
+                evicted_count += 1
+            
+            # Logging agrégé pour l'éviction LRU
+            if evicted_count > 0 and logger.level <= 10:  # DEBUG level
+                logger.debug(f"Evicted {evicted_count} old cache entries (LRU)")
     
     def get(self, key: str) -> Any:
         """Get cached artifact by key."""
@@ -76,10 +99,14 @@ class ArtifactCache:
         if key in self._cache:
             # Update access time for LRU
             self._timestamps[key] = time.time()
-            logger.debug(f"Cache hit: {key}")
+            # Optimisation: logger les cache hits seulement en mode debug et de façon agrégée
+            if logger.level <= 10:  # DEBUG level
+                logger.debug(f"Cache hit: {key[:50]}{'...' if len(key) > 50 else ''}")
             return self._cache[key]
         
-        logger.debug(f"Cache miss: {key}")
+        # Logger les cache misses seulement en mode debug
+        if logger.level <= 10:  # DEBUG level
+            logger.debug(f"Cache miss: {key[:50]}{'...' if len(key) > 50 else ''}")
         return None
     
     def set(self, key: str, value: Any) -> None:

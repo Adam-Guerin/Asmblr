@@ -14,6 +14,14 @@ import re
 from zipfile import ZipFile, ZIP_DEFLATED
 from loguru import logger
 
+# Import du smart logger pour logging optimisé
+try:
+    from app.core.smart_logger import get_smart_logger, LogLevel, LogCategory
+    SMART_LOGGER_AVAILABLE = True
+except ImportError:
+    SMART_LOGGER_AVAILABLE = False
+    smart_logger = None
+
 from app.core.config import Settings, validate_secrets
 from app.core.deploy import deploy_run
 from app.core.models import Idea, IdeaScore, RunResult, SeedInputs
@@ -2971,7 +2979,13 @@ class VenturePipeline:
 
     def _text_missing_or_unknown(self, value: Any) -> bool:
         text = str(value or "").strip().lower()
-        return text in {"", "unknown", "n/a", "none", "null", "tbd", "todo"}
+        # Liste étendue de valeurs invalides pour meilleure validation
+        invalid_values = {
+            "", "unknown", "n/a", "none", "null", "tbd", "todo",
+            "undefined", "missing", "not applicable", "na",
+            "n.d.", "nd", "nil", "void", "not available", "-"
+        }
+        return text in invalid_values
 
     def _score_idea_actionability(self, idea: Idea) -> dict[str, Any]:
         score = 50
@@ -3165,29 +3179,45 @@ class VenturePipeline:
             "blocked": blocked,
         }
         
-        # Log summary of actionability assessment for debugging
+        # Log summary of actionability assessment - optimized with smart logger
         if len(assessments) > 0:
             avg_actionability = sum(a.get("score", 0) for a in assessments) / len(assessments)
-            logger.info(
-                "Actionability assessment completed: {eligible}/{total} ideas eligible "
-                "(threshold: {threshold}, avg_score: {avg_score:.1f})",
-                eligible=len(eligible),
-                total=len(assessments),
-                threshold=threshold,
-                avg_score=avg_actionability
-            )
             
-            # Log details about blocked ideas for debugging
-            if blocked and len(blocked) > 0:
-                blocked_details = [
-                    f"{name}({assessment_by_name[name]['score']})"
-                    for name in blocked
-                    if name in assessment_by_name
-                ]
-                logger.debug(
-                    "Ideas blocked by actionability threshold: {blocked_details}",
-                    blocked_details=", ".join(blocked_details)
+            # Utiliser le smart logger si disponible
+            if SMART_LOGGER_AVAILABLE:
+                smart_logger = get_smart_logger()
+                smart_logger.business(
+                    LogLevel.MEDIUM,
+                    "Actionability assessment completed",
+                    {
+                        "eligible_count": len(eligible),
+                        "total_count": len(assessments),
+                        "threshold": threshold,
+                        "avg_score": round(avg_actionability, 1),
+                        "blocked_count": len(blocked)
+                    }
                 )
+            else:
+                # Fallback vers loguru standard
+                logger.info(
+                    "Actionability assessment: {eligible}/{total} ideas passed (threshold: {threshold}, avg: {avg_score:.1f})",
+                    eligible=len(eligible),
+                    total=len(assessments),
+                    threshold=threshold,
+                    avg_score=avg_actionability
+                )
+            
+            # Log détaillé seulement en mode debug
+            if blocked and len(blocked) > 0 and logger.level <= 10:  # DEBUG level
+                if SMART_LOGGER_AVAILABLE:
+                    smart_logger.debug(
+                        LogCategory.BUSINESS,
+                        f"{len(blocked)} ideas blocked by actionability threshold",
+                        {"blocked_ideas": blocked[:5]}  # Limiter à 5 exemples
+                    )
+                else:
+                    blocked_summary = f"{len(blocked)} ideas blocked"
+                    logger.debug("Actionability blocked: {blocked_summary}", blocked_summary=blocked_summary)
         
         return adjusted_scores, report
 
