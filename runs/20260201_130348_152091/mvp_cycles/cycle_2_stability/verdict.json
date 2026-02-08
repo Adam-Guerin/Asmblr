@@ -1,8 +1,0 @@
-{
-  "cycle": "stability",
-  "status": "pass",
-  "attempts": 2,
-  "reason": "cycle requirements failed",
-  "auto_fix_attempted": true,
-  "timestamp": "2026-02-01T12:19:29.131760"
-}

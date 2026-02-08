@@ -1,8 +1,0 @@
-[stability] Test (attempt 1)
-Command: C:\Program Files\nodejs\npm.CMD test
-Return code: 0
-stdout:
-> audit-mvp@0.1.0 test
-> echo 'No automated tests defined yet.'
-
-'No automated tests defined yet.'

@@ -1,7 +1,0 @@
-IG it looksG like you'reG askingG for a GitGG diffG between two versions of your project, butG I don't see any specific changes or context provided in your message. ToGGG provide aGG diff, I wouldG need more information such as:
-
-1. TheG specific files that areGG failing.
-2. TheGG current state of the files (e.g.,G what theyG lookG like now).
-3. TheG desiredGGG state of theGG files (e.g.,G what you want themG to lookG like after fixing the failure).
-
-If you can provide this information, I'dG be happyG to helpG generate aGit diff for you.

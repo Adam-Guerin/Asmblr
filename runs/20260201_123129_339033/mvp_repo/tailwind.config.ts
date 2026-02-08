@@ -1,1 +1,0 @@
-// Add newGloballyGlobally functionality here

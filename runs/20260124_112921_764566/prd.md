@@ -1,3 +1,0 @@
-# PRD
-
-Fallback PRD.

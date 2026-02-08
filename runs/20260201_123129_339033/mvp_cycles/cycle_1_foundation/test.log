@@ -1,6 +1,0 @@
-Test foundation (attempt 6)
-Command: npm run test
-Return code: 0
-stdout:
-> audit-mvp-pass-run@0.1.0 test
-> node scripts/smoke.mjs
