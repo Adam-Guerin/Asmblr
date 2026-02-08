@@ -1,0 +1,564 @@
+# Docker Compose pour Asmblr - Configuration Production
+# Version optimisée pour la production avec haute disponibilité
+
+version: "3.9"
+
+services:
+  # Load Balancer (Nginx)
+  nginx:
+    image: nginx:alpine
+    mem_limit: 512m
+    cpus: "0.5"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      - api-gateway-1
+      - api-gateway-2
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway - Instance 1
+  api-gateway-1:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    mem_limit: 1g
+    cpus: "1.0"
+    environment:
+      - REDIS_URL=redis://redis-cluster:6379/0
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - CORE_SERVICE_URL=http://asmblr-core-1:8001
+      - AGENTS_SERVICE_URL=http://asmblr-agents-1:8002
+      - MEDIA_SERVICE_URL=http://asmblr-media-1:8003
+      - SERVICE_NAME=api-gateway-1
+      - LOG_LEVEL=INFO
+      - RATE_LIMIT_REQUESTS=200
+      - RATE_LIMIT_WINDOW=60
+      - ENABLE_SECURITY=true
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      redis-cluster:
+        condition: service_healthy
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway - Instance 2
+  api-gateway-2:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    mem_limit: 1g
+    cpus: "1.0"
+    environment:
+      - REDIS_URL=redis://redis-cluster:6379/0
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - CORE_SERVICE_URL=http://asmblr-core-2:8001
+      - AGENTS_SERVICE_URL=http://asmblr-agents-2:8002
+      - MEDIA_SERVICE_URL=http://asmblr-media-2:8003
+      - SERVICE_NAME=api-gateway-2
+      - LOG_LEVEL=INFO
+      - RATE_LIMIT_REQUESTS=200
+      - RATE_LIMIT_WINDOW=60
+      - ENABLE_SECURITY=true
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      redis-cluster:
+        condition: service_healthy
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Core Service - Instance 1
+  asmblr-core-1:
+    build:
+      context: ./asmblr-core
+      dockerfile: Dockerfile
+    mem_limit: 2g
+    cpus: "2.0"
+    environment:
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - REDIS_URL=redis://redis-cluster:6379/1
+      - SERVICE_NAME=asmblr-core-1
+      - LOG_LEVEL=INFO
+      - ENABLE_MONITORING=true
+    volumes:
+      - core_data_1:/app/data
+      - ./logs/core:/app/logs
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-cluster:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Core Service - Instance 2
+  asmblr-core-2:
+    build:
+      context: ./asmblr-core
+      dockerfile: Dockerfile
+    mem_limit: 2g
+    cpus: "2.0"
+    environment:
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - REDIS_URL=redis://redis-cluster:6379/1
+      - SERVICE_NAME=asmblr-core-2
+      - LOG_LEVEL=INFO
+      - ENABLE_MONITORING=true
+    volumes:
+      - core_data_2:/app/data
+      - ./logs/core:/app/logs
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-cluster:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Agents Service - Instance 1
+  asmblr-agents-1:
+    build:
+      context: ./asmblr-agents
+      dockerfile: Dockerfile
+    mem_limit: 4g
+    cpus: "3.0"
+    environment:
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - REDIS_URL=redis://redis-cluster:6379/2
+      - OLLAMA_BASE_URL=http://ollama-cluster:11434
+      - SERVICE_NAME=asmblr-agents-1
+      - LOG_LEVEL=INFO
+      - CREWAI_MAX_WORKERS=3
+      - ENABLE_MONITORING=true
+    volumes:
+      - agents_data_1:/app/data
+      - ./logs/agents:/app/logs
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-cluster:
+        condition: service_healthy
+      ollama-cluster:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Agents Service - Instance 2
+  asmblr-agents-2:
+    build:
+      context: ./asmblr-agents
+      dockerfile: Dockerfile
+    mem_limit: 4g
+    cpus: "3.0"
+    environment:
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - REDIS_URL=redis://redis-cluster:6379/2
+      - OLLAMA_BASE_URL=http://ollama-cluster:11434
+      - SERVICE_NAME=asmblr-agents-2
+      - LOG_LEVEL=INFO
+      - CREWAI_MAX_WORKERS=3
+      - ENABLE_MONITORING=true
+    volumes:
+      - agents_data_2:/app/data
+      - ./logs/agents:/app/logs
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-cluster:
+        condition: service_healthy
+      ollama-cluster:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Media Service - Instance 1
+  asmblr-media-1:
+    build:
+      context: ./asmblr-media
+      dockerfile: Dockerfile
+    mem_limit: 2g
+    cpus: "2.0"
+    environment:
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - REDIS_URL=redis://redis-cluster:6379/3
+      - SERVICE_NAME=asmblr-media-1
+      - LOG_LEVEL=INFO
+      - MEDIA_STORAGE_PATH=/app/media
+      - ENABLE_MONITORING=true
+    volumes:
+      - media_storage_1:/app/media
+      - media_data_1:/app/data
+      - ./logs/media:/app/logs
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-cluster:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Media Service - Instance 2
+  asmblr-media-2:
+    build:
+      context: ./asmblr-media
+      dockerfile: Dockerfile
+    mem_limit: 2g
+    cpus: "2.0"
+    environment:
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - REDIS_URL=redis://redis-cluster:6379/3
+      - SERVICE_NAME=asmblr-media-2
+      - LOG_LEVEL=INFO
+      - MEDIA_STORAGE_PATH=/app/media
+      - ENABLE_MONITORING=true
+    volumes:
+      - media_storage_2:/app/media
+      - media_data_2:/app/data
+      - ./logs/media:/app/logs
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-cluster:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Primary (Master)
+  postgres-primary:
+    image: postgres:15-alpine
+    mem_limit: 4g
+    cpus: "2.0"
+    environment:
+      - POSTGRES_DB=asmblr
+      - POSTGRES_USER=asmblr
+      - POSTGRES_PASSWORD=${ASMblr_PASSWORD}
+      - POSTGRES_REPLICATION_USER=replicator
+      - POSTGRES_REPLICATION_PASSWORD=${REPLICATION_PASSWORD}
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgresql/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asmblr"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Replica (Slave)
+  postgres-replica:
+    image: postgres:15-alpine
+    mem_limit: 4g
+    cpus: "2.0"
+    environment:
+      - POSTGRES_DB=asmblr
+      - POSTGRES_USER=asmblr
+      - POSTGRES_PASSWORD=${ASMblr_PASSWORD}
+      - PGUSER=postgres
+      - POSTGRES_MASTER_SERVICE=postgres-primary
+      - POSTGRES_REPLICATION_USER=replicator
+      - POSTGRES_REPLICATION_PASSWORD=${REPLICATION_PASSWORD}
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asmblr"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cluster
+  redis-cluster:
+    image: redis:7-alpine
+    mem_limit: 2g
+    cpus: "1.0"
+    volumes:
+      - redis_cluster_data:/data
+      - ./redis/redis.conf:/etc/redis/redis.conf
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama Cluster
+  ollama-cluster:
+    image: ollama/ollama:latest
+    mem_limit: 8g
+    cpus: "4.0"
+    volumes:
+      - ollama_cluster_data:/root/.ollama
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    command: serve
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Auto-Optimizer
+  auto-optimizer:
+    build:
+      context: .
+      dockerfile: Dockerfile.optimizer
+    mem_limit: 512m
+    cpus: "0.5"
+    environment:
+      - REDIS_URL=redis://redis-cluster:6379/0
+      - ENABLE_AUTO_OPTIMIZATION=true
+      - OPTIMIZATION_INTERVAL=60
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      redis-cluster:
+        condition: service_healthy
+    volumes:
+      - ./logs/optimizer:/app/logs
+
+  # Security Service
+  security-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.security
+    mem_limit: 512m
+    cpus: "0.5"
+    environment:
+      - REDIS_URL=redis://redis-cluster:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - ENABLE_SECURITY=true
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      redis-cluster:
+        condition: service_healthy
+    volumes:
+      - ./logs/security:/app/logs
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    mem_limit: 1g
+    cpus: "1.0"
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus-production.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+      - ./monitoring/rules:/etc/prometheus/rules
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+
+  grafana:
+    image: grafana/grafana:latest
+    mem_limit: 1g
+    cpus: "1.0"
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    mem_limit: 512m
+    cpus: "0.5"
+    ports:
+      - "127.0.0.1:9093:9090"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+
+  # Log Aggregation (Loki)
+  loki:
+    image: grafana/loki:latest
+    mem_limit: 1g
+    cpus: "1.0"
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./monitoring/loki.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+
+  # Backup Service
+  backup-service:
+    build:
+      context: ./backup
+      dockerfile: Dockerfile
+    mem_limit: 1g
+    cpus: "1.0"
+    environment:
+      - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
+      - REDIS_URL=redis://redis-cluster:6379/0
+      - BACKUP_SCHEDULE=0 2 * * *
+      - BACKUP_RETENTION_DAYS=30
+      - S3_BUCKET=${S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./backups:/app/backups
+      - ./logs/backup:/app/logs
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-cluster:
+        condition: service_healthy
+
+networks:
+  asmblr-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  # Database volumes
+  postgres_primary_data:
+    driver: local
+  postgres_replica_data:
+    driver: local
+  
+  # Cache volumes
+  redis_cluster_data:
+    driver: local
+  
+  # Application volumes
+  core_data_1:
+    driver: local
+  core_data_2:
+    driver: local
+  agents_data_1:
+    driver: local
+  agents_data_2:
+    driver: local
+  media_data_1:
+    driver: local
+  media_data_2:
+    driver: local
+  media_storage_1:
+    driver: local
+  media_storage_2:
+    driver: local
+  
+  # AI/LLM volumes
+  ollama_cluster_data:
+    driver: local
+  
+  # Monitoring volumes
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  loki_data:
+    driver: local

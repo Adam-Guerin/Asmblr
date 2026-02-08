@@ -1,0 +1,114 @@
+# Docker Compose pour Asmblr - Mode Lightweight
+# Version optimisée pour les ressources limitées
+version: "3.9"
+
+services:
+  # Infrastructure légère
+  redis:
+    image: redis:7-alpine
+    mem_limit: 256m
+    cpus: "0.3"
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 200mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service unifié (Core + Agents + Media)
+  asmblr-unified:
+    build:
+      context: .
+      dockerfile: Dockerfile.lightweight
+    mem_limit: 2g
+    cpus: "2.0"
+    environment:
+      - MODE=lightweight
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DATABASE_URL=sqlite:///data/asmblr.db
+      - LOG_LEVEL=INFO
+      - MAX_WORKERS=2
+      - CACHE_SIZE=100
+      - ENABLE_MONITORING=false
+      - ENABLE_MEDIA_GENERATION=false
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./runs:/app/runs
+      - ./media:/app/media
+    networks:
+      - asmblr-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama optionnel (peut être désactivé)
+  ollama:
+    image: ollama/ollama:latest
+    mem_limit: 4g
+    cpus: "2.0"
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    command: serve
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - ai  # Optionnel: démarrer avec --profile ai
+
+  # Monitoring léger (optionnel)
+  prometheus:
+    image: prom/prometheus:latest
+    mem_limit: 256m
+    cpus: "0.3"
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus-lightweight.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - asmblr-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1h'
+      - '--web.enable-lifecycle'
+    profiles:
+      - monitoring  # Optionnel: démarrer avec --profile monitoring
+
+networks:
+  asmblr-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local
+  ollama_models:
+    driver: local
+  prometheus_data:
+    driver: local
