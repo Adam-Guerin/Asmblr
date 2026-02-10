@@ -216,11 +216,21 @@ class SmartLogger:
         """Filtre loguru pour réduire le bruit"""
         if not self.enable_filtering:
             return True
+        level_name = str(record["level"].name or "").upper()
+        level_map = {
+            "CRITICAL": LogLevel.CRITICAL,
+            "ERROR": LogLevel.HIGH,
+            "WARNING": LogLevel.MEDIUM,
+            "SUCCESS": LogLevel.MEDIUM,
+            "INFO": LogLevel.LOW,
+            "DEBUG": LogLevel.DEBUG,
+            "TRACE": LogLevel.DEBUG,
+        }
         
         # Créer une entrée de log temporaire
         entry = SmartLogEntry(
             timestamp=record["time"].isoformat(),
-            level=LogLevel(record["level"].name),
+            level=level_map.get(level_name, LogLevel.LOW),
             category=LogCategory(record["extra"].get("category", "system")),
             operation=record["extra"].get("operation", "unknown"),
             message=record["message"],
@@ -266,13 +276,20 @@ class SmartLogger:
         self._store_entry(entry)
         
         # Logger avec loguru
+        loguru_level_map = {
+            LogLevel.CRITICAL: "CRITICAL",
+            LogLevel.HIGH: "ERROR",
+            LogLevel.MEDIUM: "WARNING",
+            LogLevel.LOW: "INFO",
+            LogLevel.DEBUG: "DEBUG",
+        }
         logger.bind(
             category=category.value,
             operation=operation,
             user_facing=user_facing,
             correlation_id=correlation_id,
             **(metadata or {})
-        ).log(level.value, message)
+        ).log(loguru_level_map.get(level, "INFO"), message)
     
     def _store_entry(self, entry: SmartLogEntry) -> None:
         """Stocke une entrée de log"""

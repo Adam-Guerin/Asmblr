@@ -123,8 +123,9 @@ pain_sources:
     recency_weight: 0.9
 
 competitor_sources:
-  - name: G2 Categories
-    url: https://www.g2.com/categories
-  - name: AlternativeTo
-    url: https://alternativeto.net/
-
+  - name: Reddit SaaS Top
+    url: https://www.reddit.com/r/SaaS/top.json?t=year&limit=40
+  - name: Reddit startups Top
+    url: https://www.reddit.com/r/startups/top.json?t=year&limit=40
+  - name: GitHub Repos (billing SaaS)
+    url: https://api.github.com/search/repositories?q=billing+saas&sort=stars&order=desc&per_page=20

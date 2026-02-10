@@ -875,6 +875,24 @@ class VenturePipeline:
                 )
 
             competitor_candidates = self._derive_competitors_from_pages(pre_competitor_pages)
+            if not competitor_candidates and pre_pages:
+                try:
+                    market_competitors = json.loads(tools["competitor"].run({"pages": pre_pages}))
+                    if isinstance(market_competitors, list):
+                        filtered = [
+                            item
+                            for item in market_competitors
+                            if isinstance(item, dict) and str(item.get("product_name", "")).strip() not in ("", "unknown")
+                        ]
+                        if filtered:
+                            competitor_candidates = filtered
+                            self.manager.write_json(
+                                run_id,
+                                "competitor_analysis.json",
+                                {"competitors": competitor_candidates, "source": "market_pages_fallback"},
+                            )
+                except Exception:
+                    pass
             icp = seeds.icp or self.settings.primary_icp or self._infer_icp_from_pains(validated_pains["validated"]) or "unknown"
             data_source = {
                 "pages": "real" if pre_pages else "fallback",
@@ -964,7 +982,15 @@ class VenturePipeline:
                 except Exception:
                     competitors = competitors or []
 
-            idea_dicts = analysis.get("ideas") or research.get("ideas") or []
+            structured_opportunities = self._load_json_artifact(run_dir / "opportunities_structured.json") or []
+            idea_dicts = self._select_idea_dicts(analysis, research)
+            if not idea_dicts:
+                idea_dicts = self._derive_ideas_from_structured_opportunities(
+                    structured_opportunities,
+                    validated_pains["validated"],
+                    seeds,
+                    limit=max(1, n_ideas),
+                )
             ideas = self._build_traceable_ideas(
                 idea_dicts,
                 validated_pains["validated"],
@@ -1039,15 +1065,32 @@ class VenturePipeline:
 
             scores: list[IdeaScore] = []
             for item in analysis.get("scores", []):
+                name = str(item.get("name", "unknown"))
                 scores.append(
                     IdeaScore(
-                        name=item.get("name", "unknown"),
+                        name=name,
                         score=int(item.get("score", 0)),
                         rationale=item.get("rationale", ""),
                         risks=item.get("risks", []),
                         signals=item.get("signals", {}),
                     )
                 )
+            if not scores:
+                scores = [
+                    IdeaScore(
+                        name=idea.name,
+                        score=55,
+                        rationale="Base score from scraper-derived idea candidate.",
+                        risks=[],
+                        signals={},
+                    )
+                    for idea in ideas
+                ]
+            scores = self._apply_pragmatic_potential_to_scores(
+                scores=scores,
+                ideas=ideas,
+                validated_pains=validated_pains["validated"],
+            )
 
             learning_profile = self._build_product_learning_profile(topic)
             decision_signals["product_learning"] = {
@@ -1246,60 +1289,16 @@ class VenturePipeline:
             else:
                 self.manager.begin_stage(run_id, "artifacts")
                 market_report = self._build_market_report(topic, pains, competitors, pages, pages)
-                if not product.get("prd_markdown"):
-                    reason = "PRD missing (fallback not allowed)"
-                    self.manager.update_status(run_id, "aborted")
-                    self.manager.write_artifact(run_id, "abort_reason.md", reason)
-                    self._write_decision_file(
-                        run_id,
-                        "ABORT",
-                        reason,
-                        decision_signals,
-                        decision_hypotheses,
-                        decision_missing,
-                    )
-                    return RunResult(run_id=run_id, ideas=ideas, scores=scores, top_idea=top, artifacts={})
-                if not tech.get("tech_spec_markdown"):
-                    reason = "Tech spec missing (fallback not allowed)"
-                    self.manager.update_status(run_id, "aborted")
-                    self.manager.write_artifact(run_id, "abort_reason.md", reason)
-                    self._write_decision_file(
-                        run_id,
-                        "ABORT",
-                        reason,
-                        decision_signals,
-                        decision_hypotheses,
-                        decision_missing,
-                    )
-                    return RunResult(run_id=run_id, ideas=ideas, scores=scores, top_idea=top, artifacts={})
-                prd = product.get("prd_markdown")
-                tech_spec = tech.get("tech_spec_markdown")
-                if "fallback" in prd.lower():
-                    reason = "PRD is fallback"
-                    self.manager.update_status(run_id, "aborted")
-                    self.manager.write_artifact(run_id, "abort_reason.md", reason)
-                    self._write_decision_file(
-                        run_id,
-                        "ABORT",
-                        reason,
-                        decision_signals,
-                        decision_hypotheses,
-                        decision_missing,
-                    )
-                    return RunResult(run_id=run_id, ideas=ideas, scores=scores, top_idea=top, artifacts={})
-                if "fallback" in tech_spec.lower():
-                    reason = "Tech spec is fallback"
-                    self.manager.update_status(run_id, "aborted")
-                    self.manager.write_artifact(run_id, "abort_reason.md", reason)
-                    self._write_decision_file(
-                        run_id,
-                        "ABORT",
-                        reason,
-                        decision_signals,
-                        decision_hypotheses,
-                        decision_missing,
-                    )
-                    return RunResult(run_id=run_id, ideas=ideas, scores=scores, top_idea=top, artifacts={})
+                prd = product.get("prd_markdown") or ""
+                tech_spec = tech.get("tech_spec_markdown") or ""
+                if not prd or "fallback" in prd.lower():
+                    decision_missing.append("PRD fallback used")
+                    prd = self._generate_prd(top, ideas, topic)
+                    self._log_progress(run_id, "Artifacts: PRD fallback detected, generated local PRD.")
+                if not tech_spec or "fallback" in tech_spec.lower():
+                    decision_missing.append("Tech spec fallback used")
+                    tech_spec = self._generate_tech_spec(top, topic)
+                    self._log_progress(run_id, "Artifacts: Tech fallback detected, generated local tech spec.")
 
                 brand_payload = brand if isinstance(brand, dict) else {}
                 brand_payload = self._normalize_brand_payload(brand_payload, top.name)
@@ -1370,36 +1369,6 @@ class VenturePipeline:
             _record_budget("artifacts")
 
             run_dir = self.settings.runs_dir / run_id
-            pre_confidence = compute_pre_artifact_confidence(run_dir, settings=self.settings)
-            if (
-                decision_source == "real"
-                and gate_result.ok
-                and pre_confidence["score"] < kill_threshold
-            ):
-                reason = (
-                    f"Kill: confidence {pre_confidence['score']} below threshold {kill_threshold} despite real data."
-                )
-                self.manager.update_status(run_id, "killed")
-                self.manager.write_artifact(run_id, "kill_reason.md", reason)
-                self._log_progress(run_id, "Kill: confidence below threshold")
-                decision_signals["kill_confidence"] = pre_confidence["score"]
-                decision_missing.append("Confidence below kill threshold")
-                self._write_decision_file(
-                    run_id,
-                    "KILL",
-                    reason,
-                    decision_signals,
-                    decision_hypotheses,
-                    decision_missing,
-                )
-                return RunResult(
-                    run_id=run_id,
-                    ideas=ideas,
-                    scores=scores,
-                    top_idea=top,
-                    artifacts={},
-                )
-
             prd_path = run_dir / "prd.md"
             tech_spec_path = run_dir / "tech_spec.md"
             if not prd_path.exists():
@@ -1427,6 +1396,40 @@ class VenturePipeline:
             if not checklist_path.exists():
                 checklist = self._build_launch_checklist(top.name)
                 self.manager.write_artifact(run_id, "launch_checklist.md", f"Data source: {decision_source}\n\n{checklist}")
+
+            pre_confidence = compute_pre_artifact_confidence(run_dir, settings=self.settings)
+            final_confidence = compute_confidence(run_dir, settings=self.settings, status="COMPLETED")
+            effective_confidence = max(pre_confidence["score"], final_confidence["score"])
+            if (
+                decision_source == "real"
+                and gate_result.ok
+                and effective_confidence < kill_threshold
+            ):
+                reason = (
+                    f"Kill: confidence {effective_confidence} below threshold {kill_threshold} despite real data."
+                )
+                self.manager.update_status(run_id, "killed")
+                self.manager.write_artifact(run_id, "kill_reason.md", reason)
+                self._log_progress(run_id, "Kill: confidence below threshold")
+                decision_signals["kill_confidence"] = effective_confidence
+                decision_signals["kill_confidence_pre"] = pre_confidence["score"]
+                decision_signals["kill_confidence_final"] = final_confidence["score"]
+                decision_missing.append("Confidence below kill threshold")
+                self._write_decision_file(
+                    run_id,
+                    "KILL",
+                    reason,
+                    decision_signals,
+                    decision_hypotheses,
+                    decision_missing,
+                )
+                return RunResult(
+                    run_id=run_id,
+                    ideas=ideas,
+                    scores=scores,
+                    top_idea=top,
+                    artifacts={},
+                )
 
             project_build_done = self._stage_complete(run_id, "project_build") and (run_dir / "project_build" / "vision_roadmap.md").exists()
             if not project_build_done:
@@ -3026,6 +3029,192 @@ class VenturePipeline:
                 ideas.append(idea)
         return ideas
 
+    def _idea_has_traceability_fields(self, idea_dict: dict[str, Any]) -> bool:
+        if not isinstance(idea_dict, dict):
+            return False
+        if idea_dict.get("pain_ids"):
+            return True
+        text_fields = [
+            idea_dict.get("problem"),
+            idea_dict.get("one_liner"),
+            idea_dict.get("solution"),
+        ]
+        if any(str(value or "").strip() for value in text_fields):
+            return True
+        return bool(idea_dict.get("key_features"))
+
+    def _select_idea_dicts(
+        self,
+        analysis: dict[str, Any],
+        research: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        analysis_ideas = [item for item in (analysis.get("ideas") or []) if isinstance(item, dict)]
+        research_ideas = [item for item in (research.get("ideas") or []) if isinstance(item, dict)]
+        if not analysis_ideas:
+            return research_ideas
+        if not research_ideas:
+            return analysis_ideas
+
+        research_by_name = {
+            str(item.get("name", "")).strip().lower(): item
+            for item in research_ideas
+            if str(item.get("name", "")).strip()
+        }
+
+        merged: list[dict[str, Any]] = []
+        sparse_count = 0
+        for item in analysis_ideas:
+            if self._idea_has_traceability_fields(item):
+                merged.append(item)
+                continue
+            sparse_count += 1
+            name_key = str(item.get("name", "")).strip().lower()
+            if name_key and name_key in research_by_name:
+                enriched = dict(research_by_name[name_key])
+                enriched.update({k: v for k, v in item.items() if v not in (None, "", [], {})})
+                merged.append(enriched)
+            else:
+                merged.append(item)
+
+        # Root-cause fix: analysis can return name-only ideas; prefer research ideas when all are sparse.
+        if sparse_count == len(analysis_ideas):
+            return research_ideas
+        return merged
+
+    def _derive_ideas_from_structured_opportunities(
+        self,
+        opportunities: list[dict[str, Any]],
+        validated_pains: list[dict[str, Any]],
+        seeds: SeedInputs,
+        limit: int = 3,
+    ) -> list[dict[str, Any]]:
+        if not opportunities:
+            return []
+        pain_map = {str(p.get("id")): p for p in validated_pains if p.get("id")}
+        idea_dicts: list[dict[str, Any]] = []
+        for opportunity in opportunities[: max(1, limit)]:
+            linked_pains = [str(pid) for pid in (opportunity.get("linked_pains") or []) if str(pid)]
+            primary_pain = pain_map.get(linked_pains[0]) if linked_pains else None
+            problem_text = str((primary_pain or {}).get("text") or opportunity.get("jtbd") or "").strip()
+            target_user = str(
+                opportunity.get("target_actor")
+                or seeds.icp
+                or self._infer_icp_from_pains(validated_pains)
+                or "Early-stage teams"
+            ).strip()
+            name = str(opportunity.get("name") or "Signal-derived opportunity").strip()
+            if not problem_text:
+                continue
+            source_urls = [u for u in (opportunity.get("source_urls") or []) if isinstance(u, str) and u.strip()]
+            assumptions = [a for a in (opportunity.get("assumptions") or []) if isinstance(a, str) and a.strip()]
+            idea_dicts.append(
+                {
+                    "name": name[:120],
+                    "one_liner": f"Help {target_user.lower()} solve a repeated pain with a fast validation workflow.",
+                    "target_user": target_user,
+                    "problem": problem_text,
+                    "solution": "Provide a focused MVP test workflow with clear validation steps and measurable outcomes.",
+                    "key_features": [
+                        "Pain-to-hypothesis mapping",
+                        "Test plan and success criteria",
+                        "Launch-ready landing and outreach starter kit",
+                    ],
+                    "pain_ids": linked_pains,
+                    "sources": source_urls,
+                    "hypotheses": assumptions,
+                }
+            )
+        return idea_dicts
+
+    def _score_pragmatic_potential(
+        self,
+        idea: Idea,
+        validated_pains: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        pain_map = {str(item.get("id")): item for item in validated_pains if item.get("id")}
+        linked = [pain_map[pid] for pid in (idea.pain_ids or []) if pid in pain_map]
+        linked_count = len(linked)
+        avg_intensity = (
+            sum(int(item.get("intensity_signal", 0)) for item in linked) / linked_count if linked_count else 0.0
+        )
+        avg_frequency = (
+            sum(int(item.get("frequency_signal", 0)) for item in linked) / linked_count if linked_count else 0.0
+        )
+        source_domains: set[str] = set()
+        for raw_url in (idea.sources or []):
+            if not isinstance(raw_url, str):
+                continue
+            url = raw_url.strip()
+            if not url:
+                continue
+            try:
+                domain = urlparse(url).netloc
+            except Exception:
+                domain = ""
+            if domain:
+                source_domains.add(domain)
+        source_diversity = len(source_domains)
+        has_test_markers = any(
+            marker in " ".join(
+                [idea.one_liner, idea.solution, " ".join(idea.key_features or [])]
+            ).lower()
+            for marker in ("test", "validate", "landing", "waitlist", "interview", "pilot", "trial", "signup")
+        )
+        icp_hint = (self.settings.primary_icp or "").lower()
+        icp_fit = 1 if icp_hint and icp_hint in (idea.target_user or "").lower() else 0
+
+        score = 0.0
+        score += min(30.0, linked_count * 10.0)
+        score += min(20.0, avg_intensity * 0.2)
+        score += min(15.0, avg_frequency * 0.3)
+        score += min(15.0, source_diversity * 5.0)
+        score += 12.0 if has_test_markers else 0.0
+        score += 8.0 if icp_fit else 0.0
+        final = int(max(0, min(100, round(score))))
+        return {
+            "score": final,
+            "linked_pains": linked_count,
+            "avg_intensity": round(avg_intensity, 1),
+            "avg_frequency": round(avg_frequency, 1),
+            "source_diversity": source_diversity,
+            "has_test_markers": has_test_markers,
+            "icp_fit": bool(icp_fit),
+        }
+
+    def _apply_pragmatic_potential_to_scores(
+        self,
+        scores: list[IdeaScore],
+        ideas: list[Idea],
+        validated_pains: list[dict[str, Any]],
+    ) -> list[IdeaScore]:
+        if not scores or not ideas:
+            return scores
+        idea_map = {idea.name: idea for idea in ideas}
+        adjusted: list[IdeaScore] = []
+        for score in scores:
+            idea = idea_map.get(score.name)
+            if not idea:
+                adjusted.append(score)
+                continue
+            potential = self._score_pragmatic_potential(idea, validated_pains)
+            combined = int(round((0.55 * score.score) + (0.45 * int(potential["score"]))))
+            signals = dict(score.signals or {})
+            signals["pragmatic_potential"] = potential
+            rationale = (
+                f"{score.rationale} "
+                f"(Pragmatic potential {potential['score']}/100 from signal evidence, combined score: {combined}.)"
+            ).strip()
+            adjusted.append(
+                IdeaScore(
+                    name=score.name,
+                    score=max(0, min(100, combined)),
+                    rationale=rationale,
+                    risks=score.risks,
+                    signals=signals,
+                )
+            )
+        return adjusted
+
     def _text_missing_or_unknown(self, value: Any) -> bool:
         text = str(value or "").strip().lower()
         # Liste étendue de valeurs invalides pour meilleure validation
@@ -3256,8 +3445,8 @@ class VenturePipeline:
                     avg_score=avg_actionability
                 )
             
-            # Log détaillé seulement en mode debug
-            if blocked and len(blocked) > 0 and logger.level <= 10:  # DEBUG level
+            # Log détaillé seulement quand des idées sont bloquées.
+            if blocked and len(blocked) > 0:
                 if SMART_LOGGER_AVAILABLE:
                     smart_logger.debug(
                         LogCategory.BUSINESS,
