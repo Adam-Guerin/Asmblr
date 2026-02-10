@@ -44,6 +44,7 @@ from app.signal_quality import compute_novelty_score, compute_signal_quality
 from app.project_build import ProjectBuilder
 from app.mvp.builder import MVPBuilder, MVPBuilderError
 from app.tools.repo_generator import generate_fastapi_skeleton
+from app.mvp.frontend_kit.scaffold import write_frontend_scaffold
 from app.core.sanitizer import DataSanitizer
 from app.core.thresholds import (
     IDEA_ACTIONABILITY_MIN_SCORE,
@@ -87,6 +88,7 @@ from app.core.streaming import (
     process_large_feedback_file,
     process_large_historical_runs,
 )
+from app.core.product_metrics import PRODUCT_METRICS
 from app.core.cache import (
     get_cached_artifact_loader,
     load_cached_json,
@@ -106,7 +108,7 @@ class VenturePipeline:
         self.rag = RAGPlaybookQA(settings.knowledge_dir)
         
         # Initialize product metrics
-        from app.core.product_metrics import init_product_metrics
+        from app.core.product_metrics import init_product_metrics, PRODUCT_METRICS
         init_product_metrics(settings.data_dir)
 
     def record_ollama_failure(self, run_id: str, exc: Exception, llm_summary: str | None = None) -> str:
@@ -299,7 +301,8 @@ class VenturePipeline:
             return
         try:
             project_name = (topic or "Launchpad").strip()[:PROJECT_NAME_MAX_LENGTH] or "Launchpad"
-            generate_fastapi_skeleton(repo_dir, project_name, minimal=True)
+            # Use React/TypeScript scaffold instead of FastAPI
+            write_frontend_scaffold(repo_dir, project_name, brief=f"{project_name} helps teams launch with clarity", audience="founders and small teams", style="startup_clean")
         except Exception as exc:
             self.manager.write_artifact(run_id, "repo_skeleton_error.md", str(exc))
 
@@ -970,6 +973,50 @@ class VenturePipeline:
             )
             if not ideas:
                 reason = "No traceable ideas available after extraction."
+                fallback_top_name = (
+                    (analysis.get("top_idea") or {}).get("name")
+                    or (growth.get("landing_payload") or {}).get("product_name")
+                    or "Venture Ops Toolkit"
+                )
+                fallback_top = IdeaScore(
+                    name=str(fallback_top_name),
+                    score=0,
+                    rationale=reason,
+                    risks=[],
+                    signals={},
+                )
+                try:
+                    fallback_brand = self._normalize_brand_payload(
+                        brand if isinstance(brand, dict) else {},
+                        fallback_top.name,
+                    )
+                    self.manager.write_json(run_id, "brand_identity.json", fallback_brand)
+                    self.manager.write_artifact(
+                        run_id,
+                        "brand_direction.md",
+                        self._build_brand_markdown(fallback_brand),
+                    )
+                    self._generate_logo_assets(run_id, fallback_brand, fallback_top)
+
+                    landing_dir = Path(growth.get("landing_dir") or (self.settings.runs_dir / run_id / "landing_page"))
+                    if landing_dir.exists():
+                        fallback_landing_payload = growth.get("landing_payload") or default_landing_payload(
+                            fallback_top.name,
+                            fast_mode=fast_mode,
+                        )
+                        fallback_landing_payload.setdefault("logo_src", "./logo.svg")
+                        fallback_landing_payload.setdefault("logo_alt", f"{fallback_top.name} logo")
+                        tools["landing"].run(
+                            {
+                                "product_name": fallback_top.name,
+                                "output_dir": str(landing_dir),
+                                "template_dir": str(Path(__file__).resolve().parents[2] / "templates"),
+                                "payload": fallback_landing_payload,
+                                "fast_mode": fast_mode,
+                            }
+                        )
+                except Exception:
+                    pass
                 self.manager.update_status(run_id, "aborted")
                 self.manager.write_artifact(run_id, "abort_reason.md", reason)
                 self._log_progress(run_id, "Abort: no traceable ideas")
@@ -1257,11 +1304,17 @@ class VenturePipeline:
                 brand_payload = brand if isinstance(brand, dict) else {}
                 brand_payload = self._normalize_brand_payload(brand_payload, top.name)
                 brand_name = brand_payload.get("project_name") or top.name
+                self.manager.write_json(run_id, "brand_identity.json", brand_payload)
+                self.manager.write_artifact(run_id, "brand_direction.md", self._build_brand_markdown(brand_payload))
+                self._generate_logo_assets(run_id, brand_payload, top)
+
                 repo_dir = Path(tech.get("repo_dir") or (self.settings.runs_dir / run_id / "repo_skeleton"))
                 if not repo_dir.exists():
                     tools["repo"].run({"project_name": brand_name, "output_dir": str(repo_dir), "fast_mode": fast_mode})
                 landing_dir = Path(growth.get("landing_dir") or (self.settings.runs_dir / run_id / "landing_page"))
                 landing_payload = growth.get("landing_payload") or default_landing_payload(brand_name, fast_mode=fast_mode)
+                landing_payload.setdefault("logo_src", "./logo.svg")
+                landing_payload.setdefault("logo_alt", f"{brand_name} logo")
                 landing_prompt = self._load_prompt("landing_copy") + "\n\nIdea:\n" + json.dumps(top.__dict__, indent=2)
                 if not landing_dir.exists():
                     tools["landing"].run(
@@ -1291,10 +1344,6 @@ class VenturePipeline:
                             "fast_mode": fast_mode,
                         }
                     )
-
-                self.manager.write_json(run_id, "brand_identity.json", brand_payload)
-                self.manager.write_artifact(run_id, "brand_direction.md", self._build_brand_markdown(brand_payload))
-                self._generate_logo_assets(run_id, brand_payload, top)
 
                 opportunities = []
                 for idea in ideas:

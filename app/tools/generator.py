@@ -61,6 +61,8 @@ def default_landing_payload(product_name: str, fast_mode: bool = False) -> dict[
     if fast_mode:
         return {
             "product_name": product_name,
+            "logo_src": "./logo.svg",
+            "logo_alt": f"{product_name} logo",
             "hero_headline": f"{product_name} helps teams test new ideas quickly",
             "hero_subhead": "A short, practical path from signals to a testable MVP.",
             "value_prop_5s": f"For small teams: clarify the MVP test in one page, then launch a simple demand check.",
@@ -107,6 +109,8 @@ def default_landing_payload(product_name: str, fast_mode: bool = False) -> dict[
         }
     return {
         "product_name": product_name,
+        "logo_src": "./logo.svg",
+        "logo_alt": f"{product_name} logo",
         "hero_headline": f"{product_name} helps teams validate MVPs with less guesswork",
         "hero_subhead": "Turn specific pains into a testable MVP plan you can explain in minutes.",
         "value_prop_5s": "For early-stage founders: turn one painful workflow into one testable MVP offer this week.",

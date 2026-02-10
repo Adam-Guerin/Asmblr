@@ -9,6 +9,11 @@
   <body>
     <main class="page">
       <section class="hero">
+        {% if logo_src %}
+        <div class="brand-mark">
+          <img class="brand-logo" src="{{ logo_src }}" alt="{{ logo_alt }}" />
+        </div>
+        {% endif %}
         <p class="eyebrow">{{ category }}</p>
         <h1>{{ hero_headline }}</h1>
         <p class="subhead">{{ hero_subhead }}</p>

@@ -69,11 +69,22 @@ class LLMClient:
             return deepcopy(cached)
         raw = self._with_retry(lambda: self.generate(prompt))
         try:
+            # Try to extract JSON from markdown code blocks
+            import re
+            json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', raw, re.DOTALL)
+            if json_match:
+                raw = json_match.group(1)
+            # Also try to find JSON in the text without markdown
+            elif '{' in raw and '}' in raw:
+                # Extract the first JSON-like structure
+                start = raw.find('{')
+                end = raw.rfind('}') + 1
+                raw = raw[start:end]
             parsed = json.loads(raw)
             self._cache_set(cache_key, parsed)
             return deepcopy(parsed)
-        except json.JSONDecodeError:
-            logger.warning("Failed to parse JSON from LLM. Returning empty payload.")
+        except (json.JSONDecodeError, Exception) as exc:
+            logger.warning(f"Failed to parse JSON from LLM: {exc}. Raw response: {raw[:200]}")
             return {}
 
     def _cache_key(self, flavor: str, prompt: str) -> str:

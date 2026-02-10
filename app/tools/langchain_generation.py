@@ -103,6 +103,8 @@ class LandingGeneratorTool(BaseTool):
             },
         )
         data.setdefault("category", "")
+        data.setdefault("logo_src", "./logo.svg")
+        data.setdefault("logo_alt", f"{product_name} logo")
         data.setdefault("cta_heading", data.get("cta_primary", ""))
         data.setdefault("cta_subhead", "")
         if fast_mode:
