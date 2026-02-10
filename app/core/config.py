@@ -124,6 +124,12 @@ class Settings:
         "mvp_repo,landing_page,content_pack,distribution,hosting,brand_direction.md,brand_identity.json,logo.svg,launch_checklist.md,prd.md,tech_spec.md",
     )
     enable_distribution: bool = os.getenv("ENABLE_DISTRIBUTION", "true").lower() == "true"
+    campaign_auto_expand_assets: bool = os.getenv("CAMPAIGN_AUTO_EXPAND_ASSETS", "true").lower() == "true"
+    campaign_target_assets: int = int(os.getenv("CAMPAIGN_TARGET_ASSETS", "30"))
+    campaign_posts_target: int = int(os.getenv("CAMPAIGN_POSTS_TARGET", "12"))
+    campaign_ads_target: int = int(os.getenv("CAMPAIGN_ADS_TARGET", "12"))
+    campaign_outreach_target: int = int(os.getenv("CAMPAIGN_OUTREACH_TARGET", "4"))
+    campaign_videos_target: int = int(os.getenv("CAMPAIGN_VIDEOS_TARGET", "2"))
     public_base_url: str = os.getenv("PUBLIC_BASE_URL", "")
     public_base_domain: str = os.getenv("PUBLIC_BASE_DOMAIN", "")
     public_url_template: str = os.getenv("PUBLIC_URL_TEMPLATE", "https://{slug}.{domain}")

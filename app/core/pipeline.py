@@ -1840,6 +1840,266 @@ class VenturePipeline:
         summary = "\n".join(lines).rstrip() + "\n"
         self.manager.write_artifact(run_id, "ship_summary.md", summary)
 
+    def _build_campaign_brief(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> dict[str, Any]:
+        run_dir = self.settings.runs_dir / run_id
+        idea_details: dict[str, Any] = {}
+        opportunities_payload = self._load_json_artifact(run_dir / "opportunities.json") or {}
+        for item in opportunities_payload.get("items", []):
+            if not isinstance(item, dict):
+                continue
+            idea = item.get("idea") or {}
+            score = item.get("score") or {}
+            score_name = (score.get("name") or "").strip()
+            idea_name = (idea.get("name") or "").strip()
+            if top.name and (top.name == score_name or top.name == idea_name):
+                idea_details = idea
+                break
+        if not idea_details and isinstance(opportunities_payload.get("items"), list) and len(opportunities_payload["items"]) == 1:
+            candidate = opportunities_payload["items"][0]
+            idea_details = candidate.get("idea") if isinstance(candidate, dict) else {}
+        key_features = idea_details.get("key_features")
+        if not isinstance(key_features, list):
+            key_features = []
+        brief = {
+            "project_name": brand.get("project_name", top.name),
+            "idea_name": top.name,
+            "one_liner": idea_details.get("one_liner", ""),
+            "target_user": idea_details.get("target_user", ""),
+            "problem": idea_details.get("problem", ""),
+            "solution": idea_details.get("solution", ""),
+            "key_features": [str(item) for item in key_features if str(item).strip()],
+            "brand_direction": brand.get("brand_direction", ""),
+            "brand_keywords": brand.get("brand_keywords", []),
+            "score": int(getattr(top, "score", 0) or 0),
+            "rationale": getattr(top, "rationale", ""),
+        }
+        self.manager.write_json(run_id, "distribution/campaign_brief.json", brief)
+        return brief
+
+    def _campaign_angles(self, brief: dict[str, Any]) -> list[dict[str, str]]:
+        problem = (brief.get("problem") or "manual planning").strip()
+        solution = (brief.get("solution") or "a focused launch system").strip()
+        target_user = (brief.get("target_user") or "lean teams").strip()
+        features = [str(item).strip() for item in (brief.get("key_features") or []) if str(item).strip()]
+        feature_text = ", ".join(features[:3]) if features else "scoring, scope and launch assets"
+        return [
+            {"title": "Pain-first", "subtitle": "Turn recurring pain into one clear next step.", "hook": f"{target_user} keep losing time because {problem}.", "cta": "Join early access"},
+            {"title": "Outcome", "subtitle": "Go from signal to launch-ready output quickly.", "hook": f"We built this to solve {problem} with {solution}.", "cta": "Get the launch pack"},
+            {"title": "Speed", "subtitle": "From research to assets in one workflow.", "hook": f"Ship faster with {feature_text}.", "cta": "See how it works"},
+            {"title": "Clarity", "subtitle": "Focus only on what validates the idea.", "hook": f"Use {solution} to remove guesswork.", "cta": "View the MVP plan"},
+            {"title": "Evidence", "subtitle": "Built from real signal analysis.", "hook": f"{target_user} can prioritize with practical signal scoring.", "cta": "Try the framework"},
+            {"title": "Execution", "subtitle": "Planning and distribution stay aligned.", "hook": f"One system for scope, landing page, and campaign assets.", "cta": "Launch this week"},
+        ]
+
+    def _trim_text(self, value: str, max_chars: int) -> str:
+        text = (value or "").strip()
+        if len(text) <= max_chars:
+            return text
+        return text[: max(0, max_chars - 1)].rstrip() + "…"
+
+    def _expand_posts_for_campaign(self, posts: dict[str, Any], brief: dict[str, Any]) -> dict[str, Any]:
+        if not self.settings.campaign_auto_expand_assets:
+            return posts if isinstance(posts, dict) else {}
+        product_name = brief.get("project_name") or brief.get("idea_name") or "Product"
+        hashtags = [f"#{str(tag).strip().replace(' ', '')}" for tag in (brief.get("brand_keywords") or []) if str(tag).strip()]
+        hashtags = hashtags[:4] or ["#startup", "#mvp", "#build"]
+        target_total = max(2, int(self.settings.campaign_posts_target))
+        if target_total % 2 != 0:
+            target_total += 1
+        target_per_platform = max(1, target_total // 2)
+        normalized: dict[str, list[dict[str, Any]]] = {"x": [], "linkedin": []}
+        for platform in ("x", "linkedin"):
+            variants = posts.get(platform)
+            if not isinstance(variants, list):
+                variants = []
+            cleaned = [item for item in variants if isinstance(item, dict)]
+            normalized[platform] = cleaned[:target_per_platform]
+        angles = self._campaign_angles(brief)
+        for platform in ("x", "linkedin"):
+            while len(normalized[platform]) < target_per_platform:
+                idx = len(normalized[platform])
+                angle = angles[idx % len(angles)]
+                if platform == "x":
+                    text = self._trim_text(f"{product_name}: {angle['hook']} {angle['cta']}.", 280)
+                else:
+                    text = self._trim_text(
+                        f"{product_name} helps {brief.get('target_user') or 'operators'}: {angle['hook']} "
+                        f"The goal is pragmatic validation, not vanity output. {angle['cta']}.",
+                        600,
+                    )
+                normalized[platform].append(
+                    {
+                        "text": text,
+                        "hashtags": hashtags,
+                        "cta": angle["cta"],
+                        "image_title": f"{product_name} - {angle['title']}",
+                        "image_subtitle": angle["subtitle"],
+                    }
+                )
+        return normalized
+
+    def _expand_outreach_for_campaign(self, outreach: dict[str, Any], brief: dict[str, Any]) -> dict[str, Any]:
+        if not self.settings.campaign_auto_expand_assets:
+            return outreach if isinstance(outreach, dict) else {}
+        product_name = brief.get("project_name") or brief.get("idea_name") or "Product"
+        target_total = max(2, int(self.settings.campaign_outreach_target))
+        per_channel = max(1, target_total // 2)
+        email_seq = outreach.get("email_sequence")
+        dm_seq = outreach.get("dm_sequence")
+        emails = [item for item in (email_seq if isinstance(email_seq, list) else []) if isinstance(item, dict)]
+        dms = [item for item in (dm_seq if isinstance(dm_seq, list) else []) if isinstance(item, dict)]
+        angles = self._campaign_angles(brief)
+        while len(emails) < per_channel:
+            angle = angles[len(emails) % len(angles)]
+            emails.append(
+                {
+                    "subject": self._trim_text(f"{product_name}: quick validation feedback?", 110),
+                    "body": self._trim_text(
+                        f"Hi, we built {product_name} for {brief.get('target_user') or 'early teams'}. "
+                        f"{angle['hook']} Could I get 5 minutes of direct feedback?",
+                        500,
+                    ),
+                }
+            )
+        while len(dms) < per_channel:
+            angle = angles[len(dms) % len(angles)]
+            dms.append(
+                {
+                    "platform": "linkedin" if len(dms) % 2 == 0 else "x",
+                    "body": self._trim_text(
+                        f"Working on {product_name}. {angle['hook']} Open to a quick opinion?",
+                        280,
+                    ),
+                }
+            )
+        return {"email_sequence": emails[:per_channel], "dm_sequence": dms[:per_channel]}
+
+    def _expand_videos_for_campaign(self, videos_payload: dict[str, Any], brief: dict[str, Any]) -> dict[str, Any]:
+        if not self.settings.campaign_auto_expand_assets:
+            return videos_payload if isinstance(videos_payload, dict) else {}
+        product_name = brief.get("project_name") or brief.get("idea_name") or "Product"
+        target_total = max(1, int(self.settings.campaign_videos_target))
+        raw_videos = videos_payload.get("videos")
+        videos = [item for item in (raw_videos if isinstance(raw_videos, list) else []) if isinstance(item, dict)]
+        angles = self._campaign_angles(brief)
+        while len(videos) < target_total:
+            angle = angles[len(videos) % len(angles)]
+            videos.append(
+                {
+                    "title": f"{product_name} - {angle['title']}",
+                    "hook": angle["hook"],
+                    "storyboard": ["Show the pain context.", "Reveal focused MVP and campaign assets."],
+                    "on_screen_text": [angle["title"], angle["subtitle"]],
+                    "voiceover": self._trim_text(f"{product_name}: {angle['hook']} {angle['cta']}.", 220),
+                    "duration_s": 15,
+                    "style": "clean, bold, product UI",
+                    "prompt": f"Short vertical ad, {angle['subtitle']}, modern product UI, 9:16.",
+                }
+            )
+        return {"videos": videos[:target_total]}
+
+    def _expand_ads_for_campaign(self, ads_payload: dict[str, Any], brief: dict[str, Any]) -> dict[str, Any]:
+        if not self.settings.campaign_auto_expand_assets:
+            return ads_payload if isinstance(ads_payload, dict) else {}
+        product_name = brief.get("project_name") or brief.get("idea_name") or "Product"
+        target_total = max(3, int(self.settings.campaign_ads_target))
+        if target_total % 3 != 0:
+            target_total += 3 - (target_total % 3)
+        per_platform = max(1, target_total // 3)
+        angles = self._campaign_angles(brief)
+        google_ads = [item for item in (ads_payload.get("google_ads") or []) if isinstance(item, dict)]
+        meta_ads = [item for item in (ads_payload.get("meta_ads") or []) if isinstance(item, dict)]
+        tiktok_ads = [item for item in (ads_payload.get("tiktok_ads") or []) if isinstance(item, dict)]
+        while len(google_ads) < per_platform:
+            angle = angles[len(google_ads) % len(angles)]
+            google_ads.append(
+                {
+                    "headline": self._trim_text(f"{product_name}: {angle['title']}", 30),
+                    "description": self._trim_text(angle["hook"], 90),
+                    "final_url": "",
+                }
+            )
+        while len(meta_ads) < per_platform:
+            angle = angles[len(meta_ads) % len(angles)]
+            meta_ads.append(
+                {
+                    "primary_text": self._trim_text(f"{product_name}. {angle['hook']}", 140),
+                    "headline": self._trim_text(angle["title"], 40),
+                    "description": self._trim_text(angle["subtitle"], 80),
+                    "call_to_action": "LEARN_MORE",
+                    "landing_url": "",
+                }
+            )
+        while len(tiktok_ads) < per_platform:
+            angle = angles[len(tiktok_ads) % len(angles)]
+            tiktok_ads.append(
+                {
+                    "caption": self._trim_text(f"{product_name}: {angle['hook']}", 150),
+                    "call_to_action": "Learn More",
+                    "landing_url": "",
+                }
+            )
+        ads_payload["google_ads"] = google_ads[:per_platform]
+        ads_payload["meta_ads"] = meta_ads[:per_platform]
+        ads_payload["tiktok_ads"] = tiktok_ads[:per_platform]
+        ads_payload.setdefault("budget_per_platform_usd", self.settings.ads_budget_usd)
+        ads_payload.setdefault(
+            "campaign_strategy",
+            {
+                "goal": "Drive early access signups",
+                "funnel_stage": "Top of funnel",
+                "audience_hypothesis": f"{brief.get('target_user') or 'Founders validating MVPs'}",
+                "creative_angle": "Pragmatic validation and fast launch execution",
+                "success_metrics": ["CTR", "landing page signups"],
+            },
+        )
+        ads_payload.setdefault(
+            "targeting",
+            {
+                "countries": [c.strip() for c in self.settings.ads_countries.split(",") if c.strip()],
+                "language": self.settings.ads_language,
+                "audience": self.settings.ads_audience,
+                "interests": [i.strip() for i in self.settings.ads_interests.split(",") if i.strip()],
+            },
+        )
+        return ads_payload
+
+    def _write_campaign_asset_manifest(self, run_id: str) -> None:
+        run_dir = self.settings.runs_dir / run_id
+        dist_dir = run_dir / "distribution"
+        posts_payload = self._load_json_artifact(dist_dir / "posts.json") or {}
+        outreach_payload = self._load_json_artifact(dist_dir / "outreach.json") or {}
+        videos_payload = self._load_json_artifact(dist_dir / "video_prompts.json") or {}
+        ads_payload = self._load_json_artifact(dist_dir / "ads.json") or {}
+        posts_count = sum(len(items) for items in posts_payload.values() if isinstance(items, list))
+        outreach_count = len(outreach_payload.get("email_sequence") or []) + len(outreach_payload.get("dm_sequence") or [])
+        videos_count = len(videos_payload.get("videos") or [])
+        ads_count = len(ads_payload.get("google_ads") or []) + len(ads_payload.get("meta_ads") or []) + len(ads_payload.get("tiktok_ads") or [])
+        manifest = {
+            "target_assets": int(self.settings.campaign_target_assets),
+            "counts": {
+                "posts": posts_count,
+                "outreach": outreach_count,
+                "videos": videos_count,
+                "ads": ads_count,
+                "total": posts_count + outreach_count + videos_count + ads_count,
+            },
+            "targets": {
+                "posts": int(self.settings.campaign_posts_target),
+                "outreach": int(self.settings.campaign_outreach_target),
+                "videos": int(self.settings.campaign_videos_target),
+                "ads": int(self.settings.campaign_ads_target),
+            },
+            "artifacts": {
+                "brand_identity": (run_dir / "brand_identity.json").exists(),
+                "logo": (run_dir / "logo.svg").exists(),
+                "landing_page": (run_dir / "landing_page" / "index.html").exists(),
+                "mvp_repo": (run_dir / "mvp_repo").exists(),
+                "campaign_brief": (dist_dir / "campaign_brief.json").exists(),
+            },
+        }
+        self.manager.write_json(run_id, "distribution/asset_manifest.json", manifest)
+
     def _generate_distribution_assets(
         self,
         run_id: str,
@@ -1848,20 +2108,12 @@ class VenturePipeline:
         landing_dir: Path,
         content_dir: Path,
     ) -> None:
+        brief = self._build_campaign_brief(run_id, brand, top)
         run_dir = self.settings.runs_dir / run_id
         dist_dir = run_dir / "distribution"
         dist_dir.mkdir(parents=True, exist_ok=True)
         prompt = self._load_prompt("social_posts")
-        payload = {
-            "project_name": brand.get("project_name", top.name),
-            "one_liner": getattr(top, "one_liner", "") if hasattr(top, "one_liner") else "",
-            "target_user": getattr(top, "target_user", "") if hasattr(top, "target_user") else "",
-            "problem": getattr(top, "problem", "") if hasattr(top, "problem") else "",
-            "solution": getattr(top, "solution", "") if hasattr(top, "solution") else "",
-            "key_features": getattr(top, "key_features", []) if hasattr(top, "key_features") else [],
-            "brand_direction": brand.get("brand_direction", ""),
-            "brand_keywords": brand.get("brand_keywords", []),
-        }
+        payload = dict(brief)
 
         posts = {}
         if self.general_llm.available():
@@ -1908,6 +2160,7 @@ class VenturePipeline:
                 ],
             }
 
+        posts = self._expand_posts_for_campaign(posts, brief)
         images_dir = dist_dir / "images"
         images_dir.mkdir(parents=True, exist_ok=True)
         palette = brand.get("logo_palette") or [item.get("hex") for item in brand.get("color_palette", [])]
@@ -1974,22 +2227,15 @@ class VenturePipeline:
                 txt_lines.append(f"[{platform}] {item.get('text', '')}")
         if txt_lines:
             self.manager.write_artifact(run_id, "distribution/posts.txt", "\n".join(txt_lines).rstrip() + "\n")
+        self._write_campaign_asset_manifest(run_id)
 
     def _generate_outreach_assets(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> None:
+        brief = self._build_campaign_brief(run_id, brand, top)
         run_dir = self.settings.runs_dir / run_id
         dist_dir = run_dir / "distribution"
         dist_dir.mkdir(parents=True, exist_ok=True)
         prompt = self._load_prompt("outreach_sequences")
-        payload = {
-            "project_name": brand.get("project_name", top.name),
-            "one_liner": getattr(top, "one_liner", "") if hasattr(top, "one_liner") else "",
-            "target_user": getattr(top, "target_user", "") if hasattr(top, "target_user") else "",
-            "problem": getattr(top, "problem", "") if hasattr(top, "problem") else "",
-            "solution": getattr(top, "solution", "") if hasattr(top, "solution") else "",
-            "key_features": getattr(top, "key_features", []) if hasattr(top, "key_features") else [],
-            "brand_direction": brand.get("brand_direction", ""),
-            "brand_keywords": brand.get("brand_keywords", []),
-        }
+        payload = dict(brief)
 
         outreach = {}
         if self.general_llm.available():
@@ -2015,6 +2261,7 @@ class VenturePipeline:
                     }
                 ],
             }
+        outreach = self._expand_outreach_for_campaign(outreach, brief)
 
         landing_url = self._build_public_url(brand)
         if landing_url:
@@ -2036,6 +2283,7 @@ class VenturePipeline:
             md_lines.append(f"- DM ({item.get('platform', '')}): {item.get('body', '')}")
             md_lines.append(f"  - Link: {item.get('link', '')}")
         self.manager.write_artifact(run_id, "distribution/outreach.md", "\n".join(md_lines).rstrip() + "\n")
+        self._write_campaign_asset_manifest(run_id)
 
     def _build_public_url(self, brand: dict[str, Any]) -> str:
         if self.settings.public_base_url:
@@ -2070,21 +2318,13 @@ class VenturePipeline:
         return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
     def _generate_videos(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> None:
+        brief = self._build_campaign_brief(run_id, brand, top)
         run_dir = self.settings.runs_dir / run_id
         dist_dir = run_dir / "distribution"
         videos_dir = dist_dir / "videos"
         videos_dir.mkdir(parents=True, exist_ok=True)
 
-        payload = {
-            "project_name": brand.get("project_name", top.name),
-            "one_liner": getattr(top, "one_liner", "") if hasattr(top, "one_liner") else "",
-            "target_user": getattr(top, "target_user", "") if hasattr(top, "target_user") else "",
-            "problem": getattr(top, "problem", "") if hasattr(top, "problem") else "",
-            "solution": getattr(top, "solution", "") if hasattr(top, "solution") else "",
-            "key_features": getattr(top, "key_features", []) if hasattr(top, "key_features") else [],
-            "brand_direction": brand.get("brand_direction", ""),
-            "brand_keywords": brand.get("brand_keywords", []),
-        }
+        payload = dict(brief)
 
         prompt = self._load_prompt("video_prompts")
         videos_payload = {}
@@ -2134,7 +2374,9 @@ class VenturePipeline:
                 ]
             }
 
+        videos_payload = self._expand_videos_for_campaign(videos_payload, brief)
         self.manager.write_json(run_id, "distribution/video_prompts.json", videos_payload)
+        self._write_campaign_asset_manifest(run_id)
 
         if self.settings.offline_creation:
             if self.settings.enable_local_video:
@@ -2314,20 +2556,12 @@ class VenturePipeline:
         result_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
     def _generate_ads(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> None:
+        brief = self._build_campaign_brief(run_id, brand, top)
         run_dir = self.settings.runs_dir / run_id
         dist_dir = run_dir / "distribution"
         dist_dir.mkdir(parents=True, exist_ok=True)
 
-        payload = {
-            "project_name": brand.get("project_name", top.name),
-            "one_liner": getattr(top, "one_liner", "") if hasattr(top, "one_liner") else "",
-            "target_user": getattr(top, "target_user", "") if hasattr(top, "target_user") else "",
-            "problem": getattr(top, "problem", "") if hasattr(top, "problem") else "",
-            "solution": getattr(top, "solution", "") if hasattr(top, "solution") else "",
-            "key_features": getattr(top, "key_features", []) if hasattr(top, "key_features") else [],
-            "brand_direction": brand.get("brand_direction", ""),
-            "brand_keywords": brand.get("brand_keywords", []),
-        }
+        payload = dict(brief)
 
         prompt = self._load_prompt("ad_assets")
         ads_payload = {}
@@ -2397,6 +2631,7 @@ class VenturePipeline:
                 ],
             }
 
+        ads_payload = self._expand_ads_for_campaign(ads_payload, brief)
         self.manager.write_json(run_id, "distribution/ads.json", ads_payload)
         landing_url = self._build_public_url(brand)
         if landing_url:
@@ -2410,6 +2645,7 @@ class VenturePipeline:
                 if not item.get("landing_url"):
                     item["landing_url"] = self._with_utm(landing_url, "tiktok", "ads", f"t{idx}")
             self.manager.write_json(run_id, "distribution/ads.json", ads_payload)
+        self._write_campaign_asset_manifest(run_id)
 
         from app.tools.ads import AdsConfig, create_google_ads_campaign, create_meta_ads_campaign, create_tiktok_ads_campaign
 
