@@ -1279,6 +1279,8 @@ class VenturePipeline:
                 and (run_dir / "brand_direction.md").exists()
                 and (run_dir / "logo.svg").exists()
                 and (run_dir / "pitch_deck.json").exists()
+                and (run_dir / "roadmap.json").exists()
+                and (run_dir / "roadmap.md").exists()
             )
             if artifacts_ready:
                 prd = self._load_text_artifact(run_dir / "prd.md") or ""
@@ -1373,6 +1375,21 @@ class VenturePipeline:
                     self._format_pitch_deck_markdown(pitch_deck_payload),
                 )
                 self._log_progress(run_id, "Artifacts: pitch deck drafted.")
+                roadmap_payload = self._generate_roadmap(
+                    topic,
+                    top,
+                    brand_payload,
+                    validated_pains["validated"],
+                    opportunities,
+                    market_report,
+                )
+                self._write_sanitized_json(run_id, "roadmap.json", roadmap_payload)
+                self.manager.write_artifact(
+                    run_id,
+                    "roadmap.md",
+                    self._format_roadmap_markdown(roadmap_payload),
+                )
+                self._log_progress(run_id, "Artifacts: roadmap drafted.")
                 self.manager.complete_stage(run_id, "artifacts")
                 
                 # Generate Validation Sprint output if execution profile requires it
@@ -3418,6 +3435,199 @@ class VenturePipeline:
         lines.append(deck.get("closing", ""))
         lines.append("")
         lines.append(f"*Generated at {deck.get('created_at', 'unknown')} | Source: {deck.get('source', 'unknown')}*")
+        lines.append("")
+        return "\n".join(line for line in lines if line is not None).rstrip() + "\n"
+
+    def _generate_roadmap(
+        self,
+        topic: str,
+        top: IdeaScore,
+        brand_payload: dict[str, Any],
+        validated_pains: list[dict[str, Any]],
+        opportunities: list[dict[str, Any]],
+        market_report: str,
+    ) -> dict[str, Any]:
+        rag_context = self.rag.query("roadmap guidance")
+        prompt = self._load_prompt("roadmap_writer")
+        prompt += "\n\nIdea:\n" + json.dumps(top.__dict__, indent=2)
+        brand_snapshot = {
+            "project_name": brand_payload.get("project_name"),
+            "brand_direction": brand_payload.get("brand_direction"),
+            "keywords": brand_payload.get("brand_keywords") or brand_payload.get("keywords"),
+        }
+        prompt += "\n\nBrand direction:\n" + json.dumps(brand_snapshot, indent=2)
+        pains_text = "\n".join(f"- {item.get('text', 'unknown')}" for item in validated_pains if item.get("text"))
+        if pains_text:
+            prompt += "\n\nValidated pains:\n" + pains_text
+        op_text = "\n".join(
+            f"- {op.get('idea', {}).get('name', 'unknown')} (score: {op.get('score', {}).get('score', 'n/a')})"
+            for op in opportunities
+            if isinstance(op, dict)
+        )
+        if op_text:
+            prompt += "\n\nOpportunities:\n" + op_text
+        if market_report:
+            prompt += "\n\nMarket report excerpt:\n" + " ".join(market_report.split())[:4000]
+        prompt += "\n\nTopic:\n" + topic
+        if rag_context:
+            prompt += "\n\nPlaybook context:\n" + rag_context
+
+        roadmap_payload: dict[str, Any] = {}
+        if self.general_llm.available():
+            try:
+                roadmap_payload = self.general_llm.generate_json(prompt)
+            except Exception:
+                roadmap_payload = {}
+        if not roadmap_payload.get("phases"):
+            roadmap_payload = self._build_default_roadmap(
+                topic,
+                top,
+                brand_payload,
+                validated_pains,
+                opportunities,
+                market_report,
+            )
+        pain_texts = [item.get("text", "unknown") for item in validated_pains if item.get("text")]
+        roadmap_payload.setdefault("project_name", brand_payload.get("project_name") or top.name)
+        roadmap_payload.setdefault("topic", topic)
+        roadmap_payload.setdefault("overview", roadmap_payload.get("overview") or f"Roadmap for the {topic} launch.")
+        roadmap_payload.setdefault("key_metrics", roadmap_payload.get("key_metrics") or [])
+        roadmap_payload.setdefault(
+            "assumptions",
+            roadmap_payload.get("assumptions") or pain_texts[:3] or ["Market needs further validation."],
+        )
+        roadmap_payload.setdefault(
+            "phases",
+            roadmap_payload.get("phases") or self._build_default_roadmap(
+                topic,
+                top,
+                brand_payload,
+                validated_pains,
+                opportunities,
+                market_report,
+            )["phases"],
+        )
+        roadmap_payload.setdefault(
+            "source",
+            roadmap_payload.get("source") or ("llm" if self.general_llm.available() else "fallback"),
+        )
+        roadmap_payload.setdefault("created_at", roadmap_payload.get("created_at") or datetime.utcnow().isoformat())
+        return roadmap_payload
+
+    def _build_default_roadmap(
+        self,
+        topic: str,
+        top: IdeaScore,
+        brand_payload: dict[str, Any],
+        validated_pains: list[dict[str, Any]],
+        opportunities: list[dict[str, Any]],
+        market_report: str,
+    ) -> dict[str, Any]:
+        project_name = brand_payload.get("project_name") or top.name
+        primary_pain = validated_pains[0].get("text") if validated_pains else "Unvalidated but urgent need"
+        phase_templates = [
+            {
+                "name": "Validation & Signal Gathering",
+                "timeline": "Weeks 1-2",
+                "deliverables": [
+                    "Interview 5+ target users",
+                    "Document top pains and competitor gaps",
+                    "Pinpoint success metrics and ICP",
+                ],
+                "milestones": [
+                    "Validated top pain: " + (primary_pain or "untagged"),
+                    "Signal library ready for scoring",
+                ],
+                "owners": "Founding team",
+            },
+            {
+                "name": "MVP Build & Campaign",
+                "timeline": "Weeks 3-5",
+                "deliverables": [
+                    "Generate PRD + pitch deck + landing page",
+                    "Deploy landing with beta sign-up flow",
+                    "Share roadmap to evangelists",
+                ],
+                "milestones": [
+                    "Landing published",
+                    "3 idea-to-artifact automations shipped",
+                ],
+                "owners": "Product lead",
+            },
+            {
+                "name": "Validation Sprint & Momentum",
+                "timeline": "Weeks 6-8",
+                "deliverables": [
+                    "Run outreach sequences",
+                    "Capture KPIs (conversion, retention)",
+                    "Iterate roadmap based on signals",
+                ],
+                "milestones": [
+                    "Conversion > 15%",
+                    "Repeatable outreach playbook",
+                ],
+                "owners": "Growth team",
+            },
+        ]
+        key_metrics = [
+            "Pain validation completeness",
+            "Landing-to-signup conversion",
+            "Roadmap milestone execution rate",
+        ]
+        return {
+            "project_name": project_name,
+            "topic": topic,
+            "overview": (
+                f"{project_name} accelerates the {topic} launch by combining validated pains, "
+                "structured assets, and clear phases."
+            ),
+            "phases": phase_templates,
+            "key_metrics": key_metrics,
+            "assumptions": [primary_pain or "Market appetite needs confirmation"],
+            "source": "fallback",
+        }
+
+    def _format_roadmap_markdown(self, roadmap: dict[str, Any]) -> str:
+        lines: list[str] = [f"# Roadmap – {roadmap.get('project_name', 'Unknown project')}"]
+        lines.append("")
+        lines.append(f"Topic: {roadmap.get('topic', 'unknown')}")
+        lines.append("")
+        overview = roadmap.get("overview")
+        if overview:
+            lines.append(overview)
+            lines.append("")
+        metrics = roadmap.get("key_metrics") or []
+        if metrics:
+            lines.append("## Key Metrics")
+            lines.extend(f"- {metric}" for metric in metrics)
+            lines.append("")
+        phases = roadmap.get("phases") or []
+        for phase in phases:
+            lines.append(f"## {phase.get('name', 'Phase')}")
+            timeline = phase.get("timeline")
+            if timeline:
+                lines.append(f"- Timeline: {timeline}")
+            deliverables = phase.get("deliverables") or []
+            if deliverables:
+                lines.append("- Deliverables:")
+                lines.extend(f"  - {item}" for item in deliverables)
+            milestones = phase.get("milestones") or []
+            if milestones:
+                lines.append("- Milestones:")
+                lines.extend(f"  - {item}" for item in milestones)
+            owners = phase.get("owners")
+            if owners:
+                lines.append(f"- Owners: {owners}")
+            dependencies = phase.get("dependencies")
+            if dependencies:
+                lines.append(f"- Dependencies: {dependencies}")
+            lines.append("")
+        assumptions = roadmap.get("assumptions") or []
+        if assumptions:
+            lines.append("## Assumptions")
+            lines.extend(f"- {assumption}" for assumption in assumptions)
+            lines.append("")
+        lines.append(f"*Roadmap generated at {roadmap.get('created_at', 'unknown')} | Source: {roadmap.get('source', 'unknown')}*")
         lines.append("")
         return "\n".join(line for line in lines if line is not None).rstrip() + "\n"
 
