@@ -84,3 +84,33 @@ def test_campaign_expansion_hits_asset_targets(tmp_path: Path):
     assert videos_count == 2
     assert ads_count == 12
     assert posts_count + outreach_count + videos_count + ads_count == 30
+
+
+def test_organic_winners_are_boosted_into_ads(tmp_path: Path):
+    pipeline = _mk_pipeline(tmp_path)
+    run_id = pipeline.manager.create_run("organic winner boost")
+    posts_payload = {
+        "x": [
+            {"asset_id": "x_1", "text": "Validate your MVP faster", "cta": "Join early access", "hashtags": ["#mvp"]},
+            {"asset_id": "x_2", "text": "Turn pains into launch assets", "cta": "Get launch pack", "hashtags": ["#startup"]},
+        ],
+        "linkedin": [
+            {"asset_id": "linkedin_1", "text": "Founder workflow for pragmatic validation", "cta": "See plan", "hashtags": ["#founders"]},
+        ],
+    }
+    publishing_payload = {
+        "x": [{"likes": 1, "clicks": 2}, {"likes": 10, "clicks": 12}],
+        "linkedin": [{"likes": 2, "clicks": 1}],
+    }
+    leaderboard = pipeline._build_organic_leaderboard(run_id, posts_payload, publishing_payload)
+    assert leaderboard["winners"][0]["asset_id"] == "x_2"
+
+    ads_payload = {
+        "google_ads": [{"headline": "Base", "description": "Base", "final_url": ""}],
+        "meta_ads": [{"primary_text": "Base", "headline": "Base", "description": "Base", "call_to_action": "LEARN_MORE", "landing_url": ""}],
+        "tiktok_ads": [{"caption": "Base", "call_to_action": "Learn More", "landing_url": ""}],
+    }
+    boosted = pipeline._apply_organic_winners_to_ads(run_id, ads_payload)
+    assert boosted.get("boosted_from_organic") is True
+    assert "x_2" in boosted.get("organic_winner_ids", [])
+    assert any(item.get("source_asset_id") == "x_2" for item in boosted.get("google_ads", []))

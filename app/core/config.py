@@ -130,6 +130,8 @@ class Settings:
     campaign_ads_target: int = int(os.getenv("CAMPAIGN_ADS_TARGET", "12"))
     campaign_outreach_target: int = int(os.getenv("CAMPAIGN_OUTREACH_TARGET", "4"))
     campaign_videos_target: int = int(os.getenv("CAMPAIGN_VIDEOS_TARGET", "2"))
+    campaign_boost_from_organic: bool = os.getenv("CAMPAIGN_BOOST_FROM_ORGANIC", "true").lower() == "true"
+    campaign_organic_top_assets: int = int(os.getenv("CAMPAIGN_ORGANIC_TOP_ASSETS", "6"))
     public_base_url: str = os.getenv("PUBLIC_BASE_URL", "")
     public_base_domain: str = os.getenv("PUBLIC_BASE_DOMAIN", "")
     public_url_template: str = os.getenv("PUBLIC_URL_TEMPLATE", "https://{slug}.{domain}")

@@ -1278,6 +1278,7 @@ class VenturePipeline:
                 and (run_dir / "brand_identity.json").exists()
                 and (run_dir / "brand_direction.md").exists()
                 and (run_dir / "logo.svg").exists()
+                and (run_dir / "pitch_deck.json").exists()
             )
             if artifacts_ready:
                 prd = self._load_text_artifact(run_dir / "prd.md") or ""
@@ -1357,6 +1358,21 @@ class VenturePipeline:
                     f"Data source: {decision_source}\n\n# Top Idea\n\n{top.name}\n\nScore: {top.score}\n\n{top.rationale}\n",
                 )
                 self.manager.write_artifact(run_id, "market_report.md", f"Data source: {data_source_summary}\n\n{market_report}")
+                pitch_deck_payload = self._generate_pitch_deck(
+                    topic,
+                    top,
+                    brand_payload,
+                    market_report,
+                    validated_pains["validated"],
+                    competitors,
+                )
+                self._write_sanitized_json(run_id, "pitch_deck.json", pitch_deck_payload)
+                self.manager.write_artifact(
+                    run_id,
+                    "pitch_deck.md",
+                    self._format_pitch_deck_markdown(pitch_deck_payload),
+                )
+                self._log_progress(run_id, "Artifacts: pitch deck drafted.")
                 self.manager.complete_stage(run_id, "artifacts")
                 
                 # Generate Validation Sprint output if execution profile requires it
@@ -1813,7 +1829,7 @@ class VenturePipeline:
                 "opportunities_structured.json",
             ],
             "idea": ["top_idea.md", "opportunities.json", "market_report.md"],
-            "product": ["prd.md", "tech_spec.md", "mvp_scope.json"],
+            "product": ["prd.md", "tech_spec.md", "mvp_scope.json", "pitch_deck.json", "pitch_deck.md"],
             "mvp": ["mvp_repo", "mvp_cycles", "mvp_build_summary.md", "build_info.json"],
             "distribution": ["landing_page", "content_pack", "distribution"],
             "hosting": ["hosting/deploy_plan.json"],
@@ -2100,6 +2116,177 @@ class VenturePipeline:
         }
         self.manager.write_json(run_id, "distribution/asset_manifest.json", manifest)
 
+    def _parse_numeric(self, value: Any) -> float:
+        if isinstance(value, bool):
+            return 0.0
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            text = value.strip().replace("%", "")
+            try:
+                return float(text)
+            except Exception:
+                return 0.0
+        return 0.0
+
+    def _estimate_organic_quality(self, text: str) -> float:
+        normalized = (text or "").lower()
+        score = 0.0
+        if "?" in normalized:
+            score += 1.0
+        for marker in ("join", "launch", "validate", "mvp", "clear", "feedback", "try", "access"):
+            if marker in normalized:
+                score += 0.8
+        if len(normalized) < 40:
+            score -= 1.0
+        if len(normalized) > 600:
+            score -= 1.0
+        return max(0.0, score)
+
+    def _extract_engagement_score(self, publish_result: dict[str, Any]) -> float:
+        if not isinstance(publish_result, dict):
+            return 0.0
+        score = 0.0
+        score += self._parse_numeric(publish_result.get("clicks")) * 2.0
+        score += self._parse_numeric(publish_result.get("likes")) * 1.0
+        score += self._parse_numeric(publish_result.get("reactions")) * 1.0
+        score += self._parse_numeric(publish_result.get("retweets")) * 1.5
+        score += self._parse_numeric(publish_result.get("shares")) * 1.5
+        score += self._parse_numeric(publish_result.get("comments")) * 2.0
+        score += self._parse_numeric(publish_result.get("replies")) * 2.0
+        score += self._parse_numeric(publish_result.get("saves")) * 1.2
+        impressions = self._parse_numeric(publish_result.get("impressions"))
+        if impressions > 0:
+            interactions = (
+                self._parse_numeric(publish_result.get("clicks"))
+                + self._parse_numeric(publish_result.get("likes"))
+                + self._parse_numeric(publish_result.get("reactions"))
+                + self._parse_numeric(publish_result.get("retweets"))
+                + self._parse_numeric(publish_result.get("shares"))
+                + self._parse_numeric(publish_result.get("comments"))
+                + self._parse_numeric(publish_result.get("replies"))
+            )
+            score += (interactions / impressions) * 100.0
+        return score
+
+    def _build_organic_leaderboard(
+        self,
+        run_id: str,
+        posts_payload: dict[str, Any],
+        publishing_payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        rows: list[dict[str, Any]] = []
+        for platform in ("x", "linkedin"):
+            posts = posts_payload.get(platform)
+            publish_items = publishing_payload.get(platform)
+            if not isinstance(posts, list):
+                posts = []
+            if not isinstance(publish_items, list):
+                publish_items = []
+            for idx, post in enumerate(posts, start=1):
+                if not isinstance(post, dict):
+                    continue
+                publish_result = publish_items[idx - 1] if idx - 1 < len(publish_items) and isinstance(publish_items[idx - 1], dict) else {}
+                asset_id = post.get("asset_id") or f"{platform}_{idx}"
+                text = post.get("text", "")
+                measured = self._extract_engagement_score(publish_result)
+                estimated = self._estimate_organic_quality(text)
+                final_score = measured if measured > 0 else estimated
+                rows.append(
+                    {
+                        "asset_id": asset_id,
+                        "platform": platform,
+                        "variant_index": idx,
+                        "text": text,
+                        "cta": post.get("cta", ""),
+                        "hashtags": post.get("hashtags", []),
+                        "image_path": post.get("image_path", ""),
+                        "final_url": post.get("final_url", ""),
+                        "score": round(final_score, 3),
+                        "measured_score": round(measured, 3),
+                        "estimated_score": round(estimated, 3),
+                        "source": "measured" if measured > 0 else "estimated",
+                        "publish_result": publish_result,
+                    }
+                )
+        rows.sort(key=lambda item: item.get("score", 0), reverse=True)
+        top_n = max(1, int(self.settings.campaign_organic_top_assets))
+        payload = {
+            "top_n": top_n,
+            "total_candidates": len(rows),
+            "winners": rows[:top_n],
+            "all_assets": rows,
+        }
+        self.manager.write_json(run_id, "distribution/organic_leaderboard.json", payload)
+        md_lines = ["# Organic Leaderboard", ""]
+        for idx, item in enumerate(payload["winners"], start=1):
+            md_lines.append(
+                f"- #{idx} `{item.get('asset_id')}` ({item.get('platform')}) score={item.get('score')} source={item.get('source')}"
+            )
+            md_lines.append(f"  - CTA: {item.get('cta', '')}")
+            md_lines.append(f"  - Text: {self._trim_text(item.get('text', ''), 180)}")
+        self.manager.write_artifact(run_id, "distribution/organic_leaderboard.md", "\n".join(md_lines).rstrip() + "\n")
+        return payload
+
+    def _apply_organic_winners_to_ads(self, run_id: str, ads_payload: dict[str, Any]) -> dict[str, Any]:
+        if not self.settings.campaign_boost_from_organic:
+            return ads_payload
+        run_dir = self.settings.runs_dir / run_id
+        leaderboard = self._load_json_artifact(run_dir / "distribution" / "organic_leaderboard.json") or {}
+        winners = leaderboard.get("winners") or []
+        if not isinstance(winners, list) or not winners:
+            return ads_payload
+        google_ads = [item for item in (ads_payload.get("google_ads") or []) if isinstance(item, dict)]
+        meta_ads = [item for item in (ads_payload.get("meta_ads") or []) if isinstance(item, dict)]
+        tiktok_ads = [item for item in (ads_payload.get("tiktok_ads") or []) if isinstance(item, dict)]
+        for winner in winners:
+            if not isinstance(winner, dict):
+                continue
+            text = (winner.get("text") or "").strip()
+            if not text:
+                continue
+            asset_id = winner.get("asset_id", "")
+            cta = winner.get("cta") or "Learn More"
+            hashtags = winner.get("hashtags") or []
+            hash_text = " ".join(str(tag) for tag in hashtags[:3])
+            short_text = self._trim_text(text, 120)
+            google_ads.append(
+                {
+                    "headline": self._trim_text(short_text, 30),
+                    "description": self._trim_text(f"{short_text} {cta}", 90),
+                    "final_url": winner.get("final_url", ""),
+                    "source_asset_id": asset_id,
+                    "source_channel": "organic_winner",
+                }
+            )
+            meta_ads.append(
+                {
+                    "primary_text": self._trim_text(text, 140),
+                    "headline": self._trim_text(cta, 40),
+                    "description": self._trim_text(hash_text or "Top-performing organic creative", 80),
+                    "call_to_action": "LEARN_MORE",
+                    "landing_url": winner.get("final_url", ""),
+                    "source_asset_id": asset_id,
+                    "source_channel": "organic_winner",
+                }
+            )
+            tiktok_ads.append(
+                {
+                    "caption": self._trim_text(f"{short_text} {hash_text}".strip(), 150),
+                    "call_to_action": "Learn More",
+                    "landing_url": winner.get("final_url", ""),
+                    "source_asset_id": asset_id,
+                    "source_channel": "organic_winner",
+                }
+            )
+        per_platform = max(1, int(self.settings.campaign_ads_target) // 3)
+        ads_payload["google_ads"] = google_ads[:per_platform]
+        ads_payload["meta_ads"] = meta_ads[:per_platform]
+        ads_payload["tiktok_ads"] = tiktok_ads[:per_platform]
+        ads_payload["boosted_from_organic"] = True
+        ads_payload["organic_winner_ids"] = [item.get("asset_id") for item in winners if isinstance(item, dict)]
+        return ads_payload
+
     def _generate_distribution_assets(
         self,
         run_id: str,
@@ -2161,6 +2348,12 @@ class VenturePipeline:
             }
 
         posts = self._expand_posts_for_campaign(posts, brief)
+        for platform, variants in posts.items():
+            if not isinstance(variants, list):
+                continue
+            for idx, item in enumerate(variants, start=1):
+                if isinstance(item, dict) and not item.get("asset_id"):
+                    item["asset_id"] = f"{platform}_{idx}"
         images_dir = dist_dir / "images"
         images_dir.mkdir(parents=True, exist_ok=True)
         palette = brand.get("logo_palette") or [item.get("hex") for item in brand.get("color_palette", [])]
@@ -2375,6 +2568,9 @@ class VenturePipeline:
             }
 
         videos_payload = self._expand_videos_for_campaign(videos_payload, brief)
+        for idx, video in enumerate(videos_payload.get("videos", []), start=1):
+            if isinstance(video, dict) and not video.get("asset_id"):
+                video["asset_id"] = f"video_{idx}"
         self.manager.write_json(run_id, "distribution/video_prompts.json", videos_payload)
         self._write_campaign_asset_manifest(run_id)
 
@@ -2472,10 +2668,6 @@ class VenturePipeline:
         videos_path = run_dir / "distribution" / "video_prompts.json"
         result_path = run_dir / "distribution" / "publishing.json"
 
-        if self.settings.offline_creation:
-            result_path.write_text(json.dumps({"offline": True, "status": "skipped"}, indent=2), encoding="utf-8")
-            return
-
         if not posts_path.exists():
             self.manager.write_artifact(run_id, "distribution/publishing_error.md", "Missing distribution/posts.json")
             return
@@ -2492,6 +2684,24 @@ class VenturePipeline:
                 videos_payload = json.loads(videos_path.read_text(encoding="utf-8"))
             except Exception:
                 videos_payload = {}
+
+        if self.settings.offline_creation:
+            offline_payload = {"offline": True, "status": "skipped", "x": [], "linkedin": [], "youtube": [], "instagram": []}
+            for platform in ("x", "linkedin"):
+                for item in posts_payload.get(platform, []):
+                    if not isinstance(item, dict):
+                        continue
+                    offline_payload[platform].append(
+                        {
+                            "skipped": True,
+                            "reason": "offline_creation_enabled",
+                            "asset_id": item.get("asset_id", ""),
+                            "text": item.get("text", ""),
+                        }
+                    )
+            result_path.write_text(json.dumps(offline_payload, indent=2), encoding="utf-8")
+            self._build_organic_leaderboard(run_id, posts_payload, offline_payload)
+            return
 
         from app.tools.publish import PublishConfig, publish_linkedin, publish_x, publish_youtube, publish_instagram
 
@@ -2514,17 +2724,29 @@ class VenturePipeline:
             text = item.get("text", "")
             media_path = item.get("image_path")
             if config.x_bearer_token and config.x_user_id:
-                results["x"].append(publish_x(config, text, media_path))
+                result = publish_x(config, text, media_path)
+                if isinstance(result, dict):
+                    result.setdefault("asset_id", item.get("asset_id", ""))
+                    result.setdefault("source_text", text)
+                results["x"].append(result)
             else:
-                results["x"].append({"skipped": True, "reason": "missing X credentials", "text": text})
+                results["x"].append(
+                    {"skipped": True, "reason": "missing X credentials", "text": text, "asset_id": item.get("asset_id", "")}
+                )
 
         for item in posts_payload.get("linkedin", []):
             text = item.get("text", "")
             media_path = item.get("image_path")
             if config.linkedin_token and config.linkedin_author:
-                results["linkedin"].append(publish_linkedin(config, text, media_path))
+                result = publish_linkedin(config, text, media_path)
+                if isinstance(result, dict):
+                    result.setdefault("asset_id", item.get("asset_id", ""))
+                    result.setdefault("source_text", text)
+                results["linkedin"].append(result)
             else:
-                results["linkedin"].append({"skipped": True, "reason": "missing LinkedIn credentials", "text": text})
+                results["linkedin"].append(
+                    {"skipped": True, "reason": "missing LinkedIn credentials", "text": text, "asset_id": item.get("asset_id", "")}
+                )
 
         videos_dir = run_dir / "distribution" / "videos"
         if videos_dir.exists():
@@ -2554,6 +2776,7 @@ class VenturePipeline:
                         results["instagram"].append({"skipped": True, "reason": "missing Instagram credentials"})
 
         result_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
+        self._build_organic_leaderboard(run_id, posts_payload, results)
 
     def _generate_ads(self, run_id: str, brand: dict[str, Any], top: IdeaScore) -> None:
         brief = self._build_campaign_brief(run_id, brand, top)
@@ -2632,6 +2855,7 @@ class VenturePipeline:
             }
 
         ads_payload = self._expand_ads_for_campaign(ads_payload, brief)
+        ads_payload = self._apply_organic_winners_to_ads(run_id, ads_payload)
         self.manager.write_json(run_id, "distribution/ads.json", ads_payload)
         landing_url = self._build_public_url(brand)
         if landing_url:
@@ -2972,6 +3196,230 @@ class VenturePipeline:
             "## DB Schema\nRuns(id, topic, status, created_at, updated_at, output_dir)\n\n"
             "## Deployment\nDocker compose with Ollama + app.\n"
         )
+
+    def _generate_pitch_deck(
+        self,
+        topic: str,
+        top: IdeaScore,
+        brand_payload: dict[str, Any],
+        market_report: str,
+        validated_pains: list[dict[str, Any]],
+        competitors: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        rag_context = self.rag.query("pitch deck guidance")
+        prompt = self._load_prompt("pitch_deck_writer")
+        prompt += "\n\nIdea:\n" + json.dumps(top.__dict__, indent=2)
+        brand_snapshot = {
+            "project_name": brand_payload.get("project_name"),
+            "tagline": brand_payload.get("tagline"),
+            "brand_direction": brand_payload.get("brand_direction"),
+            "keywords": brand_payload.get("brand_keywords") or brand_payload.get("keywords"),
+        }
+        prompt += "\n\nBrand direction:\n" + json.dumps(brand_snapshot, indent=2)
+        pains_text = "\n".join(f"- {item.get('text', 'unknown')}" for item in validated_pains if item.get("text"))
+        if pains_text:
+            prompt += "\n\nValidated pains:\n" + pains_text
+        competitor_text = "\n".join(
+            f"- {c.get('product_name', 'unknown')} ({c.get('pricing', 'unknown')})"
+            for c in competitors
+            if isinstance(c, dict)
+        )
+        if competitor_text:
+            prompt += "\n\nCompetitor snapshot:\n" + competitor_text
+        if market_report:
+            market_excerpt = " ".join(market_report.split())
+            prompt += "\n\nMarket report excerpt:\n" + market_excerpt[:4000]
+        prompt += "\n\nTopic:\n" + topic
+        if rag_context:
+            prompt += "\n\nPlaybook context:\n" + rag_context
+
+        deck_payload: dict[str, Any] = {}
+        if self.general_llm.available():
+            try:
+                deck_payload = self.general_llm.generate_json(prompt)
+            except Exception:
+                deck_payload = {}
+        if not deck_payload.get("slides"):
+            deck_payload = self._build_default_pitch_deck(
+                topic,
+                top,
+                brand_payload,
+                market_report,
+                validated_pains,
+                competitors,
+            )
+        pain_texts = [item.get("text", "unknown") for item in validated_pains if item.get("text")]
+        deck_payload.setdefault("project_name", brand_payload.get("project_name") or top.name)
+        deck_payload.setdefault(
+            "subtitle",
+            deck_payload.get("subtitle") or brand_payload.get("tagline") or top.rationale or f"{topic} opportunity",
+        )
+        deck_payload.setdefault("topic", topic)
+        deck_payload.setdefault("validated_pains", pain_texts[:5])
+        deck_payload.setdefault(
+            "competitors",
+            [c.get("product_name", "unknown") for c in competitors if isinstance(c, dict)][:5],
+        )
+        deck_payload.setdefault("key_metrics", deck_payload.get("key_metrics") or [])
+        deck_payload.setdefault(
+            "ask",
+            deck_payload.get("ask")
+            or {
+                "amount": "TBD",
+                "use_of_funds": f"Advance the {topic} MVP and capture early adopter feedback.",
+            },
+        )
+        deck_payload.setdefault(
+            "closing",
+            deck_payload.get("closing") or "Refine this pitch with customer evidence and signal updates.",
+        )
+        deck_payload.setdefault(
+            "source",
+            deck_payload.get("source") or ("llm" if self.general_llm.available() else "fallback"),
+        )
+        deck_payload.setdefault("created_at", deck_payload.get("created_at") or datetime.utcnow().isoformat())
+        return deck_payload
+
+    def _build_default_pitch_deck(
+        self,
+        topic: str,
+        top: IdeaScore,
+        brand_payload: dict[str, Any],
+        market_report: str,
+        validated_pains: list[dict[str, Any]],
+        competitors: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        project_name = brand_payload.get("project_name") or top.name
+        subtitle = brand_payload.get("tagline") or top.rationale or f"{topic} opportunity"
+        pain_texts = [p.get("text", "unknown") for p in validated_pains if p.get("text")]
+        primary_pain = pain_texts[0] if pain_texts else "Critical problems remain undocumented."
+        competitor_names = [c.get("product_name", "unknown") for c in competitors if isinstance(c, dict)]
+        market_excerpt = " ".join(market_report.split()) if market_report else ""
+        slides = [
+            {
+                "title": "Title & Vision",
+                "summary": f"{project_name} helps founders rally around {topic} with clarity and speed.",
+                "bullets": [
+                    f"Brand promise: {brand_payload.get('brand_direction', 'clear strategic launch playbooks')}",
+                    "Vision: shorten idea-to-launch windows",
+                    "Positioning: founders who need structured signals and assets",
+                ],
+                "visual": "Hero slide with product name, tagline, and brand palette",
+            },
+            {
+                "title": "Problem",
+                "summary": f"{primary_pain} disrupts {topic} operators every day.",
+                "bullets": [
+                    primary_pain,
+                    "Decision paralysis when manual decks slow teams",
+                    "Little context tying pains to validated signals",
+                ],
+                "visual": "Pain map with highlighted friction points",
+            },
+            {
+                "title": "Solution",
+                "summary": f"{project_name} automates signal ingestion, idea scoring, and launch assets.",
+                "bullets": [
+                    "Scoring with validated pains + competitor signals",
+                    "PRD + landing + pitch decks generated in one flow",
+                    "Templates tailored to brand direction and ICP",
+                ],
+                "visual": "Flowchart from data to decks",
+            },
+            {
+                "title": "Market",
+                "summary": market_excerpt
+                or f"{topic} is poised for automation while most teams still build decks in spreadsheets.",
+                "bullets": [
+                    f"{len(pain_texts)} pains identified as urgent",
+                    f"{len(competitor_names)} adjacent players mapped in the market",
+                ],
+                "visual": "Market map with TAM, SAM, SOM bubbles",
+            },
+            {
+                "title": "Product",
+                "summary": "Launch-ready pipeline provides PRD, tech spec, landing, and pitch asset generation.",
+                "bullets": [
+                    "LLM-backed PRD + pitch deck creation",
+                    "Brand-savvy landing page and content pack",
+                    "Campaign brief with outreach and KPI tracking",
+                ],
+                "visual": "Dashboard view with asset thumbnails",
+            },
+            {
+                "title": "Traction & Validation",
+                "summary": (
+                    f"Initial validation centers on {primary_pain} and differentiates from "
+                    f"{competitor_names[0] if competitor_names else 'key players'}."
+                ),
+                "bullets": [
+                    "Signals from structured pains + competitor research",
+                    "Quick outreach tests to the ICP",
+                    "Landing page and content pack published as proof",
+                ],
+                "visual": "Validation timeline with milestones",
+            },
+            {
+                "title": "Ask",
+                "summary": "Clarify funding to close the MVP and open the validation sprint.",
+                "bullets": [
+                    "Amount: TBD",
+                    "Use of funds: finish automation, run customer interviews, tune positioning",
+                ],
+                "visual": "Slide with funding targets and use-of-funds arrows",
+            },
+        ]
+        key_metrics = [
+            f"{len(pain_texts)} validated pain insights",
+            f"{len(competitor_names)} mapped competitors",
+        ]
+        return {
+            "project_name": project_name,
+            "subtitle": subtitle,
+            "topic": topic,
+            "key_metrics": key_metrics,
+            "slides": slides,
+            "ask": {"amount": "TBD", "use_of_funds": f"Advance the {topic} MVP and capture early adopter feedback."},
+            "closing": "Update this deck with fresh customer evidence and signal quality data.",
+            "source": "fallback",
+        }
+
+    def _format_pitch_deck_markdown(self, deck: dict[str, Any]) -> str:
+        lines: list[str] = [f"# Pitch Deck – {deck.get('project_name', 'Unknown project')}"]
+        subtitle = deck.get("subtitle")
+        if subtitle:
+            lines.append(f"**{subtitle}**")
+        lines.append("")
+        lines.append(f"Topic: {deck.get('topic', 'unknown')}")
+        lines.append("")
+        metrics = deck.get("key_metrics") or []
+        if metrics:
+            lines.append("## Key Metrics")
+            lines.extend(f"- {metric}" for metric in metrics)
+            lines.append("")
+        for slide in deck.get("slides", []):
+            title = slide.get("title", "Slide")
+            lines.append(f"## {title}")
+            summary = slide.get("summary")
+            if summary:
+                lines.append(summary)
+            for bullet in slide.get("bullets", []):
+                lines.append(f"- {bullet}")
+            visual = slide.get("visual")
+            if visual:
+                lines.append(f"_Visual: {visual}_")
+            lines.append("")
+        ask = deck.get("ask") or {}
+        lines.append("## Ask")
+        lines.append(f"- Amount: {ask.get('amount', 'TBD')}")
+        lines.append(f"- Use of funds: {ask.get('use_of_funds', 'TBD')}")
+        lines.append("")
+        lines.append("## Closing")
+        lines.append(deck.get("closing", ""))
+        lines.append("")
+        lines.append(f"*Generated at {deck.get('created_at', 'unknown')} | Source: {deck.get('source', 'unknown')}*")
+        lines.append("")
+        return "\n".join(line for line in lines if line is not None).rstrip() + "\n"
 
     def _build_launch_checklist(self, idea_name: str) -> str:
         return (
