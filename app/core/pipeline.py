@@ -3,6 +3,7 @@ import os
 import math
 import time
 import random
+import hashlib
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -46,6 +47,7 @@ from app.mvp.builder import MVPBuilder, MVPBuilderError
 from app.tools.repo_generator import generate_fastapi_skeleton
 from app.mvp.frontend_kit.scaffold import write_frontend_scaffold
 from app.core.sanitizer import DataSanitizer
+from app.core.social_metrics import build_social_metrics_adapter
 from app.core.thresholds import (
     IDEA_ACTIONABILITY_MIN_SCORE,
     IDEA_ACTIONABILITY_ADJUSTMENT_MAX,
@@ -106,6 +108,7 @@ class VenturePipeline:
         self.active_general_model = settings.general_model
         self.active_code_model = settings.code_model
         self.rag = RAGPlaybookQA(settings.knowledge_dir)
+        self.social_metrics_adapter = build_social_metrics_adapter(settings)
         
         # Initialize product metrics
         from app.core.product_metrics import init_product_metrics, PRODUCT_METRICS
@@ -301,8 +304,16 @@ class VenturePipeline:
             return
         try:
             project_name = (topic or "Launchpad").strip()[:PROJECT_NAME_MAX_LENGTH] or "Launchpad"
-            # Use React/TypeScript scaffold instead of FastAPI
-            write_frontend_scaffold(repo_dir, project_name, brief=f"{project_name} helps teams launch with clarity", audience="founders and small teams", style="startup_clean")
+            # Use React/TypeScript scaffold in parallel with FastAPI backend skeleton
+            write_frontend_scaffold(
+                repo_dir,
+                project_name,
+                brief=f"{project_name} helps teams launch with clarity",
+                audience="founders and small teams",
+                style="startup_clean",
+            )
+            backend_dir = repo_dir / "backend"
+            generate_fastapi_skeleton(backend_dir, project_name, minimal=True)
         except Exception as exc:
             self.manager.write_artifact(run_id, "repo_skeleton_error.md", str(exc))
 
@@ -1296,11 +1307,21 @@ class VenturePipeline:
                 tech_spec = tech.get("tech_spec_markdown") or ""
                 if not prd or "fallback" in prd.lower():
                     decision_missing.append("PRD fallback used")
-                    prd = self._generate_prd(top, ideas, topic)
+                    prd = self._generate_prd(
+                        top,
+                        ideas,
+                        topic,
+                        validated_pains=[item.get("text", "") for item in validated_pains["validated"]],
+                        competitors=competitors,
+                    )
                     self._log_progress(run_id, "Artifacts: PRD fallback detected, generated local PRD.")
                 if not tech_spec or "fallback" in tech_spec.lower():
                     decision_missing.append("Tech spec fallback used")
-                    tech_spec = self._generate_tech_spec(top, topic)
+                    tech_spec = self._generate_tech_spec(
+                        top,
+                        topic,
+                        validated_pains=[item.get("text", "") for item in validated_pains["validated"]],
+                    )
                     self._log_progress(run_id, "Artifacts: Tech fallback detected, generated local tech spec.")
 
                 brand_payload = brand if isinstance(brand, dict) else {}
@@ -2129,6 +2150,8 @@ class VenturePipeline:
                 "landing_page": (run_dir / "landing_page" / "index.html").exists(),
                 "mvp_repo": (run_dir / "mvp_repo").exists(),
                 "campaign_brief": (dist_dir / "campaign_brief.json").exists(),
+                "social_performance": (dist_dir / "social_performance.json").exists(),
+                "social_followup": (dist_dir / "social_followup.json").exists(),
             },
         }
         self.manager.write_json(run_id, "distribution/asset_manifest.json", manifest)
@@ -2192,6 +2215,21 @@ class VenturePipeline:
         posts_payload: dict[str, Any],
         publishing_payload: dict[str, Any],
     ) -> dict[str, Any]:
+        run_dir = self.settings.runs_dir / run_id
+        performance_data = (
+            self._load_json_artifact(run_dir / "distribution" / "social_performance.json") or {}
+        )
+        performance_index: dict[str, dict[str, Any]] = {}
+        for platform, entries in performance_data.items():
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                asset_id = entry.get("asset_id")
+                if not asset_id:
+                    continue
+                performance_index[f"{platform}:{asset_id}"] = entry
         rows: list[dict[str, Any]] = []
         for platform in ("x", "linkedin"):
             posts = posts_payload.get(platform)
@@ -2209,6 +2247,11 @@ class VenturePipeline:
                 measured = self._extract_engagement_score(publish_result)
                 estimated = self._estimate_organic_quality(text)
                 final_score = measured if measured > 0 else estimated
+                perf_key = f"{platform}:{asset_id}"
+                perf_entry = performance_index.get(perf_key) or {}
+                perf_score = self._score_social_metric(perf_entry) if perf_entry else 0.0
+                if perf_entry and perf_score > final_score:
+                    final_score = perf_score
                 rows.append(
                     {
                         "asset_id": asset_id,
@@ -2222,8 +2265,11 @@ class VenturePipeline:
                         "score": round(final_score, 3),
                         "measured_score": round(measured, 3),
                         "estimated_score": round(estimated, 3),
-                        "source": "measured" if measured > 0 else "estimated",
+                        "source": perf_entry.get("source")
+                        or ("measured" if measured > 0 else "estimated"),
                         "publish_result": publish_result,
+                        "performance": perf_entry,
+                        "performance_score": round(perf_score, 3) if perf_entry else None,
                     }
                 )
         rows.sort(key=lambda item: item.get("score", 0), reverse=True)
@@ -2369,7 +2415,11 @@ class VenturePipeline:
             if not isinstance(variants, list):
                 continue
             for idx, item in enumerate(variants, start=1):
-                if isinstance(item, dict) and not item.get("asset_id"):
+                if not isinstance(item, dict):
+                    continue
+                item["platform"] = platform
+                item.setdefault("created_at", datetime.utcnow().isoformat())
+                if not item.get("asset_id"):
                     item["asset_id"] = f"{platform}_{idx}"
         images_dir = dist_dir / "images"
         images_dir.mkdir(parents=True, exist_ok=True)
@@ -2420,7 +2470,24 @@ class VenturePipeline:
         except Exception as exc:
             self.manager.write_artifact(run_id, "distribution_error.md", str(exc))
 
+        performance = self._fetch_social_post_performance(run_id, posts)
+        best_recs = self._apply_social_performance(posts, performance)
+        self._persist_social_followup(run_id, posts, best_recs)
+        self._record_ads_booster_history(run_id, posts, best_recs)
+        for platform, entry in best_recs.items():
+            if entry:
+                ctr = entry.get("ctr", 0.0)
+                self._log_progress(
+                    run_id,
+                    f"Social best {platform}: {entry.get('asset_id', 'unknown')} (CTR {ctr:.2%}) ready for ads",
+                )
         self.manager.write_json(run_id, "distribution/posts.json", posts)
+        self.manager.write_json(run_id, "distribution/social_performance.json", performance)
+        self.manager.write_artifact(
+            run_id,
+            "distribution/social_performance.md",
+            self._format_social_performance_markdown(performance),
+        )
         md_lines = ["# Distribution Posts", ""]
         for platform, variants in posts.items():
             md_lines.append(f"## {platform.upper()}")
@@ -3171,7 +3238,15 @@ class VenturePipeline:
             f"## Sources (LLM referenced)\n{citations or 'Unknown'}\n"
         )
 
-    def _generate_prd(self, top: IdeaScore, ideas: list[Idea], topic: str) -> str:
+    def _generate_prd(
+        self,
+        top: IdeaScore,
+        ideas: list[Idea],
+        topic: str,
+        *,
+        validated_pains: list[str] | None = None,
+        competitors: list[dict[str, Any]] | None = None,
+    ) -> str:
         rag_context = self.rag.query("PRD guidance")
         prompt = self._load_prompt("prd_writer") + "\n\nIdea:\n" + json.dumps(top.__dict__, indent=2)
         if rag_context:
@@ -3181,19 +3256,21 @@ class VenturePipeline:
                 return self.general_llm.generate(prompt)
             except Exception:
                 pass
-        return (
-            f"# PRD\n\n"
-            f"## Vision\nLaunch-ready pipeline for {topic}.\n\n"
-            f"## Problem\nTeams lack structured idea scoring and launch assets.\n\n"
-            f"## ICP\nOperators, founders, small product teams.\n\n"
-            f"## JTBD\nTurn raw signals into a shippable MVP plan.\n\n"
-            f"## User Stories\n- As a founder, I want to score ideas quickly.\n- As a PM, I need a PRD draft fast.\n\n"
-            f"## MVP Scope\nSignal ingestion, scoring, PRD/landing generation.\n\n"
-            f"## Success Metrics\nTime to PRD < 2 hours, idea score accuracy feedback.\n\n"
-            f"## Risks\nLimited market data, scraping failures.\n"
+        return self._build_fallback_prd(
+            top=top,
+            topic=topic,
+            ideas=ideas,
+            validated_pains=validated_pains,
+            competitors=competitors,
         )
 
-    def _generate_tech_spec(self, top: IdeaScore, topic: str) -> str:
+    def _generate_tech_spec(
+        self,
+        top: IdeaScore,
+        topic: str,
+        *,
+        validated_pains: list[str] | None = None,
+    ) -> str:
         rag_context = self.rag.query("tech spec guidance")
         prompt = self._load_prompt("tech_spec_writer") + "\n\nIdea:\n" + json.dumps(top.__dict__, indent=2)
         if rag_context:
@@ -3203,16 +3280,142 @@ class VenturePipeline:
                 return self.general_llm.generate(prompt)
             except Exception:
                 pass
-        return (
-            "# Tech Spec\n\n"
-            "## Architecture\nFastAPI + SQLite + background jobs.\n\n"
-            "## Stack Options\n"
-            "- Option A: FastAPI + SQLite + Streamlit UI.\n"
-            "- Option B: Next.js frontend + FastAPI backend.\n\n"
-            "## Endpoints\n- POST /run\n- GET /run/{id}\n- GET /run/{id}/artifact/{name}\n\n"
-            "## DB Schema\nRuns(id, topic, status, created_at, updated_at, output_dir)\n\n"
-            "## Deployment\nDocker compose with Ollama + app.\n"
+        return self._build_fallback_tech_spec(
+            top=top,
+            topic=topic,
+            validated_pains=validated_pains,
         )
+
+    def _build_fallback_prd(
+        self,
+        *,
+        top: IdeaScore,
+        topic: str,
+        ideas: list[Idea],
+        validated_pains: list[str] | None = None,
+        competitors: list[dict[str, Any]] | None = None,
+    ) -> str:
+        idea = self._select_idea(top, ideas)
+        idea_problem = idea.problem if idea else top.rationale
+        idea_solution = idea.solution if idea else "A structured launch playbook."
+        features = idea.key_features if idea else []
+        pains_md = self._format_bullets(validated_pains)
+        competitors_md = self._format_competitor_lines(competitors)
+        features_md = self._format_bullets(features, default="- TBD (define key features)")
+        return dedent(
+            f"""
+            # PRD
+
+            ## Vision
+            {top.name} turns {topic} signals into ready-to-publish launch artifacts in a single pipeline.
+
+            ## Top Idea
+            **Name:** {top.name}
+            **Score:** {top.score}
+            **Rationale:** {top.rationale}
+
+            ## Problem
+            {idea_problem}
+
+            ## Solution
+            {idea_solution}
+
+            ## Target User
+            {idea.target_user if idea and idea.target_user else 'Founders and small product teams'}
+
+            ## Validated Pains
+            {pains_md}
+
+            ## Key Features
+            {features_md}
+
+            ## Differentiation
+            {competitors_md}
+
+            ## Success Metrics
+            - Accelerate idea-to-PRD time to under 2 hours.
+            - Increase decision confidence above {self.settings.signal_quality_threshold}.
+            - Capture at least {len(competitors or [])} competitor lenses per run.
+            """
+        ).strip() + "\n"
+
+    def _build_fallback_tech_spec(
+        self,
+        *,
+        top: IdeaScore,
+        topic: str,
+        validated_pains: list[str] | None = None,
+    ) -> str:
+        idea_direction = top.rationale
+        stack_frontend = self.settings.frontend_style or "startup_clean React"
+        pains_md = self._format_bullets(validated_pains, limit=6)
+        return dedent(
+            f"""
+            # Tech Spec
+
+            ## Overview
+            Build a FastAPI backend with SQLite storage that stitches together the '{topic}' launch story.
+
+            ## Architecture
+            - Frontend stack: {stack_frontend}
+            - Backend: FastAPI with Uvicorn workers
+            - Database: SQLite (with room to migrate to PostgreSQL)
+            - LLM access: Ollama (primary) with self-healing fallbacks
+
+            ## Core Services
+            - Signals collector: ingests `pages_deduped.json`, extracts pains.
+            - Idea scoring service: heuristics + optional LLM judge.
+            - Artifact generator: builds PRD/tech spec/landing content + MVP repo.
+
+            ## Data Model
+            - `runs` (id, topic, status, output_dir, created_at, updated_at)
+            - `ideas` (name, score, rationale, risks, signals)
+            - `signals` (id, source, text, score, created_at)
+
+            ## API Endpoints
+            - `POST /api/v1/pipelines`: start new run with topic + seed data.
+            - `GET /api/v1/pipelines/{run_id}`: inspect artifacts/status.
+            - `POST /api/v1/pipelines/{run_id}/run`: trigger CrewAI stage (or offline simulation).
+            - `GET /api/v1/runs/{run_id}/artifacts/{name}`: download generated docs.
+
+            ## Automation Hooks
+            - Background MVP cycles (npm/uvicorn) with smoke tests (`npm test`).
+            - Distribution and ads generation with offline-friendly placeholders.
+            - Monitoring via `/api/health`, `/api/status`, Prometheus metrics.
+
+            ## Validated Pains
+            {pains_md}
+
+            ## Safety Notes
+            Ensure secrets guard (`admins`). Sniff `distribution/ads_publish.json` for offline fallbacks.
+            """
+        ).strip() + "\n"
+
+    def _select_idea(self, top: IdeaScore, ideas: list[Idea]) -> Idea | None:
+        for idea in ideas:
+            if idea.name == top.name:
+                return idea
+        return ideas[0] if ideas else None
+
+    def _format_bullets(
+        self, items: list[str] | None, limit: int = 5, default: str = "- TBD"
+    ) -> str:
+        filtered = [item.strip() for item in (items or []) if item and item.strip()]
+        if not filtered:
+            return default
+        return "\n".join(f"- {item}" for item in filtered[:limit])
+
+    def _format_competitor_lines(self, competitors: list[dict[str, Any]] | None) -> str:
+        filtered = []
+        for comp in competitors or []:
+            if not isinstance(comp, dict):
+                continue
+            name = comp.get("product_name") or comp.get("name") or "Unknown"
+            note = comp.get("pricing") or comp.get("category") or comp.get("description") or ""
+            filtered.append(f"- {name} ({note})" if note else f"- {name}")
+        if not filtered:
+            return "- Competitor research pending."
+        return "\n".join(filtered[:5])
 
     def _generate_pitch_deck(
         self,
@@ -3630,6 +3833,251 @@ class VenturePipeline:
         lines.append(f"*Roadmap generated at {roadmap.get('created_at', 'unknown')} | Source: {roadmap.get('source', 'unknown')}*")
         lines.append("")
         return "\n".join(line for line in lines if line is not None).rstrip() + "\n"
+
+    def _fetch_social_post_performance(
+        self, run_id: str, posts: dict[str, list[dict[str, Any]]]
+    ) -> dict[str, list[dict[str, Any]]]:
+        if not posts:
+            return {}
+        metrics: dict[str, list[dict[str, Any]]] = {}
+        adapter = getattr(self, "social_metrics_adapter", None)
+        if adapter:
+            try:
+                metrics = adapter.fetch(run_id, posts) or {}
+            except Exception as exc:
+                self._log_progress(run_id, f"Social metrics adapter call failed: {exc}")
+                metrics = {}
+        if metrics:
+            # normalize external metrics
+            for platform, entries in metrics.items():
+                if not isinstance(entries, list):
+                    continue
+                for entry in entries:
+                    if not isinstance(entry, dict):
+                        continue
+                    entry.setdefault("platform", platform)
+                    entry.setdefault("source", entry.get("source") or "api")
+                    entry.setdefault("asset_id", entry.get("asset_id", ""))
+            return metrics
+        for platform, variants in posts.items():
+            metrics[platform] = []
+            for item in variants:
+                metric = self._simulate_social_metric(item)
+                metric["asset_id"] = item.get("asset_id", "")
+                metric["platform"] = platform
+                metric["source"] = "simulated"
+                metric["created_at"] = item.get("created_at")
+                metrics[platform].append(metric)
+        return metrics
+
+    def _simulate_social_metric(self, item: dict[str, Any]) -> dict[str, Any]:
+        text = (item.get("text") or "").strip() or "social post"
+        digest = int(hashlib.sha256(text.encode("utf-8")).hexdigest()[:8], 16)
+        impressions = 200 + (digest % 600)
+        clicks = 10 + (digest % 80)
+        likes = 3 + (digest % 40)
+        ctr = clicks / max(impressions, 1)
+        engagement_rate = min(1.0, (likes + clicks) / max(impressions, 1))
+        metric = {
+            "platform": item.get("platform"),
+            "impressions": impressions,
+            "clicks": clicks,
+            "likes": likes,
+            "ctr": round(ctr, 4),
+            "engagement_rate": round(engagement_rate, 4),
+        }
+        metric["score"] = round(ctr * 0.7 + engagement_rate * 0.3, 4)
+        metadata = self._simulate_variant_metadata(item)
+        metric.update(metadata)
+        metric.setdefault("reported_at", datetime.utcnow().isoformat())
+        return metric
+
+    def _simulate_variant_metadata(self, variant: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(variant, dict):
+            return {
+                "final_url": None,
+                "cta": None,
+                "hashtags": [],
+                "content_format": "text",
+                "variant_text": None,
+                "published_at": None,
+            }
+        return {
+            "final_url": variant.get("final_url"),
+            "cta": variant.get("cta"),
+            "hashtags": [str(tag) for tag in (variant.get("hashtags") or []) if str(tag).strip()],
+            "content_format": self._infer_variant_content_format(variant),
+            "variant_text": variant.get("text"),
+            "published_at": variant.get("created_at"),
+        }
+
+    def _infer_variant_content_format(self, variant: dict[str, Any]) -> str:
+        if not isinstance(variant, dict):
+            return "text"
+        if variant.get("video_title") or variant.get("voiceover") or variant.get("storyboard"):
+            return "video"
+        if variant.get("image_path") or variant.get("image_title") or variant.get("image_subtitle"):
+            return "image"
+        return "text"
+
+    def _score_social_metric(self, entry: dict[str, Any]) -> float:
+        score = entry.get("score")
+        if isinstance(score, (int, float)):
+            return float(score)
+        ctr = float(entry.get("ctr") or 0.0)
+        engagement = float(entry.get("engagement_rate") or 0.0)
+        score = round(ctr * 0.7 + engagement * 0.3, 4)
+        entry["score"] = score
+        return score
+
+    def _rank_social_performance(
+        self, performance: dict[str, list[dict[str, Any]]]
+    ) -> dict[str, dict[str, Any]]:
+        ranking: dict[str, dict[str, Any]] = {}
+        for platform, entries in performance.items():
+            best_entry: dict[str, Any] | None = None
+            best_score = -1.0
+            for entry in entries:
+                entry_score = self._score_social_metric(entry)
+                if entry_score > best_score:
+                    best_score = entry_score
+                    best_entry = entry
+            ranking[platform] = best_entry or {}
+        return ranking
+
+    def _apply_social_performance(
+        self, posts: dict[str, list[dict[str, Any]]], performance: dict[str, list[dict[str, Any]]]
+    ) -> dict[str, dict[str, Any]]:
+        lookup: dict[str, dict[str, Any]] = {}
+        for platform, entries in performance.items():
+            for entry in entries:
+                asset_id = entry.get("asset_id")
+                if asset_id:
+                    lookup[f"{platform}:{asset_id}"] = entry
+        best_entries = self._rank_social_performance(performance)
+        for platform, variants in posts.items():
+            platform_best_id = best_entries.get(platform, {}).get("asset_id")
+            for variant in variants or []:
+                asset_id = variant.get("asset_id")
+                perf_key = f"{platform}:{asset_id}"
+                performance_entry = lookup.get(perf_key, {})
+                variant["performance"] = performance_entry
+                variant["ads_recommendation"] = bool(
+                    asset_id and platform_best_id and asset_id == platform_best_id
+                )
+                if variant["ads_recommendation"]:
+                    variant["ads_priority"] = "high"
+                elif performance_entry:
+                    variant.setdefault("ads_priority", "normal")
+        return best_entries
+
+    def _format_social_performance_markdown(
+        self, performance: dict[str, list[dict[str, Any]]]
+    ) -> str:
+        lines: list[str] = ["# Social Performance", ""]
+        for platform, entries in performance.items():
+            lines.append(f"## {platform.upper()}")
+            if not entries:
+                lines.append("- No performance data available.")
+                lines.append("")
+                continue
+            for entry in entries:
+                ctr = entry.get("ctr", 0.0)
+                engagement = entry.get("engagement_rate", 0.0)
+                lines.append(
+                    f"- {entry.get('asset_id', 'unknown')} | impressions={entry.get('impressions', 0)}, "
+                    f"clicks={entry.get('clicks', 0)}, ctr={ctr:.1%}, engagement={engagement:.1%}"
+                )
+                if entry.get("score") is not None:
+                    lines.append(f"  - Score: {entry['score']}")
+            lines.append("")
+        lines.append(
+            f"*Generated at {datetime.utcnow().isoformat()} | Source: "
+            f"{'API' if self.settings.social_metrics_api_url else 'simulated'}*"
+        )
+        lines.append("")
+        return "\n".join(line for line in lines if line is not None).rstrip() + "\n"
+
+    def _persist_social_followup(
+        self,
+        run_id: str,
+        posts: dict[str, list[dict[str, Any]]],
+        best_entries: dict[str, dict[str, Any]],
+    ) -> None:
+        records: list[dict[str, Any]] = []
+        for platform, variants in posts.items():
+            for variant in variants or []:
+                if not isinstance(variant, dict):
+                    continue
+                record = {
+                    "platform": platform,
+                    "asset_id": variant.get("asset_id"),
+                    "created_at": variant.get("created_at"),
+                    "ads_recommendation": variant.get("ads_recommendation", False),
+                    "ads_priority": variant.get("ads_priority"),
+                    "performance": variant.get("performance") or {},
+                    "variant_text": variant.get("text"),
+                }
+                records.append(record)
+        best_assets = {}
+        for platform, entry in best_entries.items():
+            if isinstance(entry, dict) and entry.get("asset_id"):
+                best_assets[platform] = {
+                    "asset_id": entry.get("asset_id"),
+                    "score": entry.get("score"),
+                    "ctr": entry.get("ctr"),
+                    "recommendation": bool(entry.get("asset_id")),
+                }
+        payload = {
+            "generated_at": datetime.utcnow().isoformat(),
+            "records": records,
+            "best_social_assets": best_assets,
+        }
+        self._write_sanitized_json(run_id, "distribution/social_followup.json", payload)
+
+    def _record_ads_booster_history(
+        self,
+        run_id: str,
+        posts: dict[str, list[dict[str, Any]]],
+        best_entries: dict[str, dict[str, Any]],
+    ) -> None:
+        run_dir = self.settings.runs_dir / run_id
+        dist_dir = run_dir / "distribution"
+        dist_dir.mkdir(parents=True, exist_ok=True)
+        records: list[dict[str, Any]] = []
+        timestamp = datetime.utcnow().isoformat()
+        for platform, variants in posts.items():
+            best_entry = best_entries.get(platform) or {}
+            best_asset_id = best_entry.get("asset_id")
+            for variant in variants or []:
+                if not isinstance(variant, dict):
+                    continue
+                if not variant.get("ads_recommendation"):
+                    continue
+                asset_id = variant.get("asset_id")
+                if best_asset_id and asset_id and asset_id != best_asset_id:
+                    continue
+                performance = variant.get("performance") or best_entry
+                record = {
+                    "platform": platform,
+                    "asset_id": asset_id,
+                    "score": performance.get("score"),
+                    "ctr": performance.get("ctr"),
+                    "source": performance.get("source"),
+                    "content_format": variant.get("content_format"),
+                    "final_url": variant.get("final_url"),
+                    "cta": variant.get("cta"),
+                    "hashtags": variant.get("hashtags") or [],
+                    "status": "queued",
+                    "recorded_at": timestamp,
+                    "created_at": variant.get("created_at"),
+                    "variant_text": variant.get("text"),
+                }
+                records.append(record)
+        if not records:
+            return
+        payload = {"generated_at": timestamp, "records": records}
+        self._write_sanitized_json(run_id, "distribution/ads_booster_history.json", payload)
 
     def _build_launch_checklist(self, idea_name: str) -> str:
         return (

@@ -1,0 +1,292 @@
+{
+  "generated_at": "2026-02-14T10:31:57.864283",
+  "analysis": {
+    "summary": {
+      "total_debt_items": 8,
+      "files_analyzed": 266,
+      "avg_complexity": 34.55,
+      "avg_maintainability": 47.12,
+      "large_files_count": 37,
+      "high_complexity_files_count": 117,
+      "low_maintainability_files_count": 171
+    },
+    "debt_by_type": {
+      "TODO": 5,
+      "FIXME": 1,
+      "BUG": 1,
+      "HACK": 1
+    },
+    "debt_by_severity": {
+      "medium": 8
+    },
+    "priority_files": {
+      "large_files": [
+        {
+          "path": "asmblr_lightweight.py",
+          "lines": 676
+        },
+        {
+          "path": "auto_optimizer.py",
+          "lines": 535
+        },
+        {
+          "path": "performance_tests.py",
+          "lines": 524
+        },
+        {
+          "path": "security_hardening.py",
+          "lines": 602
+        },
+        {
+          "path": "ui.py",
+          "lines": 511
+        },
+        {
+          "path": "app\\mvp_cycles.py",
+          "lines": 1705
+        },
+        {
+          "path": "app\\ui.py",
+          "lines": 561
+        },
+        {
+          "path": "app\\ui_quality.py",
+          "lines": 520
+        },
+        {
+          "path": "app\\agents\\asset_enhanced_crew.py",
+          "lines": 627
+        },
+        {
+          "path": "app\\agents\\crew.py",
+          "lines": 566
+        }
+      ],
+      "high_complexity": [
+        {
+          "path": "asmblr_lightweight.py",
+          "complexity": 45.0
+        },
+        {
+          "path": "auto_optimizer.py",
+          "complexity": 73.0
+        },
+        {
+          "path": "deploy_microservices_fixed.py",
+          "complexity": 44.0
+        },
+        {
+          "path": "performance_tests.py",
+          "complexity": 45.0
+        },
+        {
+          "path": "security_hardening.py",
+          "complexity": 79.0
+        },
+        {
+          "path": "setup.py",
+          "complexity": 37.0
+        },
+        {
+          "path": "test_microservices_integration.py",
+          "complexity": 55.0
+        },
+        {
+          "path": "ui.py",
+          "complexity": 63.0
+        },
+        {
+          "path": "worker_improved_v3.py",
+          "complexity": 56.0
+        },
+        {
+          "path": "api-gateway\\main.py",
+          "complexity": 29.0
+        }
+      ],
+      "low_maintainability": [
+        {
+          "path": "asmblr_lightweight.py",
+          "index": 41.77514792899409
+        },
+        {
+          "path": "auto_optimizer.py",
+          "index": 42.61682242990654
+        },
+        {
+          "path": "deploy_microservices_fixed.py",
+          "index": 42.57142857142857
+        },
+        {
+          "path": "performance_tests.py",
+          "index": 41.45038167938931
+        },
+        {
+          "path": "security_hardening.py",
+          "index": 42.45847176079734
+        },
+        {
+          "path": "setup.py",
+          "index": 42.549019607843135
+        },
+        {
+          "path": "test_microservices_integration.py",
+          "index": 41.8140589569161
+        },
+        {
+          "path": "test_phase1_improvements.py",
+          "index": 43.943661971830984
+        },
+        {
+          "path": "ui.py",
+          "index": 43.60078277886497
+        },
+        {
+          "path": "worker_improved_v3.py",
+          "index": 42.116402116402114
+        }
+      ],
+      "most_debt": [
+        {
+          "path": "tests\\test_code_quality.py",
+          "count": 6
+        },
+        {
+          "path": "app\\core\\technical_debt.py",
+          "count": 1
+        },
+        {
+          "path": "trash\\simple_analysis.py",
+          "count": 1
+        }
+      ]
+    },
+    "detailed_items": [
+      {
+        "file_path": "app\\core\\technical_debt.py",
+        "line_number": 21,
+        "type": "TODO",
+        "description": ", FIXME, BUG, HACK, XXX",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "tests\\test_code_quality.py",
+        "line_number": 25,
+        "type": "TODO",
+        "description": "Impl\u00e9menter cette fonction",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "tests\\test_code_quality.py",
+        "line_number": 27,
+        "type": "FIXME",
+        "description": "Corriger la logique ici",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "tests\\test_code_quality.py",
+        "line_number": 30,
+        "type": "BUG",
+        "description": "Cette fonction a un probl\u00e8me",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "tests\\test_code_quality.py",
+        "line_number": 32,
+        "type": "HACK",
+        "description": "Solution temporaire",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "tests\\test_code_quality.py",
+        "line_number": 42,
+        "type": "TODO",
+        "description": ", FIXME, BUG",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "tests\\test_code_quality.py",
+        "line_number": 321,
+        "type": "TODO",
+        "description": "Fix this",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "trash\\simple_analysis.py",
+        "line_number": 25,
+        "type": "TODO",
+        "description": "/FIXME/BUG",
+        "severity": "medium",
+        "effort": "hours"
+      }
+    ]
+  },
+  "refactoring_plan": {
+    "immediate_actions": [
+      {
+        "path": "asmblr_lightweight.py",
+        "issues": [
+          "High complexity (45.0)"
+        ],
+        "recommendations": [
+          "Extract functions/classes"
+        ]
+      },
+      {
+        "path": "auto_optimizer.py",
+        "issues": [
+          "High complexity (73.0)"
+        ],
+        "recommendations": [
+          "Extract functions/classes"
+        ]
+      },
+      {
+        "path": "deploy_microservices_fixed.py",
+        "issues": [
+          "High complexity (44.0)"
+        ],
+        "recommendations": [
+          "Extract functions/classes"
+        ]
+      },
+      {
+        "path": "performance_tests.py",
+        "issues": [
+          "High complexity (45.0)"
+        ],
+        "recommendations": [
+          "Extract functions/classes"
+        ]
+      },
+      {
+        "path": "security_hardening.py",
+        "issues": [
+          "High complexity (79.0)"
+        ],
+        "recommendations": [
+          "Extract functions/classes"
+        ]
+      }
+    ],
+    "medium_term_goals": [
+      "Reduce average file size to under 500 lines",
+      "Improve maintainability index above 70",
+      "Resolve critical and high severity debt items",
+      "Implement automated code quality gates"
+    ],
+    "long_term_improvements": [
+      "Establish coding standards and review process",
+      "Implement continuous refactoring sprints",
+      "Add comprehensive test coverage",
+      "Document architectural decisions"
+    ]
+  }
+}

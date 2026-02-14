@@ -1,5 +1,6 @@
 import os
 import re
+import secrets
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -93,7 +94,7 @@ class Settings:
     ui_password_prev: str = os.getenv("UI_PASSWORD_PREV", "")
     ui_password_prev_expires_at: str = os.getenv("UI_PASSWORD_PREV_EXPIRES_AT", "")
     kill_threshold: int = int(os.getenv("KILL_THRESHOLD", "55"))
-    api_key: str = os.getenv("API_KEY", "")
+    api_key: str = os.getenv("API_KEY", secrets.token_urlsafe(32))
     api_key_prev: str = os.getenv("API_KEY_PREV", "")
     api_key_prev_expires_at: str = os.getenv("API_KEY_PREV_EXPIRES_AT", "")
     enforce_key_rotation: bool = os.getenv("ENFORCE_KEY_ROTATION", "true").lower() == "true"
@@ -142,6 +143,15 @@ class Settings:
     social_image_steps: int = int(os.getenv("SOCIAL_IMAGE_STEPS", "28"))
     social_image_guidance: float = float(os.getenv("SOCIAL_IMAGE_GUIDANCE", "7.0"))
     social_image_seed: int = int(os.getenv("SOCIAL_IMAGE_SEED", "0"))
+    social_metrics_provider: str = os.getenv("SOCIAL_METRICS_PROVIDER", "").strip()
+    social_metrics_user_id: str = os.getenv("SOCIAL_METRICS_USER_ID", "").strip()
+    social_metrics_blog_id: str = os.getenv("SOCIAL_METRICS_BLOG_ID", "").strip()
+    social_metrics_token: str = os.getenv("SOCIAL_METRICS_TOKEN", "").strip()
+    social_metrics_window_days: int = int(os.getenv("SOCIAL_METRICS_WINDOW_DAYS", "7"))
+    social_metrics_api_url: str = os.getenv("SOCIAL_METRICS_API_URL", "").strip()
+    social_metrics_api_key: str = os.getenv("SOCIAL_METRICS_API_KEY", "").strip()
+    social_ads_ctr_threshold: float = float(os.getenv("SOCIAL_ADS_CTR_THRESHOLD", "0.02"))
+    social_metrics_timeout_s: float = float(os.getenv("SOCIAL_METRICS_TIMEOUT_S", "5.0"))
     enable_local_video: bool = os.getenv("ENABLE_LOCAL_VIDEO", "true").lower() == "true"
     local_video_model_id: str = os.getenv(
         "LOCAL_VIDEO_MODEL_ID",

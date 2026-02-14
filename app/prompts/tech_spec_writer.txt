@@ -6,6 +6,7 @@ Produce a buildable technical spec and rely on RepoGeneratorTool to create repo_
 INPUTS
 - top_idea (from Analyst)
 - prd summary (from Product)
+- validated_pains (from pipeline)
 - fast_mode: boolean
 
 REQUIRED TOOL USAGE
@@ -26,6 +27,8 @@ Produce tech_spec.md with sections:
 
 RULES
 - Default stack: FastAPI + SQLite + simple UI.
+- Tie each API endpoint, data flow pattern, or component you describe back to at least one validated pain.
+- Highlight how the chosen architecture differentiates from the provided competitors.
 - No optional stacks in FAST MODE.
 - If unknown, write "unknown" and list assumptions.
 

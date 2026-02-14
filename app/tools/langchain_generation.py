@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from langchain.tools import BaseTool
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 from app.core.llm import LLMClient
 from app.tools.repo_generator import generate_fastapi_skeleton
@@ -58,10 +58,11 @@ class LandingGeneratorTool(BaseTool):
     name: str = "landing_generator"
     description: str = "Generate landing page HTML/CSS using templates and optional LLM copy. Returns output path."
     args_schema: type[BaseModel] = LandingArgs
+    _llm: LLMClient = PrivateAttr()
 
     def __init__(self, llm: LLMClient) -> None:
         super().__init__()
-        self._llm = llm
+        object.__setattr__(self, "_llm", llm)
 
     def _run(
         self,
@@ -135,10 +136,11 @@ class ContentGeneratorTool(BaseTool):
     name: str = "content_generator"
     description: str = "Generate content pack (posts, hooks, ads, script, calendar). Returns output path."
     args_schema: type[BaseModel] = ContentArgs
+    _llm: LLMClient = PrivateAttr()
 
     def __init__(self, llm: LLMClient) -> None:
         super().__init__()
-        self._llm = llm
+        object.__setattr__(self, "_llm", llm)
 
     def _run(
         self,

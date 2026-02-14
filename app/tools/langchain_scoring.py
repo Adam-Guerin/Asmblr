@@ -5,7 +5,7 @@ import json
 from typing import Any
 
 from langchain.tools import BaseTool
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 from app.core.llm import LLMClient
 from app.core.scoring import derive_signals, heuristic_score
@@ -29,6 +29,12 @@ class ScoringEngineTool(BaseTool):
     description: str = "Score ideas (0-100) using heuristics and optional LLM judge. Returns JSON list of scores."
     args_schema: type[BaseModel] = ScoringArgs
 
+    _llm: LLMClient = PrivateAttr()
+    _judge_prompt: str = PrivateAttr()
+    _primary_icp: str = PrivateAttr()
+    _primary_icp_keywords: str = PrivateAttr()
+    _icp_alignment_bonus_max: int = PrivateAttr()
+
     def __init__(
         self,
         llm: LLMClient,
@@ -39,11 +45,11 @@ class ScoringEngineTool(BaseTool):
         icp_alignment_bonus_max: int = 0,
     ) -> None:
         super().__init__()
-        self._llm = llm
-        self._judge_prompt = judge_prompt
-        self._primary_icp = primary_icp
-        self._primary_icp_keywords = primary_icp_keywords
-        self._icp_alignment_bonus_max = max(0, int(icp_alignment_bonus_max))
+        object.__setattr__(self, "_llm", llm)
+        object.__setattr__(self, "_judge_prompt", judge_prompt)
+        object.__setattr__(self, "_primary_icp", primary_icp)
+        object.__setattr__(self, "_primary_icp_keywords", primary_icp_keywords)
+        object.__setattr__(self, "_icp_alignment_bonus_max", max(0, int(icp_alignment_bonus_max)))
 
     def _run(
         self,

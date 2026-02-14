@@ -7,6 +7,7 @@ INPUTS
 - top_idea (from Analyst)
 - competitors (from Analyst)
 - pain_statements (from Researcher)
+- validated_pains (from pipeline)
 - fast_mode: boolean
 
 OUTPUT (STRICT MARKDOWN)
@@ -26,9 +27,11 @@ Produce prd.md with sections in this exact order:
 
 RULES
 - No non-MVP features.
-- If missing data, write "unknown" and list assumptions explicitly.
- - Must-Haves should be concrete and tied to the MVP scope.
- - Non-Goals must list what is explicitly excluded from this MVP.
+- Link Value Proposition and MVP Scope directly to the validated pains list (describe at least two). 
+- Cite the listed competitors when explaining differentiation or risks.
+- If missing data, write "unknown" and list assumptions explicitly; never output the word "fallback" in the final document.
+- Must-Haves should be concrete and tied to the MVP scope.
+- Non-Goals must list what is explicitly excluded from this MVP.
 
 FAST MODE
 - Max 5 user stories

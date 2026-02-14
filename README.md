@@ -32,6 +32,16 @@ The setup script will:
 - **SQLite + file artifacts** in `/runs`
 - **Configurable sources, prompts, thresholds`
 
+## Watch a run finish
+
+The CLI command may time out while CrewAI still runs, so monitor the output folder instead of waiting for the process to exit:
+
+```bash
+python scripts/watch_run.py runs/<run_id>
+```
+
+The watcher prints each `run_state.json` change, tails new lines from `progress.log`, and exits once `status=completed`, letting downstream automation proceed as soon as the artifacts exist. Adjust `--poll-interval` (default 5s) for faster or slower checks.
+
 ## ICP Focus (Niche-first)
 Asmblr can enforce one primary ICP across idea generation, scoring, PRD, and growth copy.
 
