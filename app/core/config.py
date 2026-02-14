@@ -94,7 +94,7 @@ class Settings:
     ui_password_prev: str = os.getenv("UI_PASSWORD_PREV", "")
     ui_password_prev_expires_at: str = os.getenv("UI_PASSWORD_PREV_EXPIRES_AT", "")
     kill_threshold: int = int(os.getenv("KILL_THRESHOLD", "55"))
-    api_key: str = os.getenv("API_KEY", secrets.token_urlsafe(32))
+    api_key: str = os.getenv("API_KEY", "")  # Remove auto-generation for public version
     api_key_prev: str = os.getenv("API_KEY_PREV", "")
     api_key_prev_expires_at: str = os.getenv("API_KEY_PREV_EXPIRES_AT", "")
     enforce_key_rotation: bool = os.getenv("ENFORCE_KEY_ROTATION", "true").lower() == "true"
