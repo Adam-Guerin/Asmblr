@@ -119,12 +119,32 @@ class RunManager:
             with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
                 json.dump(payload, f, indent=2)
             
-            # On Windows, we need to remove the target file first if it exists
-            if target.exists():
-                target.unlink()
-            
-            # Atomic rename
-            os.rename(temp_path, target)
+            # Atomic rename with retry logic for Windows
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    # On Windows, we need to remove the target file first if it exists
+                    if target.exists():
+                        target.unlink()
+                    
+                    # Atomic rename
+                    os.rename(temp_path, target)
+                    break
+                except (FileExistsError, PermissionError) as e:
+                    if attempt == max_retries - 1:
+                        # Last attempt failed, clean up and use fallback
+                        try:
+                            if os.path.exists(temp_path):
+                                os.unlink(temp_path)
+                        except Exception:
+                            pass
+                        # Fallback to non-atomic write
+                        target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+                        break
+                    else:
+                        # Brief delay before retry
+                        import time
+                        time.sleep(0.1 * (attempt + 1))
             
         except Exception:
             # Clean up temp file if something went wrong

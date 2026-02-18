@@ -7,7 +7,7 @@ import ast
 import re
 import json
 from typing import Dict, List, Any, Optional, Set, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from pathlib import Path
 from loguru import logger
 
@@ -55,8 +55,8 @@ class CodeQualityAnalyzer:
         ]
         
         self.exception_patterns = [
-            r'except\s*:\s*$',  # except: nu
-            r'except\s*Exception\s*:\s*pass\s*$',  # except Exception: pass
+            r'except\s*:\s*(?:#.*)?$',  # except: with optional comment
+            r'except\s*Exception\s*:',  # except Exception:
             r'raise\s*Exception\s*\(\s*["\'](.+?)["\']\s*\)',  # raise Exception("message")
         ]
         
@@ -66,8 +66,8 @@ class CodeQualityAnalyzer:
         ]
         
         self.code_smells = [
-            (r'len\(\s*\)\s*==\s*0', "Utilisez 'if not obj:' au lieu de 'if len(obj) == 0'"),
-            (r'len\(\s*\)\s*>\s*0', "Utilisez 'if obj:' au lieu de 'if len(obj) > 0'"),
+            (r'len\(\s*[^)]+\s*\)\s*==\s*0', "Utilisez 'if not obj:' au lieu de 'if len(obj) == 0'"),
+            (r'len\(\s*[^)]+\s*\)\s*>\s*0', "Utilisez 'if obj:' au lieu de 'if len(obj) > 0'"),
             (r'if\s+True\s*:', "Condition '# if True:' inutile"),
             (r'if\s+False\s*:', "Condition '# if False:' inutile"),
             (r'for\s+i\s+in\s+range\s*\(\s*len\s*\(', "Utilisez 'for item in iterable:' au lieu de 'for i in range(len())'"),
@@ -116,9 +116,15 @@ class CodeQualityAnalyzer:
         issues = []
         
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-                lines = content.split('\n')
+            # Try UTF-8 first, fallback to latin-1 for compatibility
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    lines = content.split('\n')
+            except UnicodeDecodeError:
+                with open(file_path, 'r', encoding='latin-1') as f:
+                    content = f.read()
+                    lines = content.split('\n')
             
             # Analyser chaque type de problème
             issues.extend(self._find_todos(file_path, lines))
@@ -159,8 +165,8 @@ class CodeQualityAnalyzer:
         issues = []
         
         for line_num, line in enumerate(lines, 1):
-            # except: nu
-            if re.search(r'except\s*:\s*$', line):
+            # except: with optional comment
+            if re.search(r'except\s*:\s*(?:#.*)?$', line):
                 issues.append(QualityIssue(
                     file_path=str(file_path),
                     line_number=line_num,
@@ -171,17 +177,28 @@ class CodeQualityAnalyzer:
                     code_snippet=line.strip()
                 ))
             
-            # except Exception: pass
-            elif re.search(r'except\s*Exception\s*:\s*pass\s*$', line):
-                issues.append(QualityIssue(
-                    file_path=str(file_path),
-                    line_number=line_num,
-                    issue_type="Exception ignorée",
-                    severity="high",
-                    description="Exception catchée mais ignorée avec pass",
-                    suggestion="Ajoutez un traitement approprié ou loggez l'erreur",
-                    code_snippet=line.strip()
-                ))
+            # except Exception: (check if next line is pass)
+            elif re.search(r'except\s*Exception\s*:', line):
+                # Check if the next non-empty line is pass
+                next_line_pass = False
+                for next_idx in range(line_num, len(lines)):
+                    next_line = lines[next_idx].strip()
+                    if next_line == 'pass':
+                        next_line_pass = True
+                        break
+                    elif next_line and not next_line.startswith('#'):
+                        break
+                
+                if next_line_pass:
+                    issues.append(QualityIssue(
+                        file_path=str(file_path),
+                        line_number=line_num,
+                        issue_type="Exception ignorée",
+                        severity="high",
+                        description="Exception catchée mais ignorée avec pass",
+                        suggestion="Ajoutez un traitement approprié ou loggez l'erreur",
+                        code_snippet=line.strip()
+                    ))
             
             # raise Exception("message")
             elif re.search(r'raise\s*Exception\s*\(', line):
@@ -473,28 +490,30 @@ class CodeQualityFixer:
         
         for issue in issues:
             if issue.issue_type == "Print statement":
-                correction = self._fix_print_statement(issue, dry_run)
+                correction = self._fix_print_statement(issue, Path(issue.file_path), dry_run)
                 if correction:
                     corrections.append(correction)
             
             elif issue.issue_type == "Exception trop large":
-                correction = self._fix_broad_exception(issue, dry_run)
+                correction = self._fix_broad_exception(issue, Path(issue.file_path), dry_run)
                 if correction:
                     corrections.append(correction)
             
             elif issue.issue_type == "Code smell":
-                correction = self._fix_code_smell(issue, dry_run)
+                correction = self._fix_code_smell(issue, Path(issue.file_path), dry_run)
                 if correction:
                     corrections.append(correction)
         
         self.fixes_applied = len(corrections)
         return corrections
     
-    def _fix_print_statement(self, issue: QualityIssue, dry_run: bool) -> Optional[str]:
+    def _fix_print_statement(self, issue: QualityIssue, file_path: Optional[Path] = None, dry_run: bool = False) -> Optional[str]:
         """Corrige les print statements"""
         try:
-            file_path = Path(issue.file_path)
-            with open(file_path, 'r', encoding='utf-8') as f:
+            # Use provided file_path or issue.file_path
+            actual_path = Path(file_path) if file_path else Path(issue.file_path)
+            
+            with open(actual_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
             
             line_idx = issue.line_number - 1
@@ -509,20 +528,22 @@ class CodeQualityFixer:
             
             if not dry_run:
                 lines[line_idx] = fixed_line
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(actual_path, 'w', encoding='utf-8') as f:
                     f.writelines(lines)
             
-            return f"Print statement corrigé dans {file_path}:{issue.line_number}"
+            return f"Print statement corrigé dans {actual_path}:{issue.line_number}"
             
         except Exception as e:
             logger.error(f"Erreur correction print statement: {e}")
             return None
     
-    def _fix_broad_exception(self, issue: QualityIssue, dry_run: bool) -> Optional[str]:
+    def _fix_broad_exception(self, issue: QualityIssue, file_path: Optional[Path] = None, dry_run: bool = False) -> Optional[str]:
         """Corrige les exceptions trop larges"""
         try:
-            file_path = Path(issue.file_path)
-            with open(file_path, 'r', encoding='utf-8') as f:
+            # Use provided file_path or issue.file_path
+            actual_path = Path(file_path) if file_path else Path(issue.file_path)
+            
+            with open(actual_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
             
             line_idx = issue.line_number - 1
@@ -537,20 +558,22 @@ class CodeQualityFixer:
             
             if not dry_run:
                 lines[line_idx] = fixed_line
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(actual_path, 'w', encoding='utf-8') as f:
                     f.writelines(lines)
             
-            return f"Exception large corrigée dans {file_path}:{issue.line_number}"
+            return f"Exception large corrigée dans {actual_path}:{issue.line_number}"
             
         except Exception as e:
             logger.error(f"Erreur correction exception large: {e}")
             return None
     
-    def _fix_code_smell(self, issue: QualityIssue, dry_run: bool) -> Optional[str]:
+    def _fix_code_smell(self, issue: QualityIssue, file_path: Optional[Path] = None, dry_run: bool = False) -> Optional[str]:
         """Corrige les code smells simples"""
         try:
-            file_path = Path(issue.file_path)
-            with open(file_path, 'r', encoding='utf-8') as f:
+            # Use provided file_path or issue.file_path
+            actual_path = Path(file_path) if file_path else Path(issue.file_path)
+            
+            with open(actual_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
             
             line_idx = issue.line_number - 1
@@ -571,10 +594,10 @@ class CodeQualityFixer:
             if fixed_line != original_line:
                 if not dry_run:
                     lines[line_idx] = fixed_line
-                    with open(file_path, 'w', encoding='utf-8') as f:
+                    with open(actual_path, 'w', encoding='utf-8') as f:
                         f.writelines(lines)
                 
-                return f"Code smell corrigé dans {file_path}:{issue.line_number}"
+                return f"Code smell corrigé dans {actual_path}:{issue.line_number}"
             
         except Exception as e:
             logger.error(f"Erreur correction code smell: {e}")

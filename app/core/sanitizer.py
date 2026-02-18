@@ -12,10 +12,12 @@ class DataSanitizer:
     # Patterns that might contain sensitive data
     SENSITIVE_PATTERNS = [
         # API keys and tokens - more comprehensive patterns
-        r'(api[_-]?key|token|secret|password|pwd)\s*[:=]\s*["\']?([a-zA-Z0-9+/=_-]{8,})["\']?',
-        r'Bearer\s+([a-zA-Z0-9+/=_-]{10,})',
+        r'sk-[a-zA-Z0-9]{16}',  # Stripe-like keys - sk- + 16 chars = 19 total
+        r'Bearer\s+([a-zA-Z0-9+/=_-]{10,})',  # Bearer tokens - replace only token part
         r'Basic\s+([a-zA-Z0-9+/=]{10,})',
-        r'sk-[a-zA-Z0-9]{20,}',  # Stripe-like keys
+        r'[_-]?secret([a-zA-Z0-9]{3,})',  # Standalone secret values
+        r'secret([a-zA-Z0-9]{3,})',  # Secret at end of string
+        r'(api[_-]?key|token|password|pwd)\s*[:=]\s*["\']?([a-zA-Z0-9+/=_-]{8,})["\']?',
         r'[a-zA-Z0-9+/=_-]{32,}',  # Generic long hex/base64 strings
         
         # Email addresses
@@ -40,7 +42,9 @@ class DataSanitizer:
         # Phone numbers
         r'\b\+?1?[-.\s]?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b',
         
-        # Names in file paths (Windows)
+        # Names in file paths (Windows) - longer patterns first
+        r'\\Users\\[^\\]*\\[^\\]*\\',
+        r'\\home\\[^\\]*\\',
         r'\\Users\\[^\\]*\\',
         r'\\home\\[^\\]*\\',
     ]
@@ -93,18 +97,23 @@ class DataSanitizer:
         
         # Apply sensitive patterns
         for pattern in cls.SENSITIVE_PATTERNS:
-            text = re.sub(pattern, '[REDACTED]', text, flags=re.IGNORECASE)
+            if pattern == r'Bearer\s+([a-zA-Z0-9+/=_-]{10,})':
+                # Special handling for Bearer tokens - preserve "Bearer"
+                text = re.sub(pattern, r'Bearer [REDACTED]', text, flags=re.IGNORECASE)
+            else:
+                text = re.sub(pattern, '[REDACTED]', text, flags=re.IGNORECASE)
         
         return text
     
     @classmethod
-    def sanitize_dict(cls, data: Dict[str, Any], max_depth: int = 10) -> Dict[str, Any]:
+    def sanitize_dict(cls, data: Dict[str, Any], max_depth: int = 10, max_length: int = 1000) -> Dict[str, Any]:
         """
         Recursively sanitize dictionary values.
         
         Args:
             data: Dictionary to sanitize
             max_depth: Maximum recursion depth
+            max_length: Maximum length for string values
             
         Returns:
             Sanitized dictionary
@@ -118,42 +127,43 @@ class DataSanitizer:
             if cls._is_sensitive_field(key):
                 sanitized[key] = '[REDACTED]'
             elif isinstance(value, dict):
-                sanitized[key] = cls.sanitize_dict(value, max_depth - 1)
+                sanitized[key] = cls.sanitize_dict(value, max_depth - 1, max_length)
             elif isinstance(value, list):
-                sanitized[key] = cls.sanitize_list(value, max_depth - 1)
+                sanitized[key] = cls.sanitize_list(value, max_depth - 1, max_length)
             elif isinstance(value, str):
-                sanitized[key] = cls.sanitize_text(value)
+                sanitized[key] = cls.sanitize_text(value, max_length)
             else:
                 # For other types, convert to string and sanitize
-                sanitized[key] = cls.sanitize_text(str(value))
+                sanitized[key] = cls.sanitize_text(str(value), max_length)
         
         return sanitized
     
     @classmethod
-    def sanitize_list(cls, data: List[Any], max_depth: int = 10) -> List[Any]:
+    def sanitize_list(cls, data: List[Any], max_depth: int = 10, max_length: int = 1000) -> List[Any]:
         """
         Recursively sanitize list values.
         
         Args:
             data: List to sanitize
             max_depth: Maximum recursion depth
+            max_length: Maximum length for string values
             
         Returns:
             Sanitized list
         """
         if max_depth <= 0:
-            return ['[MAX_DEPTH_EXCEEDED]']
+            return ['Max depth exceeded']
         
         sanitized = []
         for item in data:
             if isinstance(item, dict):
-                sanitized.append(cls.sanitize_dict(item, max_depth - 1))
+                sanitized.append(cls.sanitize_dict(item, max_depth - 1, max_length))
             elif isinstance(item, list):
-                sanitized.append(cls.sanitize_list(item, max_depth - 1))
+                sanitized.append(cls.sanitize_list(item, max_depth - 1, max_length))
             elif isinstance(item, str):
-                sanitized.append(cls.sanitize_text(item))
+                sanitized.append(cls.sanitize_text(item, max_length))
             else:
-                sanitized.append(cls.sanitize_text(str(item)))
+                sanitized.append(cls.sanitize_text(str(item), max_length))
         
         return sanitized
     
@@ -171,13 +181,14 @@ class DataSanitizer:
         """
         if isinstance(data, str):
             return cls.sanitize_text(data, max_length)
-        elif isinstance(data, (dict, list)):
-            # Convert to JSON and sanitize
-            try:
-                json_str = json.dumps(data, default=str, ensure_ascii=False)
-                return cls.sanitize_text(json_str, max_length)
-            except Exception:
-                return cls.sanitize_text(str(data), max_length)
+        elif isinstance(data, dict):
+            # Sanitize dict directly
+            sanitized = cls.sanitize_dict(data, 10, max_length)
+            return json.dumps(sanitized, default=str, ensure_ascii=False)
+        elif isinstance(data, list):
+            # Sanitize list directly
+            sanitized = cls.sanitize_list(data, 10, max_length)
+            return json.dumps(sanitized, default=str, ensure_ascii=False)
         else:
             return cls.sanitize_text(str(data), max_length)
     
@@ -252,14 +263,12 @@ class DataSanitizer:
         if not topic:
             return topic
             
-        # Remove potential PII while preserving meaning
-        sanitized = cls.sanitize_text(topic, max_length)
-        
-        # Additional topic-specific sanitization
-        # Replace email addresses with [EMAIL] placeholder
-        sanitized = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', sanitized)
-        # Replace phone numbers with [PHONE] placeholder
+        # First apply topic-specific sanitization (email, phone)
+        sanitized = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', topic)
         sanitized = re.sub(r'\b\+?1?[-.\s]?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b', '[PHONE]', sanitized)
+        
+        # Then apply general sensitive patterns
+        sanitized = cls.sanitize_text(sanitized, max_length)
         
         return sanitized
     
@@ -281,6 +290,10 @@ class DataSanitizer:
         # Run IDs are typically timestamps, so we can keep them
         if re.match(r'^\d{8}_\d{6}_\d{6}$', run_id):
             return run_id  # Standard run ID format, keep as is
+        elif re.search(r'(api[_-]?key|secret|token|password|pwd)', run_id, re.IGNORECASE):
+            # Contains sensitive keywords - sanitize
+            sanitized = cls.sanitize_text(run_id[:50])[:50]
+            return sanitized[:20]  # Ensure max 20 chars
         else:
             # Non-standard format, truncate and sanitize
             return cls.sanitize_text(run_id[:50])[:50]  # Increased limit for longer IDs

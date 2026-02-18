@@ -102,7 +102,7 @@ class ErrorHandler:
                     title="Vérifier les permissions",
                     description="Permissions insuffisantes pour accéder aux fichiers",
                     steps=[
-                        "Vérifiez que vous avez les droits d'écriture",
+                        "Vérifiez que vous avez les droits d'écriture (permission)",
                         "Exécutez en tant qu'administrateur si nécessaire",
                         "Vérifiez que le dossier n'est pas en lecture seule",
                         "Réessayez l'opération"
@@ -183,10 +183,26 @@ class ErrorHandler:
     def _categorize_error(self, error: Exception, error_message: str) -> ErrorCategory:
         """Categorize error based on type and message."""
         error_message_lower = error_message.lower()
+        error_type = type(error).__name__
         
+        # First check by exception type for more accurate categorization
+        if isinstance(error, (ConnectionError, ConnectionRefusedError)):
+            return ErrorCategory.NETWORK
+        elif isinstance(error, TimeoutError):
+            return ErrorCategory.NETWORK
+        elif isinstance(error, PermissionError):
+            return ErrorCategory.PERMISSION
+        elif isinstance(error, (FileNotFoundError, FileExistsError, IsADirectoryError)):
+            return ErrorCategory.FILESYSTEM
+        elif isinstance(error, (ValueError, TypeError)):
+            return ErrorCategory.VALIDATION
+        elif isinstance(error, (ImportError, ModuleNotFoundError)):
+            return ErrorCategory.DEPENDENCY
+        
+        # Fall back to message-based categorization
         if "connection" in error_message_lower or "network" in error_message_lower:
             return ErrorCategory.NETWORK
-        elif "ollama" in error_message_lower or "llm" in error_message_lower:
+        elif "ollama" in error_message_lower or "llm" in error_message_lower or "model" in error_message_lower:
             return ErrorCategory.LLM
         elif "permission" in error_message_lower or "access denied" in error_message_lower:
             return ErrorCategory.PERMISSION
@@ -205,7 +221,7 @@ class ErrorHandler:
         """Determine error severity."""
         if category in [ErrorCategory.PERMISSION, ErrorCategory.DEPENDENCY]:
             return ErrorSeverity.CRITICAL
-        elif category in [ErrorCategory.LLM, ErrorCategory.CONFIGURATION]:
+        elif category in [ErrorCategory.LLM, ErrorCategory.CONFIGURATION, ErrorCategory.NETWORK]:
             return ErrorSeverity.HIGH
         elif category in [ErrorCategory.FILESYSTEM, ErrorCategory.VALIDATION]:
             return ErrorSeverity.MEDIUM
@@ -224,6 +240,11 @@ class ErrorHandler:
                 "❌ Impossible de se connecter à Ollama. Le service n'est probablement pas démarré.",
                 self._error_solutions.get("connection_refused", [])
             )
+        elif "ollama" in error_message_lower and ("not reachable" in error_message_lower or "unreachable" in error_message_lower):
+            return (
+                "❌ Ollama n'est pas accessible. Vérifiez que le service fonctionne.",
+                self._error_solutions.get("connection_refused", [])
+            )
         
         # Model not found
         elif "model" in error_message_lower and "not found" in error_message_lower:
@@ -240,7 +261,7 @@ class ErrorHandler:
             )
         
         # Timeout issues
-        elif "timeout" in error_message_lower:
+        elif "timeout" in error_message_lower or "timed out" in error_message_lower:
             return (
                 "⏱️ L'opération a pris trop de temps. Essayez d'optimiser les paramètres.",
                 self._error_solutions.get("timeout", [])

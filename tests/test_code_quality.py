@@ -43,9 +43,9 @@ def buggy_function():
             
             # Vérifier les détails
             issue_messages = [i.description for i in todo_issues]
-            assert any("TODO" in msg for msg in issue_messages)
-            assert any("FIXME" in msg for msg in issue_messages)
-            assert any("BUG" in msg for msg in issue_messages)
+            assert any("Implémenter" in msg for msg in issue_messages)  # TODO
+            assert any("Corriger" in msg for msg in issue_messages)  # FIXME
+            assert any("problème" in msg for msg in issue_messages)  # BUG
             
         finally:
             temp_path.unlink()
@@ -258,7 +258,7 @@ class TestCodeQualityFixer:
         
         try:
             # Test en mode dry run
-            correction = fixer._fix_print_statement(issue, dry_run=True)
+            correction = fixer._fix_print_statement(issue, file_path=temp_path, dry_run=True)
             assert correction is not None
             assert "corrigé" in correction.lower()
             
@@ -284,9 +284,9 @@ class TestCodeQualityFixer:
             temp_path = Path(f.name)
         
         try:
-            correction = fixer._fix_broad_exception(issue, dry_run=True)
+            correction = fixer._fix_broad_exception(issue, file_path=temp_path, dry_run=True)
             assert correction is not None
-            assert "corrigé" in correction.lower()
+            assert "corrigée" in correction.lower()
             
         finally:
             temp_path.unlink()
@@ -295,16 +295,29 @@ class TestCodeQualityFixer:
         """Test correction automatique des problèmes"""
         fixer = CodeQualityFixer()
         
-        issues = [
-            QualityIssue("test.py", 1, "Print statement", "medium", "Print", "Use logger", 'print("test")'),
-            QualityIssue("test.py", 2, "Exception trop large", "high", "Broad except", "Specify type", 'except:')
-        ]
-        
-        corrections = fixer.auto_fix_issues(issues, dry_run=True)
-        
-        assert len(corrections) == 2
-        assert all("corrigé" in c.lower() for c in corrections)
-        assert fixer.fixes_applied == 2
+        # Create temporary files for testing
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            
+            # Create test files
+            file1 = tmp_path / "test1.py"
+            file2 = tmp_path / "test2.py"
+            
+            with open(file1, 'w') as f:
+                f.write('print("test")\n')
+            with open(file2, 'w') as f:
+                f.write('try:\n    risky()\nexcept:\n    pass\n')
+            
+            issues = [
+                QualityIssue(str(file1), 1, "Print statement", "medium", "Print", "Use logger", 'print("test")'),
+                QualityIssue(str(file2), 2, "Exception trop large", "high", "Broad except", "Specify type", 'except:')
+            ]
+            
+            corrections = fixer.auto_fix_issues(issues, dry_run=True)
+            
+            assert len(corrections) == 2
+            assert all("corrigé" in c.lower() for c in corrections)
+            assert fixer.fixes_applied == 2
 
 
 class TestIntegration:

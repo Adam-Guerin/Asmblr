@@ -117,14 +117,14 @@ class TestParseISODatetime:
     def test_too_old_date(self):
         """Test that dates more than 10 years in past are rejected."""
         # Create a date 11 years in the past
-        old_date = "2013-01-31T12:34:56"
+        old_date = "2014-01-31T12:34:56"
         result = _parse_iso_datetime(old_date)
         assert result is None
 
     def test_too_future_date(self):
         """Test that dates more than 10 years in future are rejected."""
         # Create a date 11 years in the future
-        future_date = "2035-01-31T12:34:56"
+        future_date = "2037-01-31T12:34:56"
         result = _parse_iso_datetime(future_date)
         assert result is None
 

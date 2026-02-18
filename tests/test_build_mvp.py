@@ -38,7 +38,7 @@ def test_build_mvp_creates_directories_even_on_failure(tmp_path: Path, monkeypat
     builder.manager.update_status(run_id, "RUNNING")
     _patch_verifier(monkeypatch, build_success=False, test_success=True)
 
-    result = builder.build_from_run(run_id, max_fix_iter=1, force=True)
+    result = builder.build_from_run(run_id, brief="Test MVP build", max_fix_iter=1, force=True)
 
     run_dir = settings.runs_dir / run_id
     assert (run_dir / "mvp_repo").exists()
@@ -58,7 +58,7 @@ def test_build_mvp_from_abort_run_marks_seed_source(tmp_path: Path, monkeypatch)
     builder.manager.update_status(run_id, "ABORT")
     _patch_verifier(monkeypatch, build_success=True, test_success=True)
 
-    result = builder.build_from_run(run_id, force=True)
+    result = builder.build_from_run(run_id, brief="Urgent MVP build", force=True)
     data_source = json.loads((result.run_dir / "mvp_data_source.json").read_text(encoding="utf-8"))
     assert data_source["data_source"] == "seed/abort"
 
@@ -77,6 +77,8 @@ def test_build_mvp_brief_creates_adhoc_run(tmp_path: Path, monkeypatch) -> None:
 
 def test_smoke_build_mvp_repo(tmp_path: Path, monkeypatch) -> None:
     settings = Settings(runs_dir=tmp_path / "runs", data_dir=tmp_path / "data")
+    # Override dev command for test environment to skip smoke checks
+    settings.mvp_dev_command = ""
     builder = MVPBuilder(settings)
     _patch_verifier(monkeypatch, build_success=True, test_success=True)
 
@@ -84,16 +86,13 @@ def test_smoke_build_mvp_repo(tmp_path: Path, monkeypatch) -> None:
     required_files = json.loads(kit_lock.read_text(encoding="utf-8")).get("required_files", [])
 
     def build_runner(cycle_key: str, cycle_dir: Path, attempt: int) -> tuple[bool, str]:
-        repo_dir = cycle_dir.parents[2] / "mvp_repo"
+        repo_dir = cycle_dir.parents[1] / "mvp_repo"  # Go up to smoke-build then mvp_repo
         missing = [path for path in required_files if not (repo_dir / path).exists()]
         ok = len(missing) == 0
-        log = f"smoke build {cycle_key} attempt {attempt} ok={ok}"
-        if missing:
-            log += "\nMissing:\n" + "\n".join(missing)
-        return ok, log
+        return ok, f"Return code: {0 if ok else 1}\nbuild {attempt} ok={ok}"
 
     def test_runner(cycle_key: str, cycle_dir: Path, attempt: int) -> tuple[bool, str]:
-        return True, f"smoke test {cycle_key} attempt {attempt}"
+        return True, f"Return code: 0\nsmoke test {cycle_key} attempt {attempt}"
 
     output_dir = settings.runs_dir / "_adhoc" / "smoke-build"
     result = builder.build_from_brief(

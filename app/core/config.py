@@ -205,7 +205,32 @@ class Settings:
 
 
 def get_settings() -> Settings:
-    return Settings()
+    """Get settings with validation."""
+    settings = Settings()
+    
+    # Validate critical settings
+    if settings.run_max_count <= 0:
+        raise ValueError("RUN_MAX_COUNT must be positive")
+    if settings.run_retention_days <= 0:
+        raise ValueError("RUN_RETENTION_DAYS must be positive")
+    if settings.kill_threshold < 0 or settings.kill_threshold > 100:
+        raise ValueError("KILL_THRESHOLD must be between 0 and 100")
+    
+    # Validate timeouts
+    if settings.mvp_build_timeout <= 0:
+        raise ValueError("MVP_BUILD_TIMEOUT must be positive")
+    if settings.mvp_test_timeout <= 0:
+        raise ValueError("MVP_TEST_TIMEOUT must be positive")
+    if settings.mvp_install_timeout <= 0:
+        raise ValueError("MVP_INSTALL_TIMEOUT must be positive")
+    
+    # Validate rate limits
+    if settings.run_rate_limit_per_min <= 0:
+        raise ValueError("RUN_RATE_LIMIT_PER_MIN must be positive")
+    if settings.run_rate_limit_burst <= 0:
+        raise ValueError("RUN_RATE_LIMIT_BURST must be positive")
+    
+    return settings
 
 
 def _parse_iso_datetime(value: str | None) -> datetime | None:
@@ -241,8 +266,8 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
         r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$',  # 2024-01-31T12:34:56Z
         r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$',  # 2024-01-31T12:34:56+00:00
         r'^\d{8}T\d{6}$',  # 20240131T123456
-        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,3}$',  # 2024-01-31T12:34:56.789
-        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,3}Z$',  # 2024-01-31T12:34:56.789Z
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,6}$',  # 2024-01-31T12:34:56.123456
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,6}Z$',  # 2024-01-31T12:34:56.123456Z
     ]
     
     if not any(re.match(pattern, value) for pattern in iso_patterns):
@@ -262,11 +287,10 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
         else:
             parsed_utc = parsed.astimezone(timezone.utc)
             
-        if parsed_utc < past_boundary.replace(tzinfo=timezone.utc):
+        if parsed_utc.year < past_boundary.year:
             return None
-        # Don't allow dates more than 10 years in the future
-        future_boundary = now.replace(year=now.year + 10)
-        if parsed_utc > future_boundary.replace(tzinfo=timezone.utc):
+        # Don't allow dates more than 10 years in future
+        if parsed_utc.year >= now.year + 10:
             return None
         
         # Ensure timezone is set, default to UTC if not

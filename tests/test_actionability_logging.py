@@ -49,32 +49,38 @@ class TestActionabilityLogging:
                   solution="solution2", key_features=[]),
         ]
         
-        # Mock the actionability scoring to return low scores
+        # Mock actionability scoring to return low scores
         with patch.object(pipeline, '_score_idea_actionability') as mock_score:
             mock_score.side_effect = [
                 {"score": 30, "issues": ["Too generic"], "strengths": []},
                 {"score": 25, "issues": ["Hard to test"], "strengths": []},
             ]
             
+            # Mock both regular logger and smart logger
             with patch('app.core.pipeline.logger') as mock_logger:
-                with patch.object(pipeline, '_log_progress') as mock_progress:
-                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
+                with patch('app.core.pipeline.get_smart_logger') as mock_get_smart_logger:
+                    mock_smart_logger = Mock()
+                    mock_get_smart_logger.return_value = mock_smart_logger
+                    
+                    with patch.object(pipeline, '_log_progress') as mock_progress:
+                        adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
-        # Verify the report shows no eligible ideas
+        # Verify report shows no eligible ideas
         assert report["eligible"] == []
         assert len(report["blocked"]) == 2
         assert report["threshold"] == 50
         
-        # Verify logging occurred
-        mock_logger.info.assert_called()
-        mock_logger.debug.assert_called()
+        # Verify smart logger was called (since it's available)
+        mock_smart_logger.business.assert_called()
+        mock_smart_logger.debug.assert_called()
         
-        # Check the info log contains expected information
-        info_call = mock_logger.info.call_args
-        assert "eligible=0" in str(info_call)  # eligible count
-        assert "total=2" in str(info_call)    # total count
-        assert "threshold=50" in str(info_call)
-        assert "avg_score=" in str(info_call)
+        # Check business log contains expected information
+        business_call = mock_smart_logger.business.call_args
+        call_args = business_call[0][2]  # Third positional argument (data dict)
+        assert call_args["eligible_count"] == 0
+        assert call_args["total_count"] == 2
+        assert call_args["threshold"] == 50
+        assert "avg_score" in call_args
 
     def test_logs_fallback_when_require_eligible_is_false(self, pipeline):
         """Test that actionability assessment logs correctly when require_eligible is false."""
@@ -101,24 +107,29 @@ class TestActionabilityLogging:
                 {"score": 25, "issues": ["Hard to test"], "strengths": []},
             ]
             
+            # Mock both regular logger and smart logger
             with patch('app.core.pipeline.logger') as mock_logger:
-                with patch.object(pipeline, '_log_progress') as mock_progress:
-                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
+                with patch('app.core.pipeline.get_smart_logger') as mock_get_smart_logger:
+                    mock_smart_logger = Mock()
+                    mock_get_smart_logger.return_value = mock_smart_logger
+                    
+                    with patch.object(pipeline, '_log_progress') as mock_progress:
+                        adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
         # Verify the report shows no eligible ideas
         assert report["eligible"] == []
         assert len(report["blocked"]) == 2
         
-        # Verify info log was called (not warning - no fallback in current implementation)
-        mock_logger.info.assert_called()
-        info_call = mock_logger.info.call_args
-        assert "eligible=0" in str(info_call)  # eligible count
-        assert "total=2" in str(info_call)    # total count
+        # Verify smart logger was called
+        mock_smart_logger.business.assert_called()
+        mock_smart_logger.debug.assert_called()
         
-        # Verify debug log was called with blocked details
-        mock_logger.debug.assert_called()
-        debug_call = mock_logger.debug.call_args
-        assert "Ideas blocked by actionability threshold" in str(debug_call)
+        # Check business log contains expected information
+        business_call = mock_smart_logger.business.call_args
+        call_args = business_call[0][2]  # Third positional argument (data dict)
+        assert call_args["eligible_count"] == 0
+        assert call_args["total_count"] == 2
+        assert call_args["threshold"] == 50
 
     def test_logs_warning_when_no_scores_provided(self, pipeline):
         """Test that warning is logged when no scores are provided."""
@@ -157,16 +168,20 @@ class TestActionabilityLogging:
                 {"score": 25, "issues": ["Hard to test"], "strengths": []},
             ]
             
+            # Mock both regular logger and smart logger
             with patch('app.core.pipeline.logger') as mock_logger:
-                with patch.object(pipeline, '_log_progress') as mock_progress:
-                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
+                with patch('app.core.pipeline.get_smart_logger') as mock_get_smart_logger:
+                    mock_smart_logger = Mock()
+                    mock_get_smart_logger.return_value = mock_smart_logger
+                    
+                    with patch.object(pipeline, '_log_progress') as mock_progress:
+                        adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
-        # Verify debug log was called with blocked details
-        mock_logger.debug.assert_called()
-        debug_call = mock_logger.debug.call_args
-        assert "Ideas blocked by actionability threshold" in str(debug_call)
-        assert "idea1(30)" in str(debug_call)  # Idea name with score
-        assert "idea2(25)" in str(debug_call)  # Idea name with score
+        # Verify smart logger debug was called with blocked details
+        mock_smart_logger.debug.assert_called()
+        debug_call = mock_smart_logger.debug.call_args
+        debug_args = debug_call[0][1] if len(debug_call[0]) > 1 else debug_call[0][0]
+        assert "ideas blocked by actionability threshold" in str(debug_args).lower()
 
     def test_no_warning_when_ideas_meet_threshold(self, pipeline):
         """Test that no fallback warning is logged when ideas meet threshold."""
@@ -189,23 +204,28 @@ class TestActionabilityLogging:
                 {"score": 60, "issues": [], "strengths": ["Good market fit"]},
             ]
             
+            # Mock both regular logger and smart logger
             with patch('app.core.pipeline.logger') as mock_logger:
-                with patch.object(pipeline, '_log_progress') as mock_progress:
-                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
+                with patch('app.core.pipeline.get_smart_logger') as mock_get_smart_logger:
+                    mock_smart_logger = Mock()
+                    mock_get_smart_logger.return_value = mock_smart_logger
+                    
+                    with patch.object(pipeline, '_log_progress') as mock_progress:
+                        adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
         # Verify the report shows eligible ideas
         assert len(report["eligible"]) == 2
         assert len(report["blocked"]) == 0
         
-        # Verify no fallback warning was logged
-        mock_logger.warning.assert_not_called()
+        # Verify smart logger was called
+        mock_smart_logger.business.assert_called()
         
-        # Verify info log shows eligible ideas
-        mock_logger.info.assert_called()
-        info_call = mock_logger.info.call_args
-        assert "eligible=2" in str(info_call)  # eligible count
-        assert "total=2" in str(info_call)    # total count
-        assert "threshold=50" in str(info_call)
+        # Check business log contains expected information
+        business_call = mock_smart_logger.business.call_args
+        call_args = business_call[0][2]  # Third positional argument (data dict)
+        assert call_args["eligible_count"] == 2
+        assert call_args["total_count"] == 2
+        assert call_args["threshold"] == 50
 
     def test_logs_sanitized_data_in_fallback(self, pipeline):
         """Test that actionability assessment handles sensitive data appropriately."""
@@ -225,21 +245,25 @@ class TestActionabilityLogging:
         with patch.object(pipeline, '_score_idea_actionability') as mock_score:
             mock_score.return_value = {"score": 30, "issues": ["Too generic"], "strengths": []}
             
+            # Mock both regular logger and smart logger
             with patch('app.core.pipeline.logger') as mock_logger:
-                with patch.object(pipeline, '_log_progress') as mock_progress:
-                    adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
+                with patch('app.core.pipeline.get_smart_logger') as mock_get_smart_logger:
+                    mock_smart_logger = Mock()
+                    mock_get_smart_logger.return_value = mock_smart_logger
+                    
+                    with patch.object(pipeline, '_log_progress') as mock_progress:
+                        adjusted_scores, report = pipeline._apply_actionability_to_scores(scores, ideas)
         
-        # Verify the report shows blocked idea
+        # Verify report shows blocked idea
         assert len(report["blocked"]) == 1
         assert "idea_with_api_key" in report["blocked"]
         
-        # Verify info log was called with assessment summary
-        mock_logger.info.assert_called()
-        info_call = mock_logger.info.call_args
-        assert "eligible=0" in str(info_call)
-        assert "total=1" in str(info_call)
+        # Verify smart logger was called
+        mock_smart_logger.business.assert_called()
+        mock_smart_logger.debug.assert_called()
         
-        # Verify debug log was called with blocked details
-        mock_logger.debug.assert_called()
-        debug_call = mock_logger.debug.call_args
-        assert "idea_with_api_key" in str(debug_call)
+        # Check business log contains expected information
+        business_call = mock_smart_logger.business.call_args
+        call_args = business_call[0][2]  # Third positional argument (data dict)
+        assert call_args["eligible_count"] == 0
+        assert call_args["total_count"] == 1

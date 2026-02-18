@@ -222,9 +222,6 @@ def run_crewai_pipeline(
     validated_hint = ", ".join(validated_pains[:5]) if validated_pains else "none"
     validated_texts = [pain for pain in validated_pains if pain]
     validated_pain_summary = "\n".join(f"- {pain}" for pain in validated_texts[:5]) or "- None provided."
-    competitor_names = [item.get("name") for item in competitor_sources if item.get("name")]
-    competitor_summary = ", ".join(competitor_names) or "None provided."
-
     
     # Validate ICP settings
     try:
@@ -401,7 +398,7 @@ def run_crewai_pipeline(
             "You are the Product agent. Use top_idea and pain statements from Analyst/Researcher. "
             f"Primary ICP to enforce in PRD scope and language: {icp_focus_hint}. "
             f"Validated pains (priority):\n{validated_pain_summary}\n"
-            f"Competitor cues: {competitor_summary}. "
+            f"Competitor cues: {competitor_json}. "
             "Ensure every section references at least one validated pain and explains how we differentiate from competitors. "
             "Write a PRD using this prompt:\n{prd_prompt}\n"
             "Return JSON with key prd_markdown."
@@ -415,7 +412,7 @@ def run_crewai_pipeline(
         description=(
             "You are the Tech Lead. Use top_idea to write a technical spec. "
             f"Validated pains (priority):\n{validated_pain_summary}\n"
-            f"Competitor cues: {competitor_summary}. "
+            f"Competitor cues: {competitor_json}. "
             "Tie the architecture/stack to those pains and explain how the API surface and data flow create competitive advantage. "
             f"Prompt:\n{tech_prompt}\n"
             f"Then call `repo_generator` with {{\"project_name\": top_idea.name, \"output_dir\": \"{runs_dir}/repo_skeleton\", \"fast_mode\": {str(fast_mode).lower()}}}. "

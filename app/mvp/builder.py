@@ -46,23 +46,56 @@ class StackSelector:
     DEFAULT_FRONTEND = "Next.js + Premium Tailwind + shadcn/ui + TypeScript"
 
     def select(self, topic: str | None, brief: str | None) -> StackConfig:
-        context = " ".join(filter(None, [topic, brief])).strip().lower()
-        has_async = any(
-            keyword in context for keyword in ("async", "ml", "ai", "automation", "pipeline")
+        """Select appropriate technology stack based on project context."""
+        # Clean and normalize input
+        topic = (topic or "").strip()
+        brief = (brief or "").strip()
+        context = " ".join(filter(None, [topic, brief])).lower()
+        
+        # Enhanced async detection with more keywords
+        async_keywords = (
+            "async", "ml", "ai", "automation", "pipeline", "real-time", 
+            "websocket", "streaming", "background", "queue", "worker"
         )
+        has_async = any(keyword in context for keyword in async_keywords)
+        
+        # Detect specific use cases for better stack selection
+        is_mobile_app = any(keyword in context for keyword in ("mobile", "ios", "android", "pwa"))
+        is_data_intensive = any(keyword in context for keyword in ("analytics", "dashboard", "reporting", "data"))
+        is_ecommerce = any(keyword in context for keyword in ("ecommerce", "shop", "store", "payment"))
+        
         if has_async:
             backend_stack = "FastAPI + SQLite (async flow ready)"
             backend_platform = "fastapi"
+        elif is_mobile_app:
+            backend_stack = "Next.js API routes + Prisma + SQLite (mobile-optimized)"
+            backend_platform = "nextjs"
+        elif is_data_intensive:
+            backend_stack = "FastAPI + PostgreSQL + Redis (data-optimized)"
+            backend_platform = "fastapi"
+        elif is_ecommerce:
+            backend_stack = "Next.js API routes + Prisma + SQLite (ecommerce-ready)"
+            backend_platform = "nextjs"
         else:
             backend_stack = "Next.js API routes + Prisma + SQLite"
             backend_platform = "nextjs"
         
+        # Generate contextual summary
+        context_desc = context or "premium MVP"
+        if is_mobile_app:
+            context_desc += " (mobile-focused)"
+        elif is_data_intensive:
+            context_desc += " (data-intensive)"
+        elif is_ecommerce:
+            context_desc += " (ecommerce)"
+            
         summary = (
             f"Frontend: {self.DEFAULT_FRONTEND}. "
             f"Backend: {backend_stack}. "
             f"Premium Design System: 8px grid, semantic colors, conversion-optimized. "
-            f"Database: SQLite. Context: {context or 'premium MVP'}."
+            f"Database: SQLite. Context: {context_desc}."
         )
+        
         return StackConfig(
             frontend_stack=self.DEFAULT_FRONTEND,
             backend_stack=backend_stack,
@@ -972,6 +1005,7 @@ class MVPBuilder:
     def build_from_run(
         self,
         run_id: str,
+        brief: str | None = None,
         cycle_keys: list[str] | None = None,
         max_fix_iter: int = 5,
         force: bool = False,
@@ -995,7 +1029,7 @@ class MVPBuilder:
             run_id=run_id,
             run_dir=run_dir,
             topic=topic,
-            brief=None,
+            brief=brief,
             cycle_keys=cycle_keys,
             max_fix_iter=max_fix_iter,
             force=force,
@@ -1047,20 +1081,43 @@ class MVPBuilder:
         build_runner: Callable[[str, Path, int], tuple[bool, str]] | None,
         test_runner: Callable[[str, Path, int], tuple[bool, str]] | None,
     ) -> BuildResult:
+        """Build MVP with enhanced validation and monitoring."""
+        import time
+        start_time = time.time()
+        
+        # Input validation
+        if not brief or not brief.strip():
+            raise MVPBuilderError("Brief cannot be empty")
+        if len(brief) > 50000:  # Reasonable limit
+            raise MVPBuilderError("Brief too long (max 50,000 characters)")
+        
         logger.info("Building MVP for run %s in %s", run_id, run_dir)
         self._ensure_within_runs(run_dir)
+        
+        # Validate frontend style
         frontend_style = (frontend_style or getattr(self.settings, "frontend_style", "startup_clean")).strip()
         if frontend_style != "startup_clean":
             raise MVPBuilderError(f"Unsupported frontend style: {frontend_style}")
+            
+        # Security check for .env files
         if (run_dir / ".env").exists():
             raise MVPBuilderError("Detected .env in run directory; builder refuses to operate.")
+            
+        # Prepare build environment
         self._prepare_target(run_dir, force)
         self._ensure_cycle_root(run_dir)
+        
+        # Select appropriate stack
         stack = self.selector.select(topic, brief)
+        logger.info("Selected stack: {}", stack.backend_stack)
+        
         repo_dir = run_dir / "mvp_repo"
         app_name, frontend_brief, frontend_audience = self._resolve_frontend_inputs(
             run_dir, run_id, topic, brief
         )
+        
+        # Generate template
+        template_start = time.time()
         TemplateGenerator(
             repo_dir,
             stack,
@@ -1071,6 +1128,8 @@ class MVPBuilder:
             frontend_brief=frontend_brief,
             frontend_audience=frontend_audience,
         ).generate()
+        template_time = time.time() - template_start
+        logger.info("Template generation completed in {:.2f}s", template_time)
         allowed_cycles = self._normalize_cycles(cycle_keys)
         data_source_tag = self._resolve_data_source_tag(run_status, brief)
         self._write_scope(
@@ -1119,6 +1178,8 @@ class MVPBuilder:
                     build_runner = self._runner_from_verifier(verifier, "build")
                 if test_runner is None:
                     test_runner = self._runner_from_verifier(verifier, "test")
+            # Setup progression with performance monitoring
+            progression_start = time.time()
             progression = MVPProgression(
                 run_id=run_id,
                 run_dir=run_dir,
@@ -1130,8 +1191,14 @@ class MVPBuilder:
                 max_auto_fixes=max_fix_iter,
                 cycle_keys=allowed_cycles,
             )
+            
+            # Run progression with monitoring
+            logger.info("Starting MVP progression with {} cycles", len(allowed_cycles))
             progression.run()
+            progression_time = time.time() - progression_start
+            logger.info("MVP progression completed in {:.2f}s", progression_time)
             success = True
+            
         except MVPProgressionError as exc:
             logger.error("Cycle execution failed: {}", exc)
             error = str(exc)
@@ -1139,6 +1206,11 @@ class MVPBuilder:
             logger.error("Build-mvp precheck failed: {}", exc)
             error = str(exc)
         finally:
+            # Calculate total build time
+            total_time = time.time() - start_time
+            logger.info("Total MVP build time: {:.2f}s", total_time)
+            
+            # Write results
             if progression:
                 cycles = progression.cycle_results
             self._write_summary(
@@ -1151,6 +1223,7 @@ class MVPBuilder:
                 error,
             )
             self._write_data_source(run_dir, data_source)
+            
         return BuildResult(run_id, run_dir, success, error, cycles, data_source)
 
     def _normalize_cycles(self, requested: list[str] | None) -> list[str]:
@@ -1280,11 +1353,23 @@ class MVPBuilder:
             raise MVPBuilderError("Target directory must live inside the configured runs directory.")
 
     def _prepare_target(self, run_dir: Path, force: bool) -> None:
+        """Prepare target directory by cleaning existing artifacts if needed."""
         for child in ("mvp_repo", "mvp_cycles"):
             target = run_dir / child
             if target.exists():
+                if not target.is_dir():
+                    raise MVPBuilderError(
+                        f"Expected {child} to be a directory, but found a file at {target}"
+                    )
+                
                 if force:
-                    shutil.rmtree(target)
+                    try:
+                        shutil.rmtree(target)
+                        logger.info("Cleaned existing directory: {}", target)
+                    except OSError as exc:
+                        raise MVPBuilderError(
+                            f"Failed to remove {child} directory {target}: {exc}"
+                        ) from exc
                 else:
                     raise MVPBuilderError(
                         f"{child} already exists for {run_dir}. Use --force to overwrite."
