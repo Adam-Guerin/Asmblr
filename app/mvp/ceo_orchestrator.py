@@ -33,6 +33,11 @@ from app.agents.facilitators import (
     FacilitatorTools,
     create_facilitator_tools
 )
+from app.mvp.startup_success_optimizer import (
+    StartupSuccessOptimizer,
+    create_startup_success_optimizer,
+    SuccessScore
+)
 
 
 class CEODecisionType(Enum):
@@ -106,6 +111,8 @@ class CEOOrchestrator:
         # Utiliser l'infrastructure de synergie existante
         self.shared_context: Optional[SharedContext] = None
         self.facilitator_tools: Optional[FacilitatorTools] = None
+        # Optimiseur de succès de startup
+        self.success_optimizer: Optional[StartupSuccessOptimizer] = None
         
     async def _initialize_toolkit(self):
         """Initialise le CEO Toolkit avec accès illimité"""
@@ -181,7 +188,17 @@ class CEOOrchestrator:
         # Ajouter les outils de facilitation au CEO toolkit
         self.toolkit.facilitator_tools = self.facilitator_tools
         
-        logger.info("� CEO connected to existing synergy infrastructure - TOTAL CONTROL")
+        logger.info("🔗 CEO connected to existing synergy infrastructure - TOTAL CONTROL")
+    
+    async def _initialize_success_optimizer(self, topic: str, vision: str):
+        """Initialise l'optimiseur de succès de startup"""
+        self.success_optimizer = await create_startup_success_optimizer(
+            settings=self.settings,
+            llm_client=self.llm_client,
+            run_dir=self.run_dir
+        )
+        
+        logger.info("📊 CEO Success Optimizer initialized - MAXIMIZING STARTUP POTENTIAL")
         
     async def execute_ceo_vision(
         self,
@@ -220,6 +237,9 @@ class CEOOrchestrator:
             # Phase 1.875: Initialiser l'infrastructure de synergie existante
             await self._initialize_synergy_infrastructure(topic, ceo_strategy.vision)
             
+            # Phase 1.9375: Initialiser l'optimiseur de succès de startup
+            await self._initialize_success_optimizer(topic, ceo_strategy.vision)
+            
             # Phase 2: Prendre des décisions audacieuses
             strategic_decisions = await self._make_bold_decisions(ceo_strategy, topic)
             
@@ -237,8 +257,11 @@ class CEOOrchestrator:
             # Phase 4.75: Moduler les interactions entre agents
             interaction_results = await self._modulate_agent_interactions(execution_plan, results)
             
-            # Phase 4.875: Gérer les assets et synergies créés
-            asset_results = await self._manage_assets_and_synergies(execution_plan, results)
+            # Phase 4.875: Gérer les synergies via l'infrastructure existante
+            synergy_results = await self._manage_assets_and_synergies(execution_plan, results)
+            
+            # Phase 4.9375: Analyser le succès de la startup
+            success_report = await self._analyze_startup_success(execution_plan, results)
             
             # Phase 5: Préparer la domination future
             domination_plan = await self._prepare_market_domination(execution_plan, results)
@@ -257,6 +280,9 @@ class CEOOrchestrator:
                 json.dumps(synergy_summary, indent=2, default=str),
                 encoding="utf-8"
             )
+            
+            # Exporter le rapport de succès de startup
+            success_report_path = await self.success_optimizer.export_success_report(success_report)
             
             self._log_ceo_success(topic, ceo_strategy, results)
             
@@ -1414,6 +1440,87 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
             synergy_results["error"] = str(exc)
         
         return synergy_results
+    
+    async def _analyze_startup_success(
+        self,
+        execution_plan: CEOExecutionPlan,
+        results: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Analyse le succès de la startup
+        
+        Le CEO utilise l'optimiseur de succès pour évaluer le potentiel
+        de la startup créée et identifier les améliorations nécessaires.
+        """
+        
+        logger.info("📊 CEO ANALYZING STARTUP SUCCESS POTENTIAL")
+        
+        success_analysis = {
+            "overall_score": 0,
+            "success_level": "unknown",
+            "recommendations": [],
+            "critical_issues": [],
+            "strengths": [],
+            "improvement_areas": []
+        }
+        
+        try:
+            # Analyser le succès de la startup
+            success_report = await self.success_optimizer.analyze_startup_success(
+                topic=execution_plan.mvp_plan.idea_name,
+                market_analysis=results.get("market_analysis", {}),
+                prd=results.get("prd", {}),
+                architecture=results.get("architecture", {})
+            )
+            
+            success_analysis["overall_score"] = success_report.overall_success_score
+            success_analysis["success_level"] = success_report.success_level.name
+            success_analysis["recommendations"] = success_report.recommendations
+            success_analysis["critical_issues"] = success_report.critical_issues
+            success_analysis["strengths"] = success_report.strengths
+            success_analysis["improvement_areas"] = success_report.improvement_areas
+            
+            # Ajouter les insights du CEO au SharedContext
+            self.shared_context.add_insight(
+                agent="CEO",
+                insight=f"Startup success score: {success_report.overall_success_score:.1f}%",
+                data={"success_score": success_report.overall_success_score}
+            )
+            
+            # Décision basée sur le score de succès
+            if success_report.overall_success_score < 50:
+                decision = "PIVOT OR STOP - Low success potential"
+                self.shared_context.add_decision(
+                    agents=["CEO"],
+                    decision=decision,
+                    rationale=f"Success score {success_report.overall_success_score:.1f}% is too low"
+                )
+            elif success_report.overall_success_score < 70:
+                decision = "ITERATE - Needs significant improvements"
+                self.shared_context.add_decision(
+                    agents=["CEO"],
+                    decision=decision,
+                    rationale=f"Success score {success_report.overall_success_score:.1f}% requires improvements"
+                )
+            else:
+                decision = "ACCELERATE - Strong success potential"
+                self.shared_context.add_decision(
+                    agents=["CEO"],
+                    decision=decision,
+                    rationale=f"Success score {success_report.overall_success_score:.1f}% indicates strong potential"
+                )
+            
+            logger.info(
+                f"📊 Startup success analysis complete: "
+                f"Score {success_report.overall_success_score:.1f}% "
+                f"({success_report.success_level.name})"
+            )
+            
+        except Exception as exc:
+            logger.error(f"💥 Startup success analysis failed: {exc}")
+            success_analysis["error"] = str(exc)
+        
+        return success_analysis
     
     async def _prepare_market_domination(
         self,
