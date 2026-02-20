@@ -41,7 +41,10 @@ from app.signal_insights import (
     extract_structured_pains,
     generate_opportunities,
 )
-from app.signal_quality import compute_novelty_score, compute_signal_quality
+from app.mvp.pitch_deck_generator import (
+    PitchDeckGenerator,
+    create_pitch_deck_generator
+)
 from app.project_build import ProjectBuilder
 from app.mvp.builder import MVPBuilder, MVPBuilderError
 from app.tools.repo_generator import generate_fastapi_skeleton
@@ -1381,21 +1384,40 @@ class VenturePipeline:
                     f"Data source: {decision_source}\n\n# Top Idea\n\n{top.name}\n\nScore: {top.score}\n\n{top.rationale}\n",
                 )
                 self.manager.write_artifact(run_id, "market_report.md", f"Data source: {data_source_summary}\n\n{market_report}")
-                pitch_deck_payload = self._generate_pitch_deck(
-                    topic,
-                    top,
-                    brand_payload,
-                    market_report,
-                    validated_pains["validated"],
-                    competitors,
+                # Generate enhanced pitch deck with success analysis
+                from app.mvp.pitch_deck_generator import PitchDeckGenerator
+                
+                pitch_deck_generator = PitchDeckGenerator(
+                    settings=self.settings,
+                    llm_client=self.general_llm,
+                    run_dir=self.settings.runs_dir / run_id
                 )
-                self._write_sanitized_json(run_id, "pitch_deck.json", pitch_deck_payload)
-                self.manager.write_artifact(
-                    run_id,
-                    "pitch_deck.md",
-                    self._format_pitch_deck_markdown(pitch_deck_payload),
-                )
-                self._log_progress(run_id, "Artifacts: pitch deck drafted.")
+                
+                # Generate pitch deck synchronously
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+                try:
+                    pitch_deck = loop.run_until_complete(
+                        pitch_deck_generator.generate_enhanced_pitch_deck(
+                            topic=topic,
+                            idea=top.__dict__,
+                            brand_payload=brand_payload,
+                            market_report=market_report,
+                            validated_pains=validated_pains["validated"],
+                            competitors=competitors,
+                            success_report=None
+                        )
+                    )
+                    
+                    pitch_deck_path = loop.run_until_complete(
+                        pitch_deck_generator.export_pitch_deck(pitch_deck)
+                    )
+                finally:
+                    loop.close()
+                
+                self._log_progress(run_id, "Artifacts: enhanced pitch deck drafted.")
                 roadmap_payload = self._generate_roadmap(
                     topic,
                     top,
