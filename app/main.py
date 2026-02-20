@@ -4,8 +4,10 @@ from uuid import uuid4
 from pathlib import Path
 from pydantic import BaseModel, Field
 from pathlib import Path
+from typing import Optional
 import time
 import httpx
+import json
 
 from app.core.config import get_settings, previous_secret_allowed, validate_prod_mode
 from app.core.pipeline import VenturePipeline
@@ -18,6 +20,8 @@ from app.core.audit import write_audit_event
 from app.core.jobs import enqueue_run, enqueue_resume, get_job_status
 from app.core.models import SeedInputs
 from app.core.deploy import deploy_run
+from app.mvp.orchestrator import create_custom_mvp
+from app.mvp.ceo_orchestrator import execute_ceo_vision
 
 setup_logging()
 settings = get_settings()
@@ -371,3 +375,432 @@ def readyz():
             errors.append(str(exc))
     reason = errors[-1] if errors else "No model pair available"
     raise HTTPException(status_code=503, detail=f"Ollama not ready: {reason}")
+
+
+class CustomMVPRequest(BaseModel):
+    topic: str = Field(..., min_length=3, description="L'idée à développer en MVP")
+    seed_inputs: Optional[SeedInputs] = Field(None, description="Inputs utilisateur optionnels")
+    fast_mode: bool = Field(False, description="Mode rapide pour les tests")
+
+
+class CEOVisionRequest(BaseModel):
+    topic: str = Field(..., min_length=3, description="L'idée à dominer en tant que CEO")
+    seed_inputs: Optional[SeedInputs] = Field(None, description="Inputs utilisateur optionnels")
+    risk_level: str = Field("EXTREME", description="Niveau de risque CEO (LOW/MEDIUM/HIGH/EXTREME)")
+    timeline_aggression: str = Field("INSANE", description="Aggressivité timeline (CONSERVATIVE/NORMAL/AGGRESSIVE/INSANE)")
+    unleash_ceo: bool = Field(True, description="Activer le mode CEO sans limites")
+
+
+@app.post("/mvp/custom")
+async def create_mvp_custom(req: CustomMVPRequest, background: BackgroundTasks, request: Request):
+    """
+    Crée un MVP 100% customisé avec orchestrateur intelligent
+    
+    Endpoint principal pour la création de MVP personnalisés.
+    L'orchestrateur analyse l'idée, génère des prompts customisés,
+    et orchestre les agents developer pour un résultat optimal.
+    """
+    _require_api_key(request)
+    
+    # Validation rate limit
+    limiter_key = settings.api_key or (request.client.host if request.client else "unknown")
+    if not run_limiter.allow(limiter_key):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded for MVP creation")
+    
+    # Générer un run_id unique
+    run_id = str(uuid4())
+    run_dir = Path(settings.runs_dir) / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Logger la demande
+    write_audit_event(
+        Path(settings.audit_log_file),
+        {
+            "event": "custom_mvp_started",
+            "run_id": run_id,
+            "topic": req.topic,
+            "fast_mode": req.fast_mode,
+            "actor": request.headers.get("X-Actor", "api"),
+            "client_ip": request.client.host if request.client else None,
+            "user_agent": request.headers.get("User-Agent"),
+        },
+    )
+    
+    # Démarrer l'orchestration en background
+    async def run_orchestration():
+        try:
+            from app.core.llm import LLMClient
+            
+            # Initialiser le client LLM
+            llm_client = LLMClient(settings.ollama_base_url, settings.code_model)
+            
+            # Créer le MVP customisé
+            result = await create_custom_mvp(
+                topic=req.topic,
+                settings=settings,
+                llm_client=llm_client,
+                run_id=run_id,
+                run_dir=run_dir,
+                seed_inputs=req.seed_inputs,
+                fast_mode=req.fast_mode
+            )
+            
+            # Sauvegarder les résultats
+            results_file = run_dir / "custom_mvp_results.json"
+            results_file.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
+            
+            # Logger le succès
+            write_audit_event(
+                Path(settings.audit_log_file),
+                {
+                    "event": "custom_mvp_completed",
+                    "run_id": run_id,
+                    "topic": req.topic,
+                    "idea_name": result.get("orchestration_plan", {}).get("idea_name"),
+                    "mobile_required": result.get("orchestration_plan", {}).get("mobile_required"),
+                    "status": "success",
+                },
+            )
+            
+        except Exception as exc:
+            # Logger l'erreur
+            write_audit_event(
+                Path(settings.audit_log_file),
+                {
+                    "event": "custom_mvp_failed",
+                    "run_id": run_id,
+                    "topic": req.topic,
+                    "error": str(exc),
+                    "status": "failed",
+                },
+            )
+            # Propager l'erreur
+            raise
+    
+    # Ajouter la tâche en background
+    background.add_task(run_orchestration)
+    
+    return {
+        "run_id": run_id,
+        "status": "orchestration_started",
+        "topic": req.topic,
+        "fast_mode": req.fast_mode,
+        "message": "Orchestration MVP custom démarrée en background"
+    }
+
+
+@app.get("/mvp/custom/{run_id}")
+def get_custom_mvp_status(run_id: str, request: Request):
+    """Récupère le statut d'une orchestration MVP custom"""
+    _require_api_key(request)
+    
+    run_dir = Path(settings.runs_dir) / run_id
+    if not run_dir.exists():
+        raise HTTPException(status_code=404, detail="Run not found")
+    
+    results_file = run_dir / "custom_mvp_results.json"
+    if results_file.exists():
+        try:
+            results = json.loads(results_file.read_text(encoding="utf-8"))
+            return {
+                "run_id": run_id,
+                "status": "completed",
+                "results": results
+            }
+        except Exception:
+            pass
+    
+    # Vérifier si le processus est en cours
+    progress_file = run_dir / "orchestration.log"
+    if progress_file.exists():
+        return {
+            "run_id": run_id,
+            "status": "in_progress",
+            "message": "Orchestration en cours..."
+        }
+    
+    return {
+        "run_id": run_id,
+        "status": "not_started",
+        "message": "Orchestration pas encore démarrée"
+    }
+
+
+@app.get("/mvp/custom/{run_id}/download")
+def download_custom_mvp(run_id: str, request: Request):
+    """Télécharge le MVP customisé en ZIP"""
+    _require_api_key(request)
+    
+    run_dir = Path(settings.runs_dir) / run_id
+    if not run_dir.exists():
+        raise HTTPException(status_code=404, detail="Run not found")
+    
+    results_file = run_dir / "custom_mvp_results.json"
+    if not results_file.exists():
+        raise HTTPException(status_code=400, detail="MVP pas encore complété")
+    
+    # Créer un ZIP avec tous les résultats
+    import zipfile
+    import tempfile
+    
+    zip_path = run_dir / f"{run_id}_custom_mvp.zip"
+    
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Ajouter les résultats
+        zipf.write(results_file, "custom_mvp_results.json")
+        
+        # Ajouter le repo si existant
+        repo_dir = run_dir / "mvp_repo"
+        if repo_dir.exists():
+            for file_path in repo_dir.rglob("*"):
+                if file_path.is_file():
+                    arcname = file_path.relative_to(run_dir)
+                    zipf.write(file_path, arcname)
+        
+        # Ajouter les autres artefacts
+        for artifact in ["landing_page", "content_pack", "brand_assets"]:
+            artifact_dir = run_dir / artifact
+            if artifact_dir.exists():
+                for file_path in artifact_dir.rglob("*"):
+                    if file_path.is_file():
+                        arcname = file_path.relative_to(run_dir)
+                        zipf.write(file_path, arcname)
+    
+    return FileResponse(
+        str(zip_path),
+        media_type="application/zip",
+        filename=f"{run_id}_custom_mvp.zip"
+    )
+
+
+@app.post("/ceo/unleash")
+async def unleash_ceo_vision(req: CEOVisionRequest, background: BackgroundTasks, request: Request):
+    """
+    🚀 UNLEASH CEO VISION - Exécution sans limites
+    
+    Endpoint CEO pour ceux qui veulent dominer leur marché.
+    Pas de compromis, pas de peur, que de l'ambition démesurée.
+    
+    Le CEO orchestrator prend des décisions audacieuses,
+    attaque les concurrents, et prépare la domination totale.
+    """
+    _require_api_key(request)
+    
+    # Validation que le CEO est prêt
+    if not req.unleash_ceo:
+        raise HTTPException(status_code=400, detail="CEO mode must be unleashed")
+    
+    # Validation rate limit (mais les CEOs n'ont pas de limites)
+    limiter_key = settings.api_key or (request.client.host if request.client else "unknown")
+    if not run_limiter.allow(limiter_key):
+        # Les CEOs peuvent parfois contourner les limites...
+        logger.warning(f"⚡ CEO {req.topic} attempting to bypass rate limits")
+    
+    # Générer un run_id CEO
+    run_id = f"ceo_{str(uuid4())}"
+    run_dir = Path(settings.runs_dir) / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Logger l'arrivée du CEO
+    write_audit_event(
+        Path(settings.audit_log_file),
+        {
+            "event": "ceo_vision_unleashed",
+            "run_id": run_id,
+            "topic": req.topic,
+            "risk_level": req.risk_level,
+            "timeline_aggression": req.timeline_aggression,
+            "mindset": "UNLIMITED_CEO",
+            "actor": request.headers.get("X-Actor", "ceo"),
+            "client_ip": request.client.host if request.client else None,
+            "user_agent": request.headers.get("User-Agent"),
+        },
+    )
+    
+    # Démarrer l'exécution CEO en background
+    async def run_ceo_execution():
+        try:
+            from app.core.llm import LLMClient
+            
+            # Initialiser le client LLM pour le CEO
+            llm_client = LLMClient(settings.ollama_base_url, settings.code_model)
+            
+            # Exécuter la vision CEO sans limites
+            result = await execute_ceo_vision(
+                topic=req.topic,
+                settings=settings,
+                llm_client=llm_client,
+                run_id=run_id,
+                run_dir=run_dir,
+                seed_inputs=req.seed_inputs,
+                risk_level=req.risk_level,
+                timeline_aggression=req.timeline_aggression
+            )
+            
+            # Sauvegarder les résultats CEO
+            results_file = run_dir / "ceo_vision_results.json"
+            results_file.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
+            
+            # Logger le succès CEO
+            write_audit_event(
+                Path(settings.audit_log_file),
+                {
+                    "event": "ceo_vision_executed",
+                    "run_id": run_id,
+                    "topic": req.topic,
+                    "vision": result.get("ceo_strategy", {}).get("vision"),
+                    "bold_moves": len(result.get("bold_moves_made", [])),
+                    "domination_plan": result.get("domination_plan", {}).get("exit_valuation"),
+                    "status": "CEO_SUCCESS",
+                },
+            )
+            
+            logger.info(f"🏆 CEO VISION DOMINATED: {req.topic}")
+            
+        except Exception as exc:
+            # Logger l'échec CEO (mais les CEOs rebondissent toujours)
+            write_audit_event(
+                Path(settings.audit_log_file),
+                {
+                    "event": "ceo_vision_failed",
+                    "run_id": run_id,
+                    "topic": req.topic,
+                    "error": str(exc),
+                    "status": "CEO_FAILURE",
+                    "lesson": "Even bold CEOs learn from failure"
+                },
+            )
+            logger.error(f"💥 CEO VISION CRASHED: {req.topic} - {exc}")
+            raise
+    
+    # Ajouter la tâche CEO en background
+    background.add_task(run_ceo_execution)
+    
+    return {
+        "run_id": run_id,
+        "status": "ceo_vision_unleashed",
+        "topic": req.topic,
+        "risk_level": req.risk_level,
+        "timeline_aggression": req.timeline_aggression,
+        "message": f"🚀 CEO UNLEASHED: {req.topic} - Market domination in progress...",
+        "ceo_mindset": "UNLIMITED",
+        "expected_outcome": "TOTAL_MARKET_DOMINATION"
+    }
+
+
+@app.get("/ceo/{run_id}")
+def get_ceo_vision_status(run_id: str, request: Request):
+    """Récupère le statut d'une vision CEO"""
+    _require_api_key(request)
+    
+    # Vérifier si c'est un run CEO
+    if not run_id.startswith("ceo_"):
+        raise HTTPException(status_code=400, detail="Not a CEO run ID")
+    
+    run_dir = Path(settings.runs_dir) / run_id
+    if not run_dir.exists():
+        raise HTTPException(status_code=404, detail="CEO run not found")
+    
+    results_file = run_dir / "ceo_vision_results.json"
+    if results_file.exists():
+        try:
+            results = json.loads(results_file.read_text(encoding="utf-8"))
+            return {
+                "run_id": run_id,
+                "status": "ceo_vision_executed",
+                "results": results,
+                "message": "🏆 CEO vision executed - Market domination ready"
+            }
+        except Exception:
+            pass
+    
+    # Vérifier si le CEO est en cours d'exécution
+    progress_file = run_dir / "orchestration.log"
+    if progress_file.exists():
+        return {
+            "run_id": run_id,
+            "status": "ceo_in_execution",
+            "message": "🔥 CEO executing vision - Bold moves in progress..."
+        }
+    
+    return {
+        "run_id": run_id,
+        "status": "ceo_not_started",
+        "message": "⏳ CEO vision not yet unleashed"
+    }
+
+
+@app.get("/ceo/{run_id}/download")
+def download_ceo_empire(run_id: str, request: Request):
+    """Télécharge l'empire CEO complet en ZIP"""
+    _require_api_key(request)
+    
+    if not run_id.startswith("ceo_"):
+        raise HTTPException(status_code=400, detail="Not a CEO run ID")
+    
+    run_dir = Path(settings.runs_dir) / run_id
+    if not run_dir.exists():
+        raise HTTPException(status_code=404, detail="CEO run not found")
+    
+    results_file = run_dir / "ceo_vision_results.json"
+    if not results_file.exists():
+        raise HTTPException(status_code=400, detail="CEO vision not yet executed")
+    
+    # Créer un ZIP avec tout l'empire CEO
+    import zipfile
+    
+    zip_path = run_dir / f"{run_id}_ceo_empire.zip"
+    
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Ajouter les résultats CEO
+        zipf.write(results_file, "ceo_vision_results.json")
+        
+        # Ajouter le repo MVP
+        repo_dir = run_dir / "mvp_repo"
+        if repo_dir.exists():
+            for file_path in repo_dir.rglob("*"):
+                if file_path.is_file():
+                    arcname = file_path.relative_to(run_dir)
+                    zipf.write(file_path, arcname)
+        
+        # Ajouter les autres artefacts CEO
+        for artifact in ["landing_page", "content_pack", "brand_assets", "mobile"]:
+            artifact_dir = run_dir / artifact
+            if artifact_dir.exists():
+                for file_path in artifact_dir.rglob("*"):
+                    if file_path.is_file():
+                        arcname = file_path.relative_to(run_dir)
+                        zipf.write(file_path, arcname)
+        
+        # Ajouter un README CEO spécial
+        ceo_readme = run_dir / "CEO_EMPIRE_README.md"
+        if not ceo_readme.exists():
+            ceo_content = f"""# 🏆 CEO Empire - {run_id}
+
+## Vision CEO
+Ce projet a été exécuté avec une mentalité CEO sans limites.
+
+## Bold Moves Executed
+L'orchestrateur CEO a pris des décisions audacieuses pour dominer le marché.
+
+## Market Domination Plan
+Stratégie complète pour écraser la concurrence et devenir leader.
+
+## Next Steps
+1. Lever les fonds nécessaires (Series A+)
+2. Exécuter le roadmap d'expansion agressif
+3. Lancer les attaques concurrentielles planifiées
+4. Préparer l'IPO à $1B+
+
+## CEO Mindset
+UNLIMITED AMBITION. TOTAL DOMINATION.
+"""
+            ceo_readme.write_text(ceo_content, encoding="utf-8")
+        
+        zipf.write(ceo_readme, "CEO_EMPIRE_README.md")
+    
+    return FileResponse(
+        str(zip_path),
+        media_type="application/zip",
+        filename=f"{run_id}_ceo_empire.zip"
+    )

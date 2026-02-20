@@ -2890,6 +2890,447 @@ export function GET() {
 """,
                 encoding="utf-8",
             )
+        
+        # AI-driven mobile app creation decision
+        self._create_mobile_app_if_needed()
+    
+    def _create_mobile_app_if_needed(self) -> None:
+        """AI-driven decision to create React Native mobile app based on project analysis."""
+        if not self.llm_client or not self.llm_client.available():
+            logger.info("LLM not available - skipping mobile app creation")
+            return
+        
+        try:
+            # Analyze project context for mobile suitability
+            mobile_decision = self._analyze_mobile_suitability()
+            
+            if mobile_decision.get("should_create_mobile", False):
+                logger.info("AI decision: Creating React Native mobile app")
+                self._create_react_native_app(mobile_decision)
+            else:
+                logger.info("AI decision: Mobile app not suitable for this project")
+                
+        except Exception as exc:
+            logger.warning("Mobile app creation failed: {err}", err=exc)
+    
+    def _analyze_mobile_suitability(self) -> dict:
+        """Use AI to analyze if the project should have a mobile app."""
+        # Gather project context
+        steering_context = self._format_manual_steering_context(limit=5)
+        repo_tree = self._repo_tree_snapshot()
+        
+        # Read package.json to understand the project type
+        package_json_path = self.repo_dir / "package.json"
+        project_info = ""
+        if package_json_path.exists():
+            try:
+                package_data = json.loads(package_json_path.read_text(encoding="utf-8"))
+                project_info = f"\nProject: {package_data.get('name', 'Unknown')}\n"
+                project_info += f"Description: {package_data.get('description', 'No description')}\n"
+                project_info += f"Dependencies: {list(package_data.get('dependencies', {}).keys())[:10]}"
+            except Exception:
+                pass
+        
+        analysis_prompt = (
+            "You are an expert mobile strategist. Analyze if this project needs a React Native mobile app.\n\n"
+            "PROJECT CONTEXT:\n"
+            f"{steering_context}\n\n"
+            f"{project_info}\n\n"
+            f"Repository structure:\n{repo_tree}\n\n"
+            "DECISION CRITERIA:\n"
+            "1. User behavior: Will users access this on mobile devices frequently?\n"
+            "2. Platform fit: Does this benefit from native mobile features (camera, GPS, push)?\n"
+            "3. Use case: Is this a consumer app, productivity tool, or internal system?\n"
+            "4. Market: Does the target audience prefer mobile-first experience?\n"
+            "5. Complexity: Is the mobile experience significantly different from web?\n\n"
+            "Respond with JSON only:\n"
+            "{\n"
+            "  \"should_create_mobile\": true/false,\n"
+            "  \"reasoning\": \"Brief explanation of decision\",\n"
+            "  \"target_platforms\": [\"ios\", \"android\"],\n"
+            "  \"mobile_features\": [\"list key mobile features to implement\"]\n"
+            "}"
+        )
+        
+        try:
+            response = self.llm_client.generate(analysis_prompt)
+            # Extract JSON from response
+            import re
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+        except Exception as exc:
+            logger.warning("Mobile suitability analysis failed: {err}", err=exc)
+        
+        # Fallback: conservative decision
+        return {
+            "should_create_mobile": False,
+            "reasoning": "Analysis failed - conservative approach",
+            "target_platforms": [],
+            "mobile_features": []
+        }
+    
+    def _create_react_native_app(self, decision: dict) -> None:
+        """Create React Native mobile app structure."""
+        mobile_dir = self.repo_dir / "mobile"
+        mobile_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create React Native project structure
+        self._create_mobile_package_json(mobile_dir, decision)
+        self._create_mobile_app_structure(mobile_dir, decision)
+        self._create_mobile_components(mobile_dir, decision)
+        
+        # Update main README to mention mobile app
+        self._update_readme_for_mobile(decision)
+        
+        logger.info("React Native app created in mobile/ directory")
+    
+    def _create_mobile_package_json(self, mobile_dir: Path, decision: dict) -> None:
+        """Create package.json for React Native app."""
+        package_data = {
+            "name": "mobile-app",
+            "version": "1.0.0",
+            "description": "React Native mobile app",
+            "main": "index.js",
+            "scripts": {
+                "android": "react-native run-android",
+                "ios": "react-native run-ios",
+                "start": "react-native start",
+                "test": "jest",
+                "lint": "eslint ."
+            },
+            "dependencies": {
+                "react": "18.2.0",
+                "react-native": "0.72.0",
+                "@react-navigation/native": "^6.1.0",
+                "@react-navigation/stack": "^6.3.0",
+                "react-native-screens": "^3.22.0",
+                "react-native-safe-area-context": "^4.7.0"
+            },
+            "devDependencies": {
+                "@babel/core": "^7.20.0",
+                "@babel/preset-env": "^7.20.0",
+                "@babel/runtime": "^7.20.0",
+                "@react-native/eslint-config": "^0.72.0",
+                "@react-native/metro-config": "^0.72.0",
+                "@tsconfig/react-native": "^3.0.0",
+                "@types/react": "^18.0.24",
+                "@types/react-test-renderer": "^18.0.0",
+                "babel-jest": "^29.2.1",
+                "eslint": "^8.19.0",
+                "jest": "^29.2.1",
+                "metro-react-native-babel-preset": "0.76.0",
+                "prettier": "^2.4.1",
+                "react-test-renderer": "18.2.0",
+                "typescript": "4.8.4"
+            },
+            "jest": {
+                "preset": "react-native"
+            }
+        }
+        
+        package_json_path = mobile_dir / "package.json"
+        package_json_path.write_text(json.dumps(package_data, indent=2), encoding="utf-8")
+    
+    def _create_mobile_app_structure(self, mobile_dir: Path, decision: dict) -> None:
+        """Create basic React Native app structure."""
+        # Create directories
+        (mobile_dir / "src").mkdir(exist_ok=True)
+        (mobile_dir / "src" / "components").mkdir(exist_ok=True)
+        (mobile_dir / "src" / "screens").mkdir(exist_ok=True)
+        (mobile_dir / "src" / "navigation").mkdir(exist_ok=True)
+        (mobile_dir / "src" / "services").mkdir(exist_ok=True)
+        
+        # Create main App.tsx
+        app_content = '''import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+
+import HomeScreen from './src/screens/HomeScreen';
+import {ThemeProvider} from './src/theme/ThemeProvider';
+
+const Stack = createNativeStackNavigator();
+
+const App = () => {
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <NavigationContainer>
+          <Stack.Navigator>
+            <Stack.Screen 
+              name="Home" 
+              component={HomeScreen} 
+              options={{title: 'App'}} 
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ThemeProvider>
+    </SafeAreaProvider>
+  );
+};
+
+export default App;
+'''
+        (mobile_dir / "App.tsx").write_text(app_content, encoding="utf-8")
+        
+        # Create HomeScreen
+        home_screen_content = '''import React from 'react';
+import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {useTheme} from '../theme/ThemeProvider';
+
+const HomeScreen = () => {
+  const {colors, typography} = useTheme();
+  
+  return (
+    <ScrollView style={[styles.container, {backgroundColor: colors.background}]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, {color: colors.text, ...typography.h1}]}>
+          Welcome
+        </Text>
+        <Text style={[styles.subtitle, {color: colors.textSecondary, ...typography.body}]}>
+          Your mobile app is ready
+        </Text>
+      </View>
+      
+      <View style={styles.content}>
+        <Text style={[styles.sectionTitle, {color: colors.text, ...typography.h2}]}>
+          Features
+        </Text>
+        <Text style={[styles.description, {color: colors.textSecondary, ...typography.body}]}>
+          This mobile app extends your web experience with native features.
+        </Text>
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  content: {
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  description: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+});
+
+export default HomeScreen;
+'''
+        (mobile_dir / "src" / "screens" / "HomeScreen.tsx").write_text(home_screen_content, encoding="utf-8")
+        
+        # Create theme provider
+        theme_dir = mobile_dir / "src" / "theme"
+        theme_dir.mkdir(exist_ok=True)
+        
+        theme_provider_content = '''import React, {createContext, useContext, useState} from 'react';
+
+interface Theme {
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    surface: string;
+    text: string;
+    textSecondary: string;
+    border: string;
+    error: string;
+    success: string;
+  };
+  typography: {
+    h1: {
+      fontSize: number;
+      fontWeight: string;
+    };
+    h2: {
+      fontSize: number;
+      fontWeight: string;
+    };
+    body: {
+      fontSize: number;
+      fontWeight: string;
+    };
+  };
+}
+
+const lightTheme: Theme = {
+  colors: {
+    primary: '#007AFF',
+    secondary: '#5856D6',
+    background: '#FFFFFF',
+    surface: '#F2F2F7',
+    text: '#000000',
+    textSecondary: '#8E8E93',
+    border: '#C6C6C8',
+    error: '#FF3B30',
+    success: '#34C759',
+  },
+  typography: {
+    h1: {fontSize: 28, fontWeight: 'bold'},
+    h2: {fontSize: 22, fontWeight: '600'},
+    body: {fontSize: 16, fontWeight: 'normal'},
+  },
+};
+
+const ThemeContext = createContext<{
+  theme: Theme;
+  colors: Theme['colors'];
+  typography: Theme['typography'];
+}>({
+  theme: lightTheme,
+  colors: lightTheme.colors,
+  typography: lightTheme.typography,
+});
+
+export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
+  const [theme] = useState(lightTheme);
+  
+  return (
+    <ThemeContext.Provider value={{theme, colors: theme.colors, typography: theme.typography}}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+export const useTheme = () => useContext(ThemeContext);
+'''
+        (theme_dir / "ThemeProvider.tsx").write_text(theme_provider_content, encoding="utf-8")
+    
+    def _create_mobile_components(self, mobile_dir: Path, decision: dict) -> None:
+        """Create reusable mobile components."""
+        components_dir = mobile_dir / "src" / "components"
+        
+        # Create Button component
+        button_content = '''import React from 'react';
+import {TouchableOpacity, Text, StyleSheet, ActivityIndicator} from 'react-native';
+import {useTheme} from '../theme/ThemeProvider';
+
+interface ButtonProps {
+  title: string;
+  onPress: () => void;
+  variant?: 'primary' | 'secondary';
+  loading?: boolean;
+  disabled?: boolean;
+}
+
+const Button = ({
+  title,
+  onPress,
+  variant = 'primary',
+  loading = false,
+  disabled = false,
+}: ButtonProps) => {
+  const {colors} = useTheme();
+  
+  const buttonStyle = [
+    styles.button,
+    variant === 'primary' 
+      ? {backgroundColor: colors.primary}
+      : {backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+    disabled && styles.disabled,
+  ];
+  
+  const textStyle = [
+    styles.text,
+    variant === 'primary' ? {color: '#FFFFFF'} : {color: colors.text},
+    disabled && styles.disabledText,
+  ];
+  
+  return (
+    <TouchableOpacity
+      style={buttonStyle}
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.8}>
+      {loading ? (
+        <ActivityIndicator color="#FFFFFF" />
+      ) : (
+        <Text style={textStyle}>{title}</Text>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  disabledText: {
+    opacity: 0.7,
+  },
+});
+
+export default Button;
+'''
+        (components_dir / "Button.tsx").write_text(button_content, encoding="utf-8")
+    
+    def _update_readme_for_mobile(self, decision: dict) -> None:
+        """Update main README to mention mobile app."""
+        readme_path = self.repo_dir / "README.md"
+        if not readme_path.exists():
+            return
+            
+        current_content = readme_path.read_text(encoding="utf-8")
+        
+        mobile_section = f"""
+
+## Mobile App
+
+This project includes a React Native mobile app in the `mobile/` directory.
+
+### Mobile Features
+{chr(10).join(f"- {feature}" for feature in decision.get('mobile_features', ['Native mobile experience', 'Optimized for iOS and Android']))}
+
+### Getting Started with Mobile
+
+```bash
+cd mobile
+npm install
+# For iOS
+npm run ios
+# For Android  
+npm run android
+```
+
+### Target Platforms
+{', '.join(decision.get('target_platforms', ['iOS', 'Android']))}
+"""
+        
+        updated_content = current_content + mobile_section
+        readme_path.write_text(updated_content, encoding="utf-8")
 
 
 def progressive_cycles(
