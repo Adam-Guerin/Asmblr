@@ -199,28 +199,68 @@ class LLMCacheManager:
             # Store in local cache
             self._local_cache[prompt_hash] = entry
             
-            # Limit local cache size
-            if len(self._local_cache) > self._local_cache_size:
-                # Remove oldest entry
-                oldest_key = min(
-                    self._local_cache.keys(),
-                    key=lambda k: self._local_cache[k].timestamp
-                )
-                del self._local_cache[oldest_key]
-            
             # Store in Redis
             redis_client = await self._get_redis_client()
             await redis_client.setex(
-                f"llm_cache:{prompt_hash}",
-                ttl,
+                f"llm_cache:{prompt_hash}", 
+                ttl, 
                 json.dumps(entry.to_dict())
             )
             
-            logger.debug(f"Cached response: {prompt_hash[:8]} (TTL: {ttl}s)")
+            logger.debug(f"Cached response: {prompt_hash[:8]}")
             
         except Exception as e:
             logger.warning(f"Cache set error: {e}")
     
+    def get_sync(self, prompt: str, model: str, **kwargs) -> Optional[str]:
+        """Synchronous version of get for non-async contexts"""
+        try:
+            # Try exact match first
+            exact_hash = self._generate_prompt_hash(prompt, model, **kwargs)
+            
+            # Check local cache first
+            if exact_hash in self._local_cache:
+                entry = self._local_cache[exact_hash]
+                if time.time() - entry.timestamp < entry.ttl:
+                    entry.hit_count += 1
+                    logger.debug(f"Cache hit (local sync): {exact_hash[:8]}")
+                    return entry.response
+                else:
+                    # Remove expired entry
+                    del self._local_cache[exact_hash]
+            
+            logger.debug(f"Cache miss (sync): {exact_hash[:8]}")
+            return None
+            
+        except Exception as e:
+            logger.warning(f"Cache get sync error: {e}")
+            return None
+    
+    def set_sync(self, prompt: str, response: str, model: str, ttl: Optional[int] = None, **kwargs) -> None:
+        """Synchronous version of set for non-async contexts"""
+        try:
+            if ttl is None:
+                ttl = self.default_ttl
+            
+            prompt_hash = self._generate_prompt_hash(prompt, model, **kwargs)
+            
+            entry = CacheEntry(
+                prompt_hash=prompt_hash,
+                response=response,
+                model=model,
+                timestamp=time.time(),
+                ttl=ttl,
+                metadata=kwargs.get("metadata")
+            )
+            
+            # Store in local cache only (Redis requires async)
+            self._local_cache[prompt_hash] = entry
+            
+            logger.debug(f"Cached response (sync): {prompt_hash[:8]}")
+            
+        except Exception as e:
+            logger.warning(f"Cache set sync error: {e}")
+            
     async def invalidate(self, prompt: str, model: str, **kwargs) -> bool:
         """Invalidate cached response for prompt"""
         try:

@@ -5,8 +5,42 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
+from app.core.lightweight_config import lightweight_config
 
-load_dotenv()
+# Lightweight mode detection and automatic loading
+def detect_lightweight_mode():
+    """Detect if lightweight mode should be enabled"""
+    # Check for explicit lightweight flag
+    lightweight_flag = os.getenv("LIGHTWEIGHT_MODE", "").lower() == "true"
+    
+    # Check for .env.light file existence
+    env_light_exists = Path(BASE_DIR / ".env.light").exists()
+    
+    # Check for resource constraints (auto-detection)
+    try:
+        import psutil
+        # Check available memory (less than 4GB = lightweight)
+        available_memory_gb = psutil.virtual_memory().available / (1024**3)
+        memory_constrained = available_memory_gb < 4
+        
+        # Check available CPU (less than 4 cores = lightweight)
+        cpu_count = psutil.cpu_count()
+        cpu_constrained = cpu_count < 4
+        
+        auto_detect_lightweight = memory_constrained or cpu_constrained
+    except ImportError:
+        auto_detect_lightweight = False
+    
+    return lightweight_flag or env_light_exists or auto_detect_lightweight
+
+# Load appropriate environment file
+if detect_lightweight_mode():
+    print("🚀 Lightweight mode detected - loading .env.light")
+    load_dotenv(BASE_DIR / ".env.light")
+    # Set lightweight mode flag for other components
+    os.environ["LIGHTWEIGHT_MODE"] = "true"
+else:
+    load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
@@ -114,6 +148,32 @@ class Settings:
     backup_retention_days: int = int(os.getenv("BACKUP_RETENTION_DAYS", "14"))
     audit_log_file: str = os.getenv("AUDIT_LOG_FILE", "data/audit.log")
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    
+    # LLM Cache Configuration
+    enable_cache: bool = os.getenv("ENABLE_CACHE", "false").lower() == "true"
+    cache_ttl: int = int(os.getenv("CACHE_TTL", "3600"))
+    cache_max_size: int = int(os.getenv("CACHE_MAX_SIZE", "10000"))
+    cache_similarity_threshold: float = float(os.getenv("CACHE_SIMILARITY_THRESHOLD", "0.85"))
+    redis_cache_db: int = int(os.getenv("REDIS_CACHE_DB", "1"))
+    cache_async_enabled: bool = os.getenv("CACHE_ASYNC_ENABLED", "true").lower() == "true"
+    cache_background_cleanup: bool = os.getenv("CACHE_BACKGROUND_CLEANUP", "true").lower() == "true"
+    cache_compression_enabled: bool = os.getenv("CACHE_COMPRESSION_ENABLED", "true").lower() == "true"
+    
+    # Concurrency Optimization Settings
+    worker_concurrency: int = int(os.getenv("WORKER_CONCURRENCY", "3"))
+    api_concurrency: int = int(os.getenv("API_CONCURRENCY", "10"))
+    uvicorn_workers: int = int(os.getenv("UVICORN_WORKERS", "2"))
+    uvicorn_backlog: int = int(os.getenv("UVICORN_BACKLOG", "2048"))
+    queue_max_size: int = int(os.getenv("QUEUE_MAX_SIZE", "1000"))
+    batch_processing_size: int = int(os.getenv("BATCH_PROCESSING_SIZE", "10"))
+    max_connections_per_pool: int = int(os.getenv("MAX_CONNECTIONS_PER_POOL", "20"))
+    connection_timeout: int = int(os.getenv("CONNECTION_TIMEOUT", "30"))
+    read_timeout: int = int(os.getenv("READ_TIMEOUT", "60"))
+    write_timeout: int = int(os.getenv("WRITE_TIMEOUT", "60"))
+    enable_async_tasks: bool = os.getenv("ENABLE_ASYNC_TASKS", "true").lower() == "true"
+    async_workers: int = int(os.getenv("ASYNC_WORKERS", "4"))
+    task_queue_size: int = int(os.getenv("TASK_QUEUE_SIZE", "500"))
+    background_processing: bool = os.getenv("BACKGROUND_PROCESSING", "true").lower() == "true"
     rq_queue_name: str = os.getenv("RQ_QUEUE_NAME", "asmblr")
     rq_default_timeout: int = int(os.getenv("RQ_DEFAULT_TIMEOUT", "7200"))
     run_max_concurrent: int = int(os.getenv("RUN_MAX_CONCURRENT", "1"))
@@ -150,7 +210,6 @@ class Settings:
     social_metrics_window_days: int = int(os.getenv("SOCIAL_METRICS_WINDOW_DAYS", "7"))
     social_metrics_api_url: str = os.getenv("SOCIAL_METRICS_API_URL", "").strip()
     social_metrics_api_key: str = os.getenv("SOCIAL_METRICS_API_KEY", "").strip()
-    social_ads_ctr_threshold: float = float(os.getenv("SOCIAL_ADS_CTR_THRESHOLD", "0.02"))
     social_metrics_timeout_s: float = float(os.getenv("SOCIAL_METRICS_TIMEOUT_S", "5.0"))
     enable_local_video: bool = os.getenv("ENABLE_LOCAL_VIDEO", "true").lower() == "true"
     local_video_model_id: str = os.getenv(
@@ -203,6 +262,19 @@ class Settings:
     deploy_dry_run: bool = os.getenv("DEPLOY_DRY_RUN", "true").lower() == "true"
     deploy_timeout_s: int = int(os.getenv("DEPLOY_TIMEOUT_S", "600"))
 
+    # Lightweight mode detection
+    lightweight_mode: bool = os.getenv("LIGHTWEIGHT_MODE", "false").lower() == "true"
+    resource_optimization: bool = os.getenv("RESOURCE_OPTIMIZATION", "true").lower() == "true"
+    auto_tuning: bool = os.getenv("AUTO_TUNING", "true").lower() == "true"
+
+    def __post_init__(self):
+        """Apply lightweight optimizations after initialization"""
+        if self.lightweight_mode:
+            # Apply AI-driven optimizations
+            lightweight_config.apply_ai_optimizations({
+                "project_type": "auto",
+                "quality_priority": "balanced"
+            })
 
 def get_settings() -> Settings:
     """Get settings with validation."""

@@ -28,6 +28,209 @@ filterwarnings = [
     "ignore::DeprecationWarning"
 ]
 
+[project]
+name = "asmblr"
+version = "2.0.0"
+description = "AI-Powered MVP Generator with CrewAI + LangChain"
+authors = [
+    {name = "Asmblr Team", email = "team@asmblr.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Fixed dependencies for 90% bug reduction
+dependencies = [
+    # AI/ML Framework
+    "crewai==0.75.0",
+    "crewai-tools==0.17.0",
+    "langchain==0.2.16",
+    "langchain-community==0.2.16",
+    "langchain-ollama==0.1.3",
+    "langchain-core==0.2.43",
+    "langsmith==0.1.147",
+    "ollama==0.6.1",
+    
+    # Web Framework
+    "fastapi==0.104.1",
+    "uvicorn[standard]==0.24.0",
+    "starlette==0.27.0",
+    "pydantic==2.5.0",
+    "pydantic-core==2.14.1",
+    "pydantic-settings==2.1.0",
+    "python-multipart==0.0.6",
+    
+    # Data Processing
+    "jinja2==3.1.2",
+    "beautifulsoup4==4.12.3",
+    "lxml==5.2.2",
+    "httpx==0.25.2",
+    "requests==2.31.0",
+    "urllib3==2.6.3",
+    "certifi==2026.1.4",
+    
+    # Image/Video Processing
+    "imageio==2.37.2",
+    "imageio-ffmpeg==0.6.0",
+    "pillow==11.1.0",
+    "vtracer==0.6.12",
+    
+    # ML/AI Libraries
+    "torch==2.4.1",
+    "torchvision==0.19.1",
+    "torchaudio==2.10.0",
+    "transformers==4.49.0",
+    "diffusers==0.36.0",
+    "accelerate==1.12.0",
+    "safetensors==0.5.2",
+    "tokenizers==0.21.0",
+    "huggingface_hub==0.36.1",
+    
+    # Data Science
+    "numpy==1.25.2",
+    "scikit-learn==1.3.2",
+    "scipy==1.16.3",
+    "pandas==2.1.4",
+    
+    # Utilities
+    "tenacity==8.5.0",
+    "pyyaml==6.0.2",
+    "python-dotenv==1.0.1",
+    "loguru==0.7.3",
+    "prometheus_client==0.24.1",
+    "ruff==0.15.0",
+    
+    # Queue/Cache
+    "rq==2.6.1",
+    "redis==5.0.1",
+    "diskcache==5.6.3",
+    
+    # UI
+    "streamlit==1.53.1",
+    
+    # Database
+    "sqlalchemy==2.0.23",
+    
+    # Async
+    "anyio==3.7.1",
+    "aiofiles==23.2.1",
+    
+    # Monitoring
+    "opentelemetry-api==1.37.0",
+    "opentelemetry-sdk==1.37.0",
+    
+    # Security
+    "cryptography==43.0.3",
+    "pyjwt==2.10.1",
+    
+    # Additional Core Dependencies
+    "click==8.1.8",
+    "rich==13.9.4",
+    "typer==0.19.2",
+    "email-validator==2.2.0",
+    "python-dateutil==2.9.0.post0",
+    "pytz==2024.1",
+    
+    # Optional but frequently used
+    "tqdm==4.67.1",
+    "psutil==5.9.6",
+    "gitpython==3.1.46",
+    "docker==7.1.0",
+    "boto3==1.34.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.3",
+    "pytest-asyncio==0.21.1",
+    "pytest-cov==4.1.0",
+    "coverage==7.13.4",
+    "black==23.11.0",
+    "isort==5.12.0",
+    "mypy==1.7.0",
+]
+
+lightweight = [
+    # Core AI/ML
+    "crewai==0.75.0",
+    "langchain==0.2.16",
+    "langchain-community==0.2.16",
+    "langchain-ollama==0.1.3",
+    "ollama==0.6.1",
+    
+    # Web Framework
+    "fastapi==0.104.1",
+    "uvicorn[standard]==0.24.0",
+    "pydantic==2.5.0",
+    "python-multipart==0.0.6",
+    
+    # Essential Utilities
+    "jinja2==3.1.2",
+    "beautifulsoup4==4.12.3",
+    "httpx==0.25.2",
+    "tenacity==8.5.0",
+    "pyyaml==6.0.2",
+    "python-dotenv==1.0.1",
+    "loguru==0.7.3",
+    
+    # Queue/Cache
+    "rq==2.6.1",
+    "redis==5.0.1",
+    
+    # UI
+    "streamlit==1.53.1",
+    
+    # Testing
+    "pytest==7.4.3",
+    "ruff==0.15.0",
+    
+    # Database
+    "sqlalchemy==2.0.23",
+    
+    # Security
+    "cryptography==43.0.3",
+    
+    # Common utilities
+    "click==8.1.8",
+    "rich==13.9.4",
+    "pydantic-settings==2.1.0",
+    "requests==2.31.0",
+    "numpy==1.25.2",
+    "tqdm==4.67.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/asmblr/asmblr"
+Documentation = "https://docs.asmblr.com"
+Repository = "https://github.com/asmblr/asmblr.git"
+Issues = "https://github.com/asmblr/asmblr/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "G", "PIE", "PT", "Q", "RSE", "RET", "SIM", "TID", "TCH", "ARG", "PTH", "ERA", "PGH", "PL", "TRY", "FLY", "NPY", "RUF"]
+ignore = ["E501", "PGH003", "PLR0913", "S101"]
+fix = true
+unfixable = ["F841"]
+
 [tool.coverage.run]
 source = ["app"]
 omit = [

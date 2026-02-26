@@ -14,6 +14,7 @@ from app.core.constants import (
     LLM_RETRY_BASE_DELAY_S,
     LLM_RETRY_JITTER_MAX_S,
 )
+from app.core.config import get_settings
 try:
     from langchain_ollama import ChatOllama
     from langchain_core.messages import HumanMessage
@@ -35,6 +36,18 @@ class LLMClient:
             "prompt_chars": 0,
             "output_chars": 0,
         }
+        
+        # Initialize intelligent cache
+        settings = get_settings()
+        self._intelligent_cache = None
+        if settings.enable_cache:
+            try:
+                from app.core.llm_cache import LLMCacheManager
+                self._intelligent_cache = LLMCacheManager()
+                logger.info("LLM intelligent cache enabled", model=model)
+            except Exception as exc:
+                logger.warning("Failed to initialize LLM cache: {err}", err=exc)
+        
         if ChatOllama is not None:
             try:
                 self._client = ChatOllama(base_url=base_url, model=model, temperature=0.3)
@@ -48,25 +61,58 @@ class LLMClient:
     def generate(self, prompt: str) -> str:
         if not self._client:
             raise RuntimeError("LLM not available")
+        
+        # Try intelligent cache first
+        if self._intelligent_cache:
+            cached_response = self._intelligent_cache.get_sync(prompt, self.model)
+            if cached_response:
+                logger.debug("intelligent_cache_hit model={model}", model=self.model)
+                self._usage["cache_hits"] += 1
+                METRICS.record_cache_hit("llm_intelligent")
+                return cached_response
+        
+        # Fallback to local cache
         cache_key = self._cache_key("text", prompt)
         cached = self._cache_get(cache_key)
         if cached is not None:
-            logger.debug("llm_cache_hit model={model} flavor=text", model=self.model)
+            logger.debug("local_cache_hit model={model} flavor=text", model=self.model)
             self._usage["cache_hits"] += 1
+            METRICS.record_cache_hit("llm_local")
             return cached
+        
+        # Generate new response
         self._usage["prompt_chars"] += len(prompt or "")
         content = self._with_retry(lambda: self._client([HumanMessage(content=prompt)]).content)
         self._usage["requests"] += 1
         self._usage["output_chars"] += len(str(content or ""))
+        
+        # Store in both caches
         self._cache_set(cache_key, content)
+        if self._intelligent_cache:
+            self._intelligent_cache.set_sync(prompt, content, self.model)
+        
         return content
 
     def generate_json(self, prompt: str) -> dict[str, Any]:
+        # Try intelligent cache first
+        if self._intelligent_cache:
+            cached_response = self._intelligent_cache.get_sync(prompt, self.model)
+            if cached_response:
+                logger.debug("intelligent_cache_hit model={model} flavor=json", model=self.model)
+                self._usage["cache_hits"] += 1
+                METRICS.record_cache_hit("llm_intelligent_json")
+                return deepcopy(cached_response)
+        
+        # Fallback to local cache
         cache_key = self._cache_key("json", prompt)
         cached = self._cache_get(cache_key)
         if cached is not None:
-            logger.debug("llm_cache_hit model={model} flavor=json", model=self.model)
+            logger.debug("local_cache_hit model={model} flavor=json", model=self.model)
+            self._usage["cache_hits"] += 1
+            METRICS.record_cache_hit("llm_local_json")
             return deepcopy(cached)
+        
+        # Generate new response
         raw = self._with_retry(lambda: self.generate(prompt))
         try:
             # Try to extract JSON from markdown code blocks
@@ -81,7 +127,12 @@ class LLMClient:
                 end = raw.rfind('}') + 1
                 raw = raw[start:end]
             parsed = json.loads(raw)
+            
+            # Store in both caches
             self._cache_set(cache_key, parsed)
+            if self._intelligent_cache:
+                self._intelligent_cache.set_sync(prompt, parsed, self.model)
+            
             return deepcopy(parsed)
         except (json.JSONDecodeError, Exception) as exc:
             logger.warning(f"Failed to parse JSON from LLM: {exc}. Raw response: {raw[:200]}")

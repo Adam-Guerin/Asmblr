@@ -1,0 +1,230 @@
+name: Security Scan and Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Static Application Security Testing (SAST)
+  sast-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasec/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        env:
+          TRIVY_SEVERITY: 'HIGH,CRITICAL'
+          TRIVY_EXIT_CODE: '1'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Container Security Testing
+  container-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t asmblr:latest .
+
+      - name: Run Trivy on Docker image
+        uses: aquasec/trivy-action@master
+        with:
+          image-ref: 'asmblr:latest'
+          format: 'sarif'
+          output: 'trivy-container-results.sarif'
+        env:
+          TRIVY_SEVERITY: 'HIGH,CRITICAL'
+          TRIVY_EXIT_CODE: '1'
+
+      - name: Upload container scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-container-results.sarif'
+
+  # Dependency Security Testing
+  dependency-scan:
+    runs-on: ubuntu-litatest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety bandit semgrep
+
+      - name: Run Safety check
+        run: |
+          safety check --json --output safety-report.json || true
+          safety check --json --output safety-report.json
+
+      - name: Run Bandit security linter
+        run: |
+          bandit -r app -f json -o bandit-report.json || true
+          bandit -r app -f json -o bandit-report.json
+
+      - name: Run Semgrep security scan
+        run: |
+          semgrep --config=.semgrep.yml --json --output semgrep-report.json || true
+          semgrep --config=.semgrep.yml --json --output semgrep-report.json
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            safety-report.json
+            bandit-report.json
+            semgrep-report.json
+
+  # Infrastructure as Code Security Testing
+  iac-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov on Terraform files
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: './infrastructure'
+          framework: terraform
+          output: 'checkov-results.xml'
+          output_format: 'junitxml'
+          exit_code: '0'
+
+      - name: Run tfsec on Terraform files
+        run: |
+          docker run --rm -v "$(pwd):/app -w /app tfsec/tfsec . --out-format junit --output tfsec-results.xml || true
+
+      - name: Upload IaC reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: iac-reports
+          path: |
+            checkov-results.xml
+            tfsec-results.xml
+
+  # Secrets scanning
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          verbose: true
+          config: .gitleaks.toml
+          report-path: gitleaks-report.json
+          report-format: json
+
+      - name: Upload Gitleaks report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+
+  # OWASP ZAP Security Scan
+  zap-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/zap-baseline-scan-action@v0.10.0
+        with:
+          target: 'http://localhost:8443'
+          rules_file_name: '.zap/rules/zap-rules.tsv'
+          # Wait for service to be ready
+          start-up: '60'
+          timeout: '300'
+        continue-on-error: true
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: report.html
+
+  # Security Scorecard
+  security-scorecard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run OSSF Scorecard
+        uses: ossf/scorecard-action@v2.3.1
+        with:
+          results-file: results.json
+          results-format: json
+          output-file: ossf-scorecard-results.json
+
+      - name: Upload Scorecard results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ossf-scorecard
+
+  # Security Policy Check
+  policy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run custom security policy checks
+        run: |
+          python scripts/security_policy_check.py
+
+      - name: Upload policy report
+        uses: actions/upload-artifact@4
+        with:
+          name: security-policy-report
+          path: security-policy-report.json
+
+  # Security Dashboard
+  security-dashboard:
+    runs-on: ubuntu-latest
+    needs: [sast-scan, container-scan, dependency-scan, secrets-scan]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate Security Dashboard
+        run: |
+          python scripts/generate_security_dashboard.py
+
+      - name: Upload Security Dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-dashboard
+          path: security-dashboard.html

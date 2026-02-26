@@ -30,15 +30,26 @@ services:
     mem_limit: 2g
     cpus: "2.0"
     environment:
-      - MODE=lightweight
+      - LIGHTWEIGHT_MODE=true
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_BASE_URL=http://ollama:11434
-      - DATABASE_URL=sqlite:///data/asmblr.db
-      - LOG_LEVEL=INFO
-      - MAX_WORKERS=2
-      - CACHE_SIZE=100
+      - RUN_MAX_CONCURRENT=2
+      - WORKER_CONCURRENCY=2
+      - API_CONCURRENCY=5
+      - ENABLE_CACHE=true
+      - FAST_MODE=true
+      - DEFAULT_N_IDEAS=5
+      - MAX_SOURCES=5
+      - REQUEST_TIMEOUT=15
+      - RETRY_MAX_ATTEMPTS=2
       - ENABLE_MONITORING=false
-      - ENABLE_MEDIA_GENERATION=false
+      - ENABLE_LOGO_DIFFUSION=false
+      - ENABLE_VIDEO_GENERATION=false
+      - ENABLE_SOCIAL_MEDIA=false
+      - ENABLE_PUBLISHING=false
+      - ENABLE_HOSTING=false
+      - RESOURCE_OPTIMIZATION=true
+      - AUTO_TUNING=true
     ports:
       - "127.0.0.1:8000:8000"
     volumes:

@@ -1,0 +1,202 @@
+version: "3.9"
+services:
+  ollama:
+    image: ollama/ollama:latest
+    mem_limit: 4g
+    cpus: "2.0"
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=http://localhost:11434,http://api:8000,http://ui:8501
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    mem_limit: 512m
+    cpus: "0.5"
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes --maxmemory 400mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api:
+    build: .
+    mem_limit: 4g
+    cpus: "2.0"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - API_HOST=0.0.0.0
+      - API_PORT=8443
+      - HTTPS_ENABLED=true
+      - SSL_CERT_PATH=/certs/cert.pem
+      - SSL_KEY_PATH=/certs/key.pem
+      - SSL_CA_PATH=/certs/ca.pem
+      - SECURITY_ENABLED=true
+      - RATE_LIMIT_ENABLED=true
+      - AUTH_ENABLED=true
+      - SESSION_TIMEOUT=3600
+      - CORS_ORIGINS=https://localhost:8443,https://asmblr.com
+      - TRUSTED_HOSTS=localhost,127.0.0.1,asmblr.com
+      - SECURE_COOKIES=true
+      - HSTS_ENABLED=true
+      - CSP_ENABLED=true
+    ports:
+      - "127.0.0.1:8443:8443"
+    volumes:
+      - ./runs:/app/runs
+      - ./data:/app/data
+      - ./certs:/certs:ro
+      - ./secrets:/secrets:ro
+    depends_on:
+      ollama:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8443", "--ssl-keyfile", "/certs/key.pem", "--ssl-certfile", "/certs/cert.pem", "--workers", "2", "--access-log", "-", "--log-level", "info"]
+    healthcheck:
+      test: ["CMD", "curl", "-fks", "https://localhost:8443/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ui:
+    build: .
+    mem_limit: 1g
+    cpus: "0.5"
+    environment:
+      - OLLAMA_BASE_URL=https://api:8443
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - API_BASE_URL=https://api:8443
+      - UI_PORT=8444
+      - HTTPS_ENABLED=true
+      - SSL_VERIFY=true
+      - SECURITY_ENABLED=true
+      - AUTH_ENABLED=true
+    ports:
+      - "127.0.0.1:8444:8444"
+    volumes:
+      - ./runs:/app/runs
+      - ./data:/app/data
+      - ./certs:/certs:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    command: ["streamlit", "run", "app/ui.py", "--server.port", "8444", "--server.address", "0.0.0.0", "--server.sslCertFile", "/certs/cert.pem", "--server.sslKeyFile", "/certs/key.pem", "--server.headless", "true"]
+    healthcheck:
+      test: ["CMD", "curl", "-fks", "https://localhost:8444"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    build: .
+    mem_limit: 6g
+    cpus: "3.0"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - WORKER_PORT=8001
+      - SECURITY_ENABLED=true
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - AUDIT_LOG_ENABLED=true
+      - SECURE_COMMUNICATIONS=true
+    volumes:
+      - ./runs:/app/runs
+      - ./data:/app/data
+      - ./secrets:/secrets:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Reverse proxy for HTTPS termination
+  nginx:
+    image: nginx:alpine
+    mem_limit: 256m
+    cpus: "0.25"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/certs:ro
+    depends_on:
+      - api
+      - ui
+    restart: unless-stopped
+    command: ["nginx", "-g", "daemon off;"]
+
+  # Security monitoring
+  fail2ban:
+    image: fail2ban/fail2ban:latest
+    mem_limit: 256m
+    cpus: "0.25"
+    volumes:
+      - ./fail2ban/jail.local:/etc/fail2ban/jail.local:ro
+      - ./fail2ban/fail2ban.conf:/etc/fail2ban/fail2ban.conf:ro
+      - /var/log:/var/log:ro
+    depends_on:
+      - nginx
+    restart: unless-stopped
+    command: ["fail2ban-server", "-c", "/etc/fail2ban/fail2ban.conf", "-c", "/etc/fail2ban/jail.local"]
+
+  # Security scanning
+  trivy:
+    image: aquasec/trivy:latest
+    mem_limit: 512m
+    cpus: "0.5"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./reports:/reports
+    command: ["trivy", "image", "--exit-code", "0", "--severity", "HIGH,CRITICAL", "--format", "json", "--output", "/reports/trivy-report.json", "."]
+    depends_on:
+      - api
+      - ui
+      - worker
+    restart: "no"
+
+volumes:
+  ollama_models:
+    driver: local
+  redis_data:
+    driver: local
+  certs:
+    driver: local
+  secrets:
+    driver: local
+  reports:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
+    internal: false
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+        - gateway: 172.20.0.1
