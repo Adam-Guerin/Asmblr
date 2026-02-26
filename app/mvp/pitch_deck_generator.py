@@ -10,7 +10,7 @@ import base64
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Literal
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from loguru import logger
@@ -523,7 +523,7 @@ class PitchDeckGenerator:
         topic: str,
         idea: Dict[str, Any],
         brand_payload: Dict[str, Any],
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> PitchDeckSlide:
         """Crée la slide solution"""
         
@@ -554,7 +554,7 @@ class PitchDeckGenerator:
         topic: str,
         market_report: str,
         validated_pains: List[Dict[str, Any]],
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> PitchDeckSlide:
         """Crée la slide marché"""
         
@@ -652,7 +652,7 @@ class PitchDeckGenerator:
         self,
         topic: str,
         idea: Dict[str, Any],
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> PitchDeckSlide:
         """Crée la slide business model"""
         
@@ -685,7 +685,7 @@ class PitchDeckGenerator:
         self,
         topic: str,
         competitors: List[Dict[str, Any]],
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> PitchDeckSlide:
         """Crée la slide compétition"""
         
@@ -715,7 +715,7 @@ class PitchDeckGenerator:
         self,
         topic: str,
         idea: Dict[str, Any],
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> PitchDeckSlide:
         """Crée la slide go-to-market"""
         
@@ -738,7 +738,7 @@ class PitchDeckGenerator:
         topic: str,
         validated_pains: List[Dict[str, Any]],
         competitors: List[Dict[str, Any]],
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> PitchDeckSlide:
         """Crée la slide traction"""
         
@@ -772,7 +772,7 @@ class PitchDeckGenerator:
     async def _create_financial_slide(
         self,
         topic: str,
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> PitchDeckSlide:
         """Crée la slide projections financières"""
         
@@ -819,7 +819,7 @@ class PitchDeckGenerator:
     async def _create_ask_slide(
         self,
         topic: str,
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> PitchDeckSlide:
         """Crée la slide ask"""
         
@@ -858,7 +858,7 @@ class PitchDeckGenerator:
         self,
         validated_pains: List[Dict[str, Any]],
         competitors: List[Dict[str, Any]],
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> List[str]:
         """Génère les métriques clés"""
         
@@ -875,7 +875,7 @@ class PitchDeckGenerator:
     
     async def _generate_ask(
         self,
-        success_report: Optional[StartupSuccessReport],
+        success_report: Optional[Any],
         topic: str
     ) -> Dict[str, Any]:
         """Génère l'ask"""
@@ -905,7 +905,7 @@ class PitchDeckGenerator:
     
     async def _generate_closing(
         self,
-        success_report: Optional[StartupSuccessReport]
+        success_report: Optional[Any]
     ) -> str:
         """Génère le closing"""
         

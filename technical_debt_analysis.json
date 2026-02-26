@@ -1,0 +1,92 @@
+{
+  "summary": {
+    "total_files": 301,
+    "total_debt_items": 9,
+    "avg_complexity": 44.50498338870432,
+    "avg_maintainability": 92.3680398671096,
+    "files_with_debt": 4
+  },
+  "debt_by_type": {
+    "TODO": 6,
+    "FIXME": 1,
+    "BUG": 1,
+    "HACK": 1
+  },
+  "debt_by_severity": {
+    "high": 6,
+    "medium": 3
+  },
+  "priority_files": [
+    {
+      "path": "tests\\test_code_quality.py",
+      "debt_score": 21,
+      "debt_count": 6,
+      "complexity": 68.0,
+      "maintainability": 76.82000000000001
+    },
+    {
+      "path": "analyze_technical_debt.py",
+      "debt_score": 5,
+      "debt_count": 1,
+      "complexity": 49.0,
+      "maintainability": 89.61999999999999
+    },
+    {
+      "path": "app\\core\\technical_debt.py",
+      "debt_score": 5,
+      "debt_count": 1,
+      "complexity": 82.0,
+      "maintainability": 86.34
+    },
+    {
+      "path": "trash\\simple_analysis.py",
+      "debt_score": 5,
+      "debt_count": 1,
+      "complexity": 28.0,
+      "maintainability": 93.74000000000001
+    },
+    {
+      "path": "asmblr_lightweight.py",
+      "debt_score": 0,
+      "debt_count": 0,
+      "complexity": 73.0,
+      "maintainability": 85.94
+    },
+    {
+      "path": "auto_optimizer.py",
+      "debt_score": 0,
+      "debt_count": 0,
+      "complexity": 87.0,
+      "maintainability": 85.95
+    },
+    {
+      "path": "deploy_microservices_fixed.py",
+      "debt_score": 0,
+      "debt_count": 0,
+      "complexity": 63.0,
+      "maintainability": 89.5
+    },
+    {
+      "path": "performance_tests.py",
+      "debt_score": 0,
+      "debt_count": 0,
+      "complexity": 68.0,
+      "maintainability": 87.96000000000001
+    },
+    {
+      "path": "run_tests.py",
+      "debt_score": 0,
+      "debt_count": 0,
+      "complexity": 20.0,
+      "maintainability": 96.26
+    },
+    {
+      "path": "security_hardening.py",
+      "debt_score": 0,
+      "debt_count": 0,
+      "complexity": 77.0,
+      "maintainability": 86.28
+    }
+  ],
+  "critical_items": []
+}

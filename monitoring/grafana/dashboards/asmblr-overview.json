@@ -1,0 +1,220 @@
+"""
+Dashboard Grafana pour les métriques d'Asmblr - Vue d'ensemble
+"""
+
+{
+  "dashboard": {
+    "id": null,
+    "title": "Asmblr - Vue d'Ensemble",
+    "tags": ["asmblr", "overview"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Statut du Système",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=~\"asmblr.*\"}",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Requêtes par Minute",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(asmblr_requests_total[5m]) * 60",
+            "legendFormat": "{{method}} {{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"label": "Requêtes/min"}]
+      },
+      {
+        "id": 3,
+        "title": "Pipelines Actives",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(increase(asmblr_pipeline_runs_total[1h]))",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Taux d'Erreur",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(asmblr_requests_total{status=~\"5..\"}[5m]) / rate(asmblr_requests_total[5m]) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "yellow", "value": 5}, {"color": "red", "value": 10}]}
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Utilisateurs Actifs",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "asmblr_active_users{period=\"daily\"}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Temps de Réponse Moyen",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(asmblr_request_duration_seconds_bucket[5m]))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {"unit": "s"}
+        }
+      },
+      {
+        "id": 7,
+        "title": "Performance des Pipelines",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(asmblr_pipeline_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile - {{type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(asmblr_pipeline_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile - {{type}}",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(asmblr_pipeline_duration_seconds_bucket[5m]))",
+            "legendFormat": "99th percentile - {{type}}",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [{"label": "Durée (secondes)"}]
+      },
+      {
+        "id": 8,
+        "title": "Métriques LLM",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(asmblr_llm_requests_total[5m]) * 60",
+            "legendFormat": "Requêtes/min - {{model}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(asmblr_llm_tokens_total[5m]) * 60",
+            "legendFormat": "Tokens/min - {{model}}",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [{"label": "Par minute"}]
+      },
+      {
+        "id": 9,
+        "title": "Performance des Requêtes LLM",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(asmblr_llm_response_time_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile - {{model}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"label": "Temps de réponse (secondes)"}]
+      },
+      {
+        "id": 10,
+        "title": "Performance du Cache",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "asmblr_cache_hit_ratio",
+            "legendFormat": "Hit Ratio - {{cache_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"label": "Ratio", "max": 1, "min": 0}]
+      },
+      {
+        "id": 11,
+        "title": "Taille du Cache",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "asmblr_cache_size_bytes",
+            "legendFormat": "Taille - {{cache_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"label": "Taille (bytes)"}]
+      },
+      {
+        "id": 12,
+        "title": "Utilisation CPU",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36},
+        "targets": [
+          {
+            "expr": "asmblr_cpu_usage_percent",
+            "legendFormat": "CPU - {{core}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"label": "Pourcentage", "max": 100, "min": 0}]
+      },
+      {
+        "id": 13,
+        "title": "Utilisation Mémoire",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 36},
+        "targets": [
+          {
+            "expr": "asmblr_memory_usage_bytes",
+            "legendFormat": "Mémoire - {{type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"label": "Mémoire (bytes)"}]
+      }
+    ],
+    "time": {"from": "now-1h", "to": "now"},
+    "refresh": "30s"
+  }
+}

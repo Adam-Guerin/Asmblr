@@ -1,0 +1,24 @@
+{
+  "timestamp": 1772130872.0026388,
+  "status": "success",
+  "demo_summary": {
+    "metrics_registered": 25,
+    "alerts_created": 1,
+    "health_checks": 8,
+    "services_running": 4
+  },
+  "components": {
+    "prometheus": "Running",
+    "alertmanager": "Running",
+    "structured_logger": "Running",
+    "distributed_tracing": "Running",
+    "health_checks": "Running"
+  },
+  "metrics_sample": {
+    "asmblr_pipeline_runs_total": 5,
+    "asmblr_ideas_generated_total": 15,
+    "asmblr_mvp_builds_total": 3,
+    "asmblr_requests_total": 50,
+    "asmblr_alerts_total": 1
+  }
+}

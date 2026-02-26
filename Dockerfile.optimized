@@ -1,0 +1,157 @@
+# Optimized Dockerfile for Asmblr
+# Multi-stage build with smaller final image and better caching
+
+# Base stage with common dependencies
+# Use specific version for security
+FROM python:3.11.9-slim as base
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies with security updates
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
+
+# Create app user
+RUN useradd --create-home --shell /bin/bash asmblr
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.core.txt requirements.txt
+COPY requirements.ml.txt requirements-ml.txt
+COPY requirements-dev.txt requirements-dev.txt
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install -r requirements.core.txt && \
+    # Only install ML dependencies if needed (environment variable)
+    if [ "$ENABLE_ML" = "true" ]; then pip install -r requirements-ml.txt; fi
+
+# Development stage
+FROM base as development
+
+# Install development dependencies
+RUN pip install -r requirements-dev.txt
+
+# Copy source code
+COPY . .
+
+# Set permissions
+RUN chown -R asmblr:asmblr /app
+USER asmblr
+
+# Expose ports
+EXPOSE 8000 8501
+
+# Default command for development
+CMD ["python", "-m", "app.main"]
+
+# Production stage
+FROM base as production
+
+# Install production-specific dependencies
+RUN pip install gunicorn
+
+# Copy source code
+COPY --chown=asmblr:asmblr . .
+
+# Create necessary directories
+RUN mkdir -p /app/data /app/runs /app/logs && \
+    chown -R asmblr:asmblr /app
+
+# Switch to non-root user
+USER asmblr
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose ports
+EXPOSE 8000
+
+# Use gunicorn for production
+CMD ["gunicorn", "app.main:app", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120"]
+
+# Lightweight stage (minimal dependencies)
+FROM python:3.11-slim as lightweight
+
+# Install minimal system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Create app user
+RUN useradd --create-home --shell /bin/bash asmblr
+
+# Set working directory
+WORKDIR /app
+
+# Copy only core requirements
+COPY requirements.core.txt requirements.txt
+
+# Install only core dependencies
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Copy source code
+COPY --chown=asmblr:asmblr . .
+
+# Create necessary directories
+RUN mkdir -p /app/data /app/runs && \
+    chown -R asmblr:asmblr /app
+
+# Switch to non-root user
+USER asmblr
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose ports
+EXPOSE 8000
+
+# Use gunicorn for lightweight production
+CMD ["gunicorn", "app.main:app", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "60"]
+
+# ML-enabled stage
+FROM base as ml-enabled
+
+# Install ML dependencies
+RUN pip install -r requirements.ml.txt
+
+# Copy source code
+COPY --chown=asmblr:asmblr . .
+
+# Create necessary directories
+RUN mkdir -p /app/data /app/runs /app/logs && \
+    chown -R asmblr:asmblr /app
+
+# Switch to non-root user
+USER asmblr
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose ports
+EXPOSE 8000
+
+# Use gunicorn for ML-enabled production
+CMD ["gunicorn", "app.main:app", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "300"]

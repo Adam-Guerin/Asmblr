@@ -1,0 +1,71 @@
+"""
+Configuration Elasticsearch pour Asmblr
+"""
+
+cluster.name: "asmblr-cluster"
+node.name: "asmblr-elasticsearch"
+
+# Configuration du cluster
+discovery.type: "single-node"
+
+# Configuration mémoire
+bootstrap.memory_lock: true
+
+# Configuration réseau
+network.host: 0.0.0.0
+http.port: 9200
+
+# Configuration sécurité (désactivée pour développement)
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+
+# Configuration monitoring
+xpack.monitoring.collection.enabled: true
+
+# Configuration des index
+index.number_of_shards: 1
+index.number_of_replicas: 0
+
+# Configuration du mapping par défaut
+index.mapping.total_fields.limit: 2000
+
+# Configuration des templates pour les logs Asmblr
+index_patterns:
+  - pattern: "asmblr-logs-*"
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 0
+      index.refresh_interval: "5s"
+    mappings:
+      properties:
+        "@timestamp":
+          type: date
+        level:
+          type: keyword
+        message:
+          type: text
+          analyzer: standard
+        service:
+          type: keyword
+        component:
+          type: keyword
+        trace_id:
+          type: keyword
+        span_id:
+          type: keyword
+        user_id:
+          type: keyword
+        request_id:
+          type: keyword
+        error:
+          properties:
+            type:
+              type: keyword
+            message:
+              type: text
+            stack_trace:
+              type: text
+        labels:
+          type: object
+        metrics:
+          type: object

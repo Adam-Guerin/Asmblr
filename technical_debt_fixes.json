@@ -1,0 +1,237 @@
+{
+  "summary": {
+    "total_fixes_applied": 19,
+    "complex_files_analyzed": 7,
+    "estimated_total_effort": 66,
+    "generated_at": "2026-02-26T17:50:42.595599"
+  },
+  "todo_fixes": {
+    "pipeline_fixes": [],
+    "cache_fixes": [
+      {
+        "type": "validation",
+        "description": "Cache logging déjà optimisé avec smart logger",
+        "status": "already_fixed"
+      }
+    ],
+    "logging_fixes": [
+      {
+        "type": "logging_analysis",
+        "file": "analyze_technical_debt.py",
+        "debug_logs": 0,
+        "print_logs": 29,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "deploy_microservices_fixed.py",
+        "debug_logs": 0,
+        "print_logs": 22,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "fix_technical_debt.py",
+        "debug_logs": 4,
+        "print_logs": 27,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "performance_tests.py",
+        "debug_logs": 0,
+        "print_logs": 53,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "run_tests.py",
+        "debug_logs": 0,
+        "print_logs": 11,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "setup.py",
+        "debug_logs": 0,
+        "print_logs": 53,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "setup_public.py",
+        "debug_logs": 0,
+        "print_logs": 66,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "test_microservices_integration.py",
+        "debug_logs": 0,
+        "print_logs": 32,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "test_phase1_improvements.py",
+        "debug_logs": 0,
+        "print_logs": 24,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "test_pitch_deck.py",
+        "debug_logs": 0,
+        "print_logs": 47,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "test_pitch_deck_final.py",
+        "debug_logs": 0,
+        "print_logs": 48,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "test_pitch_deck_manual.py",
+        "debug_logs": 0,
+        "print_logs": 38,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "test_pitch_deck_no_timeout.py",
+        "debug_logs": 0,
+        "print_logs": 65,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "test_pitch_deck_simple.py",
+        "debug_logs": 0,
+        "print_logs": 30,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "app\\core\\demo_mode.py",
+        "debug_logs": 0,
+        "print_logs": 22,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "scripts\\demo_collection_actions_rule.py",
+        "debug_logs": 0,
+        "print_logs": 34,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "tests\\enhanced_test_suite.py",
+        "debug_logs": 0,
+        "print_logs": 7,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      },
+      {
+        "type": "logging_analysis",
+        "file": "tests\\test_code_quality.py",
+        "debug_logs": 1,
+        "print_logs": 8,
+        "recommendation": "Considérer utiliser smart_logger ou réduire les logs"
+      }
+    ]
+  },
+  "complexity_optimizations": [
+    {
+      "file": "tests\\test_code_quality.py",
+      "complexity": 68.0,
+      "maintainability": 76.82000000000001,
+      "suggestions": [
+        "Extraire des sous-fonctions de insecure_function",
+        "Extraire des sous-fonctions de test_function",
+        "Éliminer la répétition ligne 13"
+      ],
+      "estimated_effort": 6
+    },
+    {
+      "file": "app\\core\\technical_debt.py",
+      "complexity": 82.0,
+      "maintainability": 86.34,
+      "suggestions": [
+        "Extraire des sous-fonctions de __init__",
+        "Réduire l'imbrication des conditions",
+        "Éliminer la répétition ligne 14"
+      ],
+      "estimated_effort": 6
+    },
+    {
+      "file": "asmblr_lightweight.py",
+      "complexity": 73.0,
+      "maintainability": 85.94,
+      "suggestions": [
+        "Extraire des sous-fonctions de __init__",
+        "Réduire l'imbrication des conditions",
+        "Éliminer la répétition ligne 52"
+      ],
+      "estimated_effort": 6
+    },
+    {
+      "file": "auto_optimizer.py",
+      "complexity": 87.0,
+      "maintainability": 85.95,
+      "suggestions": [
+        "Extraire des sous-fonctions de __init__",
+        "Réduire l'imbrication des conditions",
+        "Éliminer la répétition ligne 30"
+      ],
+      "estimated_effort": 6
+    },
+    {
+      "file": "deploy_microservices_fixed.py",
+      "complexity": 63.0,
+      "maintainability": 89.5,
+      "suggestions": [
+        "Extraire des sous-fonctions de __init__",
+        "Réduire l'imbrication des conditions",
+        "Éliminer la répétition ligne 64"
+      ],
+      "estimated_effort": 6
+    },
+    {
+      "file": "performance_tests.py",
+      "complexity": 68.0,
+      "maintainability": 87.96000000000001,
+      "suggestions": [
+        "Extraire des sous-fonctions de __init__",
+        "Réduire l'imbrication des conditions",
+        "Éliminer la répétition ligne 89"
+      ],
+      "estimated_effort": 6
+    },
+    {
+      "file": "security_hardening.py",
+      "complexity": 77.0,
+      "maintainability": 86.28,
+      "suggestions": [
+        "Extraire des sous-fonctions de __init__",
+        "Réduire l'imbrication des conditions",
+        "Éliminer la répétition ligne 47"
+      ],
+      "estimated_effort": 6
+    }
+  ],
+  "next_steps": [
+    "Revoir et tester les corrections appliquées",
+    "Implémenter les suggestions d'optimisation",
+    "Ajouter des tests unitaires pour les zones corrigées",
+    "Mettre en place le monitoring de la qualité",
+    "Documenter les patterns de correction"
+  ],
+  "quality_improvements": {
+    "estimated_debt_reduction": 95,
+    "estimated_complexity_reduction": 70,
+    "estimated_maintainability_increase": 35
+  }
+}

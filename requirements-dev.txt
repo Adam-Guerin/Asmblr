@@ -1,0 +1,75 @@
+# Asmblr Development Dependencies
+# Testing, linting, and development tools
+
+# =============================================================================
+# TESTING FRAMEWORK
+# =============================================================================
+
+# Core testing framework
+pytest>=8.1.1
+pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.10.0
+pytest-html>=4.1.0
+pytest-xdist>=3.0.0
+pytest-timeout>=2.1.0
+
+# Performance testing
+pytest-benchmark>=4.0.0
+
+# =============================================================================
+# CODE QUALITY
+# =============================================================================
+
+# Linting and formatting (ruff is already in core)
+# Additional tools for comprehensive checking
+black>=23.0.0
+isort>=5.12.0
+mypy>=1.5.0
+
+# Security scanning
+bandit>=1.7.5
+safety>=2.3.0
+
+# =============================================================================
+# DEVELOPMENT UTILITIES
+# =============================================================================
+
+# Pre-commit hooks
+pre-commit>=3.4.0
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.4.0
+
+# Jupyter for development
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
+# =============================================================================
+# MONITORING DEBUGGING
+# =============================================================================
+
+# Debugging
+ipython>=8.15.0
+pdb++>=0.10.3
+
+# Performance profiling
+py-spy>=0.3.14
+memory-profiler>=0.61.0
+
+# =============================================================================
+# INSTALLATION INSTRUCTIONS
+# =============================================================================
+
+# For development setup:
+#   pip install -r requirements.core.txt
+#   pip install -r requirements-dev.txt
+#
+# For full development with ML features:
+#   pip install -r requirements.core.txt
+#   pip install -r requirements.ml.txt
+#   pip install -r requirements-dev.txt
+#
+# Setup pre-commit hooks:
+#   pre-commit install

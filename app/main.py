@@ -358,23 +358,186 @@ def healthz():
     return {"status": "ok"}
 
 
+@app.get("/health")
+async def health():
+    """Basic health check endpoint"""
+    return {"status": "healthy", "timestamp": time.time()}
+
+
+@app.get("/health/detailed")
+async def health_detailed():
+    """Comprehensive health check with all system components"""
+    import asyncio
+    from app.core.config import get_settings
+    from pathlib import Path
+    
+    settings = get_settings()
+    health_status = {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "version": "1.0.0",
+        "checks": {}
+    }
+    
+    # Check database connectivity
+    try:
+        # Test database connection
+        db_path = Path(settings.data_dir) / "app.db"
+        if db_path.exists():
+            health_status["checks"]["database"] = {
+                "status": "healthy",
+                "path": str(db_path),
+                "size_mb": round(db_path.stat().st_size / (1024*1024), 2)
+            }
+        else:
+            health_status["checks"]["database"] = {
+                "status": "warning",
+                "message": "Database file not found"
+            }
+    except Exception as e:
+        health_status["checks"]["database"] = {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+    
+    # Check Redis connectivity
+    try:
+        import redis
+        redis_client = redis.from_url(settings.redis_url)
+        redis_client.ping()
+        health_status["checks"]["redis"] = {
+            "status": "healthy",
+            "url": settings.redis_url
+        }
+    except Exception as e:
+        health_status["checks"]["redis"] = {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+    
+    # Check Ollama connectivity
+    try:
+        ollama_status = await check_ollama(settings.ollama_base_url)
+        health_status["checks"]["ollama"] = {
+            "status": "healthy" if ollama_status else "unhealthy",
+            "url": settings.ollama_base_url,
+            "models_available": ollama_status
+        }
+    except Exception as e:
+        health_status["checks"]["ollama"] = {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+    
+    # Check disk space
+    try:
+        import shutil
+        total, used, free = shutil.disk_usage(settings.runs_dir)
+        free_percent = (free / total) * 100
+        health_status["checks"]["disk_space"] = {
+            "status": "healthy" if free_percent > 10 else "warning" if free_percent > 5 else "unhealthy",
+            "free_gb": round(free / (1024**3), 2),
+            "free_percent": round(free_percent, 2)
+        }
+    except Exception as e:
+        health_status["checks"]["disk_space"] = {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+    
+    # Check runs directory
+    try:
+        runs_path = Path(settings.runs_dir)
+        if runs_path.exists():
+            run_count = len([d for d in runs_path.iterdir() if d.is_dir()])
+            health_status["checks"]["runs_directory"] = {
+                "status": "healthy",
+                "path": str(runs_path),
+                "run_count": run_count
+            }
+        else:
+            health_status["checks"]["runs_directory"] = {
+                "status": "warning",
+                "message": "Runs directory not found"
+            }
+    except Exception as e:
+        health_status["checks"]["runs_directory"] = {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+    
+    # Check pipeline status
+    try:
+        health_status["checks"]["pipeline"] = {
+            "status": "healthy",
+            "max_concurrent_runs": settings.run_max_concurrent,
+            "rate_limit_per_min": settings.run_rate_limit_per_min
+        }
+    except Exception as e:
+        health_status["checks"]["pipeline"] = {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+    
+    # Determine overall status
+    unhealthy_checks = [k for k, v in health_status["checks"].items() if v.get("status") == "unhealthy"]
+    warning_checks = [k for k, v in health_status["checks"].items() if v.get("status") == "warning"]
+    
+    if unhealthy_checks:
+        health_status["status"] = "unhealthy"
+        health_status["summary"] = f"Unhealthy checks: {', '.join(unhealthy_checks)}"
+    elif warning_checks:
+        health_status["status"] = "warning"
+        health_status["summary"] = f"Warning checks: {', '.join(warning_checks)}"
+    else:
+        health_status["summary"] = "All checks passed"
+    
+    return health_status
+
+
 @app.get("/readyz")
-def readyz():
-    if settings.prod_mode and settings.require_prod_checklist:
-        prod_checks = validate_prod_mode(settings)
-        if not prod_checks.get("ok"):
-            failing = next((item for item in prod_checks.get("checks", []) if not item.get("ok")), None)
-            detail = failing.get("detail") if failing else "Production checklist failed"
-            raise HTTPException(status_code=503, detail=f"Prod checklist failed: {detail}")
-    errors = []
-    for general_model, code_model in pipeline._model_candidates():
-        try:
-            check_ollama(settings.ollama_base_url, [general_model, code_model])
-            return {"status": "ready", "general_model": general_model, "code_model": code_model}
-        except Exception as exc:
-            errors.append(str(exc))
-    reason = errors[-1] if errors else "No model pair available"
-    raise HTTPException(status_code=503, detail=f"Ollama not ready: {reason}")
+async def readyz():
+    """Readiness check - indicates if the service is ready to handle traffic"""
+    try:
+        # Check critical dependencies
+        settings = get_settings()
+        
+        # Check database
+        db_path = Path(settings.data_dir) / "app.db"
+        if not db_path.exists():
+            raise Exception("Database not found")
+        
+        # Check Ollama models
+        errors = []
+        for general_model, code_model in pipeline._model_candidates():
+            try:
+                ollama_status = await check_ollama(settings.ollama_base_url, [general_model, code_model])
+                if ollama_status:
+                    return {
+                        "status": "ready", 
+                        "timestamp": time.time(),
+                        "general_model": general_model, 
+                        "code_model": code_model
+                    }
+            except Exception as exc:
+                errors.append(str(exc))
+        
+        # Production mode checks
+        if settings.prod_mode and settings.require_prod_checklist:
+            prod_checks = validate_prod_mode(settings)
+            if not prod_checks.get("ok"):
+                failing = next((item for item in prod_checks.get("checks", []) if not item.get("ok")), None)
+                detail = failing.get("detail") if failing else "Production checklist failed"
+                raise HTTPException(status_code=503, detail=f"Prod checklist failed: {detail}")
+        
+        raise Exception(f"Ollama models not ready: {'; '.join(errors)}")
+        
+    except Exception as e:
+        return {
+            "status": "not_ready", 
+            "timestamp": time.time(),
+            "error": str(e)
+        }
 
 
 class CustomMVPRequest(BaseModel):

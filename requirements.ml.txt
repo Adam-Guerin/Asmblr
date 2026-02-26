@@ -1,0 +1,57 @@
+# Asmblr ML/Optional Dependencies
+# Machine learning and media generation features
+# Install these only if you need advanced ML capabilities
+
+# =============================================================================
+# MACHINE LEARNING FRAMEWORKS
+# =============================================================================
+
+# PyTorch ecosystem (CPU-only by default)
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Transformers and LLM utilities
+transformers>=4.44.0
+accelerate>=0.33.0
+safetensors>=0.4.3
+
+# =============================================================================
+# IMAGE GENERATION
+# =============================================================================
+
+# Diffusion models for image generation
+diffusers>=0.30.0
+
+# Image processing
+pillow>=10.3.0
+
+# Vector tracing for logo generation
+vtracer>=0.6.3
+
+# =============================================================================
+# VIDEO GENERATION (Optional)
+# =============================================================================
+
+# Video processing (install separately if needed)
+# imageio[ffmpeg]>=0.35.0
+# imageio-ffmpeg>=0.5.1
+
+# =============================================================================
+# INSTALLATION NOTES
+# =============================================================================
+
+# These packages add ~8GB to your installation
+# Only install if you need:
+#   - Local image generation
+#   - Advanced ML features
+#   - Video processing
+#
+# To install:
+#   pip install -r requirements.ml.txt
+#
+# For GPU support, install PyTorch with CUDA:
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+#
+# For AMD ROCm support:
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.7

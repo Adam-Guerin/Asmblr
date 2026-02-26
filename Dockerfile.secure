@@ -1,0 +1,72 @@
+# Secure Dockerfile for Asmblr Production
+# Uses Alpine Linux for minimal attack surface and better security
+
+# Base stage with Alpine Linux
+FROM python:3.11.9-alpine as base
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONHASHSEED=random
+
+# Install system dependencies with security focus
+RUN apk update && \
+    apk upgrade --no-cache && \
+    apk add --no-cache \
+        build-base \
+        curl \
+        git \
+        sqlite \
+        ca-certificates \
+        && rm -rf /var/cache/apk/*
+
+# Create non-root user with limited privileges
+RUN addgroup -g 1001 asmblr && \
+    adduser -D -s /bin/sh -u 1001 -G asmblr asmblr
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.core.txt requirements.txt
+COPY requirements.ml.txt requirements-ml.txt
+COPY requirements-dev.txt requirements-dev.txt
+
+# Install Python dependencies securely
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    # Only install ML dependencies if needed
+    if [ "$ENABLE_ML" = "true" ]; then pip install --no-cache-dir -r requirements-ml.txt; fi
+
+# Copy application code
+COPY --chown=asmblr:asmblr . .
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/data /app/runs /app/logs && \
+    chown -R asmblr:asmblr /app && \
+    chmod 755 /app && \
+    chmod 700 /app/data /app/runs /app/logs
+
+# Switch to non-root user
+USER asmblr
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose ports
+EXPOSE 8000
+
+# Use gunicorn with security settings
+CMD ["gunicorn", "app.main:app", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--timeout", "120", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "100", \
+     "--preload", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]

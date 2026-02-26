@@ -1,0 +1,107 @@
+# Configuration ELK Stack pour Asmblr
+# Elasticsearch, Logstash, Kibana avec configuration complète
+
+services:
+  # Elasticsearch - Moteur de recherche et de stockage
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: asmblr-elasticsearch
+    environment:
+      - node.name=asmblr-elasticsearch
+      - cluster.name=asmblr-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./monitoring/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Logstash - Pipeline de traitement des logs
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: asmblr-logstash
+    volumes:
+      - ./monitoring/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logs:/var/log/asmblr:ro
+    ports:
+      - "5044:5044"  # Beats input
+      - "9600:9600"  # API Logstash
+    networks:
+      - monitoring
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600/_node/stats || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kibana - Visualisation et dashboards
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: asmblr-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=asmblr-kibana
+      - SERVER_HOST=0.0.0.0
+    volumes:
+      - ./monitoring/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    ports:
+      - "5601:5601"
+    networks:
+      - monitoring
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Filebeat - Collecteur de logs
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    container_name: asmblr-filebeat
+    user: root
+    volumes:
+      - ./monitoring/filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs:/var/log/asmblr:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - monitoring
+    depends_on:
+      logstash:
+        condition: service_healthy
+    restart: unless-stopped
+    command: filebeat -e -strict.perms=false
+
+volumes:
+  elasticsearch_data:
+    driver: local
+
+networks:
+  monitoring:
+    driver: bridge
