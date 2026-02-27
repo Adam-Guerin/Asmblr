@@ -227,7 +227,7 @@ class EnterpriseSSO:
             # OAuth2 configuration
             oauth2_config = {
                 'client_id': self.config.get('oauth2_client_id'),
-                'client_secret': self.config.get('oauth2_client_secret'),
+                'client_secret': os.getenv('OAUTH2_CLIENT_SECRET', self.config.get('oauth2_client_secret')),
                 'authorization_url': self.config.get('oauth2_authorization_url'),
                 'token_url': self.config.get('oauth2_token_url'),
                 'userinfo_url': self.config.get('oauth2_userinfo_url'),

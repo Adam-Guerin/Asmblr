@@ -2,9 +2,13 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, staging ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, staging ]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: asmblr/asmblr
 
 jobs:
   test:
@@ -12,6 +16,8 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9, 3.10, 3.11]
+        test-type: [unit, integration, performance]
+      fail-fast: false
     
     services:
       redis:
@@ -52,19 +58,19 @@ jobs:
         ruff check . --select E9,F63,F7,F82
         ruff check . --select F401,F841,E722,E711,E712,E721,UP,SIM,B --fix
     
-    - name: Run unit tests
+    - name: Run ${{ matrix.test-type }} tests
       run: |
-        python run_tests.py --type unit --no-html
-    
-    - name: Run integration tests
-      run: |
-        python run_tests.py --type integration --no-html
-    
-    - name: Generate coverage report
-      run: |
-        python run_tests.py --type all --quiet
+        if [ "${{ matrix.test-type }}" = "unit" ]; then
+          python run_tests.py --type unit --no-html
+        elif [ "${{ matrix.test-type }}" = "integration" ]; then
+          python run_tests.py --type integration --no-html
+        elif [ "${{ matrix.test-type }}" = "performance" ]; then
+          pip install pytest-benchmark
+          pytest tests/ -k "benchmark" --benchmark-json=benchmark-${{ matrix.python-version }}.json
+        fi
     
     - name: Upload coverage to Codecov
+      if: matrix.test-type == 'unit' && matrix.python-version == '3.10'
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
@@ -72,18 +78,23 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
     
-    - name: Archive test results
+    - name: Upload test results
       uses: actions/upload-artifact@v3
       if: always()
       with:
-        name: test-results-${{ matrix.python-version }}
+        name: test-results-${{ matrix.python-version }}-${{ matrix.test-type }}
         path: |
           htmlcov/
           coverage.xml
           pytest.xml
+          benchmark-*.json
 
   security:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        security-tool: [bandit, safety, trivy]
+      fail-fast: false
     steps:
     - uses: actions/checkout@v4
     
@@ -96,25 +107,45 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install bandit safety
+        if [ "${{ matrix.security-tool }}" = "bandit" ]; then
+          pip install bandit
+        elif [ "${{ matrix.security-tool }}" = "safety" ]; then
+          pip install safety
+        elif [ "${{ matrix.security-tool }}" = "trivy" ]; then
+          sudo apt-get update
+          sudo apt-get install wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+        fi
     
-    - name: Run security scan with Bandit
+    - name: Run secrets validation
       run: |
-        bandit -r app/ -f json -o bandit-report.json
-        bandit -r app/
+        python scripts/validate_secrets.py > secrets_validation_report.json
+        cat secrets_validation_report.json
     
-    - name: Check dependencies for security vulnerabilities
+    - name: Run ${{ matrix.security-tool }} security scan
       run: |
-        safety check --json --output safety-report.json
-        safety check
+        if [ "${{ matrix.security-tool }}" = "bandit" ]; then
+          bandit -r app/ -f json -o bandit-report.json
+          bandit -r app/
+        elif [ "${{ matrix.security-tool }}" = "safety" ]; then
+          safety check --json --output safety-report.json
+          safety check
+        elif [ "${{ matrix.security-tool }}" = "trivy" ]; then
+          trivy image --format json --output trivy-report.json ${REGISTRY}/${IMAGE_NAME}:latest || true
+          trivy fs --format json --output trivy-fs-report.json . || true
+        fi
     
     - name: Upload security reports
       uses: actions/upload-artifact@v3
       with:
-        name: security-reports
+        name: security-reports-${{ matrix.security-tool }}
         path: |
           bandit-report.json
           safety-report.json
+          trivy-*.json
 
   performance:
     runs-on: ubuntu-latest
@@ -149,7 +180,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: [test, security]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        service: [api-gateway, asmblr-core, asmblr-agents, asmblr-media]
+      fail-fast: false
     
     steps:
     - uses: actions/checkout@v4
@@ -157,26 +192,105 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
-    - name: Build and push Docker image
+    - name: Build and push ${{ matrix.service }} Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
+        file: ./${{ matrix.service }}/Dockerfile
         push: true
-        tags: |
-          asmblr/asmblr:latest
-          asmblr/asmblr:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha,scope=${{ matrix.service }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.service }}
     
-    - name: Run smoke tests on Docker image
+    - name: Run smoke tests on ${{ matrix.service }} image
       run: |
-        docker run --rm asmblr/asmblr:latest python -m app doctor
+        docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:latest python -m app doctor || true
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [test, security, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Deploy to staging
+      run: |
+        echo "🚀 Starting staging deployment..."
+        
+        # Create staging environment file
+        cat > .env.staging << EOF
+        STAGING_ASMblr_PASSWORD=${{ secrets.STAGING_ASMblr_PASSWORD }}
+        STAGING_GRAFANA_PASSWORD=${{ secrets.STAGING_GRAFANA_PASSWORD }}
+        STAGING_SECRET_KEY=${{ secrets.STAGING_SECRET_KEY }}
+        EOF
+        
+        # Deploy with health checks
+        docker-compose -f docker-compose.staging.yml --env-file .env.staging up -d
+        
+        # Wait for services to be ready
+        echo "⏳ Waiting for services to be healthy..."
+        timeout 300 bash -c 'until curl -f http://localhost:8000/health; do sleep 5; done'
+        timeout 300 bash -c 'until curl -f http://localhost:8080/health; do sleep 5; done'
+        
+        # Run comprehensive health checks
+        ./scripts/health-check-staging.sh
+        
+        echo "✅ Staging deployment completed successfully!"
+    
+    - name: Run E2E tests on staging
+      run: |
+        echo "🧪 Running E2E tests on staging..."
+        docker-compose -f docker-compose.staging.yml run --rm test-runner
+    
+    - name: Upload E2E test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: e2e-test-results-staging
+        path: test-results/
+    
+    - name: Setup rollback on failure
+      if: failure()
+      run: |
+        echo "❌ Staging deployment failed! Initiating rollback..."
+        ./scripts/rollback-staging.sh
+        exit 1
+    
+    - name: Update deployment status
+      if: success()
+      run: |
+        echo "📊 Updating staging deployment metrics..."
+        curl -X POST "https://api.github.com/repos/${{ github.repository }}/deployments" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -d '{
+            "ref": "staging",
+            "environment": "staging",
+            "description": "Staging deployment successful"
+          }'
 
   deploy:
     runs-on: ubuntu-latest

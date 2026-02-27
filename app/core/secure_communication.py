@@ -53,7 +53,7 @@ class SecureCommunicationManager:
                 logger.error(f"Failed to load communication key: {e}")
         
         # Generate new key
-        password = os.getenv("COMMUNICATION_PASSWORD", "").encode()
+        password = os.getenv("COMMUNICATION_PASSWORD", secrets.token_bytes(32).hex()).encode()
         if not password:
             password = secrets.token_bytes(32)
         

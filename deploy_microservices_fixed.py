@@ -3,7 +3,6 @@
 Script de déploiement automatisé pour les micro-services Asmblr
 Phase 2: Déploiement de l'architecture micro-services
 """
-
 import os
 import sys
 import time
@@ -21,7 +20,7 @@ class MicroservicesDeployer:
                 'env_vars': {
                     'POSTGRES_DB': 'asmblr',
                     'POSTGRES_USER': 'asmblr',
-                    'POSTGRES_PASSWORD': 'asmblr_secure_password'
+                    'POSTGRES_PASSWORD': os.getenv('POSTGRES_PASSWORD', 'change_me_in_production')
                 }
             },
             'redis': {
@@ -311,7 +310,7 @@ class MicroservicesDeployer:
             service = self.services[service_name]
             
             # Vérifier si le container existe
-            stdout, stderr = self.run_command(f"docker ps -f name={service['name']} --format 'table {{{{.Status}}}'", capture_output=True)
+            stdout, stderr = self.run_command(f"docker ps -f name={service['name']} --format 'table {{{{.Status}}}}'", capture_output=True)
             
             if service['name'] in stdout:
                 status = stdout.split('\n')[1].strip()

@@ -1,0 +1,402 @@
+# Service Mesh Istio Configuration for Asmblr
+# Advanced microservices architecture with traffic management, security, and observability
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: asmblr
+  labels:
+    istio-injection: enabled
+---
+# Gateway Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: asmblr-gateway
+  namespace: asmblr
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - asmblr.local
+    - api.asmblr.com
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: asmblr-tls
+    hosts:
+    - asmblr.local
+    - api.asmblr.com
+---
+# API Gateway Virtual Service
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-gateway-vs
+  namespace: asmblr
+spec:
+  hosts:
+  - asmblr.local
+  - api.asmblr.com
+  gateways:
+  - asmblr-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1/
+    route:
+    - destination:
+        host: api-gateway
+        port:
+          number: 8000
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+---
+# Core Service Virtual Service with Load Balancing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-core-vs
+  namespace: asmblr
+spec:
+  hosts:
+  - api-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /core/
+    route:
+    - destination:
+        host: asmblr-core
+        port:
+          number: 8001
+      weight: 50
+    - destination:
+        host: asmblr-core-2
+        port:
+          number: 8001
+      weight: 50
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+---
+# Agents Service Virtual Service with Canary Deployment
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-agents-vs
+  namespace: asmblr
+spec:
+  hosts:
+  - api-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /agents/
+    route:
+    - destination:
+        host: asmblr-agents
+        port:
+          number: 8002
+      weight: 90
+    - destination:
+        host: asmblr-agents-canary
+        port:
+          number: 8002
+      weight: 10
+    mirror:
+      host: asmblr-agents-canary
+      port:
+        number: 8002
+---
+# Media Service Virtual Service
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-media-vs
+  namespace: asmblr
+spec:
+  hosts:
+  - api-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /media/
+    route:
+    - destination:
+        host: asmblr-media
+        port:
+          number: 8003
+    timeout: 60s
+    retries:
+      attempts: 2
+      perTryTimeout: 30s
+---
+# Destination Rules for Service Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: api-gateway-dr
+  namespace: asmblr
+spec:
+  host: api-gateway
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+    circuitBreaker:
+      consecutiveErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: asmblr-core-dr
+  namespace: asmblr
+spec:
+  host: asmblr-core
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        httpCookie:
+          name: user-session
+          ttl: 60s
+    connectionPool:
+      tcp:
+        maxConnections: 200
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 20
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: asmblr-agents-dr
+  namespace: asmblr
+spec:
+  host: asmblr-agents
+  subsets:
+  - name: stable
+    labels:
+      version: stable
+  - name: canary
+    labels:
+      version: canary
+  trafficPolicy:
+    loadBalancer:
+      random:
+    connectionPool:
+      tcp:
+        maxConnections: 150
+      http:
+        http1MaxPendingRequests: 75
+        maxRequestsPerConnection: 15
+---
+# Service Entry for External Services
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: ollama-external
+  namespace: asmblr
+spec:
+  hosts:
+  - ollama.local
+  - api.openai.com
+  - huggingface.co
+  location: MESH_EXTERNAL
+  ports:
+  - number: 11434
+    name: http-ollama
+    protocol: HTTP
+  - number: 443
+    name: https-external
+    protocol: HTTPS
+  resolution: DNS
+---
+# Authorization Policy for Security
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: asmblr-authz
+  namespace: asmblr
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        requestPrincipals:
+        - "*"
+  to:
+    - operation:
+        methods: ["GET", "POST", "PUT", "DELETE"]
+  when:
+  - key: request.auth.claims[role]
+    values: ["admin", "user", "service"]
+---
+# Peer Authentication for mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: asmblr
+spec:
+  mtls:
+    mode: STRICT
+---
+# Request Authentication for JWT
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: jwt-auth
+  namespace: asmblr
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway
+  jwtRules:
+  - issuer: "https://asmblr.auth0.com/"
+    jwksUri: "https://asmblr.auth0.com/.well-known/jwks.json"
+    forwardOriginalToken: true
+---
+# Rate Limiting Service
+apiVersion: networking.istio.io/v1beta1
+kind: EnvoyFilter
+metadata:
+  name: rate-limit
+  namespace: asmblr
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: GATEWAY
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+            subFilter:
+              name: "envoy.filters.http.router"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.local_ratelimit
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+          token_bucket:
+            max_tokens: 100
+            tokens_per_fill: 10
+            fill_interval: 1s
+          filter_enforced:
+            headers:
+              - name: "x-ratelimit-limit"
+                value: "100"
+              - name: "x-ratelimit-remaining"
+                value: "%REQUESTS_LEFT%"
+---
+# Tracing Configuration
+apiVersion: telemetry.istio.io/v1beta1
+kind: Telemetry
+metadata:
+  name: asmblr-telemetry
+  namespace: asmblr
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway
+  tracing:
+  - sampling: 100.0
+    custom_tags:
+      app_tag:
+        literal:
+          value: "asmblr"
+      version_tag:
+        environment:
+          name: VERSION
+          defaultValue: "unknown"
+---
+# Metrics Configuration
+apiVersion: telemetry.istio.io/v1beta1
+kind: Telemetry
+metadata:
+  name: metrics
+  namespace: asmblr
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway
+  metrics:
+  - providers:
+    - name: prometheus
+    overrides:
+    - match:
+        metric: REQUEST_COUNT
+        mode: CLIENT_AND_SERVER
+---
+# Sidecar Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: Sidecar
+metadata:
+  name: default
+  namespace: asmblr
+spec:
+  egress:
+  - hosts:
+    - "./*"
+    - "istio-system/*"
+  ingress:
+  - defaultEndpoint: 0.0.0.0:15090
+---
+# Workload Entry for External Services
+apiVersion: networking.istio.io/v1beta1
+kind: WorkloadEntry
+metadata:
+  name: ollama-workload
+  namespace: asmblr
+spec:
+  address: 192.168.1.100
+  ports:
+    http:
+      11434
+  labels:
+    app: ollama
+    version: v1
+---
+# Gateway for External Access
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: external-gateway
+  namespace: asmblr
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - port:
+      number: 443
+      name: https-egress
+      protocol: HTTPS
+    hosts:
+    - api.openai.com
+    - huggingface.co
+    tls:
+      mode: ISTIO_MUTUAL

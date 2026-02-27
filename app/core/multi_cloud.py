@@ -177,7 +177,7 @@ class AWSAdapter(CloudProviderAdapter):
         try:
             self.session = boto3.Session(
                 aws_access_key_id=self.config.get('aws_access_key_id'),
-                aws_secret_access_key=self.config.get('aws_secret_access_key'),
+                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY', self.config.get('aws_secret_access_key')),
                 region_name=self.config.get('region', 'us-east-1')
             )
             self.initialized = True
@@ -282,7 +282,7 @@ class AWSAdapter(CloudProviderAdapter):
                 DBInstanceClass='db.t3.medium',
                 Engine='postgres',
                 MasterUsername='postgres',
-                MasterUserPassword='secure_password',
+                MasterUserPassword=os.getenv('RDS_MASTER_PASSWORD', 'change_me_in_production'),
                 AllocatedStorage=20,
                 StorageType='gp2',
                 StorageEncrypted=True,
