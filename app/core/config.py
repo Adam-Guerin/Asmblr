@@ -7,6 +7,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from app.core.lightweight_config import lightweight_config
 
+# Define BASE_DIR first since it's used in detect_lightweight_mode
+BASE_DIR = Path(__file__).resolve().parents[2]
+
 # Lightweight mode detection and automatic loading
 def detect_lightweight_mode():
     """Detect if lightweight mode should be enabled"""
@@ -35,14 +38,12 @@ def detect_lightweight_mode():
 
 # Load appropriate environment file
 if detect_lightweight_mode():
-    print("🚀 Lightweight mode detected - loading .env.light")
+    print("Lightweight mode detected - loading .env.light")
     load_dotenv(BASE_DIR / ".env.light")
     # Set lightweight mode flag for other components
     os.environ["LIGHTWEIGHT_MODE"] = "true"
 else:
     load_dotenv()
-
-BASE_DIR = Path(__file__).resolve().parents[2]
 
 @dataclass
 class Settings:

@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://asmblr.ai/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Disallow temporary/cache directories
+Disallow: /cache/
+Disallow: /tmp/
+Disallow: /temp/
+Disallow: /.git/
+Disallow: /node_modules/
+
+# Allow important directories
+Allow: /docs/
+Allow: /api/
+Allow: /static/
+Allow: /images/

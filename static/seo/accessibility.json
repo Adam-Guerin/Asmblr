@@ -1,0 +1,46 @@
+{
+  "wcag_level": "AA",
+  "features": {
+    "keyboard_navigation": true,
+    "screen_reader_support": true,
+    "high_contrast_mode": true,
+    "focus_management": true,
+    "aria_labels": true,
+    "semantic_html": true,
+    "alt_text": true,
+    "color_contrast": true,
+    "resize_text": true,
+    "skip_links": true
+  },
+  "keyboard_shortcuts": {
+    "navigate_menu": "Tab",
+    "activate_button": "Enter/Space",
+    "skip_to_content": "Alt+S",
+    "toggle_theme": "Alt+T",
+    "focus_search": "Ctrl+K",
+    "help": "F1"
+  },
+  "screen_reader_announcements": {
+    "page_load": "Asmblr AI Venture Factory loaded",
+    "venture_created": "New venture created successfully",
+    "error_occurred": "Error occurred, please check the form",
+    "loading_started": "Processing started, please wait",
+    "loading_completed": "Processing completed successfully"
+  },
+  "focus_management": {
+    "trap_focus": [
+      "modal",
+      "dialog",
+      "dropdown"
+    ],
+    "restore_focus": [
+      "form_submit",
+      "modal_close"
+    ],
+    "skip_links": [
+      "main_content",
+      "navigation",
+      "footer"
+    ]
+  }
+}

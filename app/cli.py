@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -145,6 +146,10 @@ def main() -> None:
     ralph_cmd.add_argument("--tail-lines", type=int, default=60)
 
     args = parser.parse_args()
+    
+    # Setup logging
+    logger = logging.getLogger(__name__)
+    
     if args.command == "run":
         topic = (args.topic or "").strip()
         if len(topic) < 3 or len(topic) > 200:

@@ -1,0 +1,320 @@
+{
+  "Python Version": {
+    "passed": true,
+    "message": "Python 3.11.9",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:30"
+  },
+  "Memory Requirement": {
+    "passed": true,
+    "message": "31.2 GB available",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:30"
+  },
+  "CPU Requirement": {
+    "passed": true,
+    "message": "12 CPU cores",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:30"
+  },
+  "Import: app.core.config": {
+    "passed": true,
+    "message": "Successfully imported",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:31"
+  },
+  "Import: app.core.models": {
+    "passed": true,
+    "message": "Successfully imported",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:31"
+  },
+  "Import: app.core.llm": {
+    "passed": true,
+    "message": "Successfully imported",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:37"
+  },
+  "Import: app.cli": {
+    "passed": true,
+    "message": "Successfully imported",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:37"
+  },
+  "Import: app.ui": {
+    "passed": true,
+    "message": "Successfully imported",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:50"
+  },
+  "Import: app.core.run_manager": {
+    "passed": true,
+    "message": "Successfully imported",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:50"
+  },
+  "Dependency: streamlit": {
+    "passed": true,
+    "message": "UI Framework",
+    "details": "",
+    "timestamp": "2026-02-27 10:53:50"
+  },
+  "Dependency: crewai": {
+    "passed": true,
+    "message": "AI Framework",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:10"
+  },
+  "Dependency: langchain": {
+    "passed": true,
+    "message": "LLM Framework",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:10"
+  },
+  "Dependency: fastapi": {
+    "passed": true,
+    "message": "API Framework",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:11"
+  },
+  "Dependency: requests": {
+    "passed": true,
+    "message": "HTTP Client",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:11"
+  },
+  "Dependency: psutil": {
+    "passed": true,
+    "message": "System Monitoring",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:11"
+  },
+  "Setting: runs_dir": {
+    "passed": true,
+    "message": "Runs directory: C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\runs",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:12"
+  },
+  "Setting: data_dir": {
+    "passed": true,
+    "message": "Data directory: C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\data",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:12"
+  },
+  "Setting: ollama_base_url": {
+    "passed": true,
+    "message": "Ollama URL: http://localhost:11434",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:12"
+  },
+  "Setting: default_llm_model": {
+    "passed": false,
+    "message": "Default LLM model not configured",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:12"
+  },
+  "Lightweight Mode": {
+    "passed": true,
+    "message": "Mode: Lightweight",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:12"
+  },
+  "Ollama Test": {
+    "passed": false,
+    "message": "Error: check_ollama() missing 2 required positional arguments: 'base_url' and 'models'",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:12"
+  },
+  "CLI Help": {
+    "passed": true,
+    "message": "Help command works",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:14"
+  },
+  "CLI Test": {
+    "passed": false,
+    "message": "Error: Command '['C:\\\\Users\\\\adamg\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\\\python.exe', '-m', 'app', 'doctor']' timed out after 30 seconds",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:44"
+  },
+  "UI Import": {
+    "passed": true,
+    "message": "Enhanced UI imported successfully",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:45"
+  },
+  "Streamlit": {
+    "passed": true,
+    "message": "Streamlit available",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:45"
+  },
+  "UI Configuration": {
+    "passed": true,
+    "message": "UI settings configured",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:46"
+  },
+  "Run Creation": {
+    "passed": true,
+    "message": "Created run: 20260227_105447_232450",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Run Retrieval": {
+    "passed": true,
+    "message": "Successfully retrieved run",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Test Cleanup": {
+    "passed": true,
+    "message": "Cleaned up test run",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: app/__init__.py": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: app/core/__init__.py": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: app/core/config.py": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: app/core/models.py": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: app/cli.py": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: app/ui.py": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: app/ui_enhanced.py": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: requirements.txt": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: README.md": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: USER_GUIDE.md": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "File: .env.example": {
+    "passed": true,
+    "message": "File exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Directory: app": {
+    "passed": true,
+    "message": "Directory exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Directory: app/core": {
+    "passed": true,
+    "message": "Directory exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Directory: app/agents": {
+    "passed": true,
+    "message": "Directory exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Directory: data": {
+    "passed": true,
+    "message": "Directory exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Directory: runs": {
+    "passed": true,
+    "message": "Directory exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Directory: tests": {
+    "passed": true,
+    "message": "Directory exists",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "GitIgnore: .env": {
+    "passed": true,
+    "message": "Security entry present",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "GitIgnore: *.key": {
+    "passed": true,
+    "message": "Security entry present",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "GitIgnore: *.pem": {
+    "passed": true,
+    "message": "Security entry present",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "GitIgnore: secrets/": {
+    "passed": true,
+    "message": "Security entry present",
+    "details": "",
+    "timestamp": "2026-02-27 10:54:47"
+  },
+  "Secret Scan": {
+    "passed": true,
+    "message": "No obvious hardcoded secrets found",
+    "details": "",
+    "timestamp": "2026-02-27 10:55:02"
+  },
+  "Startup Performance": {
+    "passed": true,
+    "message": "Startup time: 0.00s",
+    "details": "",
+    "timestamp": "2026-02-27 10:55:02"
+  },
+  "Memory Usage": {
+    "passed": true,
+    "message": "Memory usage: 359.3 MB",
+    "details": "",
+    "timestamp": "2026-02-27 10:55:02"
+  }
+}

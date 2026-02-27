@@ -1,0 +1,2876 @@
+[
+  {
+    "type": "ADD_VALIDATION",
+    "file": "deploy_microservices_fixed.py",
+    "line": 24,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": ".vscode\\settings.json",
+    "line": 2,
+    "original": "\"makefile.configureOnOpen\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 100,
+    "original": "\"technical_complexity\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 109,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 109,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 110,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 110,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 120,
+    "original": "\"technical_complexity\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 127,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 128,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 229,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 230,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\agents\\config_agent.py",
+    "line": 428,
+    "original": "\"performance_optimizations\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 83,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 84,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 134,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 134,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 135,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 135,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 148,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 149,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 189,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 219,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 220,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 311,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\agent_config.py",
+    "line": 312,
+    "original": "\"SIGNAL_QUALITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 53,
+    "original": "\"GENERAL_MODEL_FALLBACKS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 54,
+    "original": "\"CODE_MODEL_FALLBACKS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 63,
+    "original": "\"MVP_DEV_STARTUP_TIMEOUT\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 72,
+    "original": "\"RATE_LIMIT_PER_DOMAIN\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 82,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 83,
+    "original": "\"SIGNAL_SOURCES_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 85,
+    "original": "\"SIGNAL_DOMAIN_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 86,
+    "original": "\"SIGNAL_REPEAT_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 88,
+    "original": "\"SIGNAL_CLUSTER_DENSITY_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 89,
+    "original": "\"SIGNAL_NOVEL_KEYWORDS_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 90,
+    "original": "\"SIGNAL_QUALITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 92,
+    "original": "\"IDEA_ACTIONABILITY_MIN_SCORE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 93,
+    "original": "\"IDEA_ACTIONABILITY_ADJUSTMENT_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 94,
+    "original": "\"IDEA_ACTIONABILITY_REQUIRE_ELIGIBLE_TOP\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 95,
+    "original": "\"LEARNING_HISTORY_MAX_RUNS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 96,
+    "original": "\"LEARNING_EXPLORATION_RATE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 97,
+    "original": "\"LEARNING_SUCCESS_BONUS_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 98,
+    "original": "\"LEARNING_FAILURE_PENALTY_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 99,
+    "original": "\"LEARNING_NOVELTY_BONUS_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 100,
+    "original": "\"LEARNING_CLONE_PENALTY_START\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 103,
+    "original": "\"PRIMARY_ICP_KEYWORDS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 106,
+    "original": "\"ICP_ALIGNMENT_BONUS_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 108,
+    "original": "\"STAGE_RETRY_ATTEMPTS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 109,
+    "original": "\"STAGE_RETRY_BACKOFF_SEC\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 115,
+    "original": "\"ENABLE_PROGRESSIVE_CYCLES\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 116,
+    "original": "\"ENABLE_LOGO_DIFFUSION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 117,
+    "original": "\"runwayml/stable-diffusion-v1-5\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 130,
+    "original": "\"UI_PASSWORD_PREV_EXPIRES_AT\"",
+    "suggested": "os.getenv('PASSWORD', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 134,
+    "original": "\"API_KEY_PREV_EXPIRES_AT\"",
+    "suggested": "os.getenv('API_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 135,
+    "original": "\"ENFORCE_KEY_ROTATION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 137,
+    "original": "\"REQUIRE_PROD_CHECKLIST\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 138,
+    "original": "\"RUN_RATE_LIMIT_PER_MIN\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 139,
+    "original": "\"RUN_RATE_LIMIT_BURST\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 142,
+    "original": "\"RUN_COMPRESS_AFTER_DAYS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 143,
+    "original": "\"RUN_MAINTENANCE_INTERVAL_MIN\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 149,
+    "original": "\"BACKUP_RETENTION_DAYS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 157,
+    "original": "\"CACHE_SIMILARITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 160,
+    "original": "\"CACHE_BACKGROUND_CLEANUP\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 161,
+    "original": "\"CACHE_COMPRESSION_ENABLED\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 169,
+    "original": "\"BATCH_PROCESSING_SIZE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 170,
+    "original": "\"MAX_CONNECTIONS_PER_POOL\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 177,
+    "original": "\"BACKGROUND_PROCESSING\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 181,
+    "original": "\"RUN_QUEUE_BACKOFF_SEC\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 183,
+    "original": "\"ENABLE_APP_PACKAGING\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 189,
+    "original": "\"CAMPAIGN_AUTO_EXPAND_ASSETS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 190,
+    "original": "\"CAMPAIGN_TARGET_ASSETS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 191,
+    "original": "\"CAMPAIGN_POSTS_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 193,
+    "original": "\"CAMPAIGN_OUTREACH_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 194,
+    "original": "\"CAMPAIGN_VIDEOS_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 195,
+    "original": "\"CAMPAIGN_BOOST_FROM_ORGANIC\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 196,
+    "original": "\"CAMPAIGN_ORGANIC_TOP_ASSETS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 201,
+    "original": "\"ENABLE_LOCAL_SOCIAL_IMAGES\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 202,
+    "original": "\"SOCIAL_IMAGE_MODEL_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 202,
+    "original": "\"runwayml/stable-diffusion-v1-5\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 205,
+    "original": "\"SOCIAL_IMAGE_GUIDANCE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 207,
+    "original": "\"SOCIAL_METRICS_PROVIDER\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 208,
+    "original": "\"SOCIAL_METRICS_USER_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 209,
+    "original": "\"SOCIAL_METRICS_BLOG_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 210,
+    "original": "\"SOCIAL_METRICS_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 211,
+    "original": "\"SOCIAL_METRICS_WINDOW_DAYS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 212,
+    "original": "\"SOCIAL_METRICS_API_URL\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 213,
+    "original": "\"SOCIAL_METRICS_API_KEY\"",
+    "suggested": "os.getenv('API_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 214,
+    "original": "\"SOCIAL_METRICS_TIMEOUT_S\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 217,
+    "original": "\"LOCAL_VIDEO_MODEL_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 218,
+    "original": "\"stabilityai/stable-video-diffusion-img2vid-xt\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 222,
+    "original": "\"ENABLE_VIDEO_GENERATION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 226,
+    "original": "\"VEO3_POLL_INTERVAL_S\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 240,
+    "original": "\"INSTAGRAM_ACCOUNT_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 249,
+    "original": "\"GOOGLE_ADS_CUSTOMER_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 250,
+    "original": "\"GOOGLE_ADS_DEV_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 251,
+    "original": "\"GOOGLE_ADS_CLIENT_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 252,
+    "original": "\"GOOGLE_ADS_CLIENT_SECRET\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 253,
+    "original": "\"GOOGLE_ADS_REFRESH_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 254,
+    "original": "\"META_ADS_ACCESS_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 256,
+    "original": "\"TIKTOK_ADS_ACCESS_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 257,
+    "original": "\"TIKTOK_ADS_ACCOUNT_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 261,
+    "original": "\"HOSTING_SUBDOMAIN_TEMPLATE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 268,
+    "original": "\"RESOURCE_OPTIMIZATION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 403,
+    "original": "\"missing_or_invalid_expiry\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 504,
+    "original": "\"publishing_instagram\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 508,
+    "original": "\"INSTAGRAM_ACCOUNT_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 520,
+    "original": "\"GOOGLE_ADS_CUSTOMER_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 521,
+    "original": "\"GOOGLE_ADS_DEV_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 522,
+    "original": "\"GOOGLE_ADS_CLIENT_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 523,
+    "original": "\"GOOGLE_ADS_CLIENT_SECRET\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 524,
+    "original": "\"GOOGLE_ADS_REFRESH_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 532,
+    "original": "\"META_ADS_ACCESS_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 541,
+    "original": "\"TIKTOK_ADS_ACCESS_TOKEN\"",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 542,
+    "original": "\"TIKTOK_ADS_ACCOUNT_ID\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 555,
+    "original": "\"AWS_SECRET_ACCESS_KEY\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 555,
+    "original": "\"AWS_SECRET_ACCESS_KEY\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 591,
+    "original": "\"publish_dry_run_disabled\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 593,
+    "original": "\"ads_dry_run_disabled\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 595,
+    "original": "\"deploy_dry_run_disabled\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 605,
+    "original": "\"api_key_prev_rotation\"",
+    "suggested": "os.getenv('API_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\config.py",
+    "line": 623,
+    "original": "\"ui_password_prev_rotation\"",
+    "suggested": "os.getenv('PASSWORD', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\enterprise_features.py",
+    "line": 230,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\integration_smart_config.py",
+    "line": 73,
+    "original": "\"smart_config_enabled\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\integration_smart_config.py",
+    "line": 221,
+    "original": "'configs/env.simple.template'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\k8s_secrets.py",
+    "line": 56,
+    "original": "\"asmblr-security-manager\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 21,
+    "original": "\"lightweight_cache.json\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 165,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 166,
+    "original": "\"SIGNAL_QUALITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 171,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 172,
+    "original": "\"SIGNAL_QUALITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 180,
+    "original": "\"ENABLE_LOGO_DIFFUSION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 181,
+    "original": "\"ENABLE_VIDEO_GENERATION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 191,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 192,
+    "original": "\"SIGNAL_QUALITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 194,
+    "original": "\"SIGNAL_SOURCES_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 196,
+    "original": "\"SIGNAL_DOMAIN_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 197,
+    "original": "\"SIGNAL_REPEAT_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 199,
+    "original": "\"IDEA_ACTIONABILITY_MIN_SCORE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 200,
+    "original": "\"IDEA_ACTIONABILITY_ADJUSTMENT_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 201,
+    "original": "\"LEARNING_HISTORY_MAX_RUNS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 202,
+    "original": "\"LEARNING_EXPLORATION_RATE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 204,
+    "original": "\"STAGE_RETRY_ATTEMPTS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\lightweight_config.py",
+    "line": 205,
+    "original": "\"ENABLE_PROGRESSIVE_CYCLES\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\multi_cloud.py",
+    "line": 180,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\multi_cloud.py",
+    "line": 285,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\pipeline.py",
+    "line": 1562,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\pipeline.py",
+    "line": 1566,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\pipeline.py",
+    "line": 1898,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\pipeline.py",
+    "line": 3055,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 24,
+    "original": "\"GENERAL_MODEL_FALLBACKS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 25,
+    "original": "\"CODE_MODEL_FALLBACKS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 41,
+    "original": "\"MVP_DEV_STARTUP_TIMEOUT\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 52,
+    "original": "\"RATE_LIMIT_PER_DOMAIN\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 64,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 67,
+    "original": "\"SIGNAL_SOURCES_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 69,
+    "original": "\"SIGNAL_DOMAIN_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 70,
+    "original": "\"SIGNAL_REPEAT_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 72,
+    "original": "\"SIGNAL_CLUSTER_DENSITY_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 73,
+    "original": "\"SIGNAL_NOVEL_KEYWORDS_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 74,
+    "original": "\"SIGNAL_QUALITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 78,
+    "original": "\"IDEA_ACTIONABILITY_MIN_SCORE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 79,
+    "original": "\"IDEA_ACTIONABILITY_ADJUSTMENT_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 80,
+    "original": "\"IDEA_ACTIONABILITY_REQUIRE_ELIGIBLE_TOP\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 82,
+    "original": "\"PRIMARY_ICP_KEYWORDS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 83,
+    "original": "\"ICP_ALIGNMENT_BONUS_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 87,
+    "original": "\"STAGE_RETRY_ATTEMPTS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 88,
+    "original": "\"STAGE_RETRY_BACKOFF_SEC\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 95,
+    "original": "\"ENABLE_PROGRESSIVE_CYCLES\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 98,
+    "original": "\"ENABLE_LOGO_DIFFUSION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 99,
+    "original": "\"runwayml/stable-diffusion-v1-5\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 113,
+    "original": "\"UI_PASSWORD_PREV_EXPIRES_AT\"",
+    "suggested": "os.getenv('PASSWORD', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 121,
+    "original": "\"API_KEY_PREV_EXPIRES_AT\"",
+    "suggested": "os.getenv('API_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 122,
+    "original": "\"ENFORCE_KEY_ROTATION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 124,
+    "original": "\"REQUIRE_PROD_CHECKLIST\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 127,
+    "original": "\"RUN_RATE_LIMIT_PER_MIN\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 128,
+    "original": "\"RUN_RATE_LIMIT_BURST\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 131,
+    "original": "\"RUN_COMPRESS_AFTER_DAYS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 132,
+    "original": "\"RUN_MAINTENANCE_INTERVAL_MIN\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 136,
+    "original": "\"LEARNING_HISTORY_MAX_RUNS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 137,
+    "original": "\"LEARNING_EXPLORATION_RATE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 138,
+    "original": "\"LEARNING_SUCCESS_BONUS_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 139,
+    "original": "\"LEARNING_FAILURE_PENALTY_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 140,
+    "original": "\"LEARNING_NOVELTY_BONUS_MAX\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 141,
+    "original": "\"LEARNING_CLONE_PENALTY_START\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 144,
+    "original": "\"ENABLE_CONNECTION_POOLING\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 145,
+    "original": "\"MAX_HTTP_CONNECTIONS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 146,
+    "original": "\"MAX_REDIS_CONNECTIONS\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 147,
+    "original": "\"ENABLE_REQUEST_BATCHING\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 156,
+    "original": "\"ENABLE_RATE_LIMITING\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 157,
+    "original": "\"MAX_REQUESTS_PER_MINUTE\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 246,
+    "original": "\"sample_configurations\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\public_config.py",
+    "line": 258,
+    "original": "\"ENABLE_LOGO_DIFFUSION\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\secure_communication.py",
+    "line": 56,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\core\\security.py",
+    "line": 26,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 50,
+    "original": "'GOOGLE_ADS_CLIENT_ID'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 51,
+    "original": "'GOOGLE_ADS_CLIENT_SECRET'",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 52,
+    "original": "'META_ADS_ACCESS_TOKEN'",
+    "suggested": "os.getenv('TOKEN', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 72,
+    "original": "'MARKET_SIGNAL_THRESHOLD'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 73,
+    "original": "'SIGNAL_QUALITY_THRESHOLD'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 77,
+    "original": "'ENABLE_FACILITATOR_AGENTS'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 78,
+    "original": "'ENABLE_FEEDBACK_LOOPS'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 79,
+    "original": "'ENABLE_SHARED_KNOWLEDGE'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 83,
+    "original": "'EMOTIONAL_DESIGN_ENABLED'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 131,
+    "original": "'performance_optimizations'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 151,
+    "original": "'market_signal_threshold'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 151,
+    "original": "'MARKET_SIGNAL_THRESHOLD'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 152,
+    "original": "'signal_quality_threshold'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 152,
+    "original": "'SIGNAL_QUALITY_THRESHOLD'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 154,
+    "original": "'ENABLE_AUTO_OPTIMIZATION'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "app\\core\\smart_config.py",
+    "line": 200,
+    "original": "'MARKET_SIGNAL_THRESHOLD'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\monitoring\\alerts.py",
+    "line": 480,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "app\\ui\\help_system.py",
+    "line": 821,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "backups\\pipeline_20260208_012117.py",
+    "line": 1426,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "backups\\pipeline_20260208_012117.py",
+    "line": 1430,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "backups\\pipeline_20260208_012117.py",
+    "line": 1762,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "backups\\pipeline_20260208_012117.py",
+    "line": 2429,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "docs\\SMART_CONFIG_GUIDE.md",
+    "line": 71,
+    "original": "\"technical_background\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "docs\\SMART_CONFIG_GUIDE.md",
+    "line": 81,
+    "original": "\"execution_time_seconds\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "docs\\SMART_CONFIG_GUIDE.md",
+    "line": 126,
+    "original": "\"technical_complexity\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "docs\\SMART_CONFIG_GUIDE.md",
+    "line": 133,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "docs\\SMART_CONFIG_GUIDE.md",
+    "line": 170,
+    "original": "\"execution_time_seconds\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 3671,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 4559,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 4859,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 4860,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 5221,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 5222,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 5579,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 5580,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 5941,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 5942,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 6299,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 6300,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 6661,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 6662,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 6895,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 7076,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 13175,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 13176,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 13178,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 13179,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\app_package_manifest.json",
+    "line": 13180,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_194754_472511\\secrets_guard.json",
+    "line": 2,
+    "original": "\"20260210_194754_472511\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_194754_472511\\secrets_validation.json",
+    "line": 19,
+    "original": "\"hosting_aws_apprunner\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_194754_472511\\secrets_validation.json",
+    "line": 23,
+    "original": "\"AWS_SECRET_ACCESS_KEY\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_194754_472511\\hosting\\deploy_plan.json",
+    "line": 13,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 3660,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 4548,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 4848,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 4849,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 5210,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 5211,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 5568,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 5569,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 5930,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 5931,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 6288,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 6289,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 6650,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 6651,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 6884,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 7065,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 13164,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 13165,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 13167,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 13168,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\app_package_manifest.json",
+    "line": 13169,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_200901_983609\\secrets_guard.json",
+    "line": 2,
+    "original": "\"20260210_200901_983609\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_200901_983609\\secrets_validation.json",
+    "line": 19,
+    "original": "\"hosting_aws_apprunner\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_200901_983609\\secrets_validation.json",
+    "line": 23,
+    "original": "\"AWS_SECRET_ACCESS_KEY\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_200901_983609\\hosting\\deploy_plan.json",
+    "line": 13,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_202955_830607\\secrets_guard.json",
+    "line": 2,
+    "original": "\"20260210_202955_830607\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_202955_830607\\secrets_validation.json",
+    "line": 19,
+    "original": "\"hosting_aws_apprunner\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260210_202955_830607\\secrets_validation.json",
+    "line": 23,
+    "original": "\"AWS_SECRET_ACCESS_KEY\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260210_202955_830607\\hosting\\deploy_plan.json",
+    "line": 13,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 3693,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 4581,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 4881,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 4882,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 5243,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 5244,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 5601,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 5602,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 5963,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 5964,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 6321,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 6322,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 6683,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 6684,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 6917,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 7098,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 13197,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 13198,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 13200,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 13201,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\app_package_manifest.json",
+    "line": 13202,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_174654_349724\\secrets_guard.json",
+    "line": 2,
+    "original": "\"20260212_174654_349724\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_174654_349724\\secrets_validation.json",
+    "line": 19,
+    "original": "\"hosting_aws_apprunner\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_174654_349724\\secrets_validation.json",
+    "line": 23,
+    "original": "\"AWS_SECRET_ACCESS_KEY\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_174654_349724\\hosting\\deploy_plan.json",
+    "line": 13,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_175207_863512\\secrets_guard.json",
+    "line": 2,
+    "original": "\"20260212_175207_863512\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_175207_863512\\secrets_validation.json",
+    "line": 19,
+    "original": "\"hosting_aws_apprunner\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_175207_863512\\secrets_validation.json",
+    "line": 23,
+    "original": "\"AWS_SECRET_ACCESS_KEY\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_175207_863512\\hosting\\deploy_plan.json",
+    "line": 13,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_182137_479647\\secrets_guard.json",
+    "line": 2,
+    "original": "\"20260212_182137_479647\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_182137_479647\\secrets_validation.json",
+    "line": 19,
+    "original": "\"hosting_aws_apprunner\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "runs\\20260212_182137_479647\\secrets_validation.json",
+    "line": 23,
+    "original": "\"AWS_SECRET_ACCESS_KEY\"",
+    "suggested": "os.getenv('SECRET', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "runs\\20260212_182137_479647\\hosting\\deploy_plan.json",
+    "line": 13,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "scripts\\backup-service.py",
+    "line": 46,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "scripts\\security_policy_check.py",
+    "line": 247,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "scripts\\security_policy_check.py",
+    "line": 247,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "tests\\enhanced_test_suite.py",
+    "line": 168,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "tests\\test_code_quality.py",
+    "line": 163,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "tests\\test_code_quality.py",
+    "line": 164,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "tests\\test_data_sanitizer.py",
+    "line": 156,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 25,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 26,
+    "original": "\"signal_quality_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 51,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 59,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 80,
+    "original": "\"execution_time_seconds\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 122,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 203,
+    "original": "\"technical_complexity\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 210,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 218,
+    "original": "\"technical_complexity\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 227,
+    "original": "\"technical_complexity\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 232,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 238,
+    "original": "\"technical_complexity\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 242,
+    "original": "\"market_signal_threshold\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\test_smart_config.py",
+    "line": 256,
+    "original": "\"technical_complexity\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "tests\\test_smoke_doctor_and_run.py",
+    "line": 130,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "tests\\test_smoke_doctor_and_run.py",
+    "line": 131,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config.py",
+    "line": 142,
+    "original": "\"SIGNAL_SOURCES_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config.py",
+    "line": 144,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config.py",
+    "line": 145,
+    "original": "\"SIGNAL_QUALITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 96,
+    "original": "\"SIGNAL_SOURCES_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 98,
+    "original": "\"SIGNAL_DOMAIN_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 99,
+    "original": "\"SIGNAL_QUALITY_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 134,
+    "original": "'__dataclass_fields__'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 181,
+    "original": "'market_signal_threshold'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 184,
+    "original": "'signal_sources_target'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 184,
+    "original": "'signal_domain_target'",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 224,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 225,
+    "original": "\"SIGNAL_SOURCES_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 240,
+    "original": "\"MARKET_SIGNAL_THRESHOLD\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "tests\\unit\\test_config_real.py",
+    "line": 241,
+    "original": "\"SIGNAL_SOURCES_TARGET\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "ADD_VALIDATION",
+    "file": "trash\\deploy_microservices.py",
+    "line": 24,
+    "description": "Add input validation and sanitization"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260131_000000_000000\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260131_000000_000000\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_122655_072201\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_122655_072201\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_124905_062739\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_124905_062739\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_130348_152091\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_130348_152091\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_132232_287031\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_132232_287031\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_132912_147252\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\20260201_132912_147252\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_103700_536360\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_103700_536360\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_104000_268122\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_104000_268122\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_104525_518920\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_104525_518920\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_105443_325166\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_105443_325166\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_110119_831992\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_110119_831992\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_111303_131635\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_111303_131635\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_111714_536436\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\runs\\_adhoc\\20260201_111714_536436\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_230630_675244\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_230630_675244\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_230845_594581\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_230845_594581\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_231101_007192\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_231101_007192\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_231355_321868\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_231355_321868\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_231608_670043\\mvp_repo\\tsconfig.json",
+    "line": 13,
+    "original": "\"allowSyntheticDefaultImports\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  },
+  {
+    "type": "REPLACE_WITH_ENV",
+    "file": "trash\\tmp_runs\\20260205_231608_670043\\mvp_repo\\tsconfig.json",
+    "line": 16,
+    "original": "\"forceConsistentCasingInFileNames\"",
+    "suggested": "os.getenv('SECRET_KEY', '')",
+    "description": "Replace hardcoded secret with environment variable"
+  }
+]

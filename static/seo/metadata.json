@@ -1,0 +1,69 @@
+{
+  "title": "Asmblr - AI-Powered Venture Factory | Transform Ideas into Reality",
+  "description": "Asmblr uses cutting-edge AI to transform your ideas into fully-functional ventures. Generate business plans, code, and launch MVPs in minutes, not months.",
+  "keywords": [
+    "AI venture factory",
+    "startup generator",
+    "business plan AI",
+    "MVP generator",
+    "AI entrepreneur",
+    "venture creation",
+    "business automation",
+    "startup accelerator",
+    "AI business ideas",
+    "venture builder",
+    "AI startup",
+    "business innovation"
+  ],
+  "author": "Asmblr Team",
+  "robots": "index, follow",
+  "canonical": "https://asmblr.ai",
+  "open_graph": {
+    "title": "Asmblr - AI-Powered Venture Factory",
+    "description": "Transform your ideas into reality with AI-powered venture creation",
+    "url": "https://asmblr.ai",
+    "site_name": "Asmblr",
+    "type": "website",
+    "locale": "en_US",
+    "image": {
+      "url": "https://asmblr.ai/images/og-image.png",
+      "width": 1200,
+      "height": 630,
+      "alt": "Asmblr AI Venture Factory"
+    }
+  },
+  "twitter": {
+    "card": "summary_large_image",
+    "site": "@asmblr_ai",
+    "creator": "@asmblr_ai",
+    "title": "Asmblr - AI-Powered Venture Factory",
+    "description": "Transform ideas into reality with AI",
+    "image": "https://asmblr.ai/images/twitter-card.png"
+  },
+  "json_ld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Asmblr",
+    "description": "AI-powered venture factory that transforms ideas into functional businesses",
+    "url": "https://asmblr.ai",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "Asmblr Team",
+      "url": "https://asmblr.ai"
+    },
+    "featureList": [
+      "AI-powered idea generation",
+      "Automated business plan creation",
+      "MVP code generation",
+      "Real-time progress tracking",
+      "Quality assurance dashboard"
+    ]
+  }
+}
