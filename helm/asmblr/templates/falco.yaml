@@ -1,0 +1,268 @@
+{{- if .Values.security.runtimeSecurity.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-falco-rules
+  labels:
+    {{- include "asmblr.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: falco
+data:
+  rules.yaml: |
+    # Falco Runtime Security Rules for Asmblr
+    # Protects against common threats and suspicious activities
+
+    # Rule: Detect suspicious shell activity in containers
+    - rule: Suspicious Shell Activity
+      desc: Detect shell activity in containers that shouldn't have shells
+      condition: >
+        spawned_process and
+        container and
+        proc.name in (sh, bash, dash, zsh, tcsh, csh) and
+        not container.image.repository in (docker.io/library/python, docker.io/library/alpine, docker.io/library/ubuntu) and
+        not user.name in (unprivileged)
+      output: >
+        Suspicious shell activity detected (user=%user.name container=%container.name 
+        shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline image=%container.image.repository)
+      priority: WARNING
+      tags: [container, shell, process]
+
+    # Rule: Detect network connections to suspicious destinations
+    - rule: Suspicious Network Connection
+      desc: Detect connections to known malicious or suspicious destinations
+      condition: >
+        outbound and
+        container and
+        fd.type=ipv4 and
+        (fd.sip.name in (malicious.com, suspicious-domain.com) or
+         fd.sport in (4444, 5555, 6666, 7777, 8888, 9999, 31337, 12345))
+      output: >
+        Suspicious network connection detected (user=%user.name container=%container.name 
+        sip=%fd.sip sport=%fd.sport dip=%fd.dip dport=%fd.dport)
+      priority: HIGH
+      tags: [network, security]
+
+    # Rule: Detect container escape attempts
+    - rule: Container Escape Attempt
+      desc: Detect attempts to escape container isolation
+      condition: >
+        spawn_process and
+        container and
+        (proc.name in (nsenter, chroot, unshare) or
+         proc.cmdline contains (mount --bind, /proc/self/fd, /proc/self/ns))
+      output: >
+        Container escape attempt detected (user=%user.name container=%container.name 
+        process=%proc.name cmdline=%proc.cmdline)
+      priority: CRITICAL
+      tags: [container_escape, security]
+
+    # Rule: Detect cryptocurrency mining
+    - rule: Cryptocurrency Mining
+      desc: Detect cryptocurrency mining activities
+      condition: >
+        spawn_process and
+        container and
+        proc.name in (xmrig, cgminer, bfgminer, cpuminer) or
+        proc.cmdline contains (stratum+tcp, mining, pool, monero, bitcoin)
+      output: >
+        Cryptocurrency mining detected (user=%user.name container=%container.name 
+        process=%proc.name cmdline=%proc.cmdline)
+      priority: CRITICAL
+      tags: [cryptocurrency, security]
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-falco
+  labels:
+    {{- include "asmblr.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: falco
+spec:
+  selector:
+    matchLabels:
+      {{- include "asmblr.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: falco
+  template:
+    metadata:
+      labels:
+        {{- include "asmblr.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: falco
+    spec:
+      serviceAccountName: {{ include "asmblr.fullname" $ }}-falco
+      hostPID: true
+      hostNetwork: true
+      containers:
+      - name: falco
+        image: falcosecurity/falco:{{ .Values.security.runtimeSecurity.falcoVersion | default "0.36.1" }}
+        args:
+        - /usr/bin/falco
+        - --config-file=/etc/falco/falco.yaml
+        - --config-file=/etc/falco/rules.d/rules.yaml
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/falco/falco.yaml
+          subPath: falco.yaml
+          readOnly: true
+        - name: rules
+          mountPath: /etc/falco/rules.d
+          readOnly: true
+        - name: device
+          mountPath: /host/dev
+          readOnly: true
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: boot
+          mountPath: /host/boot
+          readOnly: true
+        - name: lib
+          mountPath: /host/lib
+          readOnly: true
+        - name: usr-lib
+          mountPath: /host/usr/lib
+          readOnly: true
+        - name: etc-passwd
+          mountPath: /host/etc/passwd
+          readOnly: true
+        - name: etc-group
+          mountPath: /host/etc/group
+          readOnly: true
+        - name: etc-os-release
+          mountPath: /host/etc/os-release
+          readOnly: true
+        - name: etc-timezone
+          mountPath: /host/etc/timezone
+          readOnly: true
+        - name: etc-localtime
+          mountPath: /host/etc/localtime
+          readOnly: true
+        env:
+        - name: FALCO_BPF_PROBE
+          value: ""
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "asmblr.fullname" $ }}-falco-config
+      - name: rules
+        configMap:
+          name: {{ include "asmblr.fullname" $ }}-falco-rules
+      - name: device
+        hostPath:
+          path: /dev
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: boot
+        hostPath:
+          path: /boot
+      - name: lib
+        hostPath:
+          path: /lib
+      - name: usr-lib
+        hostPath:
+          path: /usr/lib
+      - name: etc-passwd
+        hostPath:
+          path: /etc/passwd
+      - name: etc-group
+        hostPath:
+          path: /etc/group
+      - name: etc-os-release
+        hostPath:
+          path: /etc/os-release
+      - name: etc-timezone
+        hostPath:
+          path: /etc/timezone
+      - name: etc-localtime
+        hostPath:
+          path: /etc/localtime
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-falco-config
+  labels:
+    {{- include "asmblr.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: falco
+data:
+  falco.yaml: |
+    falco:
+      priority: notice
+      outputs:
+        - program: syslog
+          keep_alive: false
+          priority: info
+      - program: k8saudit
+          keep_alive: false
+          priority: info
+      - program: grpc
+          keep_alive: false
+          priority: info
+    plugins:
+      - name: k8saudit
+        library_path: libk8saudit.so
+        config:
+          socket: /var/run/k8saudit.sock
+      - name: cloudtrail
+        library_path: libcloudtrail.so
+        config:
+          aws:
+            account_id: ""
+            region: ""
+            access_key_id: ""
+            secret_access_key: ""
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-falco
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-falco
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "pods", "services", "replicationcontrollers", "replicasets", "statefulsets", "daemonsets", "deployments", "jobs", "cronjobs"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["extensions"]
+  resources: ["deployments", "replicasets", "daemonsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-falco
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "asmblr.fullname" $ }}-falco
+subjects:
+- kind: ServiceAccount
+  name: {{ include "asmblr.fullname" $ }}-falco
+  namespace: {{ .Release.Namespace }}
+{{- end }}

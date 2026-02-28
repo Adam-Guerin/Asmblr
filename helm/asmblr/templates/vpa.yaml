@@ -1,0 +1,32 @@
+{{- if .Values.autoscaling.enabled }}
+{{- range $service := list "api" "worker" "ui" }}
+{{- $config := index .Values.autoscaling $service }}
+{{- if $config }}
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-{{ $service }}-vpa
+  labels:
+    {{- include "asmblr.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $service }}
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "asmblr.fullname" $ }}-{{ $service }}
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: {{ $service }}
+      maxAllowed:
+        cpu: {{ index $.Values.resources $service "limits" "cpu" }}
+        memory: {{ index $.Values.resources $service "limits" "memory" }}
+      minAllowed:
+        cpu: "100m"
+        memory: "128Mi"
+      controlledResources: ["cpu", "memory"]
+{{- end }}
+{{- end }}
+{{- end }}

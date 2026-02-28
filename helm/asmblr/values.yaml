@@ -1,0 +1,378 @@
+# Default values for Asmblr deployment
+global:
+  imageRegistry: docker.io
+  imagePullSecrets: []
+  storageClass: ""
+
+# Common image settings
+image:
+  registry: docker.io
+  repository: asmblr/asmblr
+  tag: "latest"
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# Replica counts
+replicaCount:
+  api: 3
+  worker: 2
+  ui: 2
+  gateway: 2
+
+# Resource limits and requests
+resources:
+  api:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  worker:
+    limits:
+      cpu: 3000m
+      memory: 6Gi
+    requests:
+      cpu: 1500m
+      memory: 3Gi
+  ui:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  gateway:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+# Autoscaling
+autoscaling:
+  enabled: true
+  api:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  worker:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 85
+  ui:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# Service configuration
+service:
+  api:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+    annotations: {}
+  worker:
+    type: ClusterIP
+    port: 8001
+    targetPort: 8001
+    annotations: {}
+  ui:
+    type: ClusterIP
+    port: 8501
+    targetPort: 8501
+    annotations: {}
+  gateway:
+    type: LoadBalancer
+    port: 80
+    targetPort: 8000
+    annotations:
+      # AWS Load Balancer Controller
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+  hosts:
+    - host: asmblr.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: asmblr-tls
+      hosts:
+        - asmblr.example.com
+
+# Ollama configuration
+ollama:
+  enabled: true
+  image:
+    repository: ollama/ollama
+    tag: "latest"
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: ""
+  service:
+    type: ClusterIP
+    port: 11434
+  models:
+    - "llama3.1:8b"
+    - "qwen2.5-coder:7b"
+
+# Redis configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: ""
+    existingSecretPasswordKey: ""
+    password: ""
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  replica:
+    replicaCount: 2
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# PostgreSQL configuration (optional)
+postgresql:
+  enabled: false
+  auth:
+    existingSecret: ""
+    secretKeys:
+      adminPasswordKey: admin-password
+      userPasswordKey: user-password
+      replicationPasswordKey: replication-password
+    postgresPassword: ""
+    password: ""
+    database: ""
+    user: ""
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+
+# Application configuration
+config:
+  # Environment variables
+  env:
+    # API Configuration
+    - name: OLLAMA_BASE_URL
+      value: "http://ollama:11434"
+    - name: REDIS_URL
+      value: "redis://redis-master:6379/0"
+    - name: RUN_MAX_CONCURRENT
+      value: "5"
+    - name: WORKER_CONCURRENCY
+      value: "3"
+    - name: API_CONCURRENCY
+      value: "10"
+    - name: UVICORN_WORKERS
+      value: "2"
+    - name: LOG_LEVEL
+      value: "INFO"
+    - name: LOG_JSON
+      value: "true"
+  
+  # Secret environment variables
+  secretEnv: []
+  # - name: SECRET_KEY
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: asmblr-secrets
+  #       key: secret-key
+
+# Persistence
+persistence:
+  enabled: true
+  runs:
+    enabled: true
+    size: 50Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+  data:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+
+# Monitoring and observability
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    path: /metrics
+  prometheusRule:
+    enabled: true
+  grafanaDashboard:
+    enabled: true
+
+  # New Relic APM
+  newRelic:
+    enabled: false
+    licenseKey: ""
+    appName: "asmblr"
+    logLevel: "info"
+
+  # DataDog APM
+  dataDog:
+    enabled: false
+    apiKey: ""
+    site: "datadoghq.com"
+    env: "production"
+    version: ""
+
+# Security
+security:
+  podSecurityContext:
+    fsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+  networkPolicy:
+    enabled: true
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# Health checks
+healthChecks:
+  api:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  worker:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  ui:
+    enabled: true
+    path: /_stcore/health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Node selector and affinity
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - asmblr
+        topologyKey: kubernetes.io/hostname
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod labels
+podLabels: {}
+
+# Additional volumes
+extraVolumes: []
+
+# Additional volume mounts
+extraVolumeMounts: []
+
+# Init containers
+initContainers: []
+
+# Sidecar containers
+sidecars: []
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# RBAC
+rbac:
+  create: true
+  rules: []
+
+# Pod management
+podManagementPolicy: OrderedReady
+
+# Update strategy
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
+
+# Termination grace period
+terminationGracePeriodSeconds: 30
+
+# Priority class name
+priorityClassName: ""
+
+# Additional manifests
+extraManifests: []
+
+# Tests
+tests:
+  enabled: true

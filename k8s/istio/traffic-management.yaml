@@ -1,0 +1,427 @@
+# Advanced Traffic Management for Asmblr Service Mesh
+# Canary deployments, A/B testing, circuit breaking, and intelligent routing
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-canary-vs
+  namespace: asmblr
+spec:
+  hosts:
+  - api-gateway
+  http:
+  - match:
+    - headers:
+        canary:
+          exact: "true"
+    route:
+    - destination:
+        host: asmblr-agents
+        subset: canary
+      weight: 100
+  - route:
+    - destination:
+        host: asmblr-agents
+        subset: stable
+      weight: 95
+    - destination:
+        host: asmblr-agents
+        subset: canary
+      weight: 5
+  fault:
+    delay:
+      percentage:
+        value: 0.1
+      fixedDelay: 100ms
+---
+# A/B Testing Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-ab-test
+  namespace: asmblr
+spec:
+  hosts:
+  - api-gateway
+  http:
+  - match:
+    - headers:
+        x-ab-test:
+          exact: "feature-a"
+    route:
+    - destination:
+        host: asmblr-core
+        subset: feature-a
+      weight: 100
+  - match:
+    - headers:
+        x-ab-test:
+          exact: "feature-b"
+    route:
+    - destination:
+        host: asmblr-core
+        subset: feature-b
+      weight: 100
+  - route:
+    - destination:
+        host: asmblr-core
+        subset: stable
+      weight: 100
+---
+# Circuit Breaker with Advanced Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: asmblr-circuit-breaker
+  namespace: asmblr
+spec:
+  host: asmblr-core
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 10s
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+    outlierDetection:
+      consecutiveGatewayFailure: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 50
+    loadBalancer:
+      consistentHash:
+        httpCookie:
+          name: user-session
+          ttl: 300s
+          path: /
+    circuitBreaker:
+      consecutiveErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 50
+---
+# Retry Policy with Exponential Backoff
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-retry-policy
+  namespace: asmblr
+spec:
+  hosts:
+  - asmblr-core
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1/
+    route:
+    - destination:
+        host: asmblr-core
+        port:
+          number: 8001
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: 5xx,gateway-error,connect-failure,refused-stream
+---
+# Traffic Splitting for Blue-Green Deployment
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-blue-green
+  namespace: asmblr
+spec:
+  hosts:
+  - api-gateway
+  http:
+  - match:
+    - headers:
+        x-deployment:
+          exact: "blue"
+    route:
+    - destination:
+        host: asmblr-core
+        subset: blue
+      weight: 100
+  - match:
+    - headers:
+        x-deployment:
+          exact: "green"
+    route:
+    - destination:
+        host: asmblr-core
+        subset: green
+      weight: 100
+  - route:
+    - destination:
+        host: asmblr-core
+        subset: blue
+      weight: 100
+---
+# Session Affinity with Advanced Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: asmblr-session-affinity
+  namespace: asmblr
+spec:
+  host: asmblr-agents
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        httpCookie:
+          name: asmblr-session
+          ttl: 600s
+          path: /
+        httpHeaderName: x-user-id
+        useSourceIp: true
+---
+# Request Timeout Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-timeouts
+  namespace: asmblr
+spec:
+  hosts:
+  - api-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1/runs
+    timeout: 300s  # 5 minutes for long-running operations
+    route:
+    - destination:
+        host: asmblr-core
+        port:
+          number: 8001
+  - match:
+    - uri:
+        prefix: /api/v1/llm
+    timeout: 120s  # 2 minutes for LLM requests
+    route:
+    - destination:
+        host: asmblr-agents
+        port:
+          number: 8002
+  - match:
+    - uri:
+        prefix: /api/v1/media
+    timeout: 600s  # 10 minutes for media processing
+    route:
+    - destination:
+        host: asmblr-media
+        port:
+          number: 8003
+---
+# Mirror Configuration for Shadow Testing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-mirror
+  namespace: asmblr
+spec:
+  hosts:
+  - api-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/v1/
+    route:
+    - destination:
+        host: asmblr-core
+        port:
+          number: 8001
+      weight: 100
+    mirror:
+      host: asmblr-core-mirror
+      port:
+        number: 8001
+    mirrorPercent: 10
+---
+# Ingress Gateway with Advanced Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: asmblr-advanced-gateway
+  namespace: asmblr
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - asmblr.local
+    - api.asmblr.com
+    - "*.asmblr.com"
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: MUTUAL
+      credentialName: asmblr-tls
+      minProtocolVersion: TLSV1_2
+      cipherSuites:
+      - "ECDHE-RSA-AES128-GCM-SHA256"
+      - "ECDHE-RSA-AES256-GCM-SHA384"
+    hosts:
+    - asmblr.local
+    - api.asmblr.com
+    - "*.asmblr.com"
+---
+# Egress Gateway for External Services
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: asmblr-egress-gateway
+  namespace: asmblr
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - port:
+      number: 443
+      name: https-egress
+      protocol: HTTPS
+    hosts:
+    - api.openai.com
+    - huggingface.co
+    - "*.ollama.com"
+    tls:
+      mode: ISTIO_MUTUAL
+---
+# Service Entry for External APIs
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-apis
+  namespace: asmblr
+spec:
+  hosts:
+  - api.openai.com
+  - huggingface.co
+  - api.anthropic.com
+  - api.cohere.ai
+  location: MESH_EXTERNAL
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  resolution: DNS
+---
+# Rate Limiting per User
+apiVersion: networking.istio.io/v1beta1
+kind: EnvoyFilter
+metadata:
+  name: user-rate-limit
+  namespace: asmblr
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+            subFilter:
+              name: "envoy.filters.http.router"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.local_ratelimit
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+          descriptors:
+          - key: user_id
+            value: "*"
+            rate_limit:
+              unit: MINUTE
+              requests_per_unit: 100
+          - key: api_key
+            value: "*"
+            rate_limit:
+              unit: MINUTE
+              requests_per_unit: 1000
+---
+# Request/Response Transformation
+apiVersion: networking.istio.io/v1beta1
+kind: EnvoyFilter
+metadata:
+  name: request-transform
+  namespace: asmblr
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: GATEWAY
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.wasm
+        typed_config:
+          "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+          type_url: "type.googleapis.com/envoy.extensions.wasm.v3.Wasm"
+          value:
+            config:
+              name: "request_transform.wasm"
+              vm_config:
+                runtime: "envoy.wasm.runtime.v8"
+                code:
+                  local:
+                    filename: "/etc/istio/extensions/request_transform.wasm"
+---
+# CORS Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: asmblr-cors
+  namespace: asmblr
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - asmblr-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    corsPolicy:
+      allowOrigins:
+      - exact: "https://asmblr.com"
+      - exact: "https://www.asmblr.com"
+      - regex: "https://.*\\.asmblr\\.com"
+      allowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+      allowHeaders:
+      - "*"
+      exposeHeaders:
+      - "x-custom-header"
+      maxAge: "24h"
+      allowCredentials: true
+    route:
+    - destination:
+        host: api-gateway
+        port:
+          number: 8000

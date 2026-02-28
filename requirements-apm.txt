@@ -1,0 +1,21 @@
+# APM and Performance Monitoring Dependencies
+# Install with: pip install -r requirements-apm.txt
+
+# New Relic
+newrelic==9.2.0
+
+# DataDog
+ddtrace==2.8.0
+datadog==0.47.0
+
+# Additional monitoring tools
+psutil==5.9.6
+
+# OpenTelemetry (alternative APM)
+opentelemetry-api==1.37.0
+opentelemetry-sdk==1.37.0
+opentelemetry-instrumentation==0.48b0
+opentelemetry-instrumentation-fastapi==0.48b0
+opentelemetry-instrumentation-logging==0.48b0
+opentelemetry-exporter-otlp==1.37.0
+opentelemetry-exporter-prometheus==1.37.0

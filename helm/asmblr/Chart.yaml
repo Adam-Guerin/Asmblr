@@ -1,0 +1,32 @@
+apiVersion: v2
+name: asmblr
+description: AI-Powered MVP Generator with CrewAI + LangChain
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+keywords:
+  - ai
+  - mvp
+  - generator
+  - crewai
+  - langchain
+  - ollama
+home: https://github.com/asmblr/asmblr
+sources:
+  - https://github.com/asmblr/asmblr
+maintainers:
+  - name: Asmblr Team
+    email: team@asmblr.com
+icon: https://raw.githubusercontent.com/asmblr/asmblr/main/assets/logo.png
+annotations:
+  category: AI/ML
+  licenses: MIT
+dependencies:
+  - name: redis
+    version: "17.3.7"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+  - name: postgresql
+    version: "12.1.9"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled

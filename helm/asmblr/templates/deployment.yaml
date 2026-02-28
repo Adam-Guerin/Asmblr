@@ -1,0 +1,173 @@
+{{- range $service := list "api" "worker" "ui" "gateway" }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-{{ $service }}
+  labels:
+    {{- include "asmblr.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $service }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ index .Values.replicaCount $service }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "asmblr.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ $service }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "asmblr.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $service }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "asmblr.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml .Values.security.podSecurityContext | nindent 8 }}
+      {{- with .Values.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ $service }}
+        securityContext:
+          {{- toYaml .Values.security.securityContext | nindent 10 }}
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}-{{ $service }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ if eq $service "gateway" }}8000{{ else if eq $service "api" }}8000{{ else if eq $service "worker" }}8001{{ else if eq $service "ui" }}8501{{ end }}
+          protocol: TCP
+        {{- if index .Values.healthChecks $service }}
+        livenessProbe:
+          httpGet:
+            path: {{ index .Values.healthChecks $service "path" }}
+            port: http
+          initialDelaySeconds: {{ index .Values.healthChecks $service "initialDelaySeconds" }}
+          periodSeconds: {{ index .Values.healthChecks $service "periodSeconds" }}
+          timeoutSeconds: {{ index .Values.healthChecks $service "timeoutSeconds" }}
+          failureThreshold: {{ index .Values.healthChecks $service "failureThreshold" }}
+        readinessProbe:
+          httpGet:
+            path: {{ index .Values.healthChecks $service "path" }}
+            port: http
+          initialDelaySeconds: {{ index .Values.healthChecks $service "initialDelaySeconds" }}
+          periodSeconds: {{ index .Values.healthChecks $service "periodSeconds" }}
+          timeoutSeconds: {{ index .Values.healthChecks $service "timeoutSeconds" }}
+          failureThreshold: {{ index .Values.healthChecks $service "failureThreshold" }}
+        {{- end }}
+        resources:
+          {{- toYaml (index .Values.resources $service) | nindent 10 }}
+        env:
+        {{- range .Values.config.env }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
+        {{- range .Values.config.secretEnv }}
+        - name: {{ .name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .valueFrom.secretKeyRef.name }}
+              key: {{ .valueFrom.secretKeyRef.key }}
+        {{- end }}
+        {{- if .Values.monitoring.newRelic.enabled }}
+        - name: NEW_RELIC_LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: newrelic-secret
+              key: license-key
+        - name: NEW_RELIC_APP_NAME
+          value: {{ .Values.monitoring.newRelic.appName | quote }}
+        - name: NEW_RELIC_LOG_LEVEL
+          value: {{ .Values.monitoring.newRelic.logLevel | quote }}
+        {{- end }}
+        {{- if .Values.monitoring.dataDog.enabled }}
+        - name: DD_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secret
+              key: api-key
+        - name: DD_SITE
+          value: {{ .Values.monitoring.dataDog.site | quote }}
+        - name: DD_ENV
+          value: {{ .Values.monitoring.dataDog.env | quote }}
+        - name: DD_VERSION
+          value: {{ .Values.monitoring.dataDog.version | quote }}
+        {{- end }}
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        {{- if .Values.persistence.runs.enabled }}
+        - name: runs
+          mountPath: /app/runs
+        {{- end }}
+        {{- if .Values.persistence.data.enabled }}
+        - name: data
+          mountPath: /app/data
+        {{- end }}
+        {{- range .Values.extraVolumeMounts }}
+        - name: {{ .name }}
+          mountPath: {{ .mountPath }}
+          readOnly: {{ .readOnly | default false }}
+        {{- end }}
+      {{- with .Values.sidecars }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "asmblr.fullname" $ }}
+      {{- if .Values.persistence.runs.enabled }}
+      - name: runs
+        persistentVolumeClaim:
+          claimName: {{ include "asmblr.fullname" $ }}-runs
+      {{- end }}
+      {{- if .Values.persistence.data.enabled }}
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ include "asmblr.fullname" $ }}-data
+      {{- end }}
+      {{- range .Values.extraVolumes }}
+      - name: {{ .name }}
+        {{- if .persistentVolumeClaim }}
+        persistentVolumeClaim:
+          claimName: {{ .persistentVolumeClaim }}
+        {{- else if .configMap }}
+        configMap:
+          name: {{ .configMap }}
+        {{- else if .secret }}
+        secret:
+          secretName: {{ .secret }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+{{- end }}

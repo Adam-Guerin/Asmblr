@@ -1,0 +1,103 @@
+{{- if .Values.autoscaling.clusterAutoscaler.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-cluster-autoscaler
+  labels:
+    {{- include "asmblr.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: cluster-autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "asmblr.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        {{- include "asmblr.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: cluster-autoscaler
+    spec:
+      serviceAccountName: {{ include "asmblr.fullname" $ }}-cluster-autoscaler
+      containers:
+      - image: k8s.gcr.io/autoscaling/cluster-autoscaler:v1.21.0
+        name: cluster-autoscaler
+        resources:
+          limits:
+            cpu: 100m
+            memory: 300Mi
+          requests:
+            cpu: 100m
+            memory: 300Mi
+        command:
+        - ./cluster-autoscaler
+        - --v=4
+        - --stderrthreshold=info
+        - --cloud-provider={{ .Values.autoscaling.clusterAutoscaler.cloudProvider }}
+        - --skip-nodes-with-local-storage=false
+        - --expander=least-waste
+        - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/{{ include "asmblr.fullname" $ }}
+        - --balance-similar-node-groups
+        - --skip-nodes-with-system-pods=false
+        - --scale-down-delay-after-add=10m
+        - --scale-down-unneeded-time=10m
+        - --scale-down-utilization-threshold=0.1
+        - --max-nodes-total={{ .Values.autoscaling.clusterAutoscaler.maxNodesTotal }}
+        - --max-node-provision-time=5m
+        - --nodes={{ .Values.autoscaling.clusterAutoscaler.minNodes }}:{{ .Values.autoscaling.clusterAutoscaler.maxNodes }}:{{ .Values.autoscaling.clusterAutoscaler.nodeInstanceType }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-cluster-autoscaler
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    eks.amazonaws.com/role-arn: {{ .Values.autoscaling.clusterAutoscaler.iamRoleARN }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-cluster-autoscaler
+rules:
+- apiGroups: [""]
+  resources: ["pods", "nodes", "persistentvolumes", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+- apiGroups: ["apps"]
+  resources: ["replicasets", "daemonsets", "deployments", "statefulsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["extensions"]
+  resources: ["replicasets", "daemonsets", "deployments"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses", "csinodes", "csidrivers", "csistoragecapacities"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "asmblr.fullname" $ }}-cluster-autoscaler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "asmblr.fullname" $ }}-cluster-autoscaler
+subjects:
+- kind: ServiceAccount
+  name: {{ include "asmblr.fullname" $ }}-cluster-autoscaler
+  namespace: {{ .Release.Namespace }}
+{{- end }}

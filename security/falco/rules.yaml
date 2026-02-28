@@ -1,0 +1,203 @@
+# Falco Runtime Security Rules for Asmblr
+# Protects against common threats and suspicious activities
+
+# Rule: Detect suspicious shell activity in containers
+- rule: Suspicious Shell Activity
+  desc: Detect shell activity in containers that shouldn't have shells
+  condition: >
+    spawned_process and
+    container and
+    proc.name in (sh, bash, dash, zsh, tcsh, csh) and
+    not container.image.repository in (docker.io/library/python, docker.io/library/alpine, docker.io/library/ubuntu) and
+    not user.name in (unprivileged)
+  output: >
+    Suspicious shell activity detected (user=%user.name container=%container.name 
+    shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline image=%container.image.repository)
+  priority: WARNING
+  tags: [container, shell, process]
+
+# Rule: Detect network connections to suspicious destinations
+- rule: Suspicious Network Connection
+  desc: Detect connections to known malicious or suspicious destinations
+  condition: >
+    outbound and
+    container and
+    fd.type=ipv4 and
+    (fd.sip.name in (malicious.com, suspicious-domain.com) or
+     fd.sport in (4444, 5555, 6666, 7777, 8888, 9999, 31337, 12345))
+  output: >
+    Suspicious network connection detected (user=%user.name container=%container.name 
+    sip=%fd.sip sport=%fd.sport dip=%fd.dip dport=%fd.dport)
+  priority: HIGH
+  tags: [network, security]
+
+# Rule: Detect file system anomalies
+- rule: Suspicious File System Activity
+  desc: Detect suspicious file system modifications
+  condition: >
+    (open_read or open_write) and
+    container and
+    fd.name contains (/etc/passwd, /etc/shadow, /etc/hosts, /root/.ssh, 
+    /etc/cron, /tmp/sh, /var/spool/cron) and
+    not proc.name in (vi, nano, emacs, cat, grep, sed)
+  output: >
+    Suspicious file system activity detected (user=%user.name container=%container.name 
+    file=%fd.name operation=%evt.type process=%proc.name)
+  priority: WARNING
+  tags: [filesystem, security]
+
+# Rule: Detect privilege escalation attempts
+- rule: Privilege Escalation Attempt
+  desc: Detect attempts to escalate privileges
+  condition: >
+    spawn_process and
+    container and
+    (proc.name in (sudo, su, doas, pkexec) or
+     proc.cmdline contains (chmod +s, chown root, setcap))
+  output: >
+    Privilege escalation attempt detected (user=%user.name container=%container.name 
+    process=%proc.name cmdline=%proc.cmdline)
+  priority: HIGH
+  tags: [privilege_escalation, security]
+
+# Rule: Detect container escape attempts
+- rule: Container Escape Attempt
+  desc: Detect attempts to escape container isolation
+  condition: >
+    spawn_process and
+    container and
+    (proc.name in (nsenter, chroot, unshare) or
+     proc.cmdline contains (mount --bind, /proc/self/fd, /proc/self/ns))
+  output: >
+    Container escape attempt detected (user=%user.name container=%container.name 
+    process=%proc.name cmdline=%proc.cmdline)
+  priority: CRITICAL
+  tags: [container_escape, security]
+
+# Rule: Detect suspicious package installations
+- rule: Suspicious Package Installation
+  desc: Detect installation of suspicious packages
+  condition: >
+    spawn_process and
+    container and
+    proc.name in (apt, yum, dnf, pip, npm, yarn) and
+    proc.cmdline contains (netcat, nc, nmap, wireshark, tcpdump, john, hydra)
+  output: >
+    Suspicious package installation detected (user=%user.name container=%container.name 
+    package_manager=%proc.name package=%proc.cmdline)
+  priority: WARNING
+  tags: [package_management, security]
+
+# Rule: Detect data exfiltration attempts
+- rule: Data Exfiltration Attempt
+  desc: Detect potential data exfiltration
+  condition: >
+    outbound and
+    container and
+    fd.type=ipv4 and
+    (fd.sport in (22, 80, 443, 21, 25) and
+     proc.name in (curl, wget, nc, scp, rsync, sftp) and
+     proc.cmdline contains (/app/runs, /app/data, /app/logs))
+  output: >
+    Data exfiltration attempt detected (user=%user.name container=%container.name 
+    process=%proc.name destination=%fd.sip:%fd.sport)
+  priority: HIGH
+  tags: [data_exfiltration, security]
+
+# Rule: Detect cryptocurrency mining
+- rule: Cryptocurrency Mining
+  desc: Detect cryptocurrency mining activities
+  condition: >
+    spawn_process and
+    container and
+    proc.name in (xmrig, cgminer, bfgminer, cpuminer) or
+    proc.cmdline contains (stratum+tcp, mining, pool, monero, bitcoin)
+  output: >
+    Cryptocurrency mining detected (user=%user.name container=%container.name 
+    process=%proc.name cmdline=%proc.cmdline)
+  priority: CRITICAL
+  tags: [cryptocurrency, security]
+
+# Rule: Detect unauthorized port bindings
+- rule: Unauthorized Port Binding
+  desc: Detect binding to unauthorized ports
+  condition: >
+    bind and
+    container and
+    fd.port in (22, 23, 25, 53, 135, 139, 445, 993, 995, 1433, 3306, 3389, 5432, 6379, 27017) and
+    not proc.name in (nginx, apache, httpd, redis-server, mysqld, postgres)
+  output: >
+    Unauthorized port binding detected (user=%user.name container=%container.name 
+    process=%proc.name port=%fd.port)
+  priority: WARNING
+  tags: [network, security]
+
+# Rule: Detect suspicious environment variable access
+- rule: Suspicious Environment Variable Access
+  desc: Detect access to sensitive environment variables
+  condition: >
+    spawn_process and
+    container and
+    proc.cmdline contains (SECRET_KEY, PASSWORD, TOKEN, API_KEY, PRIVATE_KEY) and
+    not proc.name in (env, printenv, python, node)
+  output: >
+    Suspicious environment variable access detected (user=%user.name container=%container.name 
+    process=%proc.name cmdline=%proc.cmdline)
+  priority: WARNING
+  tags: [environment, security]
+
+# Rule: Detect Docker socket access
+- rule: Docker Socket Access
+  desc: Detect access to Docker socket
+  condition: >
+    (open_read or open_write) and
+    container and
+    fd.name=/var/run/docker.sock
+  output: >
+    Docker socket access detected (user=%user.name container=%container.name 
+    process=%proc.name)
+  priority: CRITICAL
+  tags: [docker, security]
+
+# Rule: Detect Kubernetes API access
+- rule: Kubernetes API Access
+  desc: Detect unauthorized Kubernetes API access
+  condition: >
+    outbound and
+    container and
+    fd.sip.name=kubernetes.default.svc and
+    fd.sport=443 and
+    not proc.name in (kubectl, curl, python, node)
+  output: >
+    Kubernetes API access detected (user=%user.name container=%container.name 
+    process=%proc.name)
+  priority: WARNING
+  tags: [kubernetes, security]
+
+# Rule: Detect suspicious cron job creation
+- rule: Suspicious Cron Job Creation
+  desc: Detect creation of suspicious cron jobs
+  condition: >
+    spawn_process and
+    container and
+    proc.name in (crontab, cron) and
+    proc.cmdline contains (curl, wget, nc, bash, sh, python)
+  output: >
+    Suspicious cron job creation detected (user=%user.name container=%container.name 
+    process=%proc.name cmdline=%proc.cmdline)
+  priority: WARNING
+  tags: [persistence, security]
+
+# Rule: Detect reverse shell attempts
+- rule: Reverse Shell Attempt
+  desc: Detect reverse shell attempts
+  condition: >
+    spawn_process and
+    container and
+    (proc.cmdline contains (/dev/tcp, /dev/udp, bash -i, sh -i) or
+     proc.name in (nc, netcat, socat) and proc.cmdline contains (-e, -c, -l))
+  output: >
+    Reverse shell attempt detected (user=%user.name container=%container.name 
+    process=%proc.name cmdline=%proc.cmdline)
+  priority: CRITICAL
+  tags: [reverse_shell, security]
