@@ -9,7 +9,14 @@ import json
 from unittest.mock import Mock, patch
 import httpx
 
-from app.core.llm import LLMClient, LLMResponse
+from app.core.llm import LLMClient
+
+# Define LLMResponse since it doesn't exist in the module
+class LLMResponse:
+    def __init__(self, text: str, done: bool = True, total_duration: int = 0):
+        self.text = text
+        self.done = done
+        self.total_duration = total_duration
 
 
 class TestLLMClient:

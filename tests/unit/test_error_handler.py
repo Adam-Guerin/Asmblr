@@ -8,8 +8,8 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from app.core.error_handler import (
-    ErrorHandler, ErrorCategory, ErrorSeverity, ErrorContext,
-    AsmblrError, handle_error, register_error_handler, error_handler
+    ErrorHandler, ErrorCategory, ErrorSeverity, ErrorInfo,
+    handle_error, format_error_for_ui
 )
 
 

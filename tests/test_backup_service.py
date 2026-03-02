@@ -12,8 +12,14 @@ from pathlib import Path
 
 # Import backup service
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-from backup_service import BackupService
+import importlib.util
+from pathlib import Path
+
+# Load backup-service.py as a module
+spec = importlib.util.spec_from_file_location("backup_service", Path(__file__).parent.parent / "scripts" / "backup-service.py")
+backup_service_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(backup_service_module)
+BackupService = backup_service_module.BackupService
 
 
 class TestBackupService:
@@ -22,7 +28,7 @@ class TestBackupService:
     @pytest.fixture
     def backup_service(self):
         """Create backup service for testing"""
-        with patch('backup_service.get_settings') as mock_settings:
+        with patch('app.core.config.get_settings') as mock_settings:
             mock_settings_instance = MagicMock()
             mock_settings_instance.backup_dir = "test_backups"
             mock_settings_instance.data_dir = "test_data"

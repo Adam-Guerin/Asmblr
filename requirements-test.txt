@@ -7,3 +7,8 @@ pytest-xdist>=3.0.0
 coverage>=7.0.0
 pytest-timeout>=2.1.0
 pytest-benchmark>=4.0.0
+
+# Security scanning tools
+bandit>=1.7.5
+safety>=2.3.0
+semgrep>=1.45.0
