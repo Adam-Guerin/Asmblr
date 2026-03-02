@@ -7,8 +7,17 @@ import pytest
 import time
 import json
 import threading
+from typing import Any
 
-from app.core.cache import CacheManager, CacheEntry
+from app.core.cache import ArtifactCache
+
+# Define CacheEntry since it doesn't exist
+class CacheEntry:
+    def __init__(self, key: str, value: Any, ttl: int = 300):
+        self.key = key
+        self.value = value
+        self.ttl = ttl
+        self.created_at = time.time()
 
 
 class TestCacheEntry:

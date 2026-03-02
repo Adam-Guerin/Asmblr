@@ -12,8 +12,11 @@ import gc
 import random
 
 from app.core.pipeline import VenturePipeline
-from app.core.cache import CacheManager
+from app.core.cache import ArtifactCache
 from app.core.llm import LLMClient
+
+# Use ArtifactCache as CacheManager for compatibility
+CacheManager = ArtifactCache
 
 
 class TestPerformanceAndLoad:

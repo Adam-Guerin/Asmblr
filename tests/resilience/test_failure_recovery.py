@@ -11,8 +11,11 @@ from unittest.mock import Mock, patch
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.core.pipeline import VenturePipeline
-from app.core.cache import CacheManager
+from app.core.cache import ArtifactCache
 from app.core.llm import LLMClient
+
+# Use ArtifactCache as CacheManager for compatibility
+CacheManager = ArtifactCache
 
 
 class TestResilienceAndRecovery:

@@ -21,6 +21,14 @@ class LLMProvider(Enum):
     LOCALAI = "localai"
     OLLAMA = "ollama"
     TOGETHERAI = "togetherai"
+    AWS = "aws"
+    AZURE = "azure"
+    GCP = "gcp"
+    DIGITAL_OCEAN = "digital_ocean"
+    VULTR = "vultr"
+    LINODE = "linode"
+    ORACLE = "oracle"
+    IBM = "ibm"
 
 class LLMModel(Enum):
     """LLM model types"""
@@ -92,18 +100,27 @@ class LLMRequest:
             self.capabilities = []
 
 @dataclass
+class CloudCost:
+    """Cloud cost calculation"""
+    provider: LLMProvider
+    model: str
+    input_tokens: int
+    output_tokens: int
+    total_cost: float
+
+@dataclass
 class LLMResponse:
     """LLM response"""
     request_id: str
     provider: LLMProvider
-    model: LLM
+    model: LLMModel
     content: str
     usage: dict[str, Any]
-    metadata: dict[str, Any] = None
     timestamp: datetime
     tokens_used: int
     response_time: float
     cost: float
+    metadata: dict[str, Any] = None
         
     def __post_init__(self):
         if self.usage is None:
@@ -828,13 +845,13 @@ class MultiLLMManager:
         try:
             # Initialize configured providers
             provider_configs = {
-                CloudProvider.AWS: self.config.get('aws', {}),
-                CloudProvider.AZURE: self.config.get('azure', {}),
-                CloudProvider.GCP: self.config.get('gcp', {}),
-                CloudProvider.ANTHROPIC: self.config.get('anthropic', {}),
-                CloudProvider.HUGGINGFACE: self.config.get('huggingface', {}),
-                CloudProvider.REPLICATE: self.config.get('replicate', {}),
-                CloudProvider.LOCALAI: self.config.get('localai', {})
+                LLMProvider.AWS: self.config.get('aws', {}),
+                LLMProvider.AZURE: self.config.get('azure', {}),
+                LLMProvider.GCP: self.config.get('gcp', {}),
+                LLMProvider.ANTHROPIC: self.config.get('anthropic', {}),
+                LLMProvider.HUGGINGFACE: self.config.get('huggingface', {}),
+                LLMProvider.REPLICATE: self.config.get('replicate', {}),
+                LLMProvider.LOCALAI: self.config.get('localai', {})
             }
             
             for provider, config in provider_configs.items():
@@ -849,21 +866,21 @@ class MultiLLMManager:
             logger.error(f"Failed to initialize providers: {e}")
             raise
     
-    def _create_adapter(self, provider: CloudProvider, config: LLMConfig) -> LLMProviderAdapter:
+    def _create_adapter(self, provider: LLMProvider, config: LLMConfig) -> LLMProviderAdapter:
         """Create adapter for provider"""
-        if provider == CloudProvider.AWS:
+        if provider == LLMProvider.AWS:
             return AWSAdapter(config)
-        elif provider == CloudProvider.AZURE:
+        elif provider == LLMProvider.AZURE:
             return AzureAdapter(config)
-        elif provider == CloudProvider.GCP:
+        elif provider == LLMProvider.GCP:
             return GCPAdapter(config)
-        elif provider == CloudProvider.ANTHROPIC:
+        elif provider == LLMProvider.ANTHROPIC:
             return AnthropicAdapter(config)
-        elif provider == CloudProvider.HUGGINGFACE:
+        elif provider == LLMProvider.HUGGINGFACE:
             return HuggingFaceAdapter(config)
-        elif provider == CloudProvider.REPLICATE:
+        elif provider == LLMProvider.REPLICATE:
             return ReplicateAdapter(config)
-        elif provider == CloudProvider.LOCALAI:
+        elif provider == LLMProvider.LOCALAI:
             return LocalAIAdapter(config)
         else:
             raise ValueError(f"Unsupported provider: {provider}")
@@ -906,11 +923,11 @@ class MultiLLMManager:
         try:
             # Select optimal provider for code generation
             code_providers = [
-                CloudProvider.OPENAI,
-                CloudProvider.ANTHROPIC,
-                CloudProvider.HUGGINGFACE,
-                CloudProvider.COHERE,
-                CloudProvider.REPLICATE
+                LLMProvider.OPENAI,
+                LLMProvider.ANTHROPIC,
+                LLMProvider.HUGGINGFACE,
+                LLMProvider.COHERE,
+                LLMProvider.REPLICATE
             ]
             
             # Filter providers that support code generation
@@ -952,7 +969,7 @@ class MultiLLMManager:
             else:
                 raise Exception("No available LLM providers for code generation")
     
-    async def _select_optimal_provider(self, request: LLMRequest, preferred_providers: list[CloudProvider] | None = None) -> CloudProvider:
+    async def _select_optimal_provider(self, request: LLMRequest, preferred_providers: list[LLMProvider] | None = None) -> LLMProvider:
         """Select optimal provider for request"""
         try:
             candidates = preferred_providers or list(self.providers.keys())
@@ -987,17 +1004,17 @@ class MultiLLMManager:
             logger.error(f"Provider selection failed: {e}")
             return self.default_provider
     
-    def _select_optimal_provider_for_code(self, request: LLMRequest, code_providers: list[CloudProvider]) -> CloudProvider:
+    def _select_optimal_provider_for_code(self, request: LLMRequest, code_providers: list[LLMProvider]) -> LLMProvider:
         """Select optimal provider for code generation"""
         try:
             # Prioritize providers known for code generation
             code_provider_priority = {
-                CloudProvider.OPENAI: 0.95,
-                CloudProvider.ANTHROPIC: 0.85,
-                CloudProvider.HUGGINGFACE: 0.80,
-                CloudProvider.COHERE: 0.75,
-                CloudProvider.REPLICATE: 0.70,
-                CloudProvider.GCP: 0.65
+                LLMProvider.OPENAI: 0.95,
+                LLMProvider.ANTHROPIC: 0.85,
+                LLMProvider.HUGGINGFACE: 0.80,
+                LLMProvider.COHERE: 0.75,
+                LLMProvider.REPLICATE: 0.70,
+                LLMProvider.GCP: 0.65
             }
             
             provider_scores = []
@@ -1010,9 +1027,9 @@ class MultiLLMManager:
             
         except Exception as e:
             logger.error(f"Code provider selection failed: {e}")
-            return CloudProvider.OPENAI
+            return LLMProvider.OPENAI
     
-    def _calculate_provider_score(self, provider: CloudProvider, request: LLMRequest, cost: CloudCost) -> float:
+    def _calculate_provider_score(self, provider: LLMProvider, request: LLMRequest, cost: CloudCost) -> float:
         """Calculate provider score for request"""
         try:
             score = 0.0
@@ -1032,14 +1049,14 @@ class MultiLLMManager:
             
             # Performance factor
             performance_scores = {
-                CloudProvider.OPENAI: 0.90,
-                CloudProvider.AZURE: 0.85,
-                CloudProvider.GCP: 0.80,
-                CloudProvider.ANTHROPIC: 0.75,
-                CloudProvider.HUGGINGFACE: 0.70,
-                CloudProvider.COHERE: 0.65,
-                CloudProvider.REPLICATE: 0.60,
-                CloudProvider.GCP: 0.55
+                LLMProvider.OPENAI: 0.90,
+                LLMProvider.AZURE: 0.85,
+                LLMProvider.GCP: 0.80,
+                LLMProvider.ANTHROPIC: 0.75,
+                LLMProvider.HUGGINGFACE: 0.70,
+                LLMProvider.COHERE: 0.65,
+                LLMProvider.REPLICATE: 0.60,
+                LLMProvider.GCP: 0.55
             }
             score += performance_scores.get(provider, 0.5) * 0.3
             
@@ -1049,28 +1066,28 @@ class MultiLLMManager:
             logger.error(f"Provider score calculation failed: {e}")
             return 0.5
     
-    def _calculate_provider_score(self, provider: CloudProvider, request: LLMRequest, cost: CloudCost) -> float:
+    def _calculate_provider_score(self, provider: LLMProvider, request: LLMRequest, cost: CloudCost) -> float:
         """Calculate provider score for general request"""
         try:
             score = 0.0
             
             # Provider reliability
             reliability_scores = {
-                CloudProvider.OPENAI: 0.95,
-                CloudProvider.AZURE: 0.90,
-                CloudProvider.GCP: 0.85,
-                CloudProvider.ANTHROPIC: 0.80,
-                CloudProvider.HUGGINGFACE: 0.75,
-                CloudProvider.COHERE: 0.70,
-                CloudProvider.REPLICATE: 0.65,
-                CloudProvider.LINODE: 0.60,
-                CloudProvider.GCP: 0.55,
-                CloudProvider.DIGITAL_OCEAN: 0.50,
-                CloudProvider.VULTR: 0.45,
-                CloudProvider.LINODE: 0.40,
-                CloudProvider.ORACLE: 0.85,
-                CloudProvider.IBM: 0.80,
-                CloudProvider.HUGGINGFACE: 0.75
+                LLMProvider.OPENAI: 0.95,
+                LLMProvider.AZURE: 0.90,
+                LLMProvider.GCP: 0.85,
+                LLMProvider.ANTHROPIC: 0.80,
+                LLMProvider.HUGGINGFACE: 0.75,
+                LLMProvider.COHERE: 0.70,
+                LLMProvider.REPLICATE: 0.65,
+                LLMProvider.LINODE: 0.60,
+                LLMProvider.GCP: 0.55,
+                LLMProvider.DIGITAL_OCEAN: 0.50,
+                LLMProvider.VULTR: 0.45,
+                LLMProvider.LINODE: 0.40,
+                LLMProvider.ORACLE: 0.85,
+                LLMProvider.IBM: 0.80,
+                LLMProvider.HUGGINGFACE: 0.75
             }
             
             score += reliability_scores.get(provider, 0.5) * 0.4
