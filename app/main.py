@@ -4,7 +4,6 @@ from uuid import uuid4
 from pathlib import Path
 from pydantic import BaseModel, Field
 from pathlib import Path
-from typing import Optional
 import time
 import httpx
 import json
@@ -367,7 +366,6 @@ async def health():
 @app.get("/health/detailed")
 async def health_detailed():
     """Comprehensive health check with all system components"""
-    import asyncio
     from app.core.config import get_settings
     from pathlib import Path
     
@@ -542,13 +540,13 @@ async def readyz():
 
 class CustomMVPRequest(BaseModel):
     topic: str = Field(..., min_length=3, description="L'idée à développer en MVP")
-    seed_inputs: Optional[SeedInputs] = Field(None, description="Inputs utilisateur optionnels")
+    seed_inputs: SeedInputs | None = Field(None, description="Inputs utilisateur optionnels")
     fast_mode: bool = Field(False, description="Mode rapide pour les tests")
 
 
 class CEOVisionRequest(BaseModel):
     topic: str = Field(..., min_length=3, description="L'idée à dominer en tant que CEO")
-    seed_inputs: Optional[SeedInputs] = Field(None, description="Inputs utilisateur optionnels")
+    seed_inputs: SeedInputs | None = Field(None, description="Inputs utilisateur optionnels")
     risk_level: str = Field("EXTREME", description="Niveau de risque CEO (LOW/MEDIUM/HIGH/EXTREME)")
     timeline_aggression: str = Field("INSANE", description="Aggressivité timeline (CONSERVATIVE/NORMAL/AGGRESSIVE/INSANE)")
     unleash_ceo: bool = Field(True, description="Activer le mode CEO sans limites")
@@ -704,7 +702,6 @@ def download_custom_mvp(run_id: str, request: Request):
     
     # Créer un ZIP avec tous les résultats
     import zipfile
-    import tempfile
     
     zip_path = run_dir / f"{run_id}_custom_mvp.zip"
     

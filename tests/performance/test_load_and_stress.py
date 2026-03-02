@@ -4,22 +4,16 @@ Tests de charge, stress, et limites du système
 """
 
 import pytest
-import asyncio
 import time
-import threading
 import statistics
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Any
 import psutil
 import gc
 import random
-import string
 
-from app.core.config import Settings
 from app.core.pipeline import VenturePipeline
 from app.core.cache import CacheManager
 from app.core.llm import LLMClient
-from app.monitoring.prometheus_metrics import AsmblrMetrics
 
 
 class TestPerformanceAndLoad:

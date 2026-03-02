@@ -6,7 +6,7 @@ Focus sur les TODO critiques et l'optimisation du code
 import re
 import json
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any
 from datetime import datetime
 
 
@@ -17,7 +17,7 @@ class TechnicalDebtFixer:
         self.project_root = project_root
         self.fixes_applied = []
         
-    def fix_critical_todos(self) -> Dict[str, Any]:
+    def fix_critical_todos(self) -> dict[str, Any]:
         """Corrige les TODO critiques identifiés"""
         print("🔧 Correction des TODO critiques...")
         
@@ -29,7 +29,7 @@ class TechnicalDebtFixer:
         
         return fixes
     
-    def _fix_pipeline_todos(self) -> List[Dict[str, Any]]:
+    def _fix_pipeline_todos(self) -> list[dict[str, Any]]:
         """Corrige les TODO dans pipeline.py"""
         pipeline_path = self.project_root / "app/core/pipeline.py"
         
@@ -39,7 +39,7 @@ class TechnicalDebtFixer:
         fixes = []
         
         try:
-            with open(pipeline_path, 'r', encoding='utf-8') as f:
+            with open(pipeline_path, encoding='utf-8') as f:
                 content = f.read()
             
             original_content = content
@@ -138,7 +138,7 @@ class TechnicalDebtFixer:
         
         return fixes
     
-    def _fix_cache_todos(self) -> List[Dict[str, Any]]:
+    def _fix_cache_todos(self) -> list[dict[str, Any]]:
         """Corrige les TODO dans cache.py"""
         cache_path = self.project_root / "app/core/cache.py"
         
@@ -148,7 +148,7 @@ class TechnicalDebtFixer:
         fixes = []
         
         try:
-            with open(cache_path, 'r', encoding='utf-8') as f:
+            with open(cache_path, encoding='utf-8') as f:
                 content = f.read()
             
             original_content = content
@@ -206,7 +206,7 @@ class TechnicalDebtFixer:
         
         return fixes
     
-    def _fix_logging_issues(self) -> List[Dict[str, Any]]:
+    def _fix_logging_issues(self) -> list[dict[str, Any]]:
         """Corrige les problèmes de logging dans tout le projet"""
         fixes = []
         
@@ -216,7 +216,7 @@ class TechnicalDebtFixer:
                 continue
             
             try:
-                with open(py_file, 'r', encoding='utf-8') as f:
+                with open(py_file, encoding='utf-8') as f:
                     content = f.read()
                 
                 # Compter les logs
@@ -237,7 +237,7 @@ class TechnicalDebtFixer:
         
         return fixes
     
-    def optimize_complex_files(self) -> List[Dict[str, Any]]:
+    def optimize_complex_files(self) -> list[dict[str, Any]]:
         """Optimise les fichiers avec haute complexité"""
         print("🚀 Optimisation des fichiers complexes...")
         
@@ -246,7 +246,7 @@ class TechnicalDebtFixer:
         if not analysis_path.exists():
             return []
         
-        with open(analysis_path, 'r', encoding='utf-8') as f:
+        with open(analysis_path, encoding='utf-8') as f:
             analysis = json.load(f)
         
         optimizations = []
@@ -260,7 +260,7 @@ class TechnicalDebtFixer:
                     continue
                 
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, encoding='utf-8') as f:
                         content = f.read()
                     
                     # Analyser les opportunités d'optimisation
@@ -282,7 +282,7 @@ class TechnicalDebtFixer:
         
         return optimizations
     
-    def _analyze_optimization_opportunities(self, content: str) -> List[str]:
+    def _analyze_optimization_opportunities(self, content: str) -> list[str]:
         """Analyse les opportunités d'optimisation dans un fichier"""
         suggestions = []
         
@@ -313,7 +313,7 @@ class TechnicalDebtFixer:
         
         return suggestions
     
-    def generate_improvement_plan(self) -> Dict[str, Any]:
+    def generate_improvement_plan(self) -> dict[str, Any]:
         """Génère un plan d'amélioration complet"""
         print("📋 Génération du plan d'amélioration...")
         

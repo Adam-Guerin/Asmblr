@@ -5,16 +5,13 @@ Advanced load balancing with health checks and circuit breakers
 
 import asyncio
 import time
-import json
-import hashlib
 import random
-from typing import Dict, Any, Optional, List, Callable, Union
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from typing import Any
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from collections import defaultdict, deque
+from collections import deque
 import statistics
-import psutil
 from loguru import logger
 import aiohttp
 import redis.asyncio as redis
@@ -44,15 +41,15 @@ class Endpoint:
     weight: float = 1.0
     max_connections: int = 100
     health_status: HealthStatus = HealthStatus.UNKNOWN
-    last_health_check: Optional[datetime] = None
+    last_health_check: datetime | None = None
     response_times: deque = None
     active_connections: int = 0
     total_requests: int = 0
     failed_requests: int = 0
     circuit_breaker_open: bool = False
     circuit_breaker_failures: int = 0
-    circuit_breaker_last_failure: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None
+    circuit_breaker_last_failure: datetime | None = None
+    metadata: dict[str, Any] | None = None
     
     def __post_init__(self):
         if self.response_times is None:
@@ -89,7 +86,7 @@ class LoadBalancerMetrics:
     failed_requests: int = 0
     avg_response_time: float = 0.0
     requests_per_second: float = 0.0
-    endpoint_distribution: Dict[str, int] = None
+    endpoint_distribution: dict[str, int] = None
     circuit_breaker_activations: int = 0
     health_check_failures: int = 0
     load_balancing_efficiency: float = 0.0
@@ -110,7 +107,7 @@ class IntelligentLoadBalancer:
     
     def __init__(self, strategy: LoadBalancingStrategy = LoadBalancingStrategy.LEAST_CONNECTIONS):
         self.strategy = strategy
-        self.endpoints: List[Endpoint] = []
+        self.endpoints: list[Endpoint] = []
         self.round_robin_index = 0
         self.metrics = LoadBalancerMetrics()
         
@@ -175,7 +172,7 @@ class IntelligentLoadBalancer:
             del self.endpoint_weights[endpoint_id]
         logger.info(f"Removed endpoint {endpoint_id}")
     
-    async def get_endpoint(self, session_id: Optional[str] = None) -> Optional[Endpoint]:
+    async def get_endpoint(self, session_id: str | None = None) -> Endpoint | None:
         """Get the best endpoint for a request"""
         if not self.endpoints:
             return None
@@ -217,21 +214,21 @@ class IntelligentLoadBalancer:
         
         return endpoint
     
-    def _round_robin_select(self, endpoints: List[Endpoint]) -> Endpoint:
+    def _round_robin_select(self, endpoints: list[Endpoint]) -> Endpoint:
         """Round robin selection"""
         endpoint = endpoints[self.round_robin_index % len(endpoints)]
         self.round_robin_index += 1
         return endpoint
     
-    def _least_connections_select(self, endpoints: List[Endpoint]) -> Endpoint:
+    def _least_connections_select(self, endpoints: list[Endpoint]) -> Endpoint:
         """Select endpoint with least connections"""
         return min(endpoints, key=lambda ep: ep.active_connections)
     
-    def _least_response_time_select(self, endpoints: List[Endpoint]) -> Endpoint:
+    def _least_response_time_select(self, endpoints: list[Endpoint]) -> Endpoint:
         """Select endpoint with least response time"""
         return min(endpoints, key=lambda ep: ep.avg_response_time)
     
-    def _weighted_round_robin_select(self, endpoints: List[Endpoint]) -> Endpoint:
+    def _weighted_round_robin_select(self, endpoints: list[Endpoint]) -> Endpoint:
         """Weighted round robin selection"""
         # Create weighted list
         weighted_endpoints = []
@@ -246,11 +243,11 @@ class IntelligentLoadBalancer:
         self.round_robin_index += 1
         return endpoint
     
-    def _random_select(self, endpoints: List[Endpoint]) -> Endpoint:
+    def _random_select(self, endpoints: list[Endpoint]) -> Endpoint:
         """Random selection"""
         return random.choice(endpoints)
     
-    def _health_aware_select(self, endpoints: List[Endpoint]) -> Endpoint:
+    def _health_aware_select(self, endpoints: list[Endpoint]) -> Endpoint:
         """Health-aware selection"""
         # Prioritize healthy endpoints
         healthy_endpoints = [ep for ep in endpoints if ep.health_status == HealthStatus.HEALTHY]
@@ -266,7 +263,7 @@ class IntelligentLoadBalancer:
         return endpoints[0]
     
     @asynccontextmanager
-    async def execute_request(self, session_id: Optional[str] = None):
+    async def execute_request(self, session_id: str | None = None):
         """Execute a request with load balancing"""
         endpoint = await self.get_endpoint(session_id)
         

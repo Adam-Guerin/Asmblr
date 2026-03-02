@@ -3,7 +3,7 @@
 import time
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 from dataclasses import dataclass
 
 from .quality_enhancer import MVPQualityEnhancer
@@ -17,19 +17,19 @@ logger = logging.getLogger(__name__)
 class MVPBuildResult:
     """Result of MVP building process."""
     success: bool
-    mvp_path: Optional[Path]
+    mvp_path: Path | None
     quality_score: float
     build_time: float
-    improvements: List[str]
-    issues_fixed: List[str]
-    quality_report: Dict[str, Any]
-    error_message: Optional[str] = None
+    improvements: list[str]
+    issues_fixed: list[str]
+    quality_report: dict[str, Any]
+    error_message: str | None = None
 
 
 class EnhancedMVPBuilder:
     """Enhanced MVP builder with quality gates and continuous improvement."""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.quality_enhancer = MVPQualityEnhancer()
         self.quality_gate_checker = QualityGateChecker()
@@ -37,7 +37,7 @@ class EnhancedMVPBuilder:
         self.quality_threshold = config.get('MVP_QUALITY_THRESHOLD', 65)
         self.enable_auto_fixes = config.get('MVP_ENABLE_AUTO_FIXES', True)
     
-    def build_enhanced_mvp(self, tech_spec: Dict[str, Any], prd_data: Dict[str, Any], 
+    def build_enhanced_mvp(self, tech_spec: dict[str, Any], prd_data: dict[str, Any], 
                           output_path: Path) -> MVPBuildResult:
         """Build MVP with enhanced quality controls."""
         start_time = time.time()
@@ -106,7 +106,7 @@ class EnhancedMVPBuilder:
                     error_message=str(e)
                 )
     
-    def _build_initial_mvp(self, tech_spec: Dict[str, Any], prd_data: Dict[str, Any], 
+    def _build_initial_mvp(self, tech_spec: dict[str, Any], prd_data: dict[str, Any], 
                           output_path: Path) -> Path:
         """Build the initial MVP structure."""
         with performance_monitor.stage("mvp_initial_build"):
@@ -176,8 +176,8 @@ class EnhancedMVPBuilder:
         (mvp_path / "docs").mkdir(exist_ok=True)
         (mvp_path / "tests").mkdir(exist_ok=True)
     
-    def _generate_core_files(self, mvp_path: Path, tech_spec: Dict[str, Any], 
-                           prd_data: Dict[str, Any], frontend: str, backend: str) -> None:
+    def _generate_core_files(self, mvp_path: Path, tech_spec: dict[str, Any], 
+                           prd_data: dict[str, Any], frontend: str, backend: str) -> None:
         """Generate core application files."""
         # Package.json
         package_json = {
@@ -258,7 +258,7 @@ This MVP was generated using [Asmblr](https://github.com/your-org/asmblr) - AI-p
         
         (mvp_path / "README.md").write_text(readme_content, encoding='utf-8')
     
-    def _generate_ui_components(self, mvp_path: Path, prd_data: Dict[str, Any], 
+    def _generate_ui_components(self, mvp_path: Path, prd_data: dict[str, Any], 
                               frontend: str, styling: str) -> None:
         """Generate UI components based on PRD requirements."""
         frontend_path = mvp_path / "frontend"
@@ -324,7 +324,7 @@ export default function App({{ Component, pageProps }}) {{
 """
                 (frontend_path / "styles" / "globals.css").write_text(globals_css, encoding='utf-8')
     
-    def _generate_api_endpoints(self, mvp_path: Path, tech_spec: Dict[str, Any], 
+    def _generate_api_endpoints(self, mvp_path: Path, tech_spec: dict[str, Any], 
                               backend: str) -> None:
         """Generate API endpoints based on technical specifications."""
         backend_path = mvp_path / "backend"
@@ -396,7 +396,7 @@ python-multipart==0.0.6
 '''
             (backend_path / "requirements.txt").write_text(requirements, encoding='utf-8')
     
-    def _generate_database_schema(self, mvp_path: Path, tech_spec: Dict[str, Any], 
+    def _generate_database_schema(self, mvp_path: Path, tech_spec: dict[str, Any], 
                                 database: str) -> None:
         """Generate database schema based on requirements."""
         if database == "sqlite":
@@ -480,8 +480,8 @@ services:
 '''
         (mvp_path / "docker-compose.yml").write_text(docker_compose, encoding='utf-8')
     
-    def _generate_documentation(self, mvp_path: Path, tech_spec: Dict[str, Any], 
-                             prd_data: Dict[str, Any]) -> None:
+    def _generate_documentation(self, mvp_path: Path, tech_spec: dict[str, Any], 
+                             prd_data: dict[str, Any]) -> None:
         """Generate comprehensive documentation."""
         docs_path = mvp_path / "docs"
         
@@ -535,7 +535,7 @@ All endpoints return appropriate HTTP status codes and error messages.
 '''
         (docs_path / "api.md").write_text(api_docs, encoding='utf-8')
     
-    def _apply_auto_fixes(self, mvp_path: Path, quality_report: Dict[str, Any]) -> None:
+    def _apply_auto_fixes(self, mvp_path: Path, quality_report: dict[str, Any]) -> None:
         """Apply automatic fixes based on quality assessment."""
         with performance_monitor.stage("mvp_auto_fixes"):
             logger.info("Applying automatic fixes to improve MVP quality")

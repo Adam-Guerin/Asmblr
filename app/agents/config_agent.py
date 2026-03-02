@@ -3,7 +3,7 @@ Agent de configuration spécialisé pour Asmblr
 Gère dynamiquement les paramètres selon le contexte et les performances
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any
 from dataclasses import dataclass
 from loguru import logger
 
@@ -49,7 +49,7 @@ class ConfigAnalysisAgent:
         else:
             self.crew_agent = None
     
-    def analyze_topic_complexity(self, topic: str) -> Dict[str, Any]:
+    def analyze_topic_complexity(self, topic: str) -> dict[str, Any]:
         """
         Analyse la complexité d'un sujet pour déterminer la configuration appropriée
         
@@ -92,7 +92,7 @@ class ConfigAnalysisAgent:
             logger.error(f"Erreur analyse complexité: {e}")
             return self._get_default_analysis()
     
-    def _validate_complexity_analysis(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_complexity_analysis(self, analysis: dict[str, Any]) -> dict[str, Any]:
         """Valide et normalise l'analyse de complexité"""
         validated = {}
         
@@ -114,7 +114,7 @@ class ConfigAnalysisAgent:
         
         return validated
     
-    def _get_default_analysis(self) -> Dict[str, Any]:
+    def _get_default_analysis(self) -> dict[str, Any]:
         """Analyse par défaut en cas d'erreur"""
         return {
             "technical_complexity": 5,
@@ -151,7 +151,7 @@ class PerformanceOptimizationAgent:
         else:
             self.crew_agent = None
     
-    def analyze_performance_issues(self, performance_data: Dict[str, Any]) -> List[ConfigOptimization]:
+    def analyze_performance_issues(self, performance_data: dict[str, Any]) -> list[ConfigOptimization]:
         """
         Analyse les problèmes de performance et suggère des optimisations
         
@@ -254,7 +254,7 @@ class UserProfileAgent:
         else:
             self.crew_agent = None
     
-    def adapt_to_user_profile(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+    def adapt_to_user_profile(self, user_data: dict[str, Any]) -> dict[str, Any]:
         """
         Adapte la configuration selon le profil utilisateur
         
@@ -299,7 +299,7 @@ class UserProfileAgent:
             logger.error(f"Erreur adaptation profil: {e}")
             return self._get_default_profile_config()
     
-    def _validate_adapted_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_adapted_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """Valide et normalise la configuration adaptée"""
         validated = {}
         
@@ -314,7 +314,7 @@ class UserProfileAgent:
         
         return validated
     
-    def _get_default_profile_config(self) -> Dict[str, Any]:
+    def _get_default_profile_config(self) -> dict[str, Any]:
         """Configuration par défaut pour profil"""
         return {
             "execution_mode": "standard",
@@ -345,7 +345,7 @@ class ConfigCrewManager:
         else:
             self.crew = None
     
-    def _create_crew(self) -> Optional[Crew]:
+    def _create_crew(self) -> Crew | None:
         """Crée l'équipage CrewAI pour la configuration"""
         try:
             tasks = [
@@ -382,8 +382,8 @@ class ConfigCrewManager:
             logger.error(f"Erreur création crew configuration: {e}")
             return None
     
-    def generate_optimal_config(self, topic: str, user_profile: Optional[Dict] = None,
-                              performance_data: Optional[Dict] = None) -> Dict[str, Any]:
+    def generate_optimal_config(self, topic: str, user_profile: dict | None = None,
+                              performance_data: dict | None = None) -> dict[str, Any]:
         """
         Génère la configuration optimale en combinant tous les agents
         
@@ -441,8 +441,8 @@ class ConfigCrewManager:
         logger.info(f"Configuration optimale générée avec {len(performance_optimizations)} optimisations")
         return result
     
-    def _merge_configurations(self, base_config: Dict, user_config: Dict, 
-                            optimizations: List) -> Dict[str, Any]:
+    def _merge_configurations(self, base_config: dict, user_config: dict, 
+                            optimizations: list) -> dict[str, Any]:
         """Fusionne intelligemment les différentes configurations"""
         merged = base_config.copy()
         

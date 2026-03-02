@@ -4,7 +4,7 @@ Remplace les 365 variables .env par une configuration dynamique pilotée par age
 """
 
 import os
-from typing import Dict, Any, Optional
+from typing import Any
 from pathlib import Path
 from loguru import logger
 
@@ -19,7 +19,7 @@ class SmartConfig:
     Remplace la configuration statique par un système dynamique
     """
     
-    def __init__(self, llm_client: Optional[LLMClient] = None):
+    def __init__(self, llm_client: LLMClient | None = None):
         self.llm = llm_client or LLMClient()
         self.config_manager = DynamicConfigManager(self.llm)
         self.crew_manager = ConfigCrewManager(self.llm)
@@ -31,7 +31,7 @@ class SmartConfig:
         self.current_config = {}
         self._initialize_config()
     
-    def _load_base_config(self) -> Dict[str, str]:
+    def _load_base_config(self) -> dict[str, str]:
         """Charge la configuration de base depuis les variables d'environnement essentielles"""
         essential_vars = [
             'OLLAMA_BASE_URL',
@@ -92,8 +92,8 @@ class SmartConfig:
         else:
             logger.info("Configuration intelligente désactivée - utilisation valeurs par défaut")
     
-    def configure_for_topic(self, topic: str, user_profile: Optional[Dict] = None,
-                          performance_data: Optional[Dict] = None) -> Dict[str, str]:
+    def configure_for_topic(self, topic: str, user_profile: dict | None = None,
+                          performance_data: dict | None = None) -> dict[str, str]:
         """
         Configure Asmblr dynamiquement pour un sujet donné
         
@@ -136,7 +136,7 @@ class SmartConfig:
             logger.info("Utilisation configuration par défaut")
             return self.current_config
     
-    def _config_to_env_vars(self, config_data: Dict[str, Any]) -> Dict[str, str]:
+    def _config_to_env_vars(self, config_data: dict[str, Any]) -> dict[str, str]:
         """Convertit la configuration des agents en variables d'environnement"""
         env_vars = {}
         
@@ -172,7 +172,7 @@ class SmartConfig:
         
         return env_vars
     
-    def _save_generated_config(self, topic: str, config_data: Dict[str, Any]) -> None:
+    def _save_generated_config(self, topic: str, config_data: dict[str, Any]) -> None:
         """Sauvegarde la configuration générée pour audit"""
         try:
             config_dir = Path(self.current_config.get('CONFIG_DIR', 'configs'))
@@ -191,7 +191,7 @@ class SmartConfig:
         except Exception as e:
             logger.error(f"Erreur sauvegarde configuration: {e}")
     
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """Retourne un résumé de la configuration actuelle"""
         return {
             "agent_auto_config": self.current_config.get('AGENT_AUTO_CONFIG', 'false') == 'true',
@@ -204,7 +204,7 @@ class SmartConfig:
             "dynamic_vars": len(self.current_config) - len(self.base_config)
         }
     
-    def optimize_performance(self, performance_metrics: Dict[str, float]) -> Dict[str, str]:
+    def optimize_performance(self, performance_metrics: dict[str, float]) -> dict[str, str]:
         """
         Optimise la configuration basée sur les métriques de performance
         
@@ -234,7 +234,7 @@ class SmartConfig:
             logger.error(f"Erreur optimisation performance: {e}")
             return self.current_config
     
-    def reset_to_defaults(self) -> Dict[str, str]:
+    def reset_to_defaults(self) -> dict[str, str]:
         """Réinitialise la configuration aux valeurs par défaut"""
         logger.info("Réinitialisation configuration aux valeurs par défaut")
         self._initialize_config()
@@ -274,10 +274,10 @@ class SmartConfig:
 
 
 # Instance globale de configuration intelligente
-_smart_config_instance: Optional[SmartConfig] = None
+_smart_config_instance: SmartConfig | None = None
 
 
-def get_smart_config(llm_client: Optional[LLMClient] = None) -> SmartConfig:
+def get_smart_config(llm_client: LLMClient | None = None) -> SmartConfig:
     """
     Récupère l'instance globale de configuration intelligente
     
@@ -295,8 +295,8 @@ def get_smart_config(llm_client: Optional[LLMClient] = None) -> SmartConfig:
     return _smart_config_instance
 
 
-def configure_for_topic(topic: str, user_profile: Optional[Dict] = None,
-                      performance_data: Optional[Dict] = None) -> Dict[str, str]:
+def configure_for_topic(topic: str, user_profile: dict | None = None,
+                      performance_data: dict | None = None) -> dict[str, str]:
     """
     Fonction utilitaire pour configurer Asmblr pour un sujet
     

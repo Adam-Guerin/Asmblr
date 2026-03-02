@@ -5,13 +5,12 @@ AI-powered task scheduling with adaptive algorithms and optimization
 
 import asyncio
 import time
-import json
-import numpy as np
-from typing import Dict, Any, Optional, List, Union, Callable, Tuple
+from typing import Any
+from collections.abc import Callable
 from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from collections import defaultdict, deque, Counter
+from collections import defaultdict, deque
 import heapq
 import psutil
 from loguru import logger
@@ -46,17 +45,17 @@ class SchedulingTask:
     name: str
     priority: int  # 1-10, lower is higher priority
     estimated_duration: float
-    deadline: Optional[datetime] = None
-    resource_requirements: Dict[str, float] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    deadline: datetime | None = None
+    resource_requirements: dict[str, float] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     # Scheduling metadata
     created_at: datetime = field(default_factory=datetime.now)
-    submitted_at: Optional[datetime] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    submitted_at: datetime | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     state: TaskState = TaskState.PENDING
     
     # Performance metrics
@@ -66,7 +65,7 @@ class SchedulingTask:
     slack_time: float = 0.0
     
     # ML features
-    features: Dict[str, float] = field(default_factory=dict)
+    features: dict[str, float] = field(default_factory=dict)
     predicted_success: float = 0.0
     predicted_duration: float = 0.0
     
@@ -202,12 +201,12 @@ class IntelligentTaskScheduler:
         args: tuple = (),
         kwargs: dict = None,
         priority: int = 5,
-        estimated_duration: Optional[float] = None,
-        deadline: Optional[datetime] = None,
-        resource_requirements: Dict[str, float] = None,
-        dependencies: List[str] = None,
-        tags: List[str] = None,
-        metadata: Dict[str, Any] = None
+        estimated_duration: float | None = None,
+        deadline: datetime | None = None,
+        resource_requirements: dict[str, float] = None,
+        dependencies: list[str] = None,
+        tags: list[str] = None,
+        metadata: dict[str, Any] = None
     ) -> str:
         """Submit a task to the intelligent scheduler"""
         try:
@@ -286,7 +285,7 @@ class IntelligentTaskScheduler:
         except Exception as e:
             logger.error(f"Task analysis error: {e}")
     
-    async def _extract_task_features(self, func: Callable, args: tuple, kwargs: dict) -> Dict[str, float]:
+    async def _extract_task_features(self, func: Callable, args: tuple, kwargs: dict) -> dict[str, float]:
         """Extract features from task for ML"""
         features = {}
         
@@ -325,7 +324,7 @@ class IntelligentTaskScheduler:
         
         return features
     
-    async def _estimate_resources(self, features: Dict[str, float]) -> Dict[str, float]:
+    async def _estimate_resources(self, features: dict[str, float]) -> dict[str, float]:
         """Estimate resource requirements based on features"""
         complexity = features.get('complexity_score', 0.5)
         data_size = features.get('data_size', 0)
@@ -387,16 +386,13 @@ class IntelligentTaskScheduler:
                 logger.error(f"Scheduling loop error: {e}")
                 await asyncio.sleep(1)
     
-    async def _get_next_task(self) -> Optional[SchedulingTask]:
+    async def _get_next_task(self) -> SchedulingTask | None:
         """Get next task based on scheduling strategy"""
         try:
             if not self.ready_queue:
                 return None
             
-            if self.scheduling_strategy == SchedulingStrategy.FIFO:
-                return heapq.heappop(self.ready_queue)
-            
-            elif self.scheduling_strategy == SchedulingStrategy.PRIORITY:
+            if self.scheduling_strategy == SchedulingStrategy.FIFO or self.scheduling_strategy == SchedulingStrategy.PRIORITY:
                 return heapq.heappop(self.ready_queue)
             
             elif self.scheduling_strategy == SchedulingStrategy.SHORTEST_JOB_FIRST:
@@ -466,7 +462,7 @@ class IntelligentTaskScheduler:
             logger.error(f"Task selection error: {e}")
             return None
     
-    def _task_fits_resources(self, task: SchedulingTask, resources: Dict[str, float]) -> bool:
+    def _task_fits_resources(self, task: SchedulingTask, resources: dict[str, float]) -> bool:
         """Check if task fits in available resources"""
         for resource, required in task.resource_requirements.items():
             available = resources.get(resource, 1.0)
@@ -474,7 +470,7 @@ class IntelligentTaskScheduler:
                 return False
         return True
     
-    async def _adaptive_selection(self) -> Optional[SchedulingTask]:
+    async def _adaptive_selection(self) -> SchedulingTask | None:
         """Adaptive strategy selection"""
         try:
             # Analyze current system state
@@ -502,7 +498,7 @@ class IntelligentTaskScheduler:
             logger.error(f"Adaptive selection error: {e}")
             return heapq.heappop(self.ready_queue) if self.ready_queue else None
     
-    async def _ml_based_selection(self) -> Optional[SchedulingTask]:
+    async def _ml_based_selection(self) -> SchedulingTask | None:
         """ML-based task selection"""
         try:
             if not self.ready_queue:
@@ -813,7 +809,7 @@ class IntelligentTaskScheduler:
         except Exception as e:
             logger.error(f"Scheduling efficiency calculation error: {e}")
     
-    async def get_task_result(self, task_id: str, timeout: Optional[float] = None) -> Any:
+    async def get_task_result(self, task_id: str, timeout: float | None = None) -> Any:
         """Get task result"""
         try:
             start_time = time.time()
@@ -837,7 +833,7 @@ class IntelligentTaskScheduler:
             logger.error(f"Failed to get task result {task_id}: {e}")
             raise
     
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get scheduler metrics"""
         try:
             # Update prediction accuracy
@@ -898,7 +894,7 @@ class MLPredictor:
         """Initialize ML models"""
         logger.info("ML predictor initialized")
     
-    async def predict_duration(self, features: Dict[str, float]) -> float:
+    async def predict_duration(self, features: dict[str, float]) -> float:
         """Predict task duration"""
         # Simplified duration prediction
         complexity = features.get('complexity_score', 0.5)
@@ -910,13 +906,13 @@ class MLPredictor:
         
         return base_duration + complexity_factor * 2.0 + data_factor
     
-    async def predict_success(self, features: Dict[str, float]) -> float:
+    async def predict_success(self, features: dict[str, float]) -> float:
         """Predict task success probability"""
         # Simplified success prediction
         complexity = features.get('complexity_score', 0.5)
         return max(0.5, 1.0 - complexity * 0.3)
     
-    async def score_task(self, task: SchedulingTask, resources: Dict[str, float]) -> float:
+    async def score_task(self, task: SchedulingTask, resources: dict[str, float]) -> float:
         """Score task for selection"""
         # Combined score based on multiple factors
         priority_score = (11 - task.priority) / 10.0  # Higher priority = higher score
@@ -956,7 +952,7 @@ class ResourceMonitor:
         """Initialize resource monitor"""
         logger.info("Resource monitor initialized")
     
-    async def get_current_resources(self) -> Dict[str, float]:
+    async def get_current_resources(self) -> dict[str, float]:
         """Get current resource availability"""
         try:
             return {
@@ -994,7 +990,7 @@ class PerformanceAnalyzer:
         """Initialize performance analyzer"""
         logger.info("Performance analyzer initialized")
     
-    async def analyze_performance(self, tasks: List[SchedulingTask]) -> Dict[str, float]:
+    async def analyze_performance(self, tasks: list[SchedulingTask]) -> dict[str, float]:
         """Analyze task performance"""
         # Placeholder for performance analysis
         return {}

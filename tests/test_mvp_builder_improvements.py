@@ -4,10 +4,8 @@ Focus on testing edge cases, error handling, and performance scenarios
 """
 
 import json
-import tempfile
-import shutil
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 from pytest import raises
 import time
 

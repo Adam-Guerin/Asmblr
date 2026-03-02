@@ -11,7 +11,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 
 from app.core.config import Settings
-from app.core.llm import LLMClient
 from app.mvp.pitch_deck_generator import (
     PitchDeckGenerator,
     GenerationMode,

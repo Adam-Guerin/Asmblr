@@ -5,12 +5,11 @@ High-performance database operations with query optimization and connection pool
 
 import asyncio
 import time
-import json
 import hashlib
 import re
-from typing import Dict, Any, Optional, List, Union, Callable, Tuple
+from typing import Any
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from contextlib import asynccontextmanager
 import asyncpg
@@ -43,11 +42,11 @@ class QueryPlan:
     estimated_cost: float
     estimated_rows: int
     execution_time: float
-    indexes_used: List[str]
-    tables_scanned: List[str]
+    indexes_used: list[str]
+    tables_scanned: list[str]
     optimization_level: OptimizationLevel
-    recommendations: List[str]
-    metadata: Optional[Dict[str, Any]] = None
+    recommendations: list[str]
+    metadata: dict[str, Any] | None = None
 
 @dataclass
 class QueryMetrics:
@@ -60,7 +59,7 @@ class QueryMetrics:
     max_time: float = 0.0
     success_count: int = 0
     error_count: int = 0
-    last_executed: Optional[datetime] = None
+    last_executed: datetime | None = None
     optimization_applied: bool = False
 
 class DatabaseOptimizer:
@@ -181,7 +180,7 @@ class DatabaseOptimizer:
             connectTimeoutMS=10000
         )
     
-    async def optimize_query(self, query: str, params: Optional[Tuple] = None) -> str:
+    async def optimize_query(self, query: str, params: tuple | None = None) -> str:
         """Optimize a database query"""
         try:
             query_hash = self._generate_query_hash(query)
@@ -441,7 +440,7 @@ class DatabaseOptimizer:
             pass
         return 0
     
-    def _extract_plan_indexes(self, plan_text: str) -> List[str]:
+    def _extract_plan_indexes(self, plan_text: str) -> list[str]:
         """Extract indexes used from execution plan"""
         try:
             indexes = []
@@ -456,7 +455,7 @@ class DatabaseOptimizer:
         except:
             return []
     
-    def _extract_plan_tables(self, plan_text: str) -> List[str]:
+    def _extract_plan_tables(self, plan_text: str) -> list[str]:
         """Extract tables scanned from execution plan"""
         try:
             tables = []
@@ -484,7 +483,7 @@ class DatabaseOptimizer:
         else:
             return OptimizationLevel.BASIC
     
-    def _generate_recommendations(self, plan_text: str) -> List[str]:
+    def _generate_recommendations(self, plan_text: str) -> list[str]:
         """Generate optimization recommendations"""
         recommendations = []
         
@@ -542,7 +541,7 @@ class DatabaseOptimizer:
         return hashlib.md5(query.encode()).hexdigest()
     
     @asynccontextmanager
-    async def execute_query(self, query: str, params: Optional[Tuple] = None):
+    async def execute_query(self, query: str, params: tuple | None = None):
         """Execute optimized query with performance monitoring"""
         query_hash = self._generate_query_hash(query)
         start_time = time.time()
@@ -594,7 +593,7 @@ class DatabaseOptimizer:
             logger.error(f"Query execution error: {e}")
             raise
     
-    async def analyze_query_performance(self, query: str) -> Dict[str, Any]:
+    async def analyze_query_performance(self, query: str) -> dict[str, Any]:
         """Analyze query performance"""
         try:
             query_hash = self._generate_query_hash(query)
@@ -624,7 +623,7 @@ class DatabaseOptimizer:
             logger.error(f"Query performance analysis error: {e}")
             return {}
     
-    async def get_index_recommendations(self) -> Dict[str, List[str]]:
+    async def get_index_recommendations(self) -> dict[str, list[str]]:
         """Get index recommendations for all tables"""
         try:
             recommendations = {}
@@ -647,13 +646,11 @@ class DatabaseOptimizer:
             logger.error(f"Index recommendation error: {e}")
             return {}
     
-    def _extract_table_name(self, query: str) -> Optional[str]:
+    def _extract_table_name(self, query: str) -> str | None:
         """Extract table name from query"""
         try:
             # Simple regex to extract table name
-            if self.db_type == "postgresql":
-                table_match = re.search(r'FROM\s+(\w+)', query, re.IGNORECASE)
-            elif self.db_type == "mysql":
+            if self.db_type == "postgresql" or self.db_type == "mysql":
                 table_match = re.search(r'FROM\s+(\w+)', query, re.IGNORECASE)
             elif self.db_type == "mongodb":
                 table_match = re.search(r'collection\s*:\s*(\w+)', query, re.IGNORECASE)
@@ -758,7 +755,7 @@ class DatabaseOptimizer:
         except Exception as e:
             logger.error(f"Connection pool optimization error: {e}")
     
-    async def get_performance_metrics(self) -> Dict[str, Any]:
+    async def get_performance_metrics(self) -> dict[str, Any]:
         """Get overall performance metrics"""
         try:
             total_queries = sum(m.execution_count for m in self.query_metrics.values())

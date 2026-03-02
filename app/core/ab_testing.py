@@ -6,22 +6,17 @@ Advanced experimentation platform with statistical analysis and automated decisi
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass, asdict
+from typing import Any
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from abc import ABC, abstractmethod
 import uuid
 import numpy as np
-import pandas as pd
 from scipy import stats
 import redis
 import sqlite3
 from pathlib import Path
-import hashlib
 import random
-from concurrent.futures import ThreadPoolExecutor
-import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -66,11 +61,11 @@ class Variant:
     variant_id: str
     name: str
     type: VariantType
-    configuration: Dict[str, Any]
+    configuration: dict[str, Any]
     traffic_allocation: float  # 0.0 to 1.0
     description: str = ""
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'variant_id': self.variant_id,
             'name': self.name,
@@ -92,7 +87,7 @@ class Metric:
     higher_is_better: bool = True
     target_improvement: float = 0.0  # Target improvement percentage
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'metric_id': self.metric_id,
             'name': self.name,
@@ -111,19 +106,19 @@ class Experiment:
     name: str
     description: str
     hypothesis: str
-    variants: List[Variant]
-    metrics: List[Metric]
+    variants: list[Variant]
+    metrics: list[Metric]
     status: ExperimentStatus
     created_at: datetime
-    started_at: Optional[datetime] = None
-    ended_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
     sample_size: int = 0
     confidence_level: float = 0.95
     min_sample_size: int = 100
     statistical_power: float = 0.8
     significance_threshold: float = 0.05
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'experiment_id': self.experiment_id,
             'name': self.name,
@@ -147,9 +142,9 @@ class Experiment:
 class ExperimentResult:
     """Results of an experiment"""
     experiment_id: str
-    variant_results: Dict[str, Dict[str, Any]]
-    statistical_tests: Dict[str, Dict[str, Any]]
-    winner: Optional[str] = None
+    variant_results: dict[str, dict[str, Any]]
+    statistical_tests: dict[str, dict[str, Any]]
+    winner: str | None = None
     confidence: float = 0.0
     recommendation: str = ""
     created_at: datetime = None
@@ -168,7 +163,7 @@ class UserAssignment:
     assigned_at: datetime
     converted: bool = False
     conversion_value: float = 0.0
-    metrics: Dict[str, float] = None
+    metrics: dict[str, float] = None
     
     def __post_init__(self):
         if self.metrics is None:
@@ -336,7 +331,7 @@ class ExperimentDatabase:
         finally:
             conn.close()
     
-    def get_experiment(self, experiment_id: str) -> Optional[Experiment]:
+    def get_experiment(self, experiment_id: str) -> Experiment | None:
         """Get an experiment by ID"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -438,7 +433,7 @@ class ExperimentDatabase:
         finally:
             conn.close()
     
-    def get_user_assignments(self, experiment_id: str) -> List[UserAssignment]:
+    def get_user_assignments(self, experiment_id: str) -> list[UserAssignment]:
         """Get all user assignments for an experiment"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -478,7 +473,7 @@ class StatisticalAnalyzer:
     
     def analyze_conversion(self, control_conversions: int, control_total: int,
                         treatment_conversions: int, treatment_total: int,
-                        confidence_level: float = 0.95) -> Dict[str, Any]:
+                        confidence_level: float = 0.95) -> dict[str, Any]:
         """Analyze conversion rates between control and treatment"""
         
         # Calculate conversion rates
@@ -524,8 +519,8 @@ class StatisticalAnalyzer:
             'test_type': 'two_proportion_z_test'
         }
     
-    def analyze_continuous_metric(self, control_values: List[float], treatment_values: List[float],
-                                   confidence_level: float = 0.95) -> Dict[str, Any]:
+    def analyze_continuous_metric(self, control_values: list[float], treatment_values: list[float],
+                                   confidence_level: float = 0.95) -> dict[str, Any]:
         """Analyze continuous metrics between control and treatment"""
         
         if not control_values or not treatment_values:
@@ -590,9 +585,9 @@ class TrafficSplitter:
     
     def __init__(self, redis_url: str = "redis://localhost:6379/0"):
         self.redis_client = redis.from_url(redis_url)
-        self.user_assignments: Dict[str, Dict[str, str]] = {}
+        self.user_assignments: dict[str, dict[str, str]] = {}
     
-    def assign_user_to_variant(self, user_id: str, experiment: Experiment) -> Optional[Variant]:
+    def assign_user_to_variant(self, user_id: str, experiment: Experiment) -> Variant | None:
         """Assign a user to a variant"""
         
         # Check if user is already assigned
@@ -632,7 +627,7 @@ class TrafficSplitter:
         
         return None
     
-    def get_user_variant(self, user_id: str, experiment_id: str) -> Optional[str]:
+    def get_user_variant(self, user_id: str, experiment_id: str) -> str | None:
         """Get the variant assigned to a user"""
         
         # Check memory first
@@ -664,10 +659,10 @@ class ExperimentRunner:
         self.database = ExperimentDatabase(db_path)
         self.analyzer = StatisticalAnalyzer()
         self.traffic_splitter = TrafficSplitter(redis_url)
-        self.running_experiments: Dict[str, Experiment] = {}
+        self.running_experiments: dict[str, Experiment] = {}
     
     def create_experiment(self, name: str, description: str, hypothesis: str,
-                         variants: List[Dict[str, Any]], metrics: List[Dict[str, Any]],
+                         variants: list[dict[str, Any]], metrics: list[dict[str, Any]],
                          **kwargs) -> Experiment:
         """Create a new experiment"""
         
@@ -751,7 +746,7 @@ class ExperimentRunner:
         logger.info(f"Stopped experiment: {experiment_id}")
         return True
     
-    def get_user_variant(self, user_id: str, experiment_id: str) -> Optional[Variant]:
+    def get_user_variant(self, user_id: str, experiment_id: str) -> Variant | None:
         """Get the variant for a user in an experiment"""
         experiment = self.database.get_experiment(experiment_id)
         if not experiment or experiment.status != ExperimentStatus.RUNNING:
@@ -760,7 +755,7 @@ class ExperimentRunner:
         return self.traffic_splitter.assign_user_to_variant(user_id, experiment)
     
     def track_conversion(self, user_id: str, experiment_id: str, 
-                        metric_values: Dict[str, float] = None) -> bool:
+                        metric_values: dict[str, float] = None) -> bool:
         """Track conversion for a user"""
         
         # Get variant assignment
@@ -784,7 +779,7 @@ class ExperimentRunner:
         
         return True
     
-    def analyze_experiment(self, experiment_id: str) -> Optional[ExperimentResult]:
+    def analyze_experiment(self, experiment_id: str) -> ExperimentResult | None:
         """Analyze an experiment and generate results"""
         
         experiment = self.database.get_experiment(experiment_id)

@@ -3,14 +3,14 @@ Gestionnaire d'erreurs unifié et intelligent
 Remplace la gestion hétérogène des erreurs dans tout Asmblr
 """
 
-import sys
 import traceback
 import functools
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, TypeVar
+from collections.abc import Callable
 from dataclasses import dataclass, asdict
 from enum import Enum
-from pathlib import Path
 from loguru import logger
+from datetime import UTC
 
 T = TypeVar('T')
 
@@ -46,10 +46,10 @@ class ErrorContext:
     user_message: str
     technical_message: str
     retry_recommended: bool
-    suggestions: List[str]
-    metadata: Dict[str, Any]
+    suggestions: list[str]
+    metadata: dict[str, Any]
     timestamp: str
-    stack_trace: Optional[str] = None
+    stack_trace: str | None = None
 
 
 class AsmblrException(Exception):
@@ -64,8 +64,8 @@ class AsmblrException(Exception):
                  severity: ErrorSeverity = ErrorSeverity.MEDIUM,
                  operation: str = "unknown",
                  retry_recommended: bool = False,
-                 suggestions: Optional[List[str]] = None,
-                 metadata: Optional[Dict[str, Any]] = None):
+                 suggestions: list[str] | None = None,
+                 metadata: dict[str, Any] | None = None):
         super().__init__(message)
         self.category = category
         self.severity = severity
@@ -98,8 +98,8 @@ class AsmblrException(Exception):
     
     def _get_timestamp(self) -> str:
         """Génère un timestamp ISO"""
-        from datetime import datetime, timezone
-        return datetime.now(timezone.utc).isoformat()
+        from datetime import datetime
+        return datetime.now(UTC).isoformat()
 
 
 # Exceptions spécialisées par catégorie
@@ -225,14 +225,14 @@ class ErrorHandlerV2:
     
     def __init__(self, enable_smart_logging: bool = True):
         self.enable_smart_logging = enable_smart_logging
-        self.error_history: List[ErrorContext] = []
+        self.error_history: list[ErrorContext] = []
         self.error_patterns = self._load_error_patterns()
         self.recovery_strategies = self._load_recovery_strategies()
     
     def handle_exception(self, 
                         exception: Exception, 
                         operation: str = "unknown",
-                        context: Optional[Dict[str, Any]] = None) -> ErrorContext:
+                        context: dict[str, Any] | None = None) -> ErrorContext:
         """
         Gère une exception de manière unifiée
         
@@ -338,7 +338,7 @@ class ErrorHandlerV2:
             except Exception as e:
                 logger.warning(f"Auto-recovery failed for {error_context.error_id}: {e}")
     
-    def _load_error_patterns(self) -> Dict[str, Dict[str, Any]]:
+    def _load_error_patterns(self) -> dict[str, dict[str, Any]]:
         """Charge les patterns d'erreurs connus"""
         return {
             "connection_refused": {
@@ -358,7 +358,7 @@ class ErrorHandlerV2:
             }
         }
     
-    def _load_recovery_strategies(self) -> Dict[ErrorCategory, Callable]:
+    def _load_recovery_strategies(self) -> dict[ErrorCategory, Callable]:
         """Charge les stratégies de récupération"""
         return {
             ErrorCategory.NETWORK: self._recover_network,
@@ -391,11 +391,11 @@ class ErrorHandlerV2:
         # Implémenter la logique de récupération configuration
         pass
     
-    def get_error_summary(self, hours: int = 24) -> Dict[str, Any]:
+    def get_error_summary(self, hours: int = 24) -> dict[str, Any]:
         """Retourne un résumé des erreurs récentes"""
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta
         
-        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff_time = datetime.now(UTC) - timedelta(hours=hours)
         recent_errors = [
             e for e in self.error_history 
             if datetime.fromisoformat(e.timestamp) > cutoff_time
@@ -423,7 +423,7 @@ class ErrorHandlerV2:
             "most_common_suggestions": self._get_common_suggestions(recent_errors)
         }
     
-    def _get_common_suggestions(self, errors: List[ErrorContext]) -> List[str]:
+    def _get_common_suggestions(self, errors: list[ErrorContext]) -> list[str]:
         """Retourne les suggestions les plus communes"""
         suggestion_counts = {}
         for error in errors:
@@ -438,9 +438,9 @@ class ErrorHandlerV2:
     
     def export_errors(self, format_type: str = "json", hours: int = 24) -> str:
         """Exporte les erreurs récentes"""
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta
         
-        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff_time = datetime.now(UTC) - timedelta(hours=hours)
         recent_errors = [
             e for e in self.error_history 
             if datetime.fromisoformat(e.timestamp) > cutoff_time
@@ -468,7 +468,7 @@ class ErrorHandlerV2:
 
 
 # Instance globale du gestionnaire d'erreurs
-_error_handler_v2: Optional[ErrorHandlerV2] = None
+_error_handler_v2: ErrorHandlerV2 | None = None
 
 
 def get_error_handler() -> ErrorHandlerV2:
@@ -490,9 +490,9 @@ def handle_errors(operation: str = "unknown",
         reraise: Si True, relance l'exception après traitement
         return_on_error: Valeur à retourner si reraise=False
     """
-    def decorator(func: Callable[..., T]) -> Callable[..., Union[T, Any]]:
+    def decorator(func: Callable[..., T]) -> Callable[..., T | Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Union[T, Any]:
+        def wrapper(*args, **kwargs) -> T | Any:
             try:
                 return func(*args, **kwargs)
             except Exception as e:

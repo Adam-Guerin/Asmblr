@@ -5,10 +5,7 @@ Handles Kubernetes secrets with proper encryption and rotation
 
 import os
 import base64
-import json
-import yaml
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Any
 from kubernetes import client, config
 from kubernetes.client import V1Secret
 from loguru import logger
@@ -30,7 +27,7 @@ class KubernetesSecretsManager:
             logger.warning(f"Failed to initialize Kubernetes client: {e}")
             self.k8s_client = None
     
-    def create_secret(self, name: str, data: Dict[str, str], secret_type: str = "Opaque") -> bool:
+    def create_secret(self, name: str, data: dict[str, str], secret_type: str = "Opaque") -> bool:
         """Create a Kubernetes secret"""
         if not self.k8s_client:
             logger.error("Kubernetes client not available")
@@ -74,7 +71,7 @@ class KubernetesSecretsManager:
             logger.error(f"Failed to create Kubernetes secret '{name}': {e}")
             return False
     
-    def get_secret(self, name: str) -> Optional[Dict[str, str]]:
+    def get_secret(self, name: str) -> dict[str, str] | None:
         """Retrieve a Kubernetes secret"""
         if not self.k8s_client:
             logger.error("Kubernetes client not available")
@@ -99,7 +96,7 @@ class KubernetesSecretsManager:
             logger.error(f"Failed to retrieve Kubernetes secret '{name}': {e}")
             return None
     
-    def update_secret(self, name: str, data: Dict[str, str]) -> bool:
+    def update_secret(self, name: str, data: dict[str, str]) -> bool:
         """Update an existing Kubernetes secret"""
         if not self.k8s_client:
             logger.error("Kubernetes client not available")
@@ -152,7 +149,7 @@ class KubernetesSecretsManager:
             logger.error(f"Failed to delete Kubernetes secret '{name}': {e}")
             return False
     
-    def list_secrets(self) -> List[str]:
+    def list_secrets(self) -> list[str]:
         """List all Asmblr secrets"""
         if not self.k8s_client:
             logger.error("Kubernetes client not available")
@@ -176,7 +173,7 @@ class KubernetesSecretsManager:
             logger.error(f"Failed to list Kubernetes secrets: {e}")
             return []
     
-    def rotate_secret(self, name: str) -> Optional[str]:
+    def rotate_secret(self, name: str) -> str | None:
         """Rotate a Kubernetes secret"""
         try:
             # Generate new secret value
@@ -190,9 +187,7 @@ class KubernetesSecretsManager:
             for key, old_value in current_data.items():
                 if 'password' in key.lower():
                     new_data[key] = security_manager.generate_secure_password()
-                elif 'token' in key.lower():
-                    new_data[key] = security_manager.encrypt_secret(secrets.token_urlsafe(32))
-                elif 'key' in key.lower():
+                elif 'token' in key.lower() or 'key' in key.lower():
                     new_data[key] = security_manager.encrypt_secret(secrets.token_urlsafe(32))
                 else:
                     new_data[key] = secrets.token_urlsafe(32)
@@ -209,7 +204,7 @@ class KubernetesSecretsManager:
             logger.error(f"Error rotating Kubernetes secret '{name}': {e}")
             return None
     
-    def sync_from_local(self, secret_names: List[str]) -> int:
+    def sync_from_local(self, secret_names: list[str]) -> int:
         """Sync local secrets to Kubernetes"""
         synced_count = 0
         
@@ -236,7 +231,7 @@ class KubernetesSecretsManager:
         logger.info(f"Synced {synced_count} secrets to Kubernetes")
         return synced_count
     
-    def sync_to_local(self, secret_names: List[str]) -> int:
+    def sync_to_local(self, secret_names: list[str]) -> int:
         """Sync Kubernetes secrets to local storage"""
         synced_count = 0
         
@@ -262,10 +257,10 @@ class KubernetesSecretsManager:
         """Create a TLS secret for HTTPS"""
         try:
             # Read certificate and key files
-            with open(cert_path, 'r') as f:
+            with open(cert_path) as f:
                 cert_data = f.read()
             
-            with open(key_path, 'r') as f:
+            with open(key_path) as f:
                 key_data = f.read()
             
             # Create TLS secret
@@ -280,7 +275,7 @@ class KubernetesSecretsManager:
             logger.error(f"Failed to create TLS secret: {e}")
             return False
     
-    def audit_k8s_secrets(self) -> Dict[str, Any]:
+    def audit_k8s_secrets(self) -> dict[str, Any]:
         """Generate audit report for Kubernetes secrets"""
         try:
             secrets = self.list_secrets()

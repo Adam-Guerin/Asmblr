@@ -3,15 +3,14 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, TypedDict
+from typing import TypedDict
 
 class RunMetrics(TypedDict):
     """Metrics for a single run."""
     run_id: str
     created_at: float
-    idea_to_landing_days: Optional[float]  # Temps en jours entre idée et landing
+    idea_to_landing_days: float | None  # Temps en jours entre idée et landing
     mvp_published: bool
     has_feedback: bool
     feedback_count: int
@@ -25,14 +24,14 @@ class ProductMetrics:
         """Initialize with path to data directory."""
         self.data_dir = data_dir
         self.metrics_file = data_dir / "product_metrics.json"
-        self._runs: Dict[str, RunMetrics] = {}
+        self._runs: dict[str, RunMetrics] = {}
         self._load_metrics()
     
     def _load_metrics(self) -> None:
         """Load metrics from JSON file."""
         if self.metrics_file.exists():
             try:
-                with open(self.metrics_file, 'r', encoding='utf-8') as f:
+                with open(self.metrics_file, encoding='utf-8') as f:
                     data = json.load(f)
                     self._runs = {run['run_id']: run for run in data.get('runs', [])}
             except (json.JSONDecodeError, KeyError):

@@ -5,7 +5,8 @@ through streaming and chunked operations, reducing memory footprint.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, Iterator, List, Union
+from typing import Any
+from collections.abc import Iterator
 import json
 import logging
 from pathlib import Path
@@ -27,7 +28,7 @@ class StreamingDataProcessor:
         self.chunk_size = chunk_size
         self.max_memory_mb = max_memory_mb
     
-    def _estimate_memory_usage(self, items: List[Any]) -> float:
+    def _estimate_memory_usage(self, items: list[Any]) -> float:
         """Estimate memory usage for a list of items."""
         if not items:
             return 0.0
@@ -36,18 +37,18 @@ class StreamingDataProcessor:
         total_bytes = sum(len(str(item)) * 100 for item in items)
         return total_bytes / (1024 * 1024)  # Convert to MB
     
-    def _should_stream(self, items: List[Any]) -> bool:
+    def _should_stream(self, items: list[Any]) -> bool:
         """Determine if dataset should be streamed."""
         estimated_mb = self._estimate_memory_usage(items)
         return estimated_mb > self.max_memory_mb
     
-    def _process_chunk(self, chunk: List[Any]) -> List[Any]:
+    def _process_chunk(self, chunk: list[Any]) -> list[Any]:
         """Process a chunk of items."""
         return chunk  # Override in subclasses
     
-    def _stream_json_file(self, file_path: Path, processor_func) -> Iterator[Dict[str, Any]]:
+    def _stream_json_file(self, file_path: Path, processor_func) -> Iterator[dict[str, Any]]:
         """Stream JSON file line by line."""
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
                 try:
                     item = json.loads(line.strip())
@@ -56,7 +57,7 @@ class StreamingDataProcessor:
                     logger.warning(f"Failed to parse JSON line {line_num}: {e}")
                     continue
     
-    def _stream_feedback_records(self, file_path: Path) -> Iterator[Dict[str, Any]]:
+    def _stream_feedback_records(self, file_path: Path) -> Iterator[dict[str, Any]]:
         """Stream feedback records with memory efficiency."""
         processed_count = 0
         
@@ -68,7 +69,7 @@ class StreamingDataProcessor:
             if processed_count % 1000 == 0:
                 logger.info(f"Processed {processed_count} feedback records")
     
-    def _process_feedback_record(self, record: Dict[str, Any], line_num: int, line: str) -> Dict[str, Any]:
+    def _process_feedback_record(self, record: dict[str, Any], line_num: int, line: str) -> dict[str, Any]:
         """Process individual feedback record."""
         # Basic validation
         if not isinstance(record, dict):
@@ -96,7 +97,7 @@ class StreamingDataProcessor:
         
         return text
     
-    def process_feedback_file(self, file_path: Path) -> Dict[str, Any]:
+    def process_feedback_file(self, file_path: Path) -> dict[str, Any]:
         """Process entire feedback file with streaming."""
         total_records = 0
         valid_records = []
@@ -127,7 +128,7 @@ class HistoricalLearningProcessor:
         """Determine if runs should be streamed."""
         return run_count > self.max_runs
     
-    def _process_run_chunk(self, chunk: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _process_run_chunk(self, chunk: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Process a chunk of historical runs."""
         processed_runs = []
         
@@ -143,7 +144,7 @@ class HistoricalLearningProcessor:
         
         return processed_runs
     
-    def process_historical_runs(self, file_path: Path) -> Dict[str, Any]:
+    def process_historical_runs(self, file_path: Path) -> dict[str, Any]:
         """Process historical runs file with streaming."""
         total_runs = 0
         valid_runs = []
@@ -166,13 +167,13 @@ def create_streaming_processor(chunk_size: int = 1000, max_memory_mb: int = 100)
     return StreamingDataProcessor(chunk_size, max_memory_mb)
 
 
-def process_large_feedback_file(file_path: Path) -> Dict[str, Any]:
+def process_large_feedback_file(file_path: Path) -> dict[str, Any]:
     """Process large feedback file using streaming."""
     processor = create_streaming_processor()
     return processor.process_feedback_file(file_path)
 
 
-def process_large_historical_runs(file_path: Path) -> Dict[str, Any]:
+def process_large_historical_runs(file_path: Path) -> dict[str, Any]:
     """Process large historical runs file using streaming."""
     processor = create_streaming_processor()
     return processor.process_historical_runs(file_path)

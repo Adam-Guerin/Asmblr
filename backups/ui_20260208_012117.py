@@ -2,7 +2,7 @@ import os
 import time
 import json
 import html
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 
 from app.core.config import get_settings, previous_secret_allowed
@@ -63,7 +63,7 @@ def _parse_ts(value: str | None) -> datetime | None:
     try:
         ts = datetime.fromisoformat(value)
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
         return ts
     except Exception:
         return None
@@ -83,7 +83,7 @@ def _format_delta(seconds: float | None) -> str:
 
 
 def _compute_stats(runs: list[dict]) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     running = [r for r in runs if r.get("status") == "running"]
     completed = [r for r in runs if r.get("status") in {"completed", "killed", "aborted", "failed"}]
     durations = []
@@ -145,7 +145,7 @@ def _load_steering_messages(output_dir: Path, limit: int = 10) -> list[dict]:
 
 def _append_steering_message(output_dir: Path, message: str, author: str = "ui") -> None:
     payload = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "author": author,
         "message": message.strip(),
     }
@@ -259,7 +259,7 @@ if running_runs:
     st.caption("Active runs (ETA based on average duration)")
     for run in running_runs[:6]:
         created = _parse_ts(run.get("created_at"))
-        elapsed = (datetime.now(timezone.utc) - created).total_seconds() if created else None
+        elapsed = (datetime.now(UTC) - created).total_seconds() if created else None
         eta = None
         if avg_duration is not None and elapsed is not None:
             eta = max(0, avg_duration - elapsed)

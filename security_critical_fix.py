@@ -4,11 +4,9 @@ Critical Security Fixer for Asmblr Phase 2
 Focuses on REAL hardcoded secrets, passwords, keys, and tokens
 """
 
-import os
 import re
 import json
 from pathlib import Path
-from typing import List, Dict, Tuple
 
 class CriticalSecurityFixer:
     def __init__(self, root_path: Path):
@@ -41,11 +39,11 @@ class CriticalSecurityFixer:
         self.file_extensions = ['.py', '.yml', '.yaml', '.json', '.env', '.env.example']
         self.exclude_dirs = ['.git', '__pycache__', 'node_modules', '.venv', 'venv', 'trash', 'tmp_runs', 'runs']
         
-    def scan_for_real_secrets(self, file_path: Path) -> List[Dict]:
+    def scan_for_real_secrets(self, file_path: Path) -> list[dict]:
         """Scan for REAL hardcoded secrets (not false positives)"""
         issues = []
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, encoding='utf-8', errors='ignore') as f:
                 content = f.read()
                 lines = content.split('\n')
                 
@@ -110,7 +108,7 @@ class CriticalSecurityFixer:
             
         return False
     
-    def scan_critical_files(self) -> Dict:
+    def scan_critical_files(self) -> dict:
         """Scan only critical files for real secrets"""
         all_issues = []
         file_count = 0
@@ -177,7 +175,7 @@ ENVIRONMENT=production
 """
         return template
     
-    def fix_critical_issues(self, issues: List[Dict]) -> List[Dict]:
+    def fix_critical_issues(self, issues: list[dict]) -> list[dict]:
         """Generate fixes for critical issues"""
         fixes = []
         
@@ -207,9 +205,7 @@ ENVIRONMENT=production
             return 'API_KEY'
         elif 'token' in match_lower:
             return 'API_TOKEN'
-        elif 'mysql' in match_lower:
-            return 'DATABASE_URL'
-        elif 'postgresql' in match_lower:
+        elif 'mysql' in match_lower or 'postgresql' in match_lower:
             return 'DATABASE_URL'
         elif 'mongodb' in match_lower:
             return 'MONGODB_URL'

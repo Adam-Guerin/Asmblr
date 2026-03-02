@@ -7,16 +7,16 @@ import asyncio
 import time
 import json
 import uuid
-from typing import Dict, List, Any, Optional, Callable
-from dataclasses import dataclass, field
+from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
-from collections import defaultdict, deque
 import threading
 from enum import Enum
 
 # Monitoring and tracing imports
-from opentelemetry import trace, baggage, context
+from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -25,14 +25,12 @@ from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
 
 # Alerting imports
-import smtplib
 from email.mime.text import MimeText
 from email.mime.multipart import MimeMultipart
-import aiohttp
 import redis.asyncio as redis
 
 # Metrics and monitoring
-from prometheus_client import Counter, Histogram, Gauge, Info, CollectorRegistry, generate_latest
+from prometheus_client import Counter, Histogram, Gauge, CollectorRegistry, generate_latest
 from loguru import logger
 
 
@@ -56,15 +54,15 @@ class Span:
     """Distributed tracing span"""
     trace_id: str
     span_id: str
-    parent_span_id: Optional[str]
+    parent_span_id: str | None
     operation_name: str
     start_time: datetime
-    end_time: Optional[datetime]
-    duration_ms: Optional[float]
+    end_time: datetime | None
+    duration_ms: float | None
     status_code: str
     status_message: str
-    tags: Dict[str, Any]
-    logs: List[Dict[str, Any]]
+    tags: dict[str, Any]
+    logs: list[dict[str, Any]]
     service_name: str
 
 
@@ -76,12 +74,12 @@ class Alert:
     severity: AlertSeverity
     status: AlertStatus
     message: str
-    labels: Dict[str, str]
-    annotations: Dict[str, str]
+    labels: dict[str, str]
+    annotations: dict[str, str]
     starts_at: datetime
-    ends_at: Optional[datetime]
+    ends_at: datetime | None
     fingerprint: str
-    generator_url: Optional[str] = None
+    generator_url: str | None = None
 
 
 @dataclass
@@ -92,8 +90,8 @@ class MonitoringRule:
     condition: str  # Prometheus query expression
     severity: AlertSeverity
     message: str
-    labels: Dict[str, str]
-    annotations: Dict[str, str]
+    labels: dict[str, str]
+    annotations: dict[str, str]
     for_duration: timedelta = timedelta(minutes=5)
     evaluation_interval: timedelta = timedelta(minutes=1)
 
@@ -106,7 +104,7 @@ class DistributedTracer:
         self.jaeger_endpoint = jaeger_endpoint
         self.tracer_provider = None
         self.tracer = None
-        self.active_spans: Dict[str, Span] = {}
+        self.active_spans: dict[str, Span] = {}
         self._lock = threading.RLock()
         
     def initialize(self):
@@ -167,7 +165,7 @@ class DistributedTracer:
         if current_span:
             current_span.set_attribute(key, value)
     
-    def get_trace_context(self) -> Dict[str, str]:
+    def get_trace_context(self) -> dict[str, str]:
         """Get current trace context for propagation"""
         current_span = trace.get_current_span()
         if current_span:
@@ -185,9 +183,9 @@ class AlertManager:
     
     def __init__(self, redis_client: redis.Redis):
         self.redis_client = redis_client
-        self.active_alerts: Dict[str, Alert] = {}
-        self.alert_rules: Dict[str, MonitoringRule] = {}
-        self.notification_channels: List[Callable] = []
+        self.active_alerts: dict[str, Alert] = {}
+        self.alert_rules: dict[str, MonitoringRule] = {}
+        self.notification_channels: list[Callable] = []
         self._lock = asyncio.Lock()
         
         # Default rules
@@ -254,7 +252,7 @@ class AlertManager:
         """Add notification channel (email, Slack, etc.)"""
         self.notification_channels.append(channel)
     
-    async def evaluate_rules(self, metrics_data: Dict[str, float]):
+    async def evaluate_rules(self, metrics_data: dict[str, float]):
         """Evaluate all monitoring rules"""
         async with self._lock:
             for rule_id, rule in self.alert_rules.items():
@@ -293,7 +291,7 @@ class AlertManager:
                 except Exception as e:
                     logger.error(f"Error evaluating rule {rule_id}: {e}")
     
-    def _evaluate_condition(self, condition: str, metrics_data: Dict[str, float]) -> bool:
+    def _evaluate_condition(self, condition: str, metrics_data: dict[str, float]) -> bool:
         """Evaluate rule condition (simplified implementation)"""
         # This is a simplified evaluation - in production use Prometheus query evaluation
         try:
@@ -375,7 +373,7 @@ class AlertManager:
             })
         )
     
-    async def get_active_alerts(self) -> List[Alert]:
+    async def get_active_alerts(self) -> list[Alert]:
         """Get all active alerts"""
         async with self._lock:
             return list(self.active_alerts.values())
@@ -385,7 +383,7 @@ class EmailNotificationChannel:
     """Email notification channel"""
     
     def __init__(self, smtp_server: str, smtp_port: int, username: str, password: str, 
-                 from_email: str, to_emails: List[str]):
+                 from_email: str, to_emails: list[str]):
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.username = username
@@ -472,8 +470,8 @@ class EnhancedMonitoringSystem:
     def __init__(self, service_name: str = "asmblr"):
         self.service_name = service_name
         self.tracer = DistributedTracer(service_name)
-        self.redis_client: Optional[redis.Redis] = None
-        self.alert_manager: Optional[AlertManager] = None
+        self.redis_client: redis.Redis | None = None
+        self.alert_manager: AlertManager | None = None
         self.metrics_registry = CollectorRegistry()
         self.is_running = False
         
@@ -544,12 +542,12 @@ class EnhancedMonitoringSystem:
         """Set queue size"""
         self.custom_metrics["queue_size"].set(size)
     
-    async def evaluate_alerts(self, metrics_data: Dict[str, float]):
+    async def evaluate_alerts(self, metrics_data: dict[str, float]):
         """Evaluate alert rules"""
         if self.alert_manager:
             await self.alert_manager.evaluate_rules(metrics_data)
     
-    async def get_monitoring_dashboard(self) -> Dict[str, Any]:
+    async def get_monitoring_dashboard(self) -> dict[str, Any]:
         """Get monitoring dashboard data"""
         if not self.is_running:
             return {"error": "Monitoring system not initialized"}

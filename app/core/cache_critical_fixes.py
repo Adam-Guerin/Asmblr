@@ -3,12 +3,12 @@ Corrections critiques pour cache.py
 Résout les TODO et problèmes de logging excessif
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 from loguru import logger
 
 # Importer les systèmes améliorés
-from app.core.error_handler_v2 import get_error_handler, handle_errors, FileIOException
-from app.core.smart_logger import get_smart_logger, LogCategory, LogLevel
+from app.core.error_handler_v2 import get_error_handler, handle_errors
+from app.core.smart_logger import get_smart_logger, LogCategory
 
 
 def fix_cache_logging():
@@ -93,9 +93,9 @@ def fix_cache_lru_eviction():
     Corrige l'éviction LRU du cache
     Version améliorée avec meilleure gestion de la mémoire
     """
-    def improved_lru_eviction(cache_dict: Dict[str, Any], 
+    def improved_lru_eviction(cache_dict: dict[str, Any], 
                               max_size: int,
-                              max_remove_pct: float = 0.2) -> List[str]:
+                              max_remove_pct: float = 0.2) -> list[str]:
         """
         Éviction LRU améliorée qui évite les problèmes de performance
         

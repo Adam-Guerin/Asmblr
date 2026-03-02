@@ -6,9 +6,6 @@ Couvre le système de cache, la gestion TTL et l'éviction
 import pytest
 import time
 import json
-import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch
 import threading
 
 from app.core.cache import CacheManager, CacheEntry

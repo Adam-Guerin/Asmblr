@@ -5,8 +5,7 @@ Désactive les fonctionnalités lourdes pour améliorer performance et fiabilit�
 
 import os
 import sys
-from typing import Dict, Any, Optional, Set
-from pathlib import Path
+from typing import Any
 from loguru import logger
 
 
@@ -18,7 +17,7 @@ class LightweightMode:
     
     def __init__(self):
         self.enabled = os.getenv('ASMblr_LIGHTWEIGHT', 'false').lower() == 'true'
-        self.disabled_features: Set[str] = set()
+        self.disabled_features: set[str] = set()
         self.optimization_settings = self._load_optimization_settings()
         
         if self.enabled:
@@ -102,7 +101,7 @@ class LightweightMode:
         # Optimiser le garbage collection
         os.environ['PYTHONGC'] = '1'
     
-    def _load_optimization_settings(self) -> Dict[str, Any]:
+    def _load_optimization_settings(self) -> dict[str, Any]:
         """Charge les paramètres d'optimisation"""
         return {
             'max_sources': 6,
@@ -144,7 +143,7 @@ class LightweightMode:
         
         return disabled_features.get(feature_name, True)
     
-    def get_optimized_config(self) -> Dict[str, Any]:
+    def get_optimized_config(self) -> dict[str, Any]:
         """Retourne la configuration optimisée pour le mode lightweight"""
         return {
             'mode': 'lightweight',
@@ -157,7 +156,7 @@ class LightweightMode:
             }
         }
     
-    def check_dependencies(self) -> Dict[str, Any]:
+    def check_dependencies(self) -> dict[str, Any]:
         """Vérifie les dépendances et retourne l'état"""
         required_lightweight = [
             'crewai', 'langchain', 'fastapi', 'streamlit',
@@ -265,7 +264,7 @@ def is_lightweight_mode() -> bool:
 
 
 # Instance globale
-_lightweight_instance: Optional[LightweightMode] = None
+_lightweight_instance: LightweightMode | None = None
 
 
 def get_lightweight_manager() -> LightweightMode:

@@ -4,17 +4,13 @@ Avec monitoring intelligent, retry automatique et métriques de performance
 """
 
 import os
-import time
-import json
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 
 import redis
-import httpx
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from loguru import logger
 
@@ -45,7 +41,7 @@ class WorkerMetrics:
     cpu_usage_percent: float = 0.0
     redis_connection_status: str = "unknown"
     ollama_status: str = "unknown"
-    last_health_check: Optional[datetime] = None
+    last_health_check: datetime | None = None
 
 
 class ImprovedWorker:
@@ -263,7 +259,7 @@ class ImprovedWorker:
         except Exception as e:
             return f"failed: {e}"
     
-    def _get_simple_metrics(self) -> Dict[str, Any]:
+    def _get_simple_metrics(self) -> dict[str, Any]:
         """Métriques simples (fallback)"""
         try:
             import psutil
@@ -325,7 +321,7 @@ class ImprovedWorker:
 
 
 # Instance globale du worker
-worker_instance: Optional[ImprovedWorker] = None
+worker_instance: ImprovedWorker | None = None
 
 
 def get_worker() -> ImprovedWorker:

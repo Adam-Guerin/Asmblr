@@ -5,9 +5,8 @@ Aucune interaction automatique - tout est contrôlé par le CEO.
 """
 
 import json
-import asyncio
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Any
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
@@ -48,20 +47,20 @@ class AgentInteraction:
     interaction_type: InteractionType
     priority: InteractionPriority = InteractionPriority.NORMAL
     allowed: bool = True
-    conditions: List[str] = field(default_factory=list)
-    data_requirements: Dict[str, Any] = field(default_factory=dict)
-    timing_constraints: Optional[Dict[str, Any]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    conditions: list[str] = field(default_factory=list)
+    data_requirements: dict[str, Any] = field(default_factory=dict)
+    timing_constraints: dict[str, Any] | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class InteractionFlow:
     """Définition d'un flux d'interactions"""
     name: str
-    interactions: List[AgentInteraction]
+    interactions: list[AgentInteraction]
     description: str = ""
-    dependencies: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,8 +68,8 @@ class InteractionExecution:
     """Exécution d'une interaction"""
     interaction: AgentInteraction
     status: str = "pending"  # pending, executing, completed, blocked, failed
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
     execution_time: float = 0.0
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
@@ -105,14 +104,14 @@ class CEOAgentInteractionOrchestrator:
         self.run_dir = run_dir
         
         # Définitions des interactions
-        self.interaction_rules: Dict[Tuple[AgentType, AgentType], AgentInteraction] = {}
-        self.interaction_flows: Dict[str, InteractionFlow] = {}
+        self.interaction_rules: dict[tuple[AgentType, AgentType], AgentInteraction] = {}
+        self.interaction_flows: dict[str, InteractionFlow] = {}
         
         # Historique des exécutions
-        self.execution_history: List[InteractionExecution] = []
+        self.execution_history: list[InteractionExecution] = []
         
         # Statistiques
-        self.interaction_stats: Dict[str, Any] = {
+        self.interaction_stats: dict[str, Any] = {
             "total_interactions": 0,
             "completed": 0,
             "blocked": 0,
@@ -216,7 +215,7 @@ class CEOAgentInteractionOrchestrator:
         self,
         topic: str,
         vision: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Crée des règles d'interactions par défaut"""
         
         # Flux standard CEO: Researcher → Analyst → Product → Tech Lead → Growth → Brand
@@ -392,7 +391,7 @@ class CEOAgentInteractionOrchestrator:
         self,
         topic: str,
         vision: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Crée des flux d'interactions par défaut"""
         
         return {
@@ -452,7 +451,7 @@ class CEOAgentInteractionOrchestrator:
         self,
         from_agent: AgentType,
         to_agent: AgentType,
-        data: Optional[Dict[str, Any]] = None
+        data: dict[str, Any] | None = None
     ) -> InteractionExecution:
         """
         Exécute une interaction entre agents
@@ -557,7 +556,7 @@ class CEOAgentInteractionOrchestrator:
     async def _check_interaction_conditions(
         self,
         interaction: AgentInteraction,
-        data: Optional[Dict[str, Any]]
+        data: dict[str, Any] | None
     ) -> bool:
         """Vérifie si les conditions d'interaction sont remplies"""
         
@@ -576,8 +575,8 @@ class CEOAgentInteractionOrchestrator:
     async def _execute_interaction_logic(
         self,
         interaction: AgentInteraction,
-        data: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        data: dict[str, Any] | None
+    ) -> dict[str, Any]:
         """Exécute la logique de l'interaction"""
         
         # Simuler l'exécution basée sur le type d'interaction
@@ -615,8 +614,8 @@ class CEOAgentInteractionOrchestrator:
     async def execute_interaction_flow(
         self,
         flow_name: str,
-        data: Optional[Dict[str, Any]] = None
-    ) -> List[InteractionExecution]:
+        data: dict[str, Any] | None = None
+    ) -> list[InteractionExecution]:
         """
         Exécute un flux d'interactions complet
         
@@ -657,7 +656,7 @@ class CEOAgentInteractionOrchestrator:
         
         return executions
     
-    async def get_interaction_report(self) -> Dict[str, Any]:
+    async def get_interaction_report(self) -> dict[str, Any]:
         """Génère un rapport des interactions"""
         
         report = {
@@ -726,7 +725,7 @@ class CEOAgentInteractionOrchestrator:
         
         return report_path
     
-    async def _create_readable_interaction_report(self, report: Dict[str, Any]) -> str:
+    async def _create_readable_interaction_report(self, report: dict[str, Any]) -> str:
         """Crée un rapport lisible"""
         
         readable = f"""# CEO Interaction Report

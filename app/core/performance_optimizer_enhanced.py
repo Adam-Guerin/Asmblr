@@ -5,9 +5,9 @@ Connection pooling, request batching, and resource management
 
 import asyncio
 import time
-import json
-from typing import Dict, List, Any, Optional, Union, Callable
-from dataclasses import dataclass, field
+from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
 from contextlib import asynccontextmanager
 from collections import defaultdict, deque
 import threading
@@ -45,11 +45,11 @@ class PerformanceMetrics:
     """Performance metrics tracking"""
     operation_name: str
     start_time: float
-    end_time: Optional[float] = None
-    duration: Optional[float] = None
+    end_time: float | None = None
+    duration: float | None = None
     success: bool = True
-    error_message: Optional[str] = None
-    batch_size: Optional[int] = None
+    error_message: str | None = None
+    batch_size: int | None = None
     connection_pool_hits: int = 0
     connection_pool_misses: int = 0
 
@@ -115,7 +115,7 @@ class EnhancedConnectionPool:
             duration = time.time() - start_time
             self.pool_request_duration.observe(duration)
     
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get pool metrics"""
         return dict(self._metrics)
     
@@ -144,7 +144,7 @@ class RequestBatcher:
         self.batch_duration_histogram = Histogram('asmblr_batch_duration_seconds', 'Batch processing duration')
         self.batch_requests_total = Counter('asmblr_batch_requests_total', 'Total batched requests')
     
-    async def add_request(self, request_data: Dict[str, Any], 
+    async def add_request(self, request_data: dict[str, Any], 
                          process_func: Callable) -> Any:
         """Add a request to the batch"""
         future = asyncio.Future()
@@ -234,7 +234,7 @@ class RequestBatcher:
             duration = time.time() - start_time
             self.batch_duration_histogram.observe(duration)
     
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get batcher metrics"""
         return dict(self._metrics)
 
@@ -243,10 +243,10 @@ class PerformanceOptimizer:
     """Main performance optimization coordinator"""
     
     def __init__(self):
-        self.connection_pools: Dict[str, EnhancedConnectionPool] = {}
-        self.request_batchers: Dict[str, RequestBatcher] = {}
+        self.connection_pools: dict[str, EnhancedConnectionPool] = {}
+        self.request_batchers: dict[str, RequestBatcher] = {}
         self._executor = ThreadPoolExecutor(max_workers=10)
-        self._metrics: List[PerformanceMetrics] = []
+        self._metrics: list[PerformanceMetrics] = []
         self._lock = threading.RLock()
         
         # Default configurations
@@ -284,7 +284,7 @@ class PerformanceOptimizer:
         async with self.connection_pools['redis'].get_connection() as client:
             yield client
     
-    async def batch_request(self, request_data: Dict[str, Any], 
+    async def batch_request(self, request_data: dict[str, Any], 
                           process_func: Callable, 
                           batcher_name: str = "default") -> Any:
         """Submit a request for batch processing"""
@@ -317,7 +317,7 @@ class PerformanceOptimizer:
             self.optimization_operations_total.labels(operation_type=operation_name).inc()
             self.optimization_duration.labels(operation_type=operation_name).observe(metrics.duration)
     
-    async def execute_parallel(self, tasks: List[Callable], max_concurrency: int = 10) -> List[Any]:
+    async def execute_parallel(self, tasks: list[Callable], max_concurrency: int = 10) -> list[Any]:
         """Execute tasks in parallel with concurrency control"""
         semaphore = asyncio.Semaphore(max_concurrency)
         
@@ -332,7 +332,7 @@ class PerformanceOptimizer:
         
         return await asyncio.gather(*[limited_execute(task) for task in tasks])
     
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary"""
         with self._lock:
             if not self._metrics:

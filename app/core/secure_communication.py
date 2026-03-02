@@ -4,18 +4,14 @@ Handles internal service communication with encryption and authentication
 """
 
 import os
-import ssl
-import hashlib
-import hmac
 import secrets
 import time
 import json
-from typing import Dict, Any, Optional, List
+from typing import Any
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from loguru import logger
-from app.core.security import security_manager
 
 class SecureCommunicationManager:
     """Manages secure internal communication between Asmblr services"""
@@ -46,7 +42,7 @@ class SecureCommunicationManager:
         
         if key_file.exists():
             try:
-                with open(key_file, 'r') as f:
+                with open(key_file) as f:
                     key_data = base64.b64decode(f.read())
                     return key_data
             except Exception as e:
@@ -119,7 +115,7 @@ class SecureCommunicationManager:
             logger.error(f"Failed to register service '{service_name}': {e}")
             return ""
     
-    def get_service_token(self, service_name: str) -> Optional[str]:
+    def get_service_token(self, service_name: str) -> str | None:
         """Get authentication token for a service"""
         try:
             if service_name not in self.registered_services:
@@ -147,7 +143,7 @@ class SecureCommunicationManager:
             logger.error(f"Failed to get token for service '{service_name}': {e}")
             return None
     
-    def encrypt_message(self, message: str, recipient_service: str) -> Optional[str]:
+    def encrypt_message(self, message: str, recipient_service: str) -> str | None:
         """Encrypt a message for a specific service"""
         try:
             if not self.require_encryption:
@@ -187,7 +183,7 @@ class SecureCommunicationManager:
             logger.error(f"Failed to encrypt message for '{recipient_service}': {e}")
             return None
     
-    def decrypt_message(self, encrypted_message: str, sender_service: str, auth_header: str = None) -> Optional[str]:
+    def decrypt_message(self, encrypted_message: str, sender_service: str, auth_header: str = None) -> str | None:
         """Decrypt a message from a service"""
         try:
             if not self.require_encryption:
@@ -229,7 +225,7 @@ class SecureCommunicationManager:
             logger.error(f"Failed to decrypt message: {e}")
             return None
     
-    def _get_service_by_token(self, token: str) -> Optional[str]:
+    def _get_service_by_token(self, token: str) -> str | None:
         """Get service name by authentication token"""
         try:
             for service_name, token_data in self.service_tokens.items():
@@ -240,7 +236,7 @@ class SecureCommunicationManager:
             logger.error(f"Failed to find service by token: {e}")
             return None
     
-    def create_secure_channel(self, service1: str, service2: str) -> Dict[str, Any]:
+    def create_secure_channel(self, service1: str, service2: str) -> dict[str, Any]:
         """Create a secure communication channel between two services"""
         try:
             # Get service tokens
@@ -280,7 +276,7 @@ class SecureCommunicationManager:
             logger.error(f"Failed to create secure channel: {e}")
             return {}
     
-    def send_message(self, channel: Dict[str, Any], message: str, sender: str) -> bool:
+    def send_message(self, channel: dict[str, Any], message: str, sender: str) -> bool:
         """Send a message through a secure channel"""
         try:
             # Determine recipient
@@ -305,7 +301,7 @@ class SecureCommunicationManager:
             logger.error(f"Failed to send message: {e}")
             return False
     
-    def receive_message(self, channel: Dict[str, Any], sender: str) -> Optional[str]:
+    def receive_message(self, channel: dict[str, Any], sender: str) -> str | None:
         """Receive a message from a secure channel"""
         try:
             # Determine sender
@@ -346,7 +342,7 @@ class SecureCommunicationManager:
             logger.error(f"Failed to cleanup expired tokens: {e}")
             return 0
     
-    def get_communication_stats(self) -> Dict[str, Any]:
+    def get_communication_stats(self) -> dict[str, Any]:
         """Get communication statistics"""
         try:
             current_time = time.time()

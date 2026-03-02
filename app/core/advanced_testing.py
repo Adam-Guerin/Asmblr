@@ -8,16 +8,12 @@ import time
 import json
 import traceback
 import sys
-import subprocess
-import tempfile
-from typing import Dict, Any, Optional, List, Union, Callable, Type
+from typing import Any
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-import pytest
 import coverage
-import unittest
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from loguru import logger
 import redis.asyncio as redis
@@ -63,13 +59,13 @@ class TestCase:
     file_path: str
     function_name: str
     description: str
-    tags: List[str]
-    dependencies: List[str]
+    tags: list[str]
+    dependencies: list[str]
     estimated_duration: float
     timeout: float
     retry_count: int = 0
     max_retries: int = 3
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -81,15 +77,15 @@ class TestResult:
     test_id: str
     status: TestStatus
     start_time: datetime
-    end_time: Optional[datetime]
+    end_time: datetime | None
     duration: float
     output: str
-    error: Optional[str]
-    traceback: Optional[str]
+    error: str | None
+    traceback: str | None
     coverage: float
-    performance_metrics: Dict[str, float]
-    artifacts: List[str]
-    metadata: Dict[str, Any] = None
+    performance_metrics: dict[str, float]
+    artifacts: list[str]
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -101,15 +97,15 @@ class TestSuite:
     id: str
     name: str
     description: str
-    test_cases: List[TestCase]
-    setup_function: Optional[str]
-    teardown_function: Optional[str]
+    test_cases: list[TestCase]
+    setup_function: str | None
+    teardown_function: str | None
     parallel: bool = True
     max_workers: int = 4
     timeout: float = 300.0
     retry_failed: bool = True
     collect_coverage: bool = True
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -225,7 +221,7 @@ class AdvancedTestingFramework:
     async def _parse_test_file(self, test_file: Path):
         """Parse a test file and extract test cases"""
         try:
-            with open(test_file, 'r') as f:
+            with open(test_file) as f:
                 content = f.read()
             
             # Parse AST
@@ -253,7 +249,7 @@ class AdvancedTestingFramework:
         except Exception as e:
             logger.error(f"Failed to parse test file {test_file}: {e}")
     
-    def _create_test_case_from_ast(self, node: ast.FunctionDef, file_path: str) -> Optional[TestCase]:
+    def _create_test_case_from_ast(self, node: ast.FunctionDef, file_path: str) -> TestCase | None:
         """Create test case from AST node"""
         try:
             # Extract basic information
@@ -353,7 +349,7 @@ class AdvancedTestingFramework:
             logger.error(f"Test priority determination failed: {e}")
             return TestPriority.MEDIUM
     
-    def _extract_tags_from_decorators(self, decorators: List[ast.expr]) -> List[str]:
+    def _extract_tags_from_decorators(self, decorators: list[ast.expr]) -> list[str]:
         """Extract tags from function decorators"""
         try:
             tags = []
@@ -407,8 +403,8 @@ class AdvancedTestingFramework:
         self,
         name: str,
         description: str,
-        test_patterns: List[str] = None,
-        test_types: List[TestType] = None,
+        test_patterns: list[str] = None,
+        test_types: list[TestType] = None,
         parallel: bool = True,
         max_workers: int = 4
     ) -> str:
@@ -454,8 +450,8 @@ class AdvancedTestingFramework:
     async def run_test_suite(
         self,
         suite_id: str,
-        parallel: Optional[bool] = None,
-        max_workers: Optional[int] = None,
+        parallel: bool | None = None,
+        max_workers: int | None = None,
         coverage: bool = True
     ) -> TestExecutionMetrics:
         """Run a test suite"""
@@ -498,7 +494,7 @@ class AdvancedTestingFramework:
             logger.error(f"Failed to run test suite {suite_id}: {e}")
             raise
     
-    async def _run_tests_parallel(self, suite: TestSuite) -> List[TestResult]:
+    async def _run_tests_parallel(self, suite: TestSuite) -> list[TestResult]:
         """Run tests in parallel"""
         try:
             results = []
@@ -528,7 +524,7 @@ class AdvancedTestingFramework:
             logger.error(f"Parallel test execution failed: {e}")
             return []
     
-    async def _run_tests_sequential(self, suite: TestSuite) -> List[TestResult]:
+    async def _run_tests_sequential(self, suite: TestSuite) -> list[TestResult]:
         """Run tests sequentially"""
         try:
             results = []
@@ -582,7 +578,7 @@ class AdvancedTestingFramework:
                 result.coverage = test_result.get('coverage', 0.0)
                 result.performance_metrics = test_result.get('performance_metrics', {})
                 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 result.status = TestStatus.TIMEOUT
                 result.error = f"Test timed out after {test_case.timeout}s"
             
@@ -615,7 +611,7 @@ class AdvancedTestingFramework:
                 metadata={}
             )
     
-    async def _run_test_subprocess(self, test_case: TestCase, suite: TestSuite) -> Dict[str, Any]:
+    async def _run_test_subprocess(self, test_case: TestCase, suite: TestSuite) -> dict[str, Any]:
         """Run test in subprocess"""
         try:
             # Prepare command
@@ -649,7 +645,7 @@ class AdvancedTestingFramework:
             # Parse coverage report
             coverage = 0.0
             try:
-                with open("/tmp/.coverage", 'r') as f:
+                with open("/tmp/.coverage") as f:
                     coverage_data = json.load(f)
                     coverage = coverage_data.get('totals', {}).get('percent_covered', 0.0)
             except:
@@ -676,7 +672,7 @@ class AdvancedTestingFramework:
                 'performance_metrics': {}
             }
     
-    def _calculate_execution_metrics(self, results: List[TestResult], start_time: datetime) -> TestExecutionMetrics:
+    def _calculate_execution_metrics(self, results: list[TestResult], start_time: datetime) -> TestExecutionMetrics:
         """Calculate test execution metrics"""
         try:
             metrics = TestExecutionMetrics()
@@ -723,7 +719,7 @@ class AdvancedTestingFramework:
             logger.error(f"Metrics calculation failed: {e}")
             return TestExecutionMetrics()
     
-    async def _generate_test_reports(self, suite_id: str, results: List[TestResult], metrics: TestExecutionMetrics):
+    async def _generate_test_reports(self, suite_id: str, results: list[TestResult], metrics: TestExecutionMetrics):
         """Generate test reports"""
         try:
             # Generate JSON report
@@ -741,7 +737,7 @@ class AdvancedTestingFramework:
         except Exception as e:
             logger.error(f"Report generation failed: {e}")
     
-    async def _generate_json_report(self, suite_id: str, results: List[TestResult], metrics: TestExecutionMetrics):
+    async def _generate_json_report(self, suite_id: str, results: list[TestResult], metrics: TestExecutionMetrics):
         """Generate JSON test report"""
         try:
             report_data = {
@@ -762,7 +758,7 @@ class AdvancedTestingFramework:
         except Exception as e:
             logger.error(f"JSON report generation failed: {e}")
     
-    async def _generate_html_report(self, suite_id: str, results: List[TestResult], metrics: TestExecutionMetrics):
+    async def _generate_html_report(self, suite_id: str, results: list[TestResult], metrics: TestExecutionMetrics):
         """Generate HTML test report"""
         try:
             html_template = """
@@ -866,8 +862,8 @@ class AdvancedTestingFramework:
         self,
         description: str,
         test_type: TestType = TestType.UNIT,
-        function_name: Optional[str] = None,
-        test_data: Optional[Dict[str, Any]] = None
+        function_name: str | None = None,
+        test_data: dict[str, Any] | None = None
     ) -> str:
         """Generate a test using AI"""
         try:
@@ -892,8 +888,8 @@ class AdvancedTestingFramework:
         self,
         description: str,
         test_type: TestType,
-        function_name: Optional[str],
-        test_data: Optional[Dict[str, Any]]
+        function_name: str | None,
+        test_data: dict[str, Any] | None
     ) -> str:
         """Generate test code"""
         try:
@@ -926,7 +922,7 @@ def {function_name}():
             logger.error(f"Test code generation failed: {e}")
             return f"# Test generation failed: {e}"
     
-    async def get_test_suite_metrics(self, suite_id: str) -> Optional[TestExecutionMetrics]:
+    async def get_test_suite_metrics(self, suite_id: str) -> TestExecutionMetrics | None:
         """Get metrics for a test suite"""
         try:
             if suite_id in self.test_results:
@@ -941,7 +937,7 @@ def {function_name}():
             logger.error(f"Failed to get suite metrics: {e}")
             return None
     
-    async def get_all_test_metrics(self) -> Dict[str, Any]:
+    async def get_all_test_metrics(self) -> dict[str, Any]:
         """Get metrics for all test suites"""
         try:
             all_metrics = {}

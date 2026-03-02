@@ -4,8 +4,6 @@ Test script for lightweight mode functionality
 """
 
 import os
-import sys
-import time
 import psutil
 from pathlib import Path
 
@@ -195,7 +193,7 @@ def test_docker_compatibility():
         
         if exists:
             # Read and check configuration
-            with open(docker_file, 'r') as f:
+            with open(docker_file) as f:
                 content = f.read()
             
             # Check for lightweight-specific settings

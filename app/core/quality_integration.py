@@ -1,7 +1,7 @@
 """Integration hook for quality metrics in the pipeline."""
 
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 import json
 from loguru import logger
 
@@ -11,9 +11,9 @@ from app.core.quality_metrics import evaluate_run_quality
 def generate_quality_metrics_report(
     run_id: str,
     output_dir: Path,
-    ideas: List[Dict[str, Any]],
-    pains: List[Dict[str, Any]], 
-    pages: List[Dict[str, Any]]
+    ideas: list[dict[str, Any]],
+    pains: list[dict[str, Any]], 
+    pages: list[dict[str, Any]]
 ) -> None:
     """Generate and save quality metrics report for a run."""
     try:
@@ -47,7 +47,7 @@ def generate_quality_metrics_report(
         logger.error(f"Failed to generate quality metrics for run {run_id}: {e}")
 
 
-def should_improve_run(quality_metrics: Dict[str, Any]) -> bool:
+def should_improve_run(quality_metrics: dict[str, Any]) -> bool:
     """Determine if a run needs improvement based on quality metrics."""
     overall_score = quality_metrics.get("overall_quality_score", 0)
     specificity_score = quality_metrics.get("idea_specificity_score", 0)
@@ -57,7 +57,7 @@ def should_improve_run(quality_metrics: Dict[str, Any]) -> bool:
     return overall_score < 65 or specificity_score < 60
 
 
-def get_improvement_recommendations(quality_metrics: Dict[str, Any]) -> List[str]:
+def get_improvement_recommendations(quality_metrics: dict[str, Any]) -> list[str]:
     """Get specific improvement recommendations based on quality metrics."""
     recommendations = []
     

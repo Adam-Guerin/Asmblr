@@ -5,19 +5,16 @@ Logique métier principale d'Asmblr
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-import uuid
 import asyncio
-import json
 
-from app.core.database import get_db, Pipeline
+from app.core.database import get_db
 from app.core.models import PipelineCreate, PipelineResponse, PipelineStatus
 from app.core.pipeline_service import PipelineService
 from app.core.error_handler import handle_errors, ValidationException
-from app.core.smart_logger import get_smart_logger, LogCategory, LogLevel
+from app.core.smart_logger import get_smart_logger, LogLevel
 from app.core.config import get_settings
 
 
@@ -60,13 +57,13 @@ async def health_check():
     }
 
 
-@app.get("/api/v1/pipelines", response_model=List[PipelineResponse])
+@app.get("/api/v1/pipelines", response_model=list[PipelineResponse])
 @handle_errors("list_pipelines", reraise=True)
 async def list_pipelines(
     db: Session = get_db_session(),
     skip: int = 0,
     limit: int = 50,
-    status_filter: Optional[str] = None
+    status_filter: str | None = None
 ):
     """
     Lister les pipelines avec pagination et filtres

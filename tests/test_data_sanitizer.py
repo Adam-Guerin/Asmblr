@@ -1,6 +1,5 @@
 """Test data sanitization functionality."""
 
-import pytest
 from app.core.sanitizer import DataSanitizer
 
 

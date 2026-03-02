@@ -4,8 +4,7 @@ from __future__ import annotations
 import streamlit as st
 import json
 import pandas as pd
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 import zipfile
 import io
 from datetime import datetime
@@ -18,7 +17,7 @@ class ExportManager:
     def __init__(self):
         self.supported_formats = ["json", "csv", "markdown", "pdf", "zip"]
     
-    def export_results(self, results: Dict[str, Any], format_type: str, run_id: str) -> Optional[bytes]:
+    def export_results(self, results: dict[str, Any], format_type: str, run_id: str) -> bytes | None:
         """Export results in the specified format."""
         try:
             if format_type == "json":
@@ -37,7 +36,7 @@ class ExportManager:
             st.error(f"Erreur lors de l'export {format_type}: {str(e)}")
             return None
     
-    def _export_json(self, results: Dict[str, Any], run_id: str) -> bytes:
+    def _export_json(self, results: dict[str, Any], run_id: str) -> bytes:
         """Export results as JSON."""
         export_data = {
             "run_id": run_id,
@@ -46,7 +45,7 @@ class ExportManager:
         }
         return json.dumps(export_data, indent=2, ensure_ascii=False).encode('utf-8')
     
-    def _export_csv(self, results: Dict[str, Any], run_id: str) -> bytes:
+    def _export_csv(self, results: dict[str, Any], run_id: str) -> bytes:
         """Export results as CSV."""
         csv_data = []
         
@@ -95,7 +94,7 @@ class ExportManager:
         df = pd.DataFrame(csv_data)
         return df.to_csv(index=False).encode('utf-8')
     
-    def _export_markdown(self, results: Dict[str, Any], run_id: str) -> bytes:
+    def _export_markdown(self, results: dict[str, Any], run_id: str) -> bytes:
         """Export results as Markdown."""
         md_content = f"""# 🚀 Asmblr Results Report
         
@@ -163,7 +162,7 @@ class ExportManager:
         
         return md_content.encode('utf-8')
     
-    def _export_pdf(self, results: Dict[str, Any], run_id: str) -> bytes:
+    def _export_pdf(self, results: dict[str, Any], run_id: str) -> bytes:
         """Export results as PDF (simplified version)."""
         # For now, we'll create a simple text-based PDF
         # In a real implementation, you'd use a library like reportlab or weasyprint
@@ -181,7 +180,7 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         
         return text_content.encode('utf-8')
     
-    def _export_zip(self, results: Dict[str, Any], run_id: str) -> bytes:
+    def _export_zip(self, results: dict[str, Any], run_id: str) -> bytes:
         """Export results as a ZIP package."""
         zip_buffer = io.BytesIO()
         
@@ -250,7 +249,7 @@ Tool: Asmblr - AI-Powered MVP Generator
         
         return f'<a href="data:{mime_type};base64,{b64}" download="{filename}">📥 Télécharger {format_type.upper()}</a>'
     
-    def render_export_buttons(self, results: Dict[str, Any], run_id: str) -> None:
+    def render_export_buttons(self, results: dict[str, Any], run_id: str) -> None:
         """Render export buttons in the UI."""
         st.subheader("📤 Exporter les Résultats")
         
@@ -281,7 +280,7 @@ Tool: Asmblr - AI-Powered MVP Generator
                     st.markdown(download_link, unsafe_allow_html=True)
                     st.success("✅ Package complet prêt!")
     
-    def render_export_preview(self, results: Dict[str, Any], format_type: str) -> None:
+    def render_export_preview(self, results: dict[str, Any], format_type: str) -> None:
         """Render a preview of the export data."""
         if format_type == "json":
             st.json(results)

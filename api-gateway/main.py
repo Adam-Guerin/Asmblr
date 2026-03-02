@@ -5,16 +5,13 @@ Gère le routing, l'authentification, le rate limiting et le monitoring
 
 import os
 import time
-import json
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List
+from datetime import datetime
+from typing import Any
 from contextlib import asynccontextmanager
 
-import fastapi
 import httpx
 import redis.asyncio as redis
-from fastapi import FastAPI, HTTPException, Request, Response, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -197,8 +194,8 @@ async def check_services_health():
 
 
 async def proxy_request(service_url: str, path: str, method: str, 
-                     headers: Dict[str, str], body: Optional[bytes] = None,
-                     query_params: Optional[Dict[str, Any]] = None) -> JSONResponse:
+                     headers: dict[str, str], body: bytes | None = None,
+                     query_params: dict[str, Any] | None = None) -> JSONResponse:
     """Proxy une requête vers un service"""
     try:
         url = f"{service_url}{path}"

@@ -4,19 +4,16 @@ Tracking des KPIs métier et analytics avancés
 """
 
 import asyncio
-import time
 import json
 import logging
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
 import numpy as np
 from collections import defaultdict, deque
 import redis
-from prometheus_client import Gauge, Counter, Histogram, Info
-import pandas as pd
-from sklearn.metrics import classification_report, confusion_matrix
+from prometheus_client import Gauge, Counter, Histogram
 import sqlite3
 from pathlib import Path
 
@@ -39,9 +36,9 @@ class BusinessMetric:
     description: str
     metric_type: MetricType
     unit: str
-    tags: List[str]
-    target_value: Optional[float] = None
-    alert_threshold: Optional[float] = None
+    tags: list[str]
+    target_value: float | None = None
+    alert_threshold: float | None = None
 
 
 @dataclass
@@ -93,8 +90,8 @@ class UserEngagementMetrics:
     ideas_generated: int
     mvps_built: int
     feedback_submitted: int
-    features_used: List[str]
-    satisfaction_score: Optional[float]
+    features_used: list[str]
+    satisfaction_score: float | None
     conversion_rate: float
     churn_risk: float
 
@@ -143,7 +140,7 @@ class AdvancedBusinessMetrics:
         self.setup_prometheus_metrics()
         
         # Cache des métriques
-        self.metrics_cache: Dict[str, Any] = {}
+        self.metrics_cache: dict[str, Any] = {}
         self.cache_ttl = 300  # 5 minutes
         
         # Historique pour les tendances
@@ -237,7 +234,7 @@ class AdvancedBusinessMetrics:
         conn.commit()
         conn.close()
     
-    def _define_business_metrics(self) -> Dict[str, BusinessMetric]:
+    def _define_business_metrics(self) -> dict[str, BusinessMetric]:
         """Définit les métriques business"""
         return {
             # Métriques de pipeline
@@ -605,7 +602,7 @@ class AdvancedBusinessMetrics:
         if metrics.conversion_rate:
             self.prometheus_metrics['conversion_rate'].set(metrics.conversion_rate)
     
-    async def get_dashboard_metrics(self) -> Dict[str, Any]:
+    async def get_dashboard_metrics(self) -> dict[str, Any]:
         """Retourne les métriques pour le dashboard"""
         try:
             current_time = datetime.now()
@@ -639,7 +636,7 @@ class AdvancedBusinessMetrics:
             logger.error(f"Erreur lors de la récupération des métriques dashboard: {e}")
             return {'error': str(e)}
     
-    async def _get_pipeline_metrics(self, current_time: datetime) -> Dict[str, Any]:
+    async def _get_pipeline_metrics(self, current_time: datetime) -> dict[str, Any]:
         """Récupère les métriques de pipeline"""
         # Idées générées dans la dernière heure
         hour_key = current_time.strftime('%Y%m%d%H')
@@ -663,7 +660,7 @@ class AdvancedBusinessMetrics:
             'tokens_used': total_tokens
         }
     
-    async def _get_mvp_metrics(self, current_time: datetime) -> Dict[str, Any]:
+    async def _get_mvp_metrics(self, current_time: datetime) -> dict[str, Any]:
         """Récupère les métriques MVP"""
         # Stats des builds
         total_builds = int(self.redis_client.get("total_builds") or 0)
@@ -688,7 +685,7 @@ class AdvancedBusinessMetrics:
             'avg_quality_score': avg_quality
         }
     
-    async def _get_user_metrics(self, current_time: datetime) -> Dict[str, Any]:
+    async def _get_user_metrics(self, current_time: datetime) -> dict[str, Any]:
         """Récupère les métriques utilisateur"""
         conn = sqlite3.connect(self.db_path)
         
@@ -726,7 +723,7 @@ class AdvancedBusinessMetrics:
             'conversion_rate': avg_conversion
         }
     
-    async def _get_revenue_metrics(self, current_time: datetime) -> Dict[str, Any]:
+    async def _get_revenue_metrics(self, current_time: datetime) -> dict[str, Any]:
         """Récupère les métriques de revenus"""
         conn = sqlite3.connect(self.db_path)
         
@@ -761,7 +758,7 @@ class AdvancedBusinessMetrics:
             'ltv_cac_ratio': avg_ltv / avg_cac if avg_cac > 0 else 0
         }
     
-    async def _calculate_trends(self) -> Dict[str, str]:
+    async def _calculate_trends(self) -> dict[str, str]:
         """Calcule les tendances des métriques"""
         trends = {}
         
@@ -784,7 +781,7 @@ class AdvancedBusinessMetrics:
         
         return trends
     
-    async def _check_alerts(self) -> List[Dict[str, Any]]:
+    async def _check_alerts(self) -> list[dict[str, Any]]:
         """Vérifie les alertes basées sur les seuils"""
         alerts = []
         
@@ -817,7 +814,7 @@ class AdvancedBusinessMetrics:
         
         return alerts
     
-    async def generate_business_report(self, period: str = 'weekly') -> Dict[str, Any]:
+    async def generate_business_report(self, period: str = 'weekly') -> dict[str, Any]:
         """Génère un rapport business détaillé"""
         try:
             # Déterminer la période
@@ -861,7 +858,7 @@ class AdvancedBusinessMetrics:
             logger.error(f"Erreur lors de la génération du rapport business: {e}")
             return {'error': str(e)}
     
-    def _get_idea_statistics(self, conn: sqlite3.Connection, start_date: datetime) -> Dict[str, Any]:
+    def _get_idea_statistics(self, conn: sqlite3.Connection, start_date: datetime) -> dict[str, Any]:
         """Calcule les statistiques des idées"""
         query = """
             SELECT 
@@ -896,7 +893,7 @@ class AdvancedBusinessMetrics:
         else:
             return {'total_ideas': 0}
     
-    def _get_build_statistics(self, conn: sqlite3.Connection, start_date: datetime) -> Dict[str, Any]:
+    def _get_build_statistics(self, conn: sqlite3.Connection, start_date: datetime) -> dict[str, Any]:
         """Calcule les statistiques des builds"""
         query = """
             SELECT 
@@ -929,7 +926,7 @@ class AdvancedBusinessMetrics:
         else:
             return {'total_builds': 0}
     
-    def _get_user_statistics(self, conn: sqlite3.Connection, start_date: datetime) -> Dict[str, Any]:
+    def _get_user_statistics(self, conn: sqlite3.Connection, start_date: datetime) -> dict[str, Any]:
         """Calcule les statistiques utilisateurs"""
         # Utilisateurs actifs
         active_users_query = """
@@ -961,7 +958,7 @@ class AdvancedBusinessMetrics:
             'avg_conversion': result[4] or 0
         }
     
-    def _get_revenue_statistics(self, conn: sqlite3.Connection, start_date: datetime) -> Dict[str, Any]:
+    def _get_revenue_statistics(self, conn: sqlite3.Connection, start_date: datetime) -> dict[str, Any]:
         """Calcule les statistiques de revenus"""
         query = """
             SELECT 
@@ -990,7 +987,7 @@ class AdvancedBusinessMetrics:
         else:
             return {'total_revenue': 0}
     
-    async def _generate_recommendations(self) -> List[str]:
+    async def _generate_recommendations(self) -> list[str]:
         """Génère des recommandations basées sur les métriques"""
         recommendations = []
         
@@ -1022,7 +1019,7 @@ class AdvancedBusinessMetrics:
 
 
 # Singleton global
-_business_metrics: Optional[AdvancedBusinessMetrics] = None
+_business_metrics: AdvancedBusinessMetrics | None = None
 
 
 async def get_business_metrics() -> AdvancedBusinessMetrics:

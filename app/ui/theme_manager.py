@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 import streamlit as st
-from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
 
@@ -372,7 +371,7 @@ def get_theme_manager() -> ThemeManager:
     return _global_theme_manager
 
 
-def apply_theme(theme_name: Optional[str] = None) -> None:
+def apply_theme(theme_name: str | None = None) -> None:
     """Apply theme to the current app."""
     if theme_name is None:
         theme_name = st.session_state.get('theme', 'light')

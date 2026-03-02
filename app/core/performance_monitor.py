@@ -2,7 +2,7 @@
 
 import time
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
 from dataclasses import dataclass, field
 from contextlib import contextmanager
 import threading
@@ -15,21 +15,21 @@ class PerformanceMetrics:
     """Performance metrics for a pipeline stage."""
     stage_name: str
     start_time: float
-    end_time: Optional[float] = None
-    duration: Optional[float] = None
-    memory_usage: Optional[int] = None
+    end_time: float | None = None
+    duration: float | None = None
+    memory_usage: int | None = None
     success: bool = True
-    error_message: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    error_message: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class PerformanceMonitor:
     """Thread-safe performance monitoring for pipeline stages."""
     
     def __init__(self):
-        self._metrics: Dict[str, PerformanceMetrics] = {}
+        self._metrics: dict[str, PerformanceMetrics] = {}
         self._lock = threading.RLock()
-        self._current_stage: Optional[str] = None
+        self._current_stage: str | None = None
     
     @contextmanager
     def stage(self, stage_name: str):
@@ -61,14 +61,14 @@ class PerformanceMonitor:
             
             logger.info(f"Stage {stage_name} completed in {metrics.duration:.2f}s")
     
-    def get_metrics(self, stage_name: Optional[str] = None) -> Dict[str, PerformanceMetrics]:
+    def get_metrics(self, stage_name: str | None = None) -> dict[str, PerformanceMetrics]:
         """Get performance metrics for all stages or a specific stage."""
         with self._lock:
             if stage_name:
                 return {stage_name: self._metrics.get(stage_name)}
             return self._metrics.copy()
     
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get a summary of all performance metrics."""
         with self._lock:
             if not self._metrics:

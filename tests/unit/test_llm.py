@@ -6,7 +6,7 @@ Couvre le client LLM, la gestion des modèles et les appels API
 import pytest
 import asyncio
 import json
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 import httpx
 
 from app.core.llm import LLMClient, LLMResponse

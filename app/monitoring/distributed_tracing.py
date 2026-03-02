@@ -4,14 +4,12 @@ Système de tracing distribué pour Asmblr avec OpenTelemetry et Jaeger
 
 import asyncio
 import time
-import uuid
-from typing import Dict, Any, Optional, List, Callable
+from typing import Any
+from collections.abc import Callable
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from enum import Enum
-import json
 from functools import wraps
-import logging
 
 try:
     from opentelemetry import trace, baggage, context
@@ -48,14 +46,14 @@ class SpanContext:
     """Contexte de span pour Asmblr"""
     trace_id: str
     span_id: str
-    parent_span_id: Optional[str] = None
-    baggage: Dict[str, Any] = field(default_factory=dict)
+    parent_span_id: str | None = None
+    baggage: dict[str, Any] = field(default_factory=dict)
     start_time: float = field(default_factory=time.time)
-    end_time: Optional[float] = None
+    end_time: float | None = None
     status: str = "ok"
-    error: Optional[str] = None
-    tags: Dict[str, Any] = field(default_factory=dict)
-    logs: List[Dict[str, Any]] = field(default_factory=list)
+    error: str | None = None
+    tags: dict[str, Any] = field(default_factory=dict)
+    logs: list[dict[str, Any]] = field(default_factory=list)
 
 
 class DistributedTracer:
@@ -123,7 +121,7 @@ class DistributedTracer:
         self,
         name: str,
         kind: SpanKind = SpanKind.BUSINESS,
-        attributes: Optional[Dict[str, Any]] = None
+        attributes: dict[str, Any] | None = None
     ):
         """Contexte pour tracer une opération"""
         if not self.enabled:
@@ -159,7 +157,7 @@ class DistributedTracer:
         self,
         name: str,
         kind: SpanKind = SpanKind.BUSINESS,
-        attributes: Optional[Dict[str, Any]] = None
+        attributes: dict[str, Any] | None = None
     ):
         """Contexte async pour tracer une opération"""
         if not self.enabled:
@@ -189,7 +187,7 @@ class DistributedTracer:
         finally:
             span.end()
     
-    def inject_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
+    def inject_headers(self, headers: dict[str, str]) -> dict[str, str]:
         """Injecter le contexte de tracing dans les headers HTTP"""
         if not self.enabled:
             return headers
@@ -197,7 +195,7 @@ class DistributedTracer:
         inject(headers)
         return headers
     
-    def extract_headers(self, headers: Dict[str, str]) -> Optional[SpanContext]:
+    def extract_headers(self, headers: dict[str, str]) -> SpanContext | None:
         """Extraire le contexte de tracing des headers HTTP"""
         if not self.enabled:
             return None
@@ -222,7 +220,7 @@ class DistributedTracer:
         if self.enabled and baggage:
             baggage.set_baggage(key, value)
     
-    def get_baggage(self, key: str) -> Optional[str]:
+    def get_baggage(self, key: str) -> str | None:
         """Obtenir une valeur du baggage"""
         if self.enabled and baggage:
             return baggage.get_baggage(key)
@@ -247,15 +245,15 @@ class MockSpan:
     def get_span_context(self):
         return type('Context', (), {'trace_id': '0', 'span_id': '0'})()
     
-    def add_event(self, name: str, attributes: Dict[str, Any] = None):
+    def add_event(self, name: str, attributes: dict[str, Any] = None):
         pass
 
 
 # Décorateurs pour le tracing
 def trace_function(
-    name: Optional[str] = None,
+    name: str | None = None,
     kind: SpanKind = SpanKind.BUSINESS,
-    attributes: Optional[Dict[str, Any]] = None
+    attributes: dict[str, Any] | None = None
 ):
     """Décorateur pour tracer une fonction"""
     def decorator(func: Callable) -> Callable:
@@ -329,7 +327,7 @@ def trace_cache_operation(cache_type: str, operation: str):
 
 
 # Instance globale du tracer
-_global_tracer: Optional[DistributedTracer] = None
+_global_tracer: DistributedTracer | None = None
 
 
 def initialize_tracing(settings: Settings, logger: StructuredLogger) -> DistributedTracer:
@@ -339,7 +337,7 @@ def initialize_tracing(settings: Settings, logger: StructuredLogger) -> Distribu
     return _global_tracer
 
 
-def get_global_tracer() -> Optional[DistributedTracer]:
+def get_global_tracer() -> DistributedTracer | None:
     """Obtenir l'instance globale du tracer"""
     return _global_tracer
 
@@ -392,7 +390,7 @@ def add_trace_attribute(key: str, value: Any):
     span.set_attribute(key, str(value))
 
 
-def add_trace_event(name: str, attributes: Dict[str, Any] = None):
+def add_trace_event(name: str, attributes: dict[str, Any] = None):
     """Ajouter un événement au span actuel"""
     tracer = get_global_tracer()
     span = tracer.get_current_span()
@@ -407,7 +405,7 @@ def set_trace_error(error: Exception):
     span.record_exception(error)
 
 
-def get_trace_id() -> Optional[str]:
+def get_trace_id() -> str | None:
     """Obtenir le trace ID actuel"""
     tracer = get_global_tracer()
     span = tracer.get_current_span()
@@ -415,7 +413,7 @@ def get_trace_id() -> Optional[str]:
     return format(ctx.trace_id, '032x') if ctx else None
 
 
-def get_span_id() -> Optional[str]:
+def get_span_id() -> str | None:
     """Obtenir le span ID actuel"""
     tracer = get_global_tracer()
     span = tracer.get_current_span()
@@ -435,7 +433,7 @@ class TraceLoggerAdapter:
         self,
         level: str,
         message: str,
-        extra_data: Optional[Dict[str, Any]] = None
+        extra_data: dict[str, Any] | None = None
     ):
         """Logger avec les informations de tracing"""
         trace_id = get_trace_id()

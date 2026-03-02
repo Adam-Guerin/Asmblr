@@ -3,21 +3,17 @@ Asmblr Agents Service - AI Agents Microservice
 Gestion des agents CrewAI et communication avec les LLM
 """
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-import asyncio
-import json
 
 from app.agents.crew_service import CrewService
 from app.agents.llm_service import LLMService
 from app.agents.models import (
-    CrewRequest, CrewResponse, AgentStatus, 
-    LLMRequest, LLMResponse, ModelInfo
+    CrewRequest, CrewResponse, LLMRequest, LLMResponse
 )
 from app.agents.error_handler import handle_agents_errors, AgentException
-from app.agents.smart_logger import get_agents_logger, LogCategory, LogLevel
+from app.agents.smart_logger import get_agents_logger, LogLevel
 from app.agents.config import get_agents_settings
 
 
@@ -187,7 +183,7 @@ async def llm_call(llm_request: LLMRequest):
 async def generate_ideas(
     topic: str,
     max_ideas: int = 10,
-    model: Optional[str] = None
+    model: str | None = None
 ):
     """
     Générer des idées pour un sujet
@@ -250,7 +246,7 @@ async def generate_ideas(
 async def analyze_market(
     topic: str,
     max_sources: int = 8,
-    model: Optional[str] = None
+    model: str | None = None
 ):
     """
     Analyser le marché pour un sujet
@@ -313,7 +309,7 @@ async def analyze_market(
 async def analyze_competitors(
     topic: str,
     max_competitors: int = 5,
-    model: Optional[str] = None
+    model: str | None = None
 ):
     """
     Analyser les concurrents pour un sujet
@@ -377,7 +373,7 @@ async def generate_content(
     topic: str,
     content_type: str = "landing_page",
     tone: str = "professional",
-    model: Optional[str] = None
+    model: str | None = None
 ):
     """
     Générer du contenu pour un sujet

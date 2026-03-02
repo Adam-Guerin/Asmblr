@@ -6,8 +6,8 @@ import psutil
 import time
 import threading
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from typing import Any
+from dataclasses import dataclass
 from collections import deque
 
 from app.core.smart_logger import get_smart_logger, LogCategory, LogLevel
@@ -20,8 +20,8 @@ class PerformanceMetrics:
     cpu_percent: float
     memory_percent: float
     disk_usage_percent: float
-    network_io: Dict[str, float]
-    response_times: List[float]
+    network_io: dict[str, float]
+    response_times: list[float]
     error_rate: float
     uptime_seconds: float
     timestamp: datetime
@@ -67,7 +67,7 @@ class PerformanceOptimizerV2:
             }
         )
     
-    def _get_default_rules(self) -> List[OptimizationRule]:
+    def _get_default_rules(self) -> list[OptimizationRule]:
         """Règles d'optimisation par défaut"""
         return [
             OptimizationRule(
@@ -223,7 +223,7 @@ class PerformanceOptimizerV2:
             return self.base_metrics
     
     @handle_errors("performance_analysis", reraise=False)
-    def analyze_performance(self, metrics: PerformanceMetrics) -> Dict[str, Any]:
+    def analyze_performance(self, metrics: PerformanceMetrics) -> dict[str, Any]:
         """Analyse les performances et identifie les problèmes"""
         issues = []
         recommendations = []
@@ -282,7 +282,7 @@ class PerformanceOptimizerV2:
         }
     
     @handle_errors("auto_optimization", reraise=False)
-    def apply_optimizations(self, analysis: Dict[str, Any]) -> List[str]:
+    def apply_optimizations(self, analysis: dict[str, Any]) -> list[str]:
         """Applique les optimisations automatiques"""
         if not self.auto_optimization_enabled:
             return []
@@ -341,7 +341,6 @@ class PerformanceOptimizerV2:
         """Nettoie l'espace disque"""
         try:
             import tempfile
-            import shutil
             
             # Nettoyer les fichiers temporaires
             temp_dir = tempfile.gettempdir()
@@ -440,7 +439,7 @@ class PerformanceOptimizerV2:
         """Retourne les métriques actuelles"""
         return self.collect_metrics()
     
-    def get_performance_summary(self, hours: int = 1) -> Dict[str, Any]:
+    def get_performance_summary(self, hours: int = 1) -> dict[str, Any]:
         """Retourne un résumé des performances sur N heures"""
         if not self.metrics_history:
             return {"status": "no_data"}
@@ -480,11 +479,11 @@ class PerformanceOptimizerV2:
         """Enregistre un callback d'optimisation personnalisé"""
         self.optimization_callbacks.append(callback)
     
-    def get_optimization_rules(self) -> List[OptimizationRule]:
+    def get_optimization_rules(self) -> list[OptimizationRule]:
         """Retourne les règles d'optimisation"""
         return self.optimization_rules
     
-    def update_optimization_rules(self, rules: List[OptimizationRule]):
+    def update_optimization_rules(self, rules: list[OptimizationRule]):
         """Met à jour les règles d'optimisation"""
         self.optimization_rules = rules
         self.smart_logger.info(

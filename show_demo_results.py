@@ -1,8 +1,7 @@
 import json
-from pathlib import Path
 
 # Lire le rapport existant
-with open('monitoring_report.json', 'r') as f:
+with open('monitoring_report.json') as f:
     report = json.load(f)
 
 print('🎯 Asmblr Monitoring Demo - RÉSULTATS FINAUX')

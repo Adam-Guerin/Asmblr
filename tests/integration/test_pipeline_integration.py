@@ -6,9 +6,7 @@ Couvre les flux de travail end-to-end avec tous les composants
 import pytest
 import asyncio
 import json
-import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import patch
 
 from app.core.pipeline import VenturePipeline
 from app.core.config import Settings

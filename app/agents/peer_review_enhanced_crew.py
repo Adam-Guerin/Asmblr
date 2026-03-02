@@ -4,8 +4,7 @@ Peer Review Enhanced crew system with collaborative quality assurance.
 
 import json
 import re
-from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from loguru import logger
 
@@ -18,7 +17,7 @@ except Exception:  # pragma: no cover
 
 from app.core.config import Settings
 from app.core.llm import LLMClient
-from app.agents.peer_review import PeerReviewManager, ReviewType, ReviewPriority
+from app.agents.peer_review import PeerReviewManager
 from app.agents.peer_review_tools import PeerReviewTools, create_peer_review_prompts
 from app.langchain_tools import build_toolbox
 
@@ -27,7 +26,7 @@ def _create_peer_review_enhanced_agent(
     role: str,
     goal: str,
     backstory: str,
-    tools: List[Any],
+    tools: list[Any],
     peer_review_tools: PeerReviewTools,
     peer_review_prompt: str
 ) -> Agent:

@@ -2,7 +2,7 @@
 
 import re
 import json
-from typing import Dict, Any, List, Optional
+from typing import Any
 from pathlib import Path
 import logging
 
@@ -21,7 +21,7 @@ class MVPQualityEnhancer:
             'performance': self._check_performance_basics
         }
     
-    def enhance_mvp(self, mvp_path: Path, tech_spec: Dict[str, Any]) -> Dict[str, Any]:
+    def enhance_mvp(self, mvp_path: Path, tech_spec: dict[str, Any]) -> dict[str, Any]:
         """Enhance MVP quality through multiple checks and improvements."""
         enhancement_report = {
             'original_quality': 0,
@@ -46,7 +46,7 @@ class MVPQualityEnhancer:
         
         return enhancement_report
     
-    def _check_ui_ux_quality(self, mvp_path: Path, tech_spec: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_ui_ux_quality(self, mvp_path: Path, tech_spec: dict[str, Any]) -> dict[str, Any]:
         """Check and improve UI/UX quality."""
         improvements = []
         issues_fixed = []
@@ -95,7 +95,7 @@ class MVPQualityEnhancer:
             'issues_fixed': issues_fixed
         }
     
-    def _check_functionality_completeness(self, mvp_path: Path, tech_spec: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_functionality_completeness(self, mvp_path: Path, tech_spec: dict[str, Any]) -> dict[str, Any]:
         """Check if all required functionality is implemented."""
         improvements = []
         issues_fixed = []
@@ -132,7 +132,7 @@ class MVPQualityEnhancer:
             'issues_fixed': issues_fixed
         }
     
-    def _check_code_quality(self, mvp_path: Path, tech_spec: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_code_quality(self, mvp_path: Path, tech_spec: dict[str, Any]) -> dict[str, Any]:
         """Check code quality standards."""
         improvements = []
         issues_fixed = []
@@ -175,7 +175,7 @@ class MVPQualityEnhancer:
             'issues_fixed': issues_fixed
         }
     
-    def _check_documentation_quality(self, mvp_path: Path, tech_spec: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_documentation_quality(self, mvp_path: Path, tech_spec: dict[str, Any]) -> dict[str, Any]:
         """Check documentation completeness."""
         improvements = []
         issues_fixed = []
@@ -211,7 +211,7 @@ class MVPQualityEnhancer:
             'issues_fixed': issues_fixed
         }
     
-    def _check_performance_basics(self, mvp_path: Path, tech_spec: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_performance_basics(self, mvp_path: Path, tech_spec: dict[str, Any]) -> dict[str, Any]:
         """Check basic performance optimizations."""
         improvements = []
         issues_fixed = []
@@ -260,7 +260,7 @@ class MVPQualityEnhancer:
             'issues_fixed': issues_fixed
         }
     
-    def _calculate_quality_score(self, enhancement_report: Dict[str, Any]) -> float:
+    def _calculate_quality_score(self, enhancement_report: dict[str, Any]) -> float:
         """Calculate overall quality score from all checks."""
         scores = []
         for check_name in self.quality_checks.keys():
@@ -269,7 +269,7 @@ class MVPQualityEnhancer:
         
         return sum(scores) / len(scores) if scores else 0
     
-    def generate_improvement_plan(self, enhancement_report: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def generate_improvement_plan(self, enhancement_report: dict[str, Any]) -> list[dict[str, Any]]:
         """Generate a prioritized improvement plan."""
         plan = []
         

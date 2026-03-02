@@ -4,16 +4,10 @@ Advanced LLM orchestration with intelligent provider management and cost optimiz
 """
 
 import asyncio
-import json
-import time
-from typing import Dict, Any, Optional, List, Union, Callable
-from dataclasses import dataclass, asdict
+from typing import Any
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
-import hashlib
-import aiohttp
-import psutil
 from loguru import logger
 import redis.asyncio as redis
 
@@ -58,8 +52,8 @@ class LLMConfig:
     """LLM configuration"""
     provider: LLMProvider
     model: LLMModel
-    api_key: Optional[str] = None
-    api_base_url: Optional[str] = None
+    api_key: str | None = None
+    api_base_url: str | None = None
     temperature: float = 0.7
     max_tokens: int = 4096
     timeout: float = 30.0
@@ -67,7 +61,7 @@ class LLMConfig:
     rate_limit: int = 60
     context_window: int = 4096
     streaming: bool = False
-    capabilities: List[LLMCapability] = None
+    capabilities: list[LLMCapability] = None
     
     def __post_init__(self):
         if self.capabilities is None:
@@ -84,12 +78,12 @@ class LLMRequest:
     provider: LLMProvider
     model: LLMModel
     prompt: str
-    context: Optional[str] = None
-    temperature: Optional[float] = None
-        max_tokens: Optional[int] = None
-        timeout: Optional[float] = None
-        capabilities: List[LLMCapability] = None
-        metadata: Dict[str, Any] = None
+    context: str | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
+    timeout: float | None = None
+    capabilities: list[LLMCapability] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -103,13 +97,13 @@ class LLMResponse:
     request_id: str
     provider: LLMProvider
     model: LLM
-        content: str
-        usage: Dict[str, Any]
-        metadata: Dict[str, Any] = None
-        timestamp: datetime
-        tokens_used: int
-        response_time: float
-        cost: float
+    content: str
+    usage: dict[str, Any]
+    metadata: dict[str, Any] = None
+    timestamp: datetime
+    tokens_used: int
+    response_time: float
+    cost: float
         
     def __post_init__(self):
         if self.usage is None:
@@ -162,7 +156,7 @@ class LLMProviderAdapter:
         """Get cost estimate for request"""
         raise NotImplementedError
     
-    async def get_performance_metrics(self) -> Dict[str, Any]:
+    async def get_performance_metrics(self) -> dict[str, Any]:
         """Get provider performance metrics"""
         try:
             return {
@@ -172,7 +166,7 @@ class LLMProviderAdapter:
                 'total_cost': self.total_cost,
                 'error_count': self.error_count,
                 'avg_response_time': sum(self.performance_history) / len(self.performance_history) if self.performance_history else 0.0,
-                'success_rate': (self.request_count - self.error_count) / max(self.request_count, 1)) * 100,
+                'success_rate': ((self.request_count - self.error_count) / max(self.request_count, 1)) * 100,
                 'last_updated': datetime.now()
             }
         except Exception as e:
@@ -419,7 +413,7 @@ class AnthropicAdapter(LLMProviderAdapter):
             # Generate response
             response = await self.client.messages.create(
                 model=self.config.model.value,
-                messages=[{"role": "user", "content": message},
+                messages=[{"role": "user", "content": message}],
                 max_tokens=request.max_tokens or self.config.max_tokens,
                 temperature=request.temperature or self.config.temperature
             )
@@ -915,7 +909,7 @@ class MultiLLMManager:
                 CloudProvider.OPENAI,
                 CloudProvider.ANTHROPIC,
                 CloudProvider.HUGGINGFACE,
-                CloudProvider.COHERE
+                CloudProvider.COHERE,
                 CloudProvider.REPLICATE
             ]
             
@@ -958,7 +952,7 @@ class MultiLLMManager:
             else:
                 raise Exception("No available LLM providers for code generation")
     
-    async def _select_optimal_provider(self, request: LLMRequest, preferred_providers: Optional[List[CloudProvider]] = None) -> CloudProvider:
+    async def _select_optimal_provider(self, request: LLMRequest, preferred_providers: list[CloudProvider] | None = None) -> CloudProvider:
         """Select optimal provider for request"""
         try:
             candidates = preferred_providers or list(self.providers.keys())
@@ -993,7 +987,7 @@ class MultiLLMManager:
             logger.error(f"Provider selection failed: {e}")
             return self.default_provider
     
-    def _select_optimal_provider_for_code(self, request: LLMRequest, code_providers: List[CloudProvider]) -> CloudProvider:
+    def _select_optimal_provider_for_code(self, request: LLMRequest, code_providers: list[CloudProvider]) -> CloudProvider:
         """Select optimal provider for code generation"""
         try:
             # Prioritize providers known for code generation
@@ -1075,7 +1069,7 @@ class MultiLLMManager:
                 CloudProvider.VULTR: 0.45,
                 CloudProvider.LINODE: 0.40,
                 CloudProvider.ORACLE: 0.85,
-                CloudProvider.IBM: 0.80
+                CloudProvider.IBM: 0.80,
                 CloudProvider.HUGGINGFACE: 0.75
             }
             
@@ -1092,7 +1086,7 @@ class MultiLLMManager:
             logger.error(f"Provider score calculation failed: {e}")
             return 0.5
     
-    async def get_llm_metrics(self) -> Dict[str, Any]:
+    async def get_llm_metrics(self) -> dict[str, Any]:
         """Get LLM metrics"""
         try:
             all_metrics = {}
@@ -1119,7 +1113,7 @@ class MultiLLMManager:
             logger.error(f"Failed to get LLM metrics: {e}")
             return {}
     
-    async def get_cost_optimization_suggestions(self) -> List[str]:
+    async def get_cost_optimization_suggestions(self) -> list[str]:
         """Get cost optimization suggestions"""
         try:
             suggestions = []
@@ -1153,7 +1147,7 @@ class MultiLLMManager:
             logger.error(f"Failed to generate cost optimization suggestions: {e}")
             return []
     
-    async def get_disaster_recovery_plan(self) -> Dict[str, Any]:
+    async def get_disaster_recovery_plan(self) -> dict[str, Any]:
         """Get disaster recovery plan"""
         try:
             plan = {
@@ -1178,7 +1172,7 @@ class MultiLLMManager:
             logger.error(f"Failed to create disaster recovery plan: {e}")
             return {}
     
-    async def get_multi_llm_summary(self) -> Dict[str, Any]:
+    async def get_multi_llm_summary(self) -> dict[str, Any]:
         """Get multi-LLM summary"""
         try:
             summary = {

@@ -1,6 +1,5 @@
 """Dashboard UI for product metrics."""
 from pathlib import Path
-from typing import Optional
 
 import streamlit as st
 from app.core.product_metrics import PRODUCT_METRICS
@@ -74,7 +73,7 @@ def show_dashboard():
     # Last updated
     st.caption(f"Dernière mise à jour: {metrics['last_updated']}")
 
-def init_dashboard(data_dir: Optional[Path] = None) -> None:
+def init_dashboard(data_dir: Path | None = None) -> None:
     """Initialize the dashboard with data directory."""
     if data_dir is None:
         data_dir = Path("data")

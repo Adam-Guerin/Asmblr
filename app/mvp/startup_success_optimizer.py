@@ -16,9 +16,8 @@ Facteurs clés de succès d'une startup :
 """
 
 import json
-import asyncio
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime
@@ -104,14 +103,14 @@ class PMFValidation:
 class StartupSuccessReport:
     """Rapport de succès de la startup"""
     pmf_validation: PMFValidation
-    success_metrics: List[SuccessMetric]
+    success_metrics: list[SuccessMetric]
     overall_success_score: float
     success_level: SuccessScore
-    recommendations: List[str]
-    critical_issues: List[str]
-    strengths: List[str]
-    improvement_areas: List[str]
-    validation_kpis: Dict[str, Any]
+    recommendations: list[str]
+    critical_issues: list[str]
+    strengths: list[str]
+    improvement_areas: list[str]
+    validation_kpis: dict[str, Any]
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -138,7 +137,7 @@ class StartupSuccessOptimizer:
         # KPIs de validation
         self.validation_kpis = self._create_validation_kpis()
     
-    def _create_default_metrics(self) -> List[SuccessMetric]:
+    def _create_default_metrics(self) -> list[SuccessMetric]:
         """Crée les métriques de succès par défaut"""
         
         return [
@@ -200,7 +199,7 @@ class StartupSuccessOptimizer:
             )
         ]
     
-    def _create_validation_kpis(self) -> Dict[str, Any]:
+    def _create_validation_kpis(self) -> dict[str, Any]:
         """Crée les KPIs de validation"""
         
         return {
@@ -254,9 +253,9 @@ class StartupSuccessOptimizer:
     async def analyze_startup_success(
         self,
         topic: str,
-        market_analysis: Dict[str, Any],
-        prd: Dict[str, Any],
-        architecture: Dict[str, Any]
+        market_analysis: dict[str, Any],
+        prd: dict[str, Any],
+        architecture: dict[str, Any]
     ) -> StartupSuccessReport:
         """
         Analyse le potentiel de succès de la startup
@@ -325,8 +324,8 @@ class StartupSuccessOptimizer:
     async def _validate_product_market_fit(
         self,
         topic: str,
-        market_analysis: Dict[str, Any],
-        prd: Dict[str, Any]
+        market_analysis: dict[str, Any],
+        prd: dict[str, Any]
     ) -> PMFValidation:
         """Valide le Product-Market Fit"""
         
@@ -366,10 +365,10 @@ class StartupSuccessOptimizer:
     async def _calculate_success_metrics(
         self,
         pmf_validation: PMFValidation,
-        market_analysis: Dict[str, Any],
-        prd: Dict[str, Any],
-        architecture: Dict[str, Any]
-    ) -> List[SuccessMetric]:
+        market_analysis: dict[str, Any],
+        prd: dict[str, Any],
+        architecture: dict[str, Any]
+    ) -> list[SuccessMetric]:
         """Calcule les métriques de succès"""
         
         metrics = []
@@ -414,7 +413,7 @@ class StartupSuccessOptimizer:
         
         return metrics
     
-    def _calculate_overall_success_score(self, metrics: List[SuccessMetric]) -> float:
+    def _calculate_overall_success_score(self, metrics: list[SuccessMetric]) -> float:
         """Calcule le score global de succès"""
         
         weighted_sum = sum(
@@ -443,9 +442,9 @@ class StartupSuccessOptimizer:
     async def _generate_recommendations(
         self,
         pmf_validation: PMFValidation,
-        metrics: List[SuccessMetric],
+        metrics: list[SuccessMetric],
         success_level: SuccessScore
-    ) -> List[str]:
+    ) -> list[str]:
         """Génère des recommandations pour améliorer le succès"""
         
         recommendations = []
@@ -514,7 +513,7 @@ class StartupSuccessOptimizer:
         
         return recommendations
     
-    def _identify_critical_issues(self, metrics: List[SuccessMetric]) -> List[str]:
+    def _identify_critical_issues(self, metrics: list[SuccessMetric]) -> list[str]:
         """Identifie les problèmes critiques"""
         
         return [
@@ -523,7 +522,7 @@ class StartupSuccessOptimizer:
             if metric.status == "critical"
         ]
     
-    def _identify_strengths(self, metrics: List[SuccessMetric]) -> List[str]:
+    def _identify_strengths(self, metrics: list[SuccessMetric]) -> list[str]:
         """Identifie les forces"""
         
         return [
@@ -532,7 +531,7 @@ class StartupSuccessOptimizer:
             if metric.status == "achieved"
         ]
     
-    def _identify_improvement_areas(self, metrics: List[SuccessMetric]) -> List[str]:
+    def _identify_improvement_areas(self, metrics: list[SuccessMetric]) -> list[str]:
         """Identifie les domaines d'amélioration"""
         
         return [

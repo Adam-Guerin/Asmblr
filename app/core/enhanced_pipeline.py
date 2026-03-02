@@ -5,16 +5,13 @@ Improved performance, monitoring, and user experience
 
 import asyncio
 import json
-import os
 import time
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Any
+from dataclasses import dataclass
 from enum import Enum
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -42,20 +39,20 @@ class PipelineMetrics:
     """Pipeline execution metrics"""
     pipeline_id: str
     start_time: datetime
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
     duration: float = 0.0
     stages_completed: int = 0
     stages_total: int = 0
     llm_calls: int = 0
     tokens_processed: int = 0
-    errors: List[str] = None
+    errors: list[str] = None
     performance_score: float = 0.0
     
     def __post_init__(self):
         if self.errors is None:
             self.errors = []
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'pipeline_id': self.pipeline_id,
             'start_time': self.start_time.isoformat(),
@@ -82,7 +79,7 @@ class PipelineConfig:
     timeout_per_stage: float = 300.0
     priority: PipelinePriority = PipelinePriority.NORMAL
     enable_parallel_execution: bool = True
-    resource_limits: Dict[str, Any] = None
+    resource_limits: dict[str, Any] = None
     
     def __post_init__(self):
         if self.resource_limits is None:
@@ -98,15 +95,15 @@ class EnhancedPipelineManager:
     
     def __init__(self, config: PipelineConfig = None):
         self.config = config or PipelineConfig()
-        self.running_pipelines: Dict[str, Dict[str, Any]] = {}
-        self.pipeline_metrics: Dict[str, PipelineMetrics] = {}
+        self.running_pipelines: dict[str, dict[str, Any]] = {}
+        self.pipeline_metrics: dict[str, PipelineMetrics] = {}
         self.stage_queue = asyncio.Queue()
         self.executor = ThreadPoolExecutor(max_workers=self.config.max_concurrent_stages)
-        self.metrics_history: List[PipelineMetrics] = []
-        self.performance_cache: Dict[str, Any] = {}
+        self.metrics_history: list[PipelineMetrics] = []
+        self.performance_cache: dict[str, Any] = {}
         
-    async def start_pipeline(self, pipeline_id: str, stages: List[Dict[str, Any]], 
-                           inputs: Dict[str, Any] = None) -> str:
+    async def start_pipeline(self, pipeline_id: str, stages: list[dict[str, Any]], 
+                           inputs: dict[str, Any] = None) -> str:
         """Start an enhanced pipeline with advanced features"""
         
         # Initialize pipeline state
@@ -178,8 +175,8 @@ class EnhancedPipelineManager:
                 logger.error(f"Pipeline {pipeline_id} failed after {pipeline_state['retry_count']} retries: {e}")
                 raise
     
-    async def _execute_sequential_stages(self, pipeline_id: str, stages: List[Dict[str, Any]], 
-                                       inputs: Dict[str, Any]) -> None:
+    async def _execute_sequential_stages(self, pipeline_id: str, stages: list[dict[str, Any]], 
+                                       inputs: dict[str, Any]) -> None:
         """Execute stages sequentially with enhanced features"""
         
         pipeline_state = self.running_pipelines[pipeline_id]
@@ -231,7 +228,7 @@ class EnhancedPipelineManager:
                 # Update inputs for next stage
                 inputs.update(stage_result.get('outputs', {}))
                 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 error_msg = f"Stage {i} timed out after {self.config.timeout_per_stage}s"
                 metrics.errors.append(error_msg)
                 raise TimeoutError(error_msg)
@@ -241,8 +238,8 @@ class EnhancedPipelineManager:
                 metrics.errors.append(error_msg)
                 raise
     
-    async def _execute_parallel_stages(self, pipeline_id: str, stages: List[Dict[str, Any]], 
-                                     inputs: Dict[str, Any]) -> None:
+    async def _execute_parallel_stages(self, pipeline_id: str, stages: list[dict[str, Any]], 
+                                     inputs: dict[str, Any]) -> None:
         """Execute stages in parallel where possible"""
         
         pipeline_state = self.running_pipelines[pipeline_id]
@@ -281,8 +278,8 @@ class EnhancedPipelineManager:
                 logger.error(f"Parallel stage group failed: {e}")
                 raise
     
-    async def _execute_stage_with_monitoring(self, pipeline_id: str, stage: Dict[str, Any], 
-                                           inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_stage_with_monitoring(self, pipeline_id: str, stage: dict[str, Any], 
+                                           inputs: dict[str, Any]) -> dict[str, Any]:
         """Execute a stage with monitoring and resource limits"""
         
         stage_start = time.time()
@@ -309,8 +306,8 @@ class EnhancedPipelineManager:
             logger.error(f"Stage {stage_name} failed: {e}")
             raise
     
-    async def _execute_stage(self, stage: Dict[str, Any], inputs: Dict[str, Any], 
-                           context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_stage(self, stage: dict[str, Any], inputs: dict[str, Any], 
+                           context: dict[str, Any]) -> dict[str, Any]:
         """Execute a single stage"""
         
         stage_type = stage.get('type', 'default')
@@ -328,7 +325,7 @@ class EnhancedPipelineManager:
         else:
             return await self._execute_default_stage(stage, inputs)
     
-    async def _execute_llm_stage(self, stage: Dict[str, Any], inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_llm_stage(self, stage: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
         """Execute LLM stage with monitoring"""
         
         from app.core.llm import LLMClient
@@ -358,7 +355,7 @@ class EnhancedPipelineManager:
             'duration': duration
         }
     
-    async def _execute_data_stage(self, stage: Dict[str, Any], inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_data_stage(self, stage: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
         """Execute data processing stage"""
         
         operation = stage.get('operation', 'transform')
@@ -381,7 +378,7 @@ class EnhancedPipelineManager:
         
         return {'outputs': {}}
     
-    async def _execute_api_stage(self, stage: Dict[str, Any], inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_api_stage(self, stage: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
         """Execute API call stage"""
         
         import aiohttp
@@ -401,14 +398,14 @@ class EnhancedPipelineManager:
                     }
                 }
     
-    async def _execute_file_stage(self, stage: Dict[str, Any], inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_file_stage(self, stage: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
         """Execute file operation stage"""
         
         operation = stage.get('operation', 'read')
         file_path = stage.get('path', '')
         
         if operation == 'read':
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
             
             return {
@@ -429,7 +426,7 @@ class EnhancedPipelineManager:
         
         return {'outputs': {}}
     
-    async def _execute_default_stage(self, stage: Dict[str, Any], inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_default_stage(self, stage: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
         """Execute default stage"""
         
         # Default implementation - just pass through inputs
@@ -437,7 +434,7 @@ class EnhancedPipelineManager:
             'outputs': inputs
         }
     
-    def _can_run_parallel(self, stages: List[Dict[str, Any]]) -> bool:
+    def _can_run_parallel(self, stages: list[dict[str, Any]]) -> bool:
         """Check if stages can run in parallel"""
         
         # Check if any stage has dependencies
@@ -447,7 +444,7 @@ class EnhancedPipelineManager:
         
         return True
     
-    def _group_stages_by_dependencies(self, stages: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
+    def _group_stages_by_dependencies(self, stages: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
         """Group stages by dependencies"""
         
         # Simple implementation - all stages in one group if no dependencies
@@ -457,7 +454,7 @@ class EnhancedPipelineManager:
         # More complex dependency resolution would go here
         return [[stage] for stage in stages]
     
-    def _get_stage_cache_key(self, stage: Dict[str, Any], inputs: Dict[str, Any]) -> str:
+    def _get_stage_cache_key(self, stage: dict[str, Any], inputs: dict[str, Any]) -> str:
         """Generate cache key for stage"""
         
         import hashlib
@@ -508,7 +505,7 @@ class EnhancedPipelineManager:
         if cpu_percent > self.config.resource_limits['max_cpu_percent']:
             logger.warning(f"High CPU usage: {cpu_percent}%")
     
-    def get_pipeline_status(self, pipeline_id: str) -> Optional[Dict[str, Any]]:
+    def get_pipeline_status(self, pipeline_id: str) -> dict[str, Any] | None:
         """Get pipeline status"""
         
         if pipeline_id not in self.running_pipelines:
@@ -543,7 +540,7 @@ class EnhancedPipelineManager:
         
         return False
     
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get overall performance metrics"""
         
         if not self.metrics_history:

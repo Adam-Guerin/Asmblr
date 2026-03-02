@@ -6,17 +6,14 @@ Vérification de l'état de tous les composants du système
 import asyncio
 import time
 import psutil
-import subprocess
 import requests
-from typing import Dict, List, Any, Optional, Callable
+from typing import Any
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-import json
-import logging
 
 from app.core.config import Settings
-from app.core.llm import LLMClient
 from app.core.cache import ArtifactCache
 from app.monitoring.prometheus_metrics import AsmblrMetrics
 from app.monitoring.structured_logger import StructuredLogger
@@ -47,12 +44,12 @@ class HealthCheck:
     type: CheckType
     status: HealthStatus
     message: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     duration_ms: float = 0.0
     timestamp: float = field(default_factory=time.time)
     critical: bool = True
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convertir en dictionnaire"""
         return {
             "name": self.name,
@@ -78,8 +75,8 @@ class HealthChecker:
         self.settings = settings
         self.metrics = metrics
         self.logger = logger
-        self.checks: Dict[str, Callable] = {}
-        self.last_results: Dict[str, HealthCheck] = {}
+        self.checks: dict[str, Callable] = {}
+        self.last_results: dict[str, HealthCheck] = {}
         
         # Enregistrer les checks par défaut
         self._register_default_checks()
@@ -110,7 +107,7 @@ class HealthChecker:
         }
         self.logger.system(f"Registered health check: {name}")
     
-    async def run_all_checks(self) -> Dict[str, HealthCheck]:
+    async def run_all_checks(self) -> dict[str, HealthCheck]:
         """Exécuter tous les health checks"""
         results = {}
         
@@ -144,7 +141,7 @@ class HealthChecker:
         
         return results
     
-    async def _run_single_check(self, name: str, check_info: Dict) -> HealthCheck:
+    async def _run_single_check(self, name: str, check_info: dict) -> HealthCheck:
         """Exécuter un seul health check"""
         check_func = check_info["func"]
         check_type = check_info["type"]
@@ -181,7 +178,7 @@ class HealthChecker:
                 critical=critical
             )
     
-    def get_overall_status(self, results: Dict[str, HealthCheck]) -> HealthStatus:
+    def get_overall_status(self, results: dict[str, HealthCheck]) -> HealthStatus:
         """Calculer le statut global"""
         if not results:
             return HealthStatus.UNKNOWN
@@ -532,7 +529,7 @@ class HealthChecker:
                 message=f"Logging system check failed: {str(e)}"
             )
     
-    def get_health_summary(self) -> Dict[str, Any]:
+    def get_health_summary(self) -> dict[str, Any]:
         """Obtenir un résumé de la santé du système"""
         if not self.last_results:
             return {
@@ -570,7 +567,7 @@ class HealthChecker:
 
 
 # Endpoint FastAPI pour les health checks
-async def health_endpoint(checker: HealthChecker) -> Dict[str, Any]:
+async def health_endpoint(checker: HealthChecker) -> dict[str, Any]:
     """Endpoint FastAPI pour les health checks"""
     results = await checker.run_all_checks()
     summary = checker.get_health_summary()
@@ -583,7 +580,7 @@ async def health_endpoint(checker: HealthChecker) -> Dict[str, Any]:
     }
 
 
-async def readiness_endpoint(checker: HealthChecker) -> Dict[str, Any]:
+async def readiness_endpoint(checker: HealthChecker) -> dict[str, Any]:
     """Endpoint de readiness (vérifie seulement les checks critiques)"""
     results = await checker.run_all_checks()
     
@@ -602,7 +599,7 @@ async def readiness_endpoint(checker: HealthChecker) -> Dict[str, Any]:
     }
 
 
-async def liveness_endpoint() -> Dict[str, Any]:
+async def liveness_endpoint() -> dict[str, Any]:
     """Endpoint de liveness (vérifie que l'application est en vie)"""
     return {
         "status": HealthStatus.HEALTHY.value,

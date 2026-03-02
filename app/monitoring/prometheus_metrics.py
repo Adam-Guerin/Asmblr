@@ -5,14 +5,11 @@ Exportateur de métriques, registry centralisé et métriques business
 
 import time
 import threading
-from typing import Dict, Any, List, Optional, Callable
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
-from collections import defaultdict, deque
+from typing import Any
+from dataclasses import dataclass
 from enum import Enum
 
 from prometheus_client import Counter, Histogram, Gauge, Info, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
-from prometheus_client.core import REGISTRY
 from fastapi import FastAPI, Response
 from loguru import logger
 
@@ -31,8 +28,8 @@ class MetricConfig:
     name: str
     metric_type: MetricType
     description: str
-    labels: List[str] = None
-    buckets: List[float] = None  # Pour les histogrammes
+    labels: list[str] = None
+    buckets: list[float] = None  # Pour les histogrammes
     
     def __post_init__(self):
         if self.labels is None:
@@ -46,8 +43,8 @@ class PrometheusMetricsRegistry:
     
     def __init__(self):
         self.registry = CollectorRegistry()
-        self.metrics: Dict[str, Any] = {}
-        self.configs: Dict[str, MetricConfig] = {}
+        self.metrics: dict[str, Any] = {}
+        self.configs: dict[str, MetricConfig] = {}
         self._lock = threading.Lock()
     
     def register_metric(self, config: MetricConfig) -> bool:
@@ -102,11 +99,11 @@ class PrometheusMetricsRegistry:
                 logger.error(f"Erreur lors de l'enregistrement de la métrique {config.name}: {e}")
                 return False
     
-    def get_metric(self, name: str) -> Optional[Any]:
+    def get_metric(self, name: str) -> Any | None:
         """Récupère une métrique par son nom"""
         return self.metrics.get(name)
     
-    def increment_counter(self, name: str, value: float = 1, labels: Dict[str, str] = None):
+    def increment_counter(self, name: str, value: float = 1, labels: dict[str, str] = None):
         """Incrémente un counter"""
         metric = self.get_metric(name)
         if metric and isinstance(metric, Counter):
@@ -117,7 +114,7 @@ class PrometheusMetricsRegistry:
         else:
             logger.warning(f"Counter {name} non trouvé")
     
-    def set_gauge(self, name: str, value: float, labels: Dict[str, str] = None):
+    def set_gauge(self, name: str, value: float, labels: dict[str, str] = None):
         """Définit la valeur d'un gauge"""
         metric = self.get_metric(name)
         if metric and isinstance(metric, Gauge):
@@ -128,7 +125,7 @@ class PrometheusMetricsRegistry:
         else:
             logger.warning(f"Gauge {name} non trouvé")
     
-    def observe_histogram(self, name: str, value: float, labels: Dict[str, str] = None):
+    def observe_histogram(self, name: str, value: float, labels: dict[str, str] = None):
         """Observe une valeur dans un histogramme"""
         metric = self.get_metric(name)
         if metric and isinstance(metric, Histogram):
@@ -139,7 +136,7 @@ class PrometheusMetricsRegistry:
         else:
             logger.warning(f"Histogram {name} non trouvé")
     
-    def set_info(self, name: str, info: Dict[str, str]):
+    def set_info(self, name: str, info: dict[str, str]):
         """Définit une métrique de type info"""
         from prometheus_client import Info
         
@@ -157,7 +154,7 @@ class PrometheusMetricsRegistry:
         """Génère les métriques au format Prometheus"""
         return generate_latest(self.registry).decode('utf-8')
     
-    def list_metrics(self) -> List[str]:
+    def list_metrics(self) -> list[str]:
         """Liste toutes les métriques enregistrées"""
         return list(self.metrics.keys())
 
@@ -558,7 +555,7 @@ class AsmblrMetrics:
         
         logger.info("Endpoint /metrics configuré pour Prometheus")
     
-    def get_metric(self, name: str) -> Optional[Any]:
+    def get_metric(self, name: str) -> Any | None:
         """Retourne une métrique par son nom"""
         return self.registry.get_metric(name)
     
@@ -566,7 +563,7 @@ class AsmblrMetrics:
         """Génère les métriques au format Prometheus"""
         return self.registry.generate_metrics()
     
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Retourne un résumé des métriques"""
         return {
             "registered_metrics": len(self.registry.list_metrics()),

@@ -4,7 +4,6 @@ Script pour exécuter les tests avec couverture et génération de rapports
 
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 

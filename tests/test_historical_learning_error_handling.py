@@ -1,8 +1,6 @@
 """Test error handling in historical learning functions."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
+from unittest.mock import Mock
 
 from app.core.models import IdeaScore, Idea
 

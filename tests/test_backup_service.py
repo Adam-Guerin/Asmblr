@@ -7,7 +7,6 @@ import pytest
 import asyncio
 import json
 import tempfile
-import shutil
 from unittest.mock import AsyncMock, patch, MagicMock
 from pathlib import Path
 

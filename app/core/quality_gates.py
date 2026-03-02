@@ -1,7 +1,7 @@
 """Quality gates for ensuring MVP generation standards."""
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any
 from dataclasses import dataclass
 from enum import Enum
 
@@ -23,16 +23,16 @@ class QualityGate:
     actual_value: float
     result: GateResult
     message: str
-    suggestions: List[str] = None
+    suggestions: list[str] = None
 
 
 class QualityGateChecker:
     """Checks various quality gates for MVP generation."""
     
     def __init__(self):
-        self.gates: List[QualityGate] = []
+        self.gates: list[QualityGate] = []
     
-    def check_idea_quality(self, ideas: List[Dict[str, Any]]) -> QualityGate:
+    def check_idea_quality(self, ideas: list[dict[str, Any]]) -> QualityGate:
         """Check if generated ideas meet quality standards."""
         if not ideas:
             return QualityGate(
@@ -69,7 +69,7 @@ class QualityGateChecker:
             suggestions=suggestions
         )
     
-    def check_market_signal_quality(self, signal_data: Dict[str, Any]) -> QualityGate:
+    def check_market_signal_quality(self, signal_data: dict[str, Any]) -> QualityGate:
         """Check market signal quality and diversity."""
         signal_score = signal_data.get('score', 0)
         sources_count = signal_data.get('sources_count', 0)
@@ -96,7 +96,7 @@ class QualityGateChecker:
             suggestions=suggestions
         )
     
-    def check_tech_spec_completeness(self, tech_spec: Dict[str, Any]) -> QualityGate:
+    def check_tech_spec_completeness(self, tech_spec: dict[str, Any]) -> QualityGate:
         """Check technical specification completeness."""
         required_sections = ['architecture', 'tech_stack', 'api_design', 'database_schema']
         present_sections = sum(1 for section in required_sections if tech_spec.get(section))
@@ -118,7 +118,7 @@ class QualityGateChecker:
             suggestions=suggestions
         )
     
-    def check_prd_quality(self, prd_data: Dict[str, Any]) -> QualityGate:
+    def check_prd_quality(self, prd_data: dict[str, Any]) -> QualityGate:
         """Check PRD quality and completeness."""
         required_elements = ['problem_statement', 'target_audience', 'key_features', 'success_metrics']
         present_elements = sum(1 for element in required_elements if prd_data.get(element))
@@ -148,7 +148,7 @@ class QualityGateChecker:
             suggestions=suggestions
         )
     
-    def run_all_checks(self, pipeline_results: Dict[str, Any]) -> List[QualityGate]:
+    def run_all_checks(self, pipeline_results: dict[str, Any]) -> list[QualityGate]:
         """Run all quality gate checks on pipeline results."""
         self.gates = []
         
@@ -186,7 +186,7 @@ class QualityGateChecker:
         else:
             return GateResult.PASS
     
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of quality gate results."""
         if not self.gates:
             return {"overall": GateResult.WARN, "gates": []}

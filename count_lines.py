@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Script to count lines of code in Asmblr project"""
 
-import os
 from pathlib import Path
 
 def count_lines():
@@ -13,7 +12,7 @@ def count_lines():
     # Find all Python files
     for py_file in project_root.rglob("*.py"):
         try:
-            with open(py_file, 'r', encoding='utf-8') as f:
+            with open(py_file, encoding='utf-8') as f:
                 lines = len(f.readlines())
                 total_lines += lines
                 file_count += 1

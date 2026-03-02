@@ -7,16 +7,13 @@ import asyncio
 import time
 import json
 import logging
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Any
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
 import numpy as np
-import pandas as pd
-from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, precision_recall_fscore_support
-from sklearn.model_selection import train_test_split
 import joblib
 from collections import defaultdict, deque
 import redis
@@ -53,10 +50,10 @@ class AnomalyDetection:
     anomaly_type: AnomalyType
     severity: AnomalySeverity
     value: float
-    expected_range: Tuple[float, float]
+    expected_range: tuple[float, float]
     confidence_score: float
     description: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
     alert_sent: bool = False
 
 
@@ -66,8 +63,8 @@ class MetricDataPoint:
     timestamp: datetime
     metric_name: str
     value: float
-    labels: Dict[str, str]
-    context: Dict[str, Any]
+    labels: dict[str, str]
+    context: dict[str, Any]
 
 
 @dataclass
@@ -107,14 +104,14 @@ class MLAnomalyDetector:
         self.redis_client = redis.from_url(redis_url)
         
         # Modèles ML
-        self.models: Dict[str, Dict[str, Any]] = {}
-        self.scalers: Dict[str, StandardScaler] = {}
+        self.models: dict[str, dict[str, Any]] = {}
+        self.scalers: dict[str, StandardScaler] = {}
         
         # Historique des données
-        self.data_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=training_window))
+        self.data_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=training_window))
         
         # Métriques des modèles
-        self.model_metrics: Dict[str, ModelMetrics] = {}
+        self.model_metrics: dict[str, ModelMetrics] = {}
         
         # Configuration des métriques à surveiller
         self.metric_configs = self._setup_metric_configs()
@@ -132,7 +129,7 @@ class MLAnomalyDetector:
         
         logger.info("ML Anomaly Detector initialisé")
     
-    def _setup_metric_configs(self) -> Dict[str, Dict[str, Any]]:
+    def _setup_metric_configs(self) -> dict[str, dict[str, Any]]:
         """Configure les métriques à surveiller"""
         return {
             # Métriques performance
@@ -476,7 +473,7 @@ class MLAnomalyDetector:
                 logger.error(f"Erreur lors de la détection d'anomalies: {e}")
                 await asyncio.sleep(120)
     
-    async def _detect_metric_anomalies(self, metric_name: str, timestamp: datetime) -> List[AnomalyDetection]:
+    async def _detect_metric_anomalies(self, metric_name: str, timestamp: datetime) -> list[AnomalyDetection]:
         """Détecte les anomalies pour une métrique spécifique"""
         anomalies = []
         
@@ -811,7 +808,7 @@ class MLAnomalyDetector:
         except Exception as e:
             logger.error(f"Erreur lors du chargement des modèles: {e}")
     
-    async def get_anomaly_summary(self, hours: int = 24) -> Dict[str, Any]:
+    async def get_anomaly_summary(self, hours: int = 24) -> dict[str, Any]:
         """Retourne un résumé des anomalies"""
         try:
             cutoff_time = datetime.now() - timedelta(hours=hours)
@@ -871,7 +868,7 @@ class MLAnomalyDetector:
         logger.info(f"Force réentraînement du modèle {metric_name}")
         await self._train_model(metric_name)
     
-    async def get_model_performance(self) -> Dict[str, Any]:
+    async def get_model_performance(self) -> dict[str, Any]:
         """Retourne les performances des modèles"""
         performance = {}
         
@@ -891,7 +888,7 @@ class MLAnomalyDetector:
 
 
 # Singleton global
-_anomaly_detector: Optional[MLAnomalyDetector] = None
+_anomaly_detector: MLAnomalyDetector | None = None
 
 
 async def get_anomaly_detector() -> MLAnomalyDetector:

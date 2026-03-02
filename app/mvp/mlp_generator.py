@@ -292,7 +292,7 @@ export function MagicalExperience() {{
   
   return (
     <div className="relative">
-      {/* Magical background effects */}
+      {{/* Magical background effects */}}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(8)].map((_, i) => (
           <motion.div

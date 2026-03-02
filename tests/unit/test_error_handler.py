@@ -5,7 +5,7 @@ Tests pour le gestionnaire d'erreurs unifié
 import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from app.core.error_handler import (
     ErrorHandler, ErrorCategory, ErrorSeverity, ErrorContext,
@@ -167,7 +167,7 @@ class TestErrorHandler:
             
             # Vérifier le contenu
             import json
-            with open(temp_path, 'r') as f:
+            with open(temp_path) as f:
                 data = json.load(f)
             
             assert len(data) == 1

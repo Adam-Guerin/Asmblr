@@ -466,9 +466,9 @@ export function EmotionalHero() {{
       transition={{{{ duration: 0.8, ease: "easeOutBack" }}}}
       className="{component['props']['className']} relative overflow-hidden py-20 lg:py-32"
     >
-      {/* Animated background elements */}
+      {{/* Animated background elements */}}
       <div className="absolute inset-0">
-        {[...Array(6)].map((_, i) => (
+        {{[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
             initial={{{{ opacity: 0, scale: 0 }}}}
@@ -486,7 +486,7 @@ export function EmotionalHero() {{
               top: `${{Math.random() * 100}}%`,
             }}
           />
-        ))}
+        ))}}
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

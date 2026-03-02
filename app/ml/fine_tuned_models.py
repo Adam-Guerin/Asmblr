@@ -6,26 +6,19 @@ Advanced ML models fine-tuned on domain-specific data for optimal performance
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 import torch
-import torch.nn as nn
 from transformers import (
     AutoTokenizer, AutoModelForCausalLM, 
     AutoModelForSequenceClassification,
     TrainingArguments, Trainer,
     DataCollatorForLanguageModel
 )
-from datasets import Dataset, load_dataset
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
+from datasets import Dataset
 import redis
-import pickle
-from concurrent.futures import ThreadPoolExecutor
-import os
 import gc
 
 logging.basicConfig(level=logging.INFO)
@@ -60,7 +53,7 @@ class AsmblrDataset:
         self.task_type = task_type
         self.data = self._load_data()
     
-    def _load_data(self) -> List[Dict[str, Any]]:
+    def _load_data(self) -> list[dict[str, Any]]:
         """Load training data"""
         if self.task_type == "generation":
             return self._load_generation_data()
@@ -71,13 +64,13 @@ class AsmblrDataset:
         else:
             raise ValueError(f"Unsupported task type: {self.task_type}")
     
-    def _load_generation_data(self) -> List[Dict[str, Any]]:
+    def _load_generation_data(self) -> list[dict[str, Any]]:
         """Load data for text generation tasks"""
         data = []
         
         # Load idea descriptions and evaluations
         if (self.data_path / "ideas.json").exists():
-            with open(self.data_path / "ideas.json", 'r') as f:
+            with open(self.data_path / "ideas.json") as f:
                 ideas = json.load(f)
                 
                 for idea in ideas:
@@ -93,7 +86,7 @@ class AsmblrDataset:
         
         # Load MVP descriptions
         if (self.data_path / "mvps.json").exists():
-            with open(self.data_path / "mvps.json", 'r') as f:
+            with open(self.data_path / "mvps.json") as f:
                 mvps = json.load(f)
                 
                 for mvp in mvps:
@@ -108,7 +101,7 @@ class AsmblrDataset:
         
         # Load market research data
         if (self.data_path / "market_research.json").exists():
-            with open(self.data_path / "market_research.json", 'r') as f:
+            with open(self.data_path / "market_research.json") as f:
                 research = json.load(f)
                 
                 for item in research:
@@ -123,13 +116,13 @@ class AsmblrDataset:
         
         return data
     
-    def _load_classification_data(self) -> List[Dict[str, Any]]:
+    def _load_classification_data(self) -> list[dict[str, Any]]:
         """Load data for classification tasks"""
         data = []
         
         # Load idea evaluations for classification
         if (self.data_path / "ideas.json").exists():
-            with open(self.data_path / "ideas.json", 'r') as f:
+            with open(self.data_path / "ideas.json") as f:
                 ideas = json.load(f)
                 
                 for idea in ideas:
@@ -154,7 +147,7 @@ class AsmblrDataset:
         
         return data
     
-    def _load_embedding_data(self) -> List[Dict[str, Any]]:
+    def _load_embedding_data(self) -> list[dict[str, Any]]:
         """Load data for embedding tasks"""
         data = []
         
@@ -163,21 +156,21 @@ class AsmblrDataset:
         
         # Ideas
         if (self.data_path / "ideas.json").exists():
-            with open(self.data_path / "ideas.json", 'r') as f:
+            with open(self.data_path / "ideas.json") as f:
                 ideas = json.load(f)
                 for idea in ideas:
                     all_texts.append(f"{idea.get('title', '')} {idea.get('description', '')}")
         
         # MVPs
         if (self.data_path / "mvps.json").exists():
-            with open(self.data_path / "mvps.json", 'r') as f:
+            with open(self.data_path / "mvps.json") as f:
                 mvps = json.load(f)
                 for mvp in mvps:
                     all_texts.append(f"{mvp.get('frontend_stack', '')} {mvp.get('backend_stack', '')}")
         
         # Market research
         if (self.data_path / "market_research.json").exists():
-            with open(self.data_path / "market_research.json", 'r') as f:
+            with open(self.data_path / "market_research.json") as f:
                 research = json.load(f)
                 for item in research:
                     all_texts.append(item.get('topic', ''))
@@ -251,7 +244,7 @@ class CustomModelTrainer:
         
         logger.info(f"Model setup complete. Device: {self.device}")
     
-    async def train(self) -> Dict[str, Any]:
+    async def train(self) -> dict[str, Any]:
         """Train the model"""
         try:
             # Load dataset
@@ -387,7 +380,7 @@ class CustomModelTrainer:
             logger.error(f"Text generation failed: {e}")
             return f"Generation failed: {str(e)}"
     
-    async def classify_text(self, text: str) -> Dict[str, float]:
+    async def classify_text(self, text: str) -> dict[str, float]:
         """Classify text using the fine-tuned model"""
         try:
             if not self.model or not self.tokenizer:
@@ -421,8 +414,8 @@ class ModelRegistry:
     
     def __init__(self, redis_url: str = "redis://localhost:6379/0"):
         self.redis_client = redis.from_url(redis_url)
-        self.models: Dict[str, CustomModelTrainer] = {}
-        self.model_configs: Dict[str, FineTuningConfig] = {}
+        self.models: dict[str, CustomModelTrainer] = {}
+        self.model_configs: dict[str, FineTuningConfig] = {}
         
     async def register_model(self, model_name: str, config: FineTuningConfig) -> None:
         """Register a new model configuration"""
@@ -448,7 +441,7 @@ class ModelRegistry:
         
         logger.info(f"Registered model: {model_name}")
     
-    async def train_model(self, model_name: str) -> Dict[str, Any]:
+    async def train_model(self, model_name: str) -> dict[str, Any]:
         """Train a registered model"""
         if model_name not in self.model_configs:
             raise ValueError(f"Model {model_name} not registered")
@@ -499,11 +492,11 @@ class ModelRegistry:
         
         logger.info(f"Loaded model: {model_name}")
     
-    async def get_model(self, model_name: str) -> Optional[CustomModelTrainer]:
+    async def get_model(self, model_name: str) -> CustomModelTrainer | None:
         """Get a trained model"""
         return self.models.get(model_name)
     
-    async def list_models(self) -> Dict[str, Dict[str, Any]]:
+    async def list_models(self) -> dict[str, dict[str, Any]]:
         """List all registered models"""
         models = {}
         
@@ -535,7 +528,7 @@ class ModelRegistry:
         
         return await model.generate_text(prompt, **kwargs)
     
-    async def classify_text(self, model_name: str, text: str) -> Dict[str, float]:
+    async def classify_text(self, model_name: str, text: str) -> dict[str, float]:
         """Classify text using a specific model"""
         model = await self.get_model(model_name)
         if not model:
@@ -592,7 +585,7 @@ class ModelManager:
         
         logger.info("Model manager initialized with default models")
     
-    async def train_all_models(self) -> Dict[str, Dict[str, Any]]:
+    async def train_all_models(self) -> dict[str, dict[str, Any]]:
         """Train all registered models"""
         results = {}
         
@@ -617,7 +610,7 @@ class ModelManager:
         """Generate idea using fine-tuned model"""
         return await self.registry.generate_text("idea_generator", prompt, **kwargs)
     
-    async def classify_idea(self, text: str) -> Dict[str, float]:
+    async def classify_idea(self, text: str) -> dict[str, float]:
         """Classify idea using fine-tuned model"""
         return await self.registry.classify_text("idea_classifier", text)
     
@@ -625,7 +618,7 @@ class ModelManager:
         """Generate MVP description using fine-tuned model"""
         return await self.registry.generate_text("mvp_generator", prompt, **kwargs)
     
-    async def get_model_status(self) -> Dict[str, Any]:
+    async def get_model_status(self) -> dict[str, Any]:
         """Get status of all models"""
         return await self.registry.list_models()
 

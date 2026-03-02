@@ -3,10 +3,10 @@
 import time
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 from dataclasses import dataclass
 
-from .enhanced_builder import EnhancedMVPBuilder, MVPBuildResult
+from .enhanced_builder import EnhancedMVPBuilder
 from .mlp_generator import MLPGenerator
 from ..agents.loveability_engineer import LoveabilityEngineerAgent
 from ..agents.ux_specialist import UXSpecialistAgent
@@ -21,23 +21,23 @@ logger = logging.getLogger(__name__)
 class MLPBuildResult:
     """Result of MLP building process."""
     success: bool
-    mlp_path: Optional[Path]
+    mlp_path: Path | None
     loveability_score: float
     emotional_attachment_score: float
     habit_formation_score: float
     community_culture_score: float
     build_time: float
-    loveability_features: List[str]
-    magical_moments: List[str]
-    identity_systems: List[str]
-    community_features: List[str]
-    error_message: Optional[str] = None
+    loveability_features: list[str]
+    magical_moments: list[str]
+    identity_systems: list[str]
+    community_features: list[str]
+    error_message: str | None = None
 
 
 class MLPBuilder:
     """Most Lovable Product builder with emotional addiction systems."""
     
-    def __init__(self, config: Dict[str, Any], llm_client: LLMClient):
+    def __init__(self, config: dict[str, Any], llm_client: LLMClient):
         self.config = config
         self.llm_client = llm_client
         self.enhanced_builder = EnhancedMVPBuilder(config)
@@ -60,7 +60,7 @@ class MLPBuilder:
         self.enable_personalization = config.get('ENABLE_EMOTIONAL_PERSONALIZATION', True)
         self.enable_community = config.get('ENABLE_COMMUNITY_FEATURES', True)
     
-    def build_mlp(self, tech_spec: Dict[str, Any], prd_data: Dict[str, Any], 
+    def build_mlp(self, tech_spec: dict[str, Any], prd_data: dict[str, Any], 
                   output_path: Path) -> MLPBuildResult:
         """Build Most Lovable Product with emotional addiction systems."""
         start_time = time.time()
@@ -180,7 +180,7 @@ class MLPBuilder:
                     error_message=str(e)
                 )
     
-    def _integrate_emotional_design(self, mvp_path: Path, emotional_addiction: Dict[str, Any]):
+    def _integrate_emotional_design(self, mvp_path: Path, emotional_addiction: dict[str, Any]):
         """Integrate emotional design patterns into MVP."""
         try:
             # Create emotional design components
@@ -245,7 +245,7 @@ export function useMagicalMoments() {
         except Exception as e:
             logger.error(f"Failed to integrate emotional design: {e}")
     
-    def _add_celebration_systems(self, mvp_path: Path, loveability_strategy: Dict[str, Any]):
+    def _add_celebration_systems(self, mvp_path: Path, loveability_strategy: dict[str, Any]):
         """Add celebration systems to MLP."""
         try:
             # Create celebration components
@@ -322,7 +322,7 @@ export function useCelebration() {
         except Exception as e:
             logger.error(f"Failed to add celebration systems: {e}")
     
-    def _implement_personalization(self, mvp_path: Path, identity_systems: Dict[str, Any]):
+    def _implement_personalization(self, mvp_path: Path, identity_systems: dict[str, Any]):
         """Implement personalization systems."""
         try:
             # Create personalization components
@@ -342,7 +342,7 @@ export function useCelebration() {
         except Exception as e:
             logger.error(f"Failed to implement personalization: {e}")
     
-    def _build_community_features(self, mvp_path: Path, community_culture: Dict[str, Any]):
+    def _build_community_features(self, mvp_path: Path, community_culture: dict[str, Any]):
         """Build community culture features."""
         try:
             # Create community components
@@ -362,7 +362,7 @@ export function useCelebration() {
         except Exception as e:
             logger.error(f"Failed to build community features: {e}")
     
-    def _calculate_mlp_scores(self, mvp_path: Path, prd_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_mlp_scores(self, mvp_path: Path, prd_data: dict[str, Any]) -> dict[str, Any]:
         """Calculate MLP quality scores."""
         try:
             # Base scores from enhanced MVP
@@ -457,7 +457,7 @@ export function useCelebration() {
                 'community_features': []
             }
     
-    def _generate_mlp_components(self, mvp_path: Path, mlp_data: Dict[str, Any]):
+    def _generate_mlp_components(self, mvp_path: Path, mlp_data: dict[str, Any]):
         """Generate MLP-specific components and configurations."""
         try:
             # Create MLP configuration
@@ -512,7 +512,7 @@ export function MLPLayout({{ children }}: {{ children: React.ReactNode }}) {{
         except Exception as e:
             logger.error(f"Failed to generate MLP components: {e}")
     
-    def get_mlp_quality_report(self, mlp_result: MLPBuildResult) -> Dict[str, Any]:
+    def get_mlp_quality_report(self, mlp_result: MLPBuildResult) -> dict[str, Any]:
         """Generate comprehensive MLP quality report."""
         if not mlp_result.success:
             return {

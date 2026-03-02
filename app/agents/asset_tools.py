@@ -2,14 +2,12 @@
 Asset Management Tools for agents to create, share and reuse collaborative resources.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 from loguru import logger
 
 from app.agents.shared_assets import (
     SharedAssetManager,
-    AssetMetadata,
     AssetType,
-    AssetStatus,
     AssetFormat
 )
 
@@ -22,8 +20,8 @@ class AssetManagementTools:
         self.agent_name = agent_name
     
     def create_logo(self, name: str, description: str, file_path: str,
-                  tags: List[str] = None, brand_colors: List[str] = None,
-                  style: str = "modern", variations: List[str] = None) -> Optional[str]:
+                  tags: list[str] = None, brand_colors: list[str] = None,
+                  style: str = "modern", variations: list[str] = None) -> str | None:
         """Create a logo asset with brand-specific metadata."""
         try:
             technical_specs = {
@@ -54,8 +52,8 @@ class AssetManagementTools:
             return None
     
     def create_hosting_info(self, name: str, description: str, url: str,
-                         provider: str, plan: str = "basic", features: List[str] = None,
-                         pricing: Dict[str, Any] = None, deployment_info: Dict[str, Any] = None) -> Optional[str]:
+                         provider: str, plan: str = "basic", features: list[str] = None,
+                         pricing: dict[str, Any] = None, deployment_info: dict[str, Any] = None) -> str | None:
         """Create hosting information asset for CTA and deployment."""
         try:
             hosting_info = {
@@ -93,8 +91,8 @@ class AssetManagementTools:
             return None
     
     def create_cta_template(self, name: str, description: str, platform: str,
-                          template_type: str, copy: str, design_specs: Dict[str, Any] = None,
-                          targeting: Dict[str, Any] = None, analytics: Dict[str, Any] = None) -> Optional[str]:
+                          template_type: str, copy: str, design_specs: dict[str, Any] = None,
+                          targeting: dict[str, Any] = None, analytics: dict[str, Any] = None) -> str | None:
         """Create a CTA template for different platforms and use cases."""
         try:
             cta_template = {
@@ -140,8 +138,8 @@ class AssetManagementTools:
             return None
     
     def search_assets(self, asset_type: str = None, category: str = None,
-                    tags: List[str] = None, limit: int = 20,
-                    sort_by: str = "usage_count") -> List[Dict[str, Any]]:
+                    tags: list[str] = None, limit: int = 20,
+                    sort_by: str = "usage_count") -> list[dict[str, Any]]:
         """Search for assets based on criteria."""
         try:
             asset_type_enum = AssetType(asset_type) if asset_type else None
@@ -185,7 +183,7 @@ class AssetManagementTools:
             logger.error(f"Failed to search assets: {e}")
             return []
     
-    def get_asset_details(self, asset_id: str) -> Optional[Dict[str, Any]]:
+    def get_asset_details(self, asset_id: str) -> dict[str, Any] | None:
         """Get detailed information about a specific asset."""
         try:
             asset = self.asset_manager.get_asset(asset_id)
@@ -240,7 +238,7 @@ class AssetManagementTools:
             logger.error(f"Failed to record asset usage {asset_id}: {e}")
             return False
     
-    def get_logos_for_brand(self, brand_name: str = None) -> List[Dict[str, Any]]:
+    def get_logos_for_brand(self, brand_name: str = None) -> list[dict[str, Any]]:
         """Get available logos for brand filtering."""
         try:
             logos = self.asset_manager.get_assets_by_type(AssetType.LOGO)
@@ -273,7 +271,7 @@ class AssetManagementTools:
             logger.error(f"Failed to get logos for brand {brand_name}: {e}")
             return []
     
-    def get_hosting_options(self, provider: str = None, plan_type: str = None) -> List[Dict[str, Any]]:
+    def get_hosting_options(self, provider: str = None, plan_type: str = None) -> list[dict[str, Any]]:
         """Get available hosting options."""
         try:
             hosting_assets = self.asset_manager.get_assets_by_type(AssetType.HOSTING_INFO)
@@ -305,7 +303,7 @@ class AssetManagementTools:
             logger.error(f"Failed to get hosting options: {e}")
             return []
     
-    def get_cta_templates(self, platform: str = None, template_type: str = None) -> List[Dict[str, Any]]:
+    def get_cta_templates(self, platform: str = None, template_type: str = None) -> list[dict[str, Any]]:
         """Get available CTA templates."""
         try:
             cta_assets = self.asset_manager.get_assets_by_type(AssetType.CTA_TEMPLATE)
@@ -337,7 +335,7 @@ class AssetManagementTools:
             logger.error(f"Failed to get CTA templates: {e}")
             return []
     
-    def get_asset_statistics(self) -> Dict[str, Any]:
+    def get_asset_statistics(self) -> dict[str, Any]:
         """Get asset management statistics."""
         try:
             return self.asset_manager.get_asset_statistics()
@@ -362,7 +360,7 @@ class AssetManagementTools:
             return False
 
 
-def create_asset_management_prompts() -> Dict[str, str]:
+def create_asset_management_prompts() -> dict[str, str]:
     """Create specialized prompts for asset-aware agents."""
     
     return {
