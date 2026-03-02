@@ -102,6 +102,23 @@ class Settings:
         "PRIMARY_ICP_KEYWORDS",
         "founder,founders,b2b,saas,pre-seed,startup,startups,small team,operators",
     )
+    enable_agent_skills: bool = os.getenv("ENABLE_AGENT_SKILLS", "true").lower() == "true"
+    agent_skills_dirs: str = os.getenv(
+        "AGENT_SKILLS_DIRS",
+        "skills,~/.codex/skills",
+    )
+    agent_skill_prompt_max_chars: int = int(os.getenv("AGENT_SKILL_PROMPT_MAX_CHARS", "3200"))
+    agent_skill_role_map: str = os.getenv(
+        "AGENT_SKILL_ROLE_MAP",
+        (
+            "researcher=startup-analyst|deep-research|apify-market-research|context7-auto-research|competitive-landscape|market-sizing-analysis|research-engineer;"
+            "analyst=competitor-alternatives|competitive-landscape|startup-business-analyst-market-opportunity|startup-business-analyst-business-case|startup-business-analyst-financial-projections|startup-metrics-framework|pricing-strategy;"
+            "product=product-manager-toolkit|ai-product|startup-financial-modeling|startup-metrics-framework|prompt-engineering|prompt-engineering-patterns|api-documentation;"
+            "tech-lead=software-architecture|frontend-dev-guidelines|testing-patterns|test-driven-development|test-automator|performance-engineer|observability-engineer|postmortem-writing|api-security-best-practices;"
+            "growth=seo-content-writer|seo-content-planner|seo-keyword-strategist|seo-audit|programmatic-seo|social-content|content-marketer|copywriting|onboarding-cro;"
+            "brand=brand-guidelines-community|brand-guidelines|ui-ux-designer|ui-ux-pro-max|frontend-design|canvas-design"
+        ),
+    )
     icp_alignment_bonus_max: int = int(os.getenv("ICP_ALIGNMENT_BONUS_MAX", "8"))
     enable_self_healing: bool = os.getenv("ENABLE_SELF_HEALING", "true").lower() == "true"
     stage_retry_attempts: int = int(os.getenv("STAGE_RETRY_ATTEMPTS", "2"))

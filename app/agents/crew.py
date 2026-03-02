@@ -19,6 +19,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from app.core.config import Settings
 from app.core.models import SeedInputs
 from app.core.llm import LLMClient
+from app.agents.skills import build_agent_skill_guidance
 from app.langchain_tools import build_toolbox
 
 
@@ -313,6 +314,12 @@ def run_crewai_pipeline(
     content_prompt = _load_prompt("content_pack")
     brand_prompt = _load_prompt("brand_identity")
 
+    def _with_skill_guidance(description: str, role: str) -> str:
+        guidance = build_agent_skill_guidance(role, settings)
+        if not guidance:
+            return description
+        return f"{description}\n\n{guidance}"
+
     def _mk_agent(role, goal, backstory, tools):
         try:
             return Agent(role=role, goal=goal, backstory=backstory, tools=tools, llm=llm)
@@ -357,7 +364,8 @@ def run_crewai_pipeline(
     )
 
     research_task = Task(
-        description=(
+        description=_with_skill_guidance(
+            (
             f"You are the Researcher. Use tool `web_search_and_summarize` with args: "
             f"{{\"sources\": {sources_json}, \"max_sources\": {3 if fast_mode else settings.max_sources}, "
             f"\"cache_dir\": \"{settings.data_dir / 'cache'}\", \"timeout\": {settings.request_timeout}, "
@@ -371,13 +379,16 @@ def run_crewai_pipeline(
             f"Then generate {n_ideas} product ideas using this prompt:\n{idea_prompt}\n" 
             "Return JSON with keys: pain_statements, clusters, ideas, sources, pages. "
             "If data missing, set 'unknown' and state assumptions."
+            ),
+            "Researcher",
         ),
         agent=researcher,
         expected_output="JSON",
     )
 
     analyst_task = Task(
-        description=(
+        description=_with_skill_guidance(
+            (
             "You are the Analyst. Use pain_statements and ideas from the Researcher. "
             f"Seed hypotheses (data_source=seed): {seed_summary or 'none provided'}. "
             f"Primary ICP focus: {icp_focus_hint}. ICP keywords: {icp_keyword_hint}. "
@@ -387,6 +398,8 @@ def run_crewai_pipeline(
             "`competitor_extractor` (or pass competitor URLs directly). "
             f"Competitor sources: {competitor_json}. Pre-collected competitor pages: {seed_competitor_json}. "
             "Pick top 1-2 ideas by score and return JSON with keys: ideas, scores, top_idea, competitors."
+            ),
+            "Analyst",
         ),
         agent=analyst,
         context=[research_task],
@@ -394,7 +407,8 @@ def run_crewai_pipeline(
     )
 
     product_task = Task(
-        description=(
+        description=_with_skill_guidance(
+            (
             "You are the Product agent. Use top_idea and pain statements from Analyst/Researcher. "
             f"Primary ICP to enforce in PRD scope and language: {icp_focus_hint}. "
             f"Validated pains (priority):\n{validated_pain_summary}\n"
@@ -402,6 +416,8 @@ def run_crewai_pipeline(
             "Ensure every section references at least one validated pain and explains how we differentiate from competitors. "
             "Write a PRD using this prompt:\n{prd_prompt}\n"
             "Return JSON with key prd_markdown."
+            ),
+            "Product",
         ),
         agent=product,
         context=[research_task, analyst_task],
@@ -409,7 +425,8 @@ def run_crewai_pipeline(
     )
 
     tech_task = Task(
-        description=(
+        description=_with_skill_guidance(
+            (
             "You are the Tech Lead. Use top_idea to write a technical spec. "
             f"Validated pains (priority):\n{validated_pain_summary}\n"
             f"Competitor cues: {competitor_json}. "
@@ -417,6 +434,8 @@ def run_crewai_pipeline(
             f"Prompt:\n{tech_prompt}\n"
             f"Then call `repo_generator` with {{\"project_name\": top_idea.name, \"output_dir\": \"{runs_dir}/repo_skeleton\", \"fast_mode\": {str(fast_mode).lower()}}}. "
             "Return JSON with keys: tech_spec_markdown, repo_dir."
+            ),
+            "Tech Lead",
         ),
         agent=tech,
         context=[analyst_task],
@@ -424,7 +443,8 @@ def run_crewai_pipeline(
     )
 
     growth_task = Task(
-        description=(
+        description=_with_skill_guidance(
+            (
             "You are the Growth agent. Use top_idea to generate landing copy and content pack. "
             f"Primary ICP to enforce in messaging: {icp_focus_hint}. "
             f"Prompt for landing:\n{landing_prompt}\nPrompt for content:\n{content_prompt}\n"
@@ -433,6 +453,8 @@ def run_crewai_pipeline(
             f"Call `content_generator` with {{\"product_name\": top_idea.name, \"output_dir\": \"{runs_dir}/content_pack\", "
             f"\"prompt\": content_prompt, \"fast_mode\": {str(fast_mode).lower()}}}. "
             "Return JSON with keys: landing_dir, content_dir."
+            ),
+            "Growth",
         ),
         agent=growth,
         context=[analyst_task],
@@ -440,12 +462,15 @@ def run_crewai_pipeline(
     )
 
     brand_task = Task(
-        description=(
+        description=_with_skill_guidance(
+            (
             "You are the Brand agent. Use top_idea and pain statements to define a project name, DA (direction artistique), "
             "and a simple logo. "
             f"Prompt:\n{brand_prompt}\n"
             "Return strict JSON with keys: project_name, name_rationale, brand_direction, brand_keywords, "
             "color_palette, typography, logo_prompt, logo_palette, logo_svg, logo_description, usage_notes."
+            ),
+            "Brand",
         ),
         agent=brand,
         context=[research_task, analyst_task],
