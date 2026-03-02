@@ -3,10 +3,6 @@
 Test script to verify 5x concurrency optimization
 """
 
-import asyncio
-import time
-import httpx
-from concurrent.futures import ThreadPoolExecutor
 from app.core.config import get_settings
 
 def test_concurrency_configuration():

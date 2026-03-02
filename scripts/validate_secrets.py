@@ -7,12 +7,12 @@ Validates and reports on security configuration and secrets
 import os
 import json
 import logging
-from typing import Dict, Any, List
+from typing import Any
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-def validate_secrets(settings: Dict[str, Any]) -> Dict[str, Any]:
+def validate_secrets(settings: dict[str, Any]) -> dict[str, Any]:
     """Validate security secrets and configuration"""
     
     report = {
@@ -103,7 +103,7 @@ def validate_secrets(settings: Dict[str, Any]) -> Dict[str, Any]:
     
     return report
 
-def check_hardcoded_secrets() -> List[Dict[str, Any]]:
+def check_hardcoded_secrets() -> list[dict[str, Any]]:
     """Check for hardcoded secrets in source code"""
     
     hardcoded_patterns = [
@@ -128,7 +128,7 @@ def check_hardcoded_secrets() -> List[Dict[str, Any]]:
     for file_path in source_files:
         if Path(file_path).exists():
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, encoding='utf-8') as f:
                     content = f.read()
                     line_num = 1
                     
@@ -147,7 +147,7 @@ def check_hardcoded_secrets() -> List[Dict[str, Any]]:
     
     return issues
 
-def check_security_best_practices() -> List[Dict[str, Any]]:
+def check_security_best_practices() -> list[dict[str, Any]]:
     """Check security best practices"""
     
     recommendations = []
@@ -155,7 +155,7 @@ def check_security_best_practices() -> List[Dict[str, Any]]:
     # Check if .env is in .gitignore
     gitignore_path = Path(".gitignore")
     if gitignore_path.exists():
-        with open(gitignore_path, 'r') as f:
+        with open(gitignore_path) as f:
             gitignore_content = f.read()
             if ".env" not in gitignore_content:
                 recommendations.append({

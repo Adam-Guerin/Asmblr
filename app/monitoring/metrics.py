@@ -4,10 +4,10 @@ from __future__ import annotations
 import time
 import threading
 import psutil
-import json
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Callable
-from dataclasses import dataclass, asdict
+from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
 from collections import defaultdict, deque
 from enum import Enum
 import statistics
@@ -36,9 +36,9 @@ class MetricValue:
     """Single metric value with timestamp."""
     value: float
     timestamp: datetime
-    labels: Dict[str, str]
+    labels: dict[str, str]
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "value": self.value,
@@ -56,10 +56,10 @@ class Alert:
     threshold: float
     message: str
     enabled: bool = True
-    last_triggered: Optional[datetime] = None
+    last_triggered: datetime | None = None
     trigger_count: int = 0
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "name": self.name,
@@ -78,11 +78,11 @@ class MetricsCollector:
     
     def __init__(self, max_history: int = 1000):
         self.max_history = max_history
-        self.metrics: Dict[str, List[MetricValue]] = defaultdict(lambda: deque(maxlen=max_history))
-        self.counters: Dict[str, float] = defaultdict(float)
-        self.gauges: Dict[str, float] = defaultdict(float)
-        self.histograms: Dict[str, List[float]] = defaultdict(lambda: deque(maxlen=max_history))
-        self.timers: Dict[str, List[float]] = defaultdict(lambda: deque(maxlen=max_history))
+        self.metrics: dict[str, list[MetricValue]] = defaultdict(lambda: deque(maxlen=max_history))
+        self.counters: dict[str, float] = defaultdict(float)
+        self.gauges: dict[str, float] = defaultdict(float)
+        self.histograms: dict[str, list[float]] = defaultdict(lambda: deque(maxlen=max_history))
+        self.timers: dict[str, list[float]] = defaultdict(lambda: deque(maxlen=max_history))
         self.lock = threading.Lock()
         
         # System metrics
@@ -91,34 +91,34 @@ class MetricsCollector:
         self._system_metrics_thread = None
         self._stop_system_metrics = threading.Event()
     
-    def increment_counter(self, name: str, value: float = 1.0, labels: Optional[Dict[str, str]] = None) -> None:
+    def increment_counter(self, name: str, value: float = 1.0, labels: dict[str, str] | None = None) -> None:
         """Increment a counter metric."""
         with self.lock:
             self.counters[name] += value
             self._store_metric(name, MetricType.COUNTER, self.counters[name], labels or {})
     
-    def set_gauge(self, name: str, value: float, labels: Optional[Dict[str, str]] = None) -> None:
+    def set_gauge(self, name: str, value: float, labels: dict[str, str] | None = None) -> None:
         """Set a gauge metric."""
         with self.lock:
             self.gauges[name] = value
             self._store_metric(name, MetricType.GAUGE, value, labels or {})
     
-    def record_histogram(self, name: str, value: float, labels: Optional[Dict[str, str]] = None) -> None:
+    def record_histogram(self, name: str, value: float, labels: dict[str, str] | None = None) -> None:
         """Record a histogram value."""
         with self.lock:
             self.histograms[name].append(value)
             self._store_metric(name, MetricType.HISTOGRAM, value, labels or {})
     
-    def record_timer(self, name: str, duration: float, labels: Optional[Dict[str, str]] = None) -> None:
+    def record_timer(self, name: str, duration: float, labels: dict[str, str] | None = None) -> None:
         """Record a timer value."""
         with self.lock:
             self.timers[name].append(duration)
             self._store_metric(name, MetricType.TIMER, duration, labels or {})
     
-    def time_operation(self, name: str, labels: Optional[Dict[str, str]] = None):
+    def time_operation(self, name: str, labels: dict[str, str] | None = None):
         """Context manager for timing operations."""
         class TimerContext:
-            def __init__(self, collector: MetricsCollector, name: str, labels: Optional[Dict[str, str]]):
+            def __init__(self, collector: MetricsCollector, name: str, labels: dict[str, str] | None):
                 self.collector = collector
                 self.name = name
                 self.labels = labels
@@ -134,7 +134,7 @@ class MetricsCollector:
         
         return TimerContext(self, name, labels)
     
-    def _store_metric(self, name: str, metric_type: MetricType, value: float, labels: Dict[str, str]) -> None:
+    def _store_metric(self, name: str, metric_type: MetricType, value: float, labels: dict[str, str]) -> None:
         """Store a metric value with timestamp."""
         metric_value = MetricValue(
             value=value,
@@ -143,7 +143,7 @@ class MetricsCollector:
         )
         self.metrics[name].append(metric_value)
     
-    def get_metric(self, name: str, since: Optional[datetime] = None) -> List[MetricValue]:
+    def get_metric(self, name: str, since: datetime | None = None) -> list[MetricValue]:
         """Get metric values, optionally filtered by time."""
         with self.lock:
             values = list(self.metrics.get(name, []))
@@ -153,7 +153,7 @@ class MetricsCollector:
             
             return values
     
-    def get_metric_summary(self, name: str) -> Dict[str, Any]:
+    def get_metric_summary(self, name: str) -> dict[str, Any]:
         """Get summary statistics for a metric."""
         values = self.get_metric(name)
         
@@ -180,7 +180,7 @@ class MetricsCollector:
         
         return summary
     
-    def get_all_metrics(self) -> Dict[str, Any]:
+    def get_all_metrics(self) -> dict[str, Any]:
         """Get all current metric values."""
         with self.lock:
             return {
@@ -255,8 +255,8 @@ class AlertManager:
     
     def __init__(self, metrics_collector: MetricsCollector):
         self.metrics_collector = metrics_collector
-        self.alerts: Dict[str, Alert] = {}
-        self.alert_callbacks: List[Callable[[Alert], None]] = []
+        self.alerts: dict[str, Alert] = {}
+        self.alert_callbacks: list[Callable[[Alert], None]] = []
         self.lock = threading.Lock()
         self._alert_thread = None
         self._stop_alerts = threading.Event()
@@ -400,12 +400,12 @@ class AlertManager:
                 except Exception as e:
                     logger.error(f"Error in alert callback: {e}")
     
-    def get_active_alerts(self) -> List[Alert]:
+    def get_active_alerts(self) -> list[Alert]:
         """Get currently active alerts."""
         with self.lock:
             return [alert for alert in self.alerts.values() if alert.last_triggered is not None]
     
-    def get_all_alerts(self) -> Dict[str, Alert]:
+    def get_all_alerts(self) -> dict[str, Alert]:
         """Get all alert definitions."""
         with self.lock:
             return dict(self.alerts)
@@ -477,7 +477,7 @@ class MonitoringSystem:
             success_rate = (self.pipeline_metrics["pipelines_completed"] / total) * 100
             self.metrics_collector.set_gauge("pipeline_success_rate", success_rate)
     
-    def get_dashboard_data(self) -> Dict[str, Any]:
+    def get_dashboard_data(self) -> dict[str, Any]:
         """Get data for monitoring dashboard."""
         return {
             "system_metrics": {

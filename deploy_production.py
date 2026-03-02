@@ -4,15 +4,11 @@ Production Deployment Script for Asmblr v2.0
 Automated deployment with validation, monitoring setup, and rollback capabilities
 """
 
-import asyncio
 import sys
 import time
 import subprocess
-import json
 import argparse
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-import signal
 import shutil
 
 # Add project root to path
@@ -264,7 +260,7 @@ class ProductionDeployer:
         self.log("❌ Services not fully healthy after all attempts")
         return False
     
-    def generate_deployment_report(self, success: bool, backup_name: Optional[str] = None) -> None:
+    def generate_deployment_report(self, success: bool, backup_name: str | None = None) -> None:
         """Generate deployment report"""
         total_time = time.time() - self.start_time
         

@@ -2,12 +2,12 @@
 Feedback loops system for continuous agent improvement and iterative refinement.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 from dataclasses import dataclass, field
 from enum import Enum
 import json
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from loguru import logger
 
 
@@ -38,16 +38,16 @@ class FeedbackItem:
     type: FeedbackType
     priority: FeedbackPriority
     source_agent: str
-    target_agent: Optional[str]
-    task_id: Optional[str]
+    target_agent: str | None
+    task_id: str | None
     timestamp: str
     message: str
-    context: Dict[str, Any] = field(default_factory=dict)
-    actionable_items: List[str] = field(default_factory=list)
+    context: dict[str, Any] = field(default_factory=dict)
+    actionable_items: list[str] = field(default_factory=list)
     resolution_status: str = "pending"  # pending, in_progress, resolved, ignored
-    resolution_notes: Optional[str] = None
+    resolution_notes: str | None = None
     impact_score: float = 0.0  # -1 to +1, impact on agent performance
-    learning_extracted: Optional[str] = None
+    learning_extracted: str | None = None
 
 
 @dataclass
@@ -56,26 +56,26 @@ class FeedbackLoop:
     id: str
     pipeline_id: str
     start_time: str
-    end_time: Optional[str] = None
+    end_time: str | None = None
     status: str = "active"  # active, completed, failed
-    feedback_items: List[FeedbackItem] = field(default_factory=list)
-    summary: Dict[str, Any] = field(default_factory=dict)
-    next_actions: List[str] = field(default_factory=list)
+    feedback_items: list[FeedbackItem] = field(default_factory=list)
+    summary: dict[str, Any] = field(default_factory=dict)
+    next_actions: list[str] = field(default_factory=list)
     
     def add_feedback(self, feedback: FeedbackItem) -> None:
         """Add feedback item to the loop."""
         self.feedback_items.append(feedback)
         self._update_summary()
     
-    def get_pending_feedback(self) -> List[FeedbackItem]:
+    def get_pending_feedback(self) -> list[FeedbackItem]:
         """Get all pending feedback items."""
         return [f for f in self.feedback_items if f.resolution_status == "pending"]
     
-    def get_feedback_for_agent(self, agent_name: str) -> List[FeedbackItem]:
+    def get_feedback_for_agent(self, agent_name: str) -> list[FeedbackItem]:
         """Get all feedback items for a specific agent."""
         return [f for f in self.feedback_items if f.target_agent == agent_name]
     
-    def get_high_priority_feedback(self) -> List[FeedbackItem]:
+    def get_high_priority_feedback(self) -> list[FeedbackItem]:
         """Get high and critical priority feedback."""
         return [f for f in self.feedback_items if f.priority in [FeedbackPriority.CRITICAL, FeedbackPriority.HIGH]]
     
@@ -100,17 +100,17 @@ class FeedbackLoopManager:
     
     def __init__(self, runs_dir: Path):
         self.runs_dir = runs_dir
-        self.feedback_loops: Dict[str, FeedbackLoop] = {}
-        self.active_loop_id: Optional[str] = None
+        self.feedback_loops: dict[str, FeedbackLoop] = {}
+        self.active_loop_id: str | None = None
         
     def create_feedback_loop(self, pipeline_id: str) -> FeedbackLoop:
         """Create a new feedback loop for a pipeline."""
-        loop_id = f"feedback_{pipeline_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        loop_id = f"feedback_{pipeline_id}_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
         
         feedback_loop = FeedbackLoop(
             id=loop_id,
             pipeline_id=pipeline_id,
-            start_time=datetime.now(timezone.utc).isoformat()
+            start_time=datetime.now(UTC).isoformat()
         )
         
         self.feedback_loops[loop_id] = feedback_loop
@@ -132,7 +132,7 @@ class FeedbackLoopManager:
         self._save_feedback_loop(self.feedback_loops[loop_id])
         return True
     
-    def get_feedback_loop(self, loop_id: str) -> Optional[FeedbackLoop]:
+    def get_feedback_loop(self, loop_id: str) -> FeedbackLoop | None:
         """Get a specific feedback loop."""
         return self.feedback_loops.get(loop_id)
     
@@ -143,7 +143,7 @@ class FeedbackLoopManager:
             return False
         
         loop = self.feedback_loops[loop_id]
-        loop.end_time = datetime.now(timezone.utc).isoformat()
+        loop.end_time = datetime.now(UTC).isoformat()
         loop.status = status
         
         # Generate next actions
@@ -157,7 +157,7 @@ class FeedbackLoopManager:
         logger.info(f"Closed feedback loop {loop_id} with status {status}")
         return True
     
-    def _generate_next_actions(self, loop: FeedbackLoop) -> List[str]:
+    def _generate_next_actions(self, loop: FeedbackLoop) -> list[str]:
         """Generate next actions based on feedback."""
         actions = []
         
@@ -241,15 +241,15 @@ class FeedbackTools:
         self.agent_name = agent_name
     
     def submit_feedback(self, target_agent: str, message: str, priority: FeedbackPriority = FeedbackPriority.MEDIUM, 
-                     feedback_type: FeedbackType = FeedbackType.QUALITY, context: Dict[str, Any] = None) -> bool:
+                     feedback_type: FeedbackType = FeedbackType.QUALITY, context: dict[str, Any] = None) -> bool:
         """Submit feedback about another agent."""
         feedback = FeedbackItem(
-            id=f"fb_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')[:-3]}",
+            id=f"fb_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S_%f')[:-3]}",
             type=feedback_type,
             priority=priority,
             source_agent=self.agent_name,
             target_agent=target_agent,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             message=message,
             context=context or {}
         )
@@ -257,22 +257,22 @@ class FeedbackTools:
         return self.feedback_manager.add_feedback(self.loop_id, feedback)
     
     def submit_self_feedback(self, message: str, priority: FeedbackPriority = FeedbackPriority.MEDIUM,
-                        feedback_type: FeedbackType = FeedbackType.SELF, context: Dict[str, Any] = None) -> bool:
+                        feedback_type: FeedbackType = FeedbackType.SELF, context: dict[str, Any] = None) -> bool:
         """Submit self-reflection feedback."""
         feedback = FeedbackItem(
-            id=f"self_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')[:-3]}",
+            id=f"self_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S_%f')[:-3]}",
             type=feedback_type,
             priority=priority,
             source_agent=self.agent_name,
             target_agent=self.agent_name,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             message=message,
             context=context or {}
         )
         
         return self.feedback_manager.add_feedback(self.loop_id, feedback)
     
-    def get_my_feedback(self) -> List[FeedbackItem]:
+    def get_my_feedback(self) -> list[FeedbackItem]:
         """Get all feedback for this agent."""
         loop = self.feedback_manager.get_feedback_loop(self.loop_id)
         if not loop:
@@ -280,7 +280,7 @@ class FeedbackTools:
         
         return loop.get_feedback_for_agent(self.agent_name)
     
-    def get_pending_actions(self) -> List[str]:
+    def get_pending_actions(self) -> list[str]:
         """Get pending action items for this agent."""
         my_feedback = self.get_my_feedback()
         pending_feedback = [f for f in my_feedback if f.resolution_status == "pending"]
@@ -308,7 +308,7 @@ class FeedbackTools:
         return False
 
 
-def create_feedback_prompts() -> Dict[str, str]:
+def create_feedback_prompts() -> dict[str, str]:
     """Create specialized prompts for feedback-aware agents."""
     
     return {

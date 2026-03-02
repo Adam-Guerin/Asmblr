@@ -5,12 +5,11 @@ Aucune restriction, aucune limite, liberté totale.
 """
 
 import asyncio
-import json
-import subprocess
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable, Union
+from typing import Any
+from collections.abc import Callable
 from datetime import datetime
 from dataclasses import dataclass, field
 import httpx
@@ -28,9 +27,9 @@ class ToolExecution:
     tool_name: str
     success: bool
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     execution_time: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class CEOToolkit:
@@ -58,7 +57,7 @@ class CEOToolkit:
         self.settings = settings
         self.llm_client = llm_client
         self.run_dir = run_dir
-        self.execution_log: List[ToolExecution] = []
+        self.execution_log: list[ToolExecution] = []
         self.tool_permissions = {
             "file_operations": True,
             "command_execution": True,
@@ -135,7 +134,7 @@ class CEOToolkit:
     
     async def create_file(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         content: str,
         encoding: str = "utf-8"
     ) -> ToolExecution:
@@ -151,7 +150,7 @@ class CEOToolkit:
     
     async def read_file(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         encoding: str = "utf-8"
     ) -> ToolExecution:
         """Lit un fichier"""
@@ -166,7 +165,7 @@ class CEOToolkit:
     
     async def modify_file(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         old_content: str,
         new_content: str,
         encoding: str = "utf-8"
@@ -186,7 +185,7 @@ class CEOToolkit:
     
     async def delete_file(
         self,
-        path: Union[str, Path]
+        path: str | Path
     ) -> ToolExecution:
         """Supprime un fichier"""
         
@@ -201,8 +200,8 @@ class CEOToolkit:
     
     async def copy_file(
         self,
-        src: Union[str, Path],
-        dst: Union[str, Path]
+        src: str | Path,
+        dst: str | Path
     ) -> ToolExecution:
         """Copie un fichier"""
         
@@ -217,8 +216,8 @@ class CEOToolkit:
     
     async def move_file(
         self,
-        src: Union[str, Path],
-        dst: Union[str, Path]
+        src: str | Path,
+        dst: str | Path
     ) -> ToolExecution:
         """Déplace un fichier"""
         
@@ -233,7 +232,7 @@ class CEOToolkit:
     
     async def list_directory(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         recursive: bool = False
     ) -> ToolExecution:
         """Liste les fichiers dans un répertoire"""
@@ -259,7 +258,7 @@ class CEOToolkit:
     async def execute_command(
         self,
         command: str,
-        cwd: Optional[Union[str, Path]] = None,
+        cwd: str | Path | None = None,
         timeout: int = 300,
         shell: bool = True
     ) -> ToolExecution:
@@ -293,7 +292,7 @@ class CEOToolkit:
                     "stderr": stderr.decode("utf-8", errors="ignore"),
                     "cwd": cwd
                 }
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 process.kill()
                 raise TimeoutError(f"Command timed out after {timeout}s")
         
@@ -302,7 +301,7 @@ class CEOToolkit:
     async def execute_python(
         self,
         code: str,
-        cwd: Optional[Union[str, Path]] = None
+        cwd: str | Path | None = None
     ) -> ToolExecution:
         """Exécute du code Python"""
         
@@ -334,7 +333,7 @@ class CEOToolkit:
     async def run_npm_command(
         self,
         command: str,
-        cwd: Optional[Union[str, Path]] = None
+        cwd: str | Path | None = None
     ) -> ToolExecution:
         """Exécute une commande npm"""
         
@@ -346,7 +345,7 @@ class CEOToolkit:
     async def run_git_command(
         self,
         command: str,
-        cwd: Optional[Union[str, Path]] = None
+        cwd: str | Path | None = None
     ) -> ToolExecution:
         """Exécute une commande git"""
         
@@ -363,9 +362,9 @@ class CEOToolkit:
         self,
         url: str,
         method: str = "GET",
-        headers: Optional[Dict[str, str]] = None,
-        data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
+        headers: dict[str, str] | None = None,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
         timeout: int = 30
     ) -> ToolExecution:
         """Effectue un appel API"""
@@ -428,8 +427,8 @@ class CEOToolkit:
     async def execute_sql(
         self,
         query: str,
-        db_path: Optional[Union[str, Path]] = None,
-        params: Optional[tuple] = None
+        db_path: str | Path | None = None,
+        params: tuple | None = None
     ) -> ToolExecution:
         """Exécute une requête SQL"""
         
@@ -465,8 +464,8 @@ class CEOToolkit:
     
     async def create_database(
         self,
-        db_path: Union[str, Path],
-        schema: Optional[str] = None
+        db_path: str | Path,
+        schema: str | None = None
     ) -> ToolExecution:
         """Crée une base de données avec un schéma"""
         
@@ -514,7 +513,7 @@ class CEOToolkit:
     async def download_file(
         self,
         url: str,
-        destination: Union[str, Path]
+        destination: str | Path
     ) -> ToolExecution:
         """Télécharge un fichier depuis une URL"""
         
@@ -617,9 +616,9 @@ class CEOToolkit:
     
     async def deploy_application(
         self,
-        repo_path: Union[str, Path],
+        repo_path: str | Path,
         platform: str = "netlify",
-        config: Optional[Dict[str, Any]] = None
+        config: dict[str, Any] | None = None
     ) -> ToolExecution:
         """Déploie une application"""
         
@@ -638,7 +637,7 @@ class CEOToolkit:
     
     async def run_tests(
         self,
-        repo_path: Union[str, Path],
+        repo_path: str | Path,
         test_type: str = "all"
     ) -> ToolExecution:
         """Exécute des tests"""
@@ -664,7 +663,7 @@ class CEOToolkit:
     
     async def build_application(
         self,
-        repo_path: Union[str, Path],
+        repo_path: str | Path,
         build_type: str = "production"
     ) -> ToolExecution:
         """Build une application"""
@@ -712,7 +711,7 @@ class CEOToolkit:
     
     async def create_directory(
         self,
-        path: Union[str, Path]
+        path: str | Path
     ) -> ToolExecution:
         """Crée un répertoire"""
         
@@ -723,11 +722,11 @@ class CEOToolkit:
         
         return await self.execute_tool("create_directory", _create, path)
     
-    async def get_execution_log(self) -> List[ToolExecution]:
+    async def get_execution_log(self) -> list[ToolExecution]:
         """Récupère le log d'exécution"""
         return self.execution_log
     
-    async def get_tool_statistics(self) -> Dict[str, Any]:
+    async def get_tool_statistics(self) -> dict[str, Any]:
         """Récupère les statistiques d'utilisation des outils"""
         
         stats = {}

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Script to count lines of code in core Asmblr project (excluding runs, trash, backups)"""
 
-import os
 from pathlib import Path
 
 def count_core_lines():
@@ -23,7 +22,7 @@ def count_core_lines():
             continue
             
         try:
-            with open(py_file, 'r', encoding='utf-8') as f:
+            with open(py_file, encoding='utf-8') as f:
                 lines = len(f.readlines())
                 total_lines += lines
                 file_count += 1

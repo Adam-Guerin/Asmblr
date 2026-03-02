@@ -9,9 +9,8 @@ import aiohttp
 import time
 import json
 import statistics
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from typing import Any
 import argparse
 
 # Configuration
@@ -47,7 +46,7 @@ class LoadTestResult:
             if error:
                 self.errors.append(error)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Calcule les statistiques"""
         duration = (self.end_time - self.start_time).total_seconds() if self.start_time and self.end_time else 0
         
@@ -74,7 +73,7 @@ class LoadTestResult:
         
         return stats
     
-    def _percentile(self, data: List[float], percentile: float) -> float:
+    def _percentile(self, data: list[float], percentile: float) -> float:
         """Calcule un percentile"""
         if not data:
             return 0
@@ -219,7 +218,7 @@ class LoadTester:
             self.result.add_request(False, 0, error=str(e))
             return False
     
-    async def run_user_simulation(self, user_id: int, duration_seconds: int, test_types: List[str]) -> None:
+    async def run_user_simulation(self, user_id: int, duration_seconds: int, test_types: list[str]) -> None:
         """Simule l'activité d'un utilisateur"""
         end_time = time.time() + duration_seconds
         
@@ -274,7 +273,7 @@ class LoadTester:
         return self.result
     
     async def _delayed_user_simulation(self, user_id: int, duration_seconds: int, 
-                                   delay: float, test_types: List[str]) -> None:
+                                   delay: float, test_types: list[str]) -> None:
         """Simulation utilisateur avec délai"""
         if delay > 0:
             await asyncio.sleep(delay)
@@ -288,7 +287,7 @@ class PerformanceTestSuite:
     def __init__(self, base_url: str):
         self.base_url = base_url
     
-    async def run_stress_test(self, max_users: int = 200) -> Dict[str, Any]:
+    async def run_stress_test(self, max_users: int = 200) -> dict[str, Any]:
         """Test de stress progressif"""
         print("\n🔥 TEST DE STRESS PROGRESSIF")
         print("=" * 50)
@@ -324,7 +323,7 @@ class PerformanceTestSuite:
         
         return results
     
-    async def run_endurance_test(self, duration_minutes: int = 10) -> Dict[str, Any]:
+    async def run_endurance_test(self, duration_minutes: int = 10) -> dict[str, Any]:
         """Test d'endurance"""
         print(f"\n⏰ TEST D'ENDURANCE ({duration_minutes} minutes)")
         print("=" * 50)
@@ -347,7 +346,7 @@ class PerformanceTestSuite:
             
             return stats
     
-    async def run_spike_test(self) -> Dict[str, Any]:
+    async def run_spike_test(self) -> dict[str, Any]:
         """Test de pic (spike)"""
         print("\n📈 TEST DE PIC (SPIKE)")
         print("=" * 50)
@@ -404,7 +403,7 @@ class PerformanceTestSuite:
         
         return results
     
-    async def run_all_tests(self, max_users: int = 200, endurance_minutes: int = 5) -> Dict[str, Any]:
+    async def run_all_tests(self, max_users: int = 200, endurance_minutes: int = 5) -> dict[str, Any]:
         """Exécute tous les tests de performance"""
         print("🧪 SUITE COMPLÈTE DE TESTS DE PERFORMANCE")
         print("=" * 60)

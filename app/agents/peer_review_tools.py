@@ -2,17 +2,13 @@
 Peer Review Tools for agents to conduct and participate in reviews.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 from loguru import logger
 
 from app.agents.peer_review import (
     PeerReviewManager,
-    PeerReview,
-    ReviewAssignment,
     ReviewType,
-    ReviewStatus,
-    ReviewPriority,
-    ReviewCriterion
+    ReviewPriority
 )
 
 
@@ -23,7 +19,7 @@ class PeerReviewTools:
         self.review_manager = review_manager
         self.agent_name = agent_name
     
-    def get_my_review_assignments(self, status: str = None) -> List[Dict[str, Any]]:
+    def get_my_review_assignments(self, status: str = None) -> list[dict[str, Any]]:
         """Get review assignments for this agent."""
         try:
             assignments = [a for a in self.review_manager.assignments.values() 
@@ -51,7 +47,7 @@ class PeerReviewTools:
             logger.error(f"Failed to get review assignments for {self.agent_name}: {e}")
             return []
     
-    def get_review_details(self, review_id: str) -> Optional[Dict[str, Any]]:
+    def get_review_details(self, review_id: str) -> dict[str, Any] | None:
         """Get detailed information about a specific review."""
         try:
             review = self.review_manager.get_review(review_id)
@@ -106,10 +102,10 @@ class PeerReviewTools:
             logger.error(f"Failed to accept review assignment {assignment_id}: {e}")
             return False
     
-    def submit_review(self, review_id: str, scores: List[Dict[str, Any]], 
-                   comments: str = "", recommendations: List[str] = None,
-                   approval_conditions: List[str] = None, 
-                   revision_requests: List[str] = None) -> bool:
+    def submit_review(self, review_id: str, scores: list[dict[str, Any]], 
+                   comments: str = "", recommendations: list[str] = None,
+                   approval_conditions: list[str] = None, 
+                   revision_requests: list[str] = None) -> bool:
         """Submit a completed peer review."""
         try:
             return self.review_manager.submit_review(
@@ -127,7 +123,7 @@ class PeerReviewTools:
     def request_review(self, review_type: str, reviewee_agent: str, artifact_id: str,
                     artifact_type: str, title: str, description: str,
                     criteria_template: str = None, priority: str = "medium",
-                    task_id: str = None) -> Optional[str]:
+                    task_id: str = None) -> str | None:
         """Request a peer review for an artifact."""
         try:
             # Get criteria template
@@ -159,7 +155,7 @@ class PeerReviewTools:
             logger.error(f"Failed to request review: {e}")
             return None
     
-    def get_my_reviews(self, as_reviewer: bool = True, status: str = None) -> List[Dict[str, Any]]:
+    def get_my_reviews(self, as_reviewer: bool = True, status: str = None) -> list[dict[str, Any]]:
         """Get reviews involving this agent."""
         try:
             reviews = self.review_manager.get_reviews_for_agent(self.agent_name, as_reviewer)
@@ -195,7 +191,7 @@ class PeerReviewTools:
             logger.error(f"Failed to get reviews for {self.agent_name}: {e}")
             return []
     
-    def get_review_statistics(self) -> Dict[str, Any]:
+    def get_review_statistics(self) -> dict[str, Any]:
         """Get peer review statistics for this agent."""
         try:
             return self.review_manager.get_review_statistics(self.agent_name)
@@ -203,7 +199,7 @@ class PeerReviewTools:
             logger.error(f"Failed to get review statistics for {self.agent_name}: {e}")
             return {}
     
-    def get_pending_reviews_for_my_artifacts(self) -> List[Dict[str, Any]]:
+    def get_pending_reviews_for_my_artifacts(self) -> list[dict[str, Any]]:
         """Get pending reviews for artifacts created by this agent."""
         try:
             pending_reviews = self.review_manager.get_pending_reviews(self.agent_name)
@@ -229,7 +225,7 @@ class PeerReviewTools:
             logger.error(f"Failed to get pending reviews for {self.agent_name}: {e}")
             return []
     
-    def get_criteria_templates(self) -> Dict[str, List[Dict[str, Any]]]:
+    def get_criteria_templates(self) -> dict[str, list[dict[str, Any]]]:
         """Get available review criteria templates."""
         try:
             templates = {}
@@ -253,7 +249,7 @@ class PeerReviewTools:
             return {}
 
 
-def create_peer_review_prompts() -> Dict[str, str]:
+def create_peer_review_prompts() -> dict[str, str]:
     """Create specialized prompts for peer review-aware agents."""
     
     return {

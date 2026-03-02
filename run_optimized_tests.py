@@ -4,12 +4,11 @@ Comprehensive Test Runner for Asmblr Optimized Features
 Runs all tests for cache, async tasks, metrics, backup, and Docker
 """
 
-import asyncio
 import sys
 import time
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 import argparse
 
 # Add project root to path
@@ -32,7 +31,7 @@ class OptimizedTestRunner:
         self.test_results = {}
         self.start_time = time.time()
         
-    def run_test_suite(self, suite_name: str, test_files: List[str], timeout: int = 300) -> Dict[str, Any]:
+    def run_test_suite(self, suite_name: str, test_files: list[str], timeout: int = 300) -> dict[str, Any]:
         """Run a specific test suite"""
         logger.info(f"Running test suite: {suite_name}")
         
@@ -62,7 +61,7 @@ class OptimizedTestRunner:
             
             # Parse results
             try:
-                with open("test_results.json", "r") as f:
+                with open("test_results.json") as f:
                     import json
                     json_results = json.load(f)
             except:
@@ -99,7 +98,7 @@ class OptimizedTestRunner:
                 "success": False
             }
     
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run all optimized feature tests"""
         logger.info("Starting comprehensive test suite for Asmblr optimized features")
         
@@ -150,7 +149,7 @@ class OptimizedTestRunner:
         
         return results
     
-    def generate_report(self, results: Dict[str, Any]) -> None:
+    def generate_report(self, results: dict[str, Any]) -> None:
         """Generate comprehensive test report"""
         total_time = time.time() - self.start_time
         
@@ -249,7 +248,7 @@ Your Asmblr optimized features are working correctly. You can now:
         
         logger.info(f"Test report saved to: {report_file}")
     
-    def run_integration_tests(self) -> Dict[str, Any]:
+    def run_integration_tests(self) -> dict[str, Any]:
         """Run integration tests for the complete optimized stack"""
         logger.info("Running integration tests for optimized stack")
         
@@ -303,7 +302,7 @@ def main():
     if args.report_only:
         # Generate report from existing results
         try:
-            with open("test_results.json", "r") as f:
+            with open("test_results.json") as f:
                 import json
                 results = {"cached": json.load(f)}
             runner.generate_report(results)

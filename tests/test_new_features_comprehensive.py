@@ -4,20 +4,17 @@ Tests all newly implemented enterprise features, AI capabilities, and performanc
 """
 
 import asyncio
-import pytest
 import time
 import json
 import tempfile
 import os
-from pathlib import Path
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock
 import redis.asyncio as redis
 
 # Import all new features to test
 from app.core.ai_orchestrator import AIOrchestrator
 from app.core.predictive_monitoring import PredictiveMonitoring
-from app.core.predictive_dashboard import PredictiveDashboard
 from app.core.advanced_debugger import AdvancedDebugger
 from app.core.ai_code_generator import AICodeGenerator
 from app.core.advanced_testing import AdvancedTestingFramework
@@ -29,8 +26,6 @@ from app.core.llm_cache import LLMCacheManager
 from app.core.async_tasks import AsyncTaskManager
 from app.core.connection_pool import ConnectionPoolManager
 from app.core.load_balancer import LoadBalancer
-from app.core.db_optimizer import DBOptimizer
-from app.core.distributed_cache import DistributedCacheManager
 from app.core.security import SecurityManager
 from app.core.k8s_secrets import K8sSecretsManager
 

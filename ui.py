@@ -2,7 +2,6 @@ import streamlit as st
 import time
 from datetime import datetime
 import threading
-from typing import Dict, Any
 import pandas as pd
 
 from app.core.config import Settings
@@ -10,7 +9,7 @@ from app.core.llm import LLMClient
 from app.agents.crew import run_crewai_pipeline
 from app.core.models import SeedInputs
 from app.core.progress import get_progress_tracker, ProgressUpdate, PipelineStage
-from app.core.error_handler import handle_error, format_error_for_ui
+from app.core.error_handler import handle_error
 from app.ui.theme_manager import get_theme_manager, apply_theme
 from app.ui.charts import get_chart_manager
 from app.ui.export_manager import get_export_manager

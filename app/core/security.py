@@ -5,10 +5,9 @@ Handles secrets management, encryption, and security policies
 
 import os
 import secrets
-import hashlib
 import base64
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Any
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -43,7 +42,7 @@ class SecurityManager:
         """Generate or load encryption key"""
         if self.keys_file.exists():
             try:
-                with open(self.keys_file, 'r') as f:
+                with open(self.keys_file) as f:
                     data = json.load(f)
                     key_data = base64.b64decode(data['encryption_key'])
                     return key_data
@@ -102,7 +101,7 @@ class SecurityManager:
             logger.error(f"Failed to decrypt secret: {e}")
             raise
     
-    def store_secret(self, key: str, value: str, metadata: Optional[Dict] = None) -> bool:
+    def store_secret(self, key: str, value: str, metadata: dict | None = None) -> bool:
         """Store an encrypted secret"""
         try:
             # Load existing secrets
@@ -131,7 +130,7 @@ class SecurityManager:
             logger.error(f"Failed to store secret '{key}': {e}")
             return False
     
-    def get_secret(self, key: str) -> Optional[str]:
+    def get_secret(self, key: str) -> str | None:
         """Retrieve and decrypt a secret"""
         try:
             secrets = self.load_all_secrets()
@@ -162,13 +161,13 @@ class SecurityManager:
             logger.error(f"Failed to retrieve secret '{key}': {e}")
             return None
     
-    def load_all_secrets(self) -> Dict[str, Any]:
+    def load_all_secrets(self) -> dict[str, Any]:
         """Load all encrypted secrets"""
         try:
             if not self.encrypted_secrets_file.exists():
                 return {}
             
-            with open(self.encrypted_secrets_file, 'r') as f:
+            with open(self.encrypted_secrets_file) as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Failed to load secrets: {e}")
@@ -221,7 +220,7 @@ class SecurityManager:
         
         return has_upper and has_lower and has_digit and has_special
     
-    def rotate_secret(self, key: str) -> Optional[str]:
+    def rotate_secret(self, key: str) -> str | None:
         """Rotate a secret and return the new value"""
         try:
             current_value = self.get_secret(key)
@@ -230,9 +229,7 @@ class SecurityManager:
             # Generate new secret
             if 'password' in key.lower():
                 new_value = self.generate_secure_password()
-            elif 'token' in key.lower():
-                new_value = secrets.token_urlsafe(32)
-            elif 'key' in key.lower():
+            elif 'token' in key.lower() or 'key' in key.lower():
                 new_value = secrets.token_urlsafe(32)
             else:
                 new_value = secrets.token_urlsafe(32)
@@ -298,11 +295,11 @@ class SecurityManager:
             self._save_failed_attempts()
             logger.info(f"Failed attempts cleared for '{identifier}'")
     
-    def _load_failed_attempts(self) -> Dict[str, Any]:
+    def _load_failed_attempts(self) -> dict[str, Any]:
         """Load failed attempts from file"""
         try:
             if self.failed_attempts_file.exists():
-                with open(self.failed_attempts_file, 'r') as f:
+                with open(self.failed_attempts_file) as f:
                     return json.load(f)
         except Exception as e:
             logger.warning(f"Failed to load failed attempts: {e}")
@@ -316,7 +313,7 @@ class SecurityManager:
         except Exception as e:
             logger.error(f"Failed to save failed attempts: {e}")
     
-    def audit_secrets(self) -> Dict[str, Any]:
+    def audit_secrets(self) -> dict[str, Any]:
         """Generate audit report of all secrets"""
         try:
             secrets = self.load_all_secrets()

@@ -4,8 +4,7 @@ Knowledge-enhanced crew system with shared knowledge base integration.
 
 import json
 import re
-from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from loguru import logger
 
@@ -27,7 +26,7 @@ def _create_knowledge_enhanced_agent(
     role: str,
     goal: str,
     backstory: str,
-    tools: List[Any],
+    tools: list[Any],
     knowledge_tools: KnowledgeBaseTools,
     knowledge_prompt: str
 ) -> Agent:

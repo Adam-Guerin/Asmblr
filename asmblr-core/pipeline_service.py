@@ -2,19 +2,17 @@
 Service métier pour la gestion des pipelines
 """
 
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
+from typing import Any
+from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
 
-from app.core.database import Pipeline, PipelineStatus, get_db
+from app.core.database import Pipeline, PipelineStatus
 from app.core.models import (
     PipelineCreate, PipelineResponse, PipelineUpdate, 
-    PipelineExecutionRequest, Topic, TopicValidation, PipelineMetrics
+    PipelineExecutionRequest, TopicValidation, PipelineMetrics
 )
 from app.core.error_handler import handle_errors, ValidationException
-from app.core.smart_logger import get_smart_logger, LogCategory, LogLevel
-from app.core.config import get_settings
+from app.core.smart_logger import get_smart_logger, LogLevel
 
 
 class PipelineService:
@@ -28,7 +26,7 @@ class PipelineService:
     def list_pipelines(self, 
                       skip: int = 0, 
                       limit: int = 50, 
-                      filters: Optional[Dict[str, Any]] = None) -> List[PipelineResponse]:
+                      filters: dict[str, Any] | None = None) -> list[PipelineResponse]:
         """
         Lister les pipelines avec pagination et filtres
         """
@@ -65,7 +63,7 @@ class PipelineService:
             raise
     
     @handle_errors("get_pipeline", reraise=True)
-    def get_pipeline(self, pipeline_id: str) -> Optional[PipelineResponse]:
+    def get_pipeline(self, pipeline_id: str) -> PipelineResponse | None:
         """
         Récupérer un pipeline spécifique
         """
@@ -139,7 +137,7 @@ class PipelineService:
     @handle_errors("update_pipeline", reraise=True)
     def update_pipeline(self, 
                       pipeline_id: str, 
-                      update_data: PipelineUpdate) -> Optional[PipelineResponse]:
+                      update_data: PipelineUpdate) -> PipelineResponse | None:
         """
         Mettre à jour un pipeline existant
         """
@@ -236,7 +234,7 @@ class PipelineService:
     @handle_errors("run_pipeline", reraise=True)
     async def run_pipeline(self, 
                         pipeline_id: str, 
-                        execution_request: Optional[PipelineExecutionRequest] = None) -> Dict[str, Any]:
+                        execution_request: PipelineExecutionRequest | None = None) -> dict[str, Any]:
         """
         Exécuter un pipeline
         """
@@ -357,7 +355,7 @@ class PipelineService:
             
             raise
     
-    def get_available_topics(self, limit: int = 20) -> List[Dict[str, Any]]:
+    def get_available_topics(self, limit: int = 20) -> list[dict[str, Any]]:
         """
         Récupérer les sujets disponibles pour l'analyse
         """
@@ -396,7 +394,7 @@ class PipelineService:
             self.logger.error("get_available_topics", f"Erreur récupération sujets: {str(e)}")
             return []
     
-    def get_topic_details(self, topic_id: str) -> Optional[Dict[str, Any]]:
+    def get_topic_details(self, topic_id: str) -> dict[str, Any] | None:
         """
         Récupérer les détails d'un sujet
         """
@@ -515,8 +513,7 @@ class PipelineService:
                 self.db.query(PipelineExecution)
                 .filter(PipelineExecution.duration_seconds.isnot(None))
                 .with_entities(Pipeline)
-            ).with_entities(Pipeline)
-            ).all()
+            ).with_entities(Pipeline).all()
             
             avg_duration = sum(d.duration_seconds for d in avg_duration) / len(avg_duration) if avg_duration else 0
             
@@ -530,7 +527,7 @@ class PipelineService:
                 success_rate=success_rate,
                 uptime_seconds=3600.0,  # À implémenter
                 memory_usage_mb=0.0,  # À implémenter
-                cpu_usage_percent=0.0  # À implémenter
+                cpu_usage_percent=0.0,  # À implémenter
                 timestamp=datetime.utcnow()
             )
             

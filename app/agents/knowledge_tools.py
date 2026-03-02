@@ -2,7 +2,7 @@
 Knowledge Base Tools for agents to access and contribute to shared intelligence.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 from loguru import logger
 
 from app.agents.shared_knowledge import (
@@ -10,9 +10,9 @@ from app.agents.shared_knowledge import (
     KnowledgeEntry,
     KnowledgeQuery,
     KnowledgeType,
-    KnowledgeDomain,
-    KnowledgeStatus
+    KnowledgeDomain
 )
+from datetime import UTC
 
 
 class KnowledgeBaseTools:
@@ -23,14 +23,14 @@ class KnowledgeBaseTools:
         self.agent_name = agent_name
     
     def search_knowledge(self, 
-                       keywords: List[str] = None,
-                       types: List[str] = None,
-                       domains: List[str] = None,
-                       tags: List[str] = None,
+                       keywords: list[str] = None,
+                       types: list[str] = None,
+                       domains: list[str] = None,
+                       tags: list[str] = None,
                        min_success_rate: float = 0.0,
                        min_validation_score: float = 0.0,
                        limit: int = 20,
-                       sort_by: str = "relevance") -> List[Dict[str, Any]]:
+                       sort_by: str = "relevance") -> list[dict[str, Any]]:
         """Search knowledge base for relevant entries."""
         try:
             # Convert string parameters to enums
@@ -76,7 +76,7 @@ class KnowledgeBaseTools:
             logger.error(f"Failed to search knowledge base: {e}")
             return []
     
-    def get_knowledge_entry(self, entry_id: str) -> Optional[Dict[str, Any]]:
+    def get_knowledge_entry(self, entry_id: str) -> dict[str, Any] | None:
         """Get a specific knowledge entry."""
         try:
             entry = self.knowledge_base.get_entry(entry_id)
@@ -118,18 +118,18 @@ class KnowledgeBaseTools:
                      domain: str,
                      title: str,
                      description: str,
-                     content: Dict[str, Any],
-                     tags: List[str] = None,
-                     related_entries: List[str] = None,
-                     prerequisites: List[str] = None,
-                     context: Dict[str, Any] = None,
-                     metadata: Dict[str, Any] = None) -> Optional[str]:
+                     content: dict[str, Any],
+                     tags: list[str] = None,
+                     related_entries: list[str] = None,
+                     prerequisites: list[str] = None,
+                     context: dict[str, Any] = None,
+                     metadata: dict[str, Any] = None) -> str | None:
         """Add a new knowledge entry to the knowledge base."""
         try:
             # Generate unique ID
-            from datetime import datetime, timezone
+            from datetime import datetime
             import uuid
-            entry_id = f"kb_{self.agent_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+            entry_id = f"kb_{self.agent_name}_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
             
             # Convert string parameters to enums
             type_enum = KnowledgeType(knowledge_type)
@@ -162,7 +162,7 @@ class KnowledgeBaseTools:
             logger.error(f"Failed to add knowledge entry: {e}")
             return None
     
-    def update_knowledge(self, entry_id: str, updates: Dict[str, Any]) -> bool:
+    def update_knowledge(self, entry_id: str, updates: dict[str, Any]) -> bool:
         """Update an existing knowledge entry."""
         try:
             # Add current agent as contributor
@@ -196,7 +196,7 @@ class KnowledgeBaseTools:
             logger.error(f"Failed to validate knowledge entry {entry_id}: {e}")
             return False
     
-    def get_related_knowledge(self, entry_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_related_knowledge(self, entry_id: str, limit: int = 10) -> list[dict[str, Any]]:
         """Get knowledge entries related to a specific entry."""
         try:
             entries = self.knowledge_base.get_related_entries(entry_id, limit)
@@ -226,7 +226,7 @@ class KnowledgeBaseTools:
             logger.error(f"Failed to get related knowledge for {entry_id}: {e}")
             return []
     
-    def get_top_knowledge(self, domain: str = None, limit: int = 20) -> List[Dict[str, Any]]:
+    def get_top_knowledge(self, domain: str = None, limit: int = 20) -> list[dict[str, Any]]:
         """Get top knowledge entries by validation score."""
         try:
             domain_enum = KnowledgeDomain(domain) if domain else None
@@ -257,7 +257,7 @@ class KnowledgeBaseTools:
             logger.error(f"Failed to get top knowledge: {e}")
             return []
     
-    def get_my_contributions(self) -> List[Dict[str, Any]]:
+    def get_my_contributions(self) -> list[dict[str, Any]]:
         """Get all knowledge entries contributed by this agent."""
         try:
             entries = self.knowledge_base.get_agent_contributions(self.agent_name)
@@ -286,7 +286,7 @@ class KnowledgeBaseTools:
             logger.error(f"Failed to get contributions for {self.agent_name}: {e}")
             return []
     
-    def get_knowledge_statistics(self) -> Dict[str, Any]:
+    def get_knowledge_statistics(self) -> dict[str, Any]:
         """Get knowledge base statistics."""
         try:
             return self.knowledge_base.get_statistics()
@@ -295,7 +295,7 @@ class KnowledgeBaseTools:
             return {}
 
 
-def create_knowledge_prompts() -> Dict[str, str]:
+def create_knowledge_prompts() -> dict[str, str]:
     """Create specialized prompts for knowledge-aware agents."""
     
     return {

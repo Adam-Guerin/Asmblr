@@ -2,8 +2,7 @@
 Integration module for enhanced crew system with facilitator agents, feedback loops, shared knowledge base, peer review, and asset management.
 """
 
-from typing import Any, Dict
-from pathlib import Path
+from typing import Any
 
 from app.core.config import Settings
 from app.core.llm import LLMClient

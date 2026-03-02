@@ -5,17 +5,15 @@ Sécurité renforcée pour la production
 
 import os
 import asyncio
-import hashlib
 import secrets
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Set
+from typing import Any
 from dataclasses import dataclass
-from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
-from fastapi import HTTPException, Request, Response
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import HTTPException, Request
+from fastapi.security import HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from loguru import logger
@@ -55,7 +53,7 @@ class SecurityEvent:
     ip_address: str
     user_agent: str
     timestamp: datetime
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @dataclass
@@ -75,9 +73,9 @@ class SecurityManager:
     
     def __init__(self):
         self.redis_client = None
-        self.blocked_ips: Set[str] = set()
-        self.active_sessions: Dict[str, UserSession] = {}
-        self.security_events: List[SecurityEvent] = []
+        self.blocked_ips: set[str] = set()
+        self.active_sessions: dict[str, UserSession] = {}
+        self.security_events: list[SecurityEvent] = []
         
     async def initialize(self):
         """Initialise le gestionnaire de sécurité"""
@@ -102,7 +100,7 @@ class SecurityManager:
         """Vérifie un mot de passe"""
         return pwd_context.verify(plain_password, hashed_password)
     
-    def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    def create_access_token(self, data: dict, expires_delta: timedelta | None = None) -> str:
         """Crée un token d'accès JWT"""
         to_encode = data.copy()
         if expires_delta:
@@ -122,7 +120,7 @@ class SecurityManager:
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
     
-    async def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
+    async def verify_token(self, token: str) -> dict[str, Any] | None:
         """Vérifie un token JWT"""
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -137,7 +135,7 @@ class SecurityManager:
             )
             return None
     
-    async def authenticate_user(self, username: str, password: str, ip_address: str, user_agent: str) -> Optional[Dict[str, Any]]:
+    async def authenticate_user(self, username: str, password: str, ip_address: str, user_agent: str) -> dict[str, Any] | None:
         """Authentifie un utilisateur"""
         start_time = time.time()
         
@@ -380,7 +378,7 @@ class SecurityManager:
         return True
     
     async def log_security_event(self, event_type: str, severity: str, description: str, 
-                               ip_address: str, user_agent: str, metadata: Dict[str, Any] = None) -> None:
+                               ip_address: str, user_agent: str, metadata: dict[str, Any] = None) -> None:
         """Enregistre un événement de sécurité"""
         event = SecurityEvent(
             event_type=event_type,
@@ -425,7 +423,7 @@ class SecurityManager:
         else:
             logger.debug(f"SECURITY LOW: {description}")
     
-    async def get_security_status(self) -> Dict[str, Any]:
+    async def get_security_status(self) -> dict[str, Any]:
         """Récupère le statut de sécurité"""
         try:
             # Statistiques des événements récents

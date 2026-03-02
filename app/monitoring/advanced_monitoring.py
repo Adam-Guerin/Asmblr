@@ -5,22 +5,15 @@ Real-time monitoring, anomaly detection, and predictive analytics
 
 import asyncio
 import json
-import time
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
+from typing import Any
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
 from collections import defaultdict, deque
 import numpy as np
-import pandas as pd
 from scipy import stats
 import redis
-from pathlib import Path
-import pickle
-from concurrent.futures import ThreadPoolExecutor
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 
@@ -50,8 +43,8 @@ class Metric:
     value: float
     metric_type: MetricType
     timestamp: datetime
-    labels: Dict[str, str] = None
-    tags: List[str] = None
+    labels: dict[str, str] = None
+    tags: list[str] = None
     
     def __post_init__(self):
         if self.labels is None:
@@ -59,7 +52,7 @@ class Metric:
         if self.tags is None:
             self.tags = []
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'name': self.name,
             'value': self.value,
@@ -82,9 +75,9 @@ class Alert:
     threshold: float
     timestamp: datetime
     resolved: bool = False
-    resolved_at: Optional[datetime] = None
+    resolved_at: datetime | None = None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'alert_id': self.alert_id,
             'name': self.name,
@@ -106,7 +99,7 @@ class MonitoringConfig:
     alerts_retention_days: int = 7
     anomaly_detection_enabled: bool = True
     predictive_analytics_enabled: bool = True
-    alert_thresholds: Dict[str, Dict[str, float]] = None
+    alert_thresholds: dict[str, dict[str, float]] = None
     sampling_interval: float = 60.0  # seconds
     anomaly_threshold: float = 0.1
     prediction_horizon_hours: int = 24
@@ -129,10 +122,10 @@ class MetricsCollector:
         self.redis_client = redis.from_url(redis_url)
         self.config = config or MonitoringConfig()
         self.metrics_buffer: deque = deque(maxlen=10000)
-        self.aggregated_metrics: Dict[str, Dict[str, Any]] = defaultdict(dict)
+        self.aggregated_metrics: dict[str, dict[str, Any]] = defaultdict(dict)
         
     def record_metric(self, name: str, value: float, metric_type: MetricType = MetricType.GAUGE,
-                      labels: Dict[str, str] = None, tags: List[str] = None) -> None:
+                      labels: dict[str, str] = None, tags: list[str] = None) -> None:
         """Record a metric"""
         
         metric = Metric(
@@ -197,7 +190,7 @@ class MetricsCollector:
         agg['values'].append(metric.value)
     
     def get_metrics(self, name: str, start_time: datetime = None, end_time: datetime = None,
-                    labels: Dict[str, str] = None) -> List[Metric]:
+                    labels: dict[str, str] = None) -> list[Metric]:
         """Get metrics with optional filtering"""
         
         start_score = start_time.timestamp() if start_time else 0
@@ -235,7 +228,7 @@ class MetricsCollector:
         
         return metrics
     
-    def get_aggregated_metrics(self, name: str, labels: Dict[str, str] = None) -> Dict[str, Any]:
+    def get_aggregated_metrics(self, name: str, labels: dict[str, str] = None) -> dict[str, Any]:
         """Get aggregated metrics"""
         
         key = f"{name}:{':'.join(f'{k}={v}' for k, v in labels.items())}" if labels else name
@@ -259,7 +252,7 @@ class MetricsCollector:
         
         return {}
     
-    def get_metric_names(self) -> List[str]:
+    def get_metric_names(self) -> list[str]:
         """Get all available metric names"""
         
         pattern = "metrics:*"
@@ -273,11 +266,11 @@ class AnomalyDetector:
     
     def __init__(self, config: MonitoringConfig = None):
         self.config = config or MonitoringConfig()
-        self.models: Dict[str, IsolationForest] = {}
-        self.scalers: Dict[str, StandardScaler] = {}
-        self.anomaly_history: List[Dict[str, Any]] = []
+        self.models: dict[str, IsolationForest] = {}
+        self.scalers: dict[str, StandardScaler] = {}
+        self.anomaly_history: list[dict[str, Any]] = []
         
-    def train_anomaly_model(self, metric_name: str, historical_data: List[float]) -> bool:
+    def train_anomaly_model(self, metric_name: str, historical_data: list[float]) -> bool:
         """Train anomaly detection model for a metric"""
         
         if len(historical_data) < 100:
@@ -311,7 +304,7 @@ class AnomalyDetector:
             logger.error(f"Error training anomaly model for {metric_name}: {e}")
             return False
     
-    def detect_anomaly(self, metric_name: str, value: float) -> Dict[str, Any]:
+    def detect_anomaly(self, metric_name: str, value: float) -> dict[str, Any]:
         """Detect if a metric value is anomalous"""
         
         if metric_name not in self.models:
@@ -349,7 +342,7 @@ class AnomalyDetector:
             logger.error(f"Error detecting anomaly for {metric_name}: {e}")
             return {'anomaly': False, 'score': 0.0, 'reason': f'Error: {str(e)}'}
     
-    def get_anomaly_summary(self, hours: int = 24) -> Dict[str, Any]:
+    def get_anomaly_summary(self, hours: int = 24) -> dict[str, Any]:
         """Get anomaly summary for recent period"""
         
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
@@ -385,11 +378,11 @@ class AlertManager:
     def __init__(self, redis_url: str = "redis://localhost:6379/0", config: MonitoringConfig = None):
         self.redis_client = redis.from_url(redis_url)
         self.config = config or MonitoringConfig()
-        self.active_alerts: Dict[str, Alert] = {}
-        self.alert_history: List[Alert] = []
-        self.alert_rules: Dict[str, Dict[str, Any]] = self._load_alert_rules()
+        self.active_alerts: dict[str, Alert] = {}
+        self.alert_history: list[Alert] = []
+        self.alert_rules: dict[str, dict[str, Any]] = self._load_alert_rules()
         
-    def _load_alert_rules(self) -> Dict[str, Dict[str, Any]]:
+    def _load_alert_rules(self) -> dict[str, dict[str, Any]]:
         """Load alert rules"""
         rules = {}
         
@@ -403,7 +396,7 @@ class AlertManager:
         
         return rules
     
-    def evaluate_metric(self, metric: Metric) -> List[Alert]:
+    def evaluate_metric(self, metric: Metric) -> list[Alert]:
         """Evaluate metric against alert rules"""
         
         alerts = []
@@ -479,7 +472,7 @@ class AlertManager:
         
         return False
     
-    def get_active_alerts(self, severity: AlertSeverity = None) -> List[Alert]:
+    def get_active_alerts(self, severity: AlertSeverity = None) -> list[Alert]:
         """Get active alerts"""
         
         alerts = list(self.active_alerts.values())
@@ -489,7 +482,7 @@ class AlertManager:
         
         return sorted(alerts, key=lambda a: a.timestamp, reverse=True)
     
-    def get_alert_summary(self, hours: int = 24) -> Dict[str, Any]:
+    def get_alert_summary(self, hours: int = 24) -> dict[str, Any]:
         """Get alert summary for recent period"""
         
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
@@ -524,9 +517,9 @@ class PredictiveAnalytics:
     
     def __init__(self, config: MonitoringConfig = None):
         self.config = config or MonitoringConfig()
-        self.forecast_models: Dict[str, Dict[str, Any]] = {}
+        self.forecast_models: dict[str, dict[str, Any]] = {}
         
-    def train_forecast_model(self, metric_name: str, historical_data: List[float]) -> bool:
+    def train_forecast_model(self, metric_name: str, historical_data: list[float]) -> bool:
         """Train forecasting model for a metric"""
         
         if len(historical_data) < 50:
@@ -566,7 +559,7 @@ class PredictiveAnalytics:
             logger.error(f"Error training forecast model for {metric_name}: {e}")
             return False
     
-    def _calculate_seasonal_pattern(self, data: List[float]) -> List[float]:
+    def _calculate_seasonal_pattern(self, data: list[float]) -> list[float]:
         """Calculate seasonal pattern (24-hour cycle)"""
         
         if len(data) < 24:
@@ -593,7 +586,7 @@ class PredictiveAnalytics:
         
         return hourly_avgs
     
-    def forecast_metric(self, metric_name: str, hours_ahead: int = 24) -> Dict[str, Any]:
+    def forecast_metric(self, metric_name: str, hours_ahead: int = 24) -> dict[str, Any]:
         """Forecast metric values"""
         
         if metric_name not in self.forecast_models:
@@ -636,7 +629,7 @@ class PredictiveAnalytics:
             logger.error(f"Error forecasting {metric_name}: {e}")
             return {'error': str(e)}
     
-    def get_capacity_prediction(self, metric_name: str, threshold: float) -> Dict[str, Any]:
+    def get_capacity_prediction(self, metric_name: str, threshold: float) -> dict[str, Any]:
         """Predict when metric will reach threshold"""
         
         forecast_result = self.forecast_metric(metric_name, 72)  # 3 days ahead
@@ -828,12 +821,12 @@ class AdvancedMonitoringSystem:
             except Exception as e:
                 logger.error(f"Error in predictive analytics loop: {e}")
     
-    def record_custom_metric(self, name: str, value: float, labels: Dict[str, str] = None) -> None:
+    def record_custom_metric(self, name: str, value: float, labels: dict[str, str] = None) -> None:
         """Record a custom metric"""
         
         self.metrics_collector.record_metric(name, value, MetricType.GAUGE, labels)
     
-    def get_dashboard_data(self) -> Dict[str, Any]:
+    def get_dashboard_data(self) -> dict[str, Any]:
         """Get data for monitoring dashboard"""
         
         return {
@@ -848,7 +841,7 @@ class AdvancedMonitoringSystem:
             'metric_names': self.metrics_collector.get_metric_names()
         }
     
-    def get_health_status(self) -> Dict[str, Any]:
+    def get_health_status(self) -> dict[str, Any]:
         """Get overall system health status"""
         
         active_alerts = self.alert_manager.get_active_alerts()

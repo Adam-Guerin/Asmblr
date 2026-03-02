@@ -4,10 +4,8 @@ Tests pour le système de monitoring Prometheus
 
 import pytest
 import time
-import json
 from unittest.mock import Mock, patch
-from fastapi import FastAPI, Response
-from prometheus_client import CONTENT_TYPE_LATEST
+from fastapi import FastAPI
 
 from app.monitoring.prometheus_metrics import (
     MetricType, MetricConfig, PrometheusMetricsRegistry,

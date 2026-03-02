@@ -4,11 +4,8 @@ Couvre la pipeline de génération MVP, les étapes et la gestion des erreurs
 """
 
 import pytest
-import tempfile
 import json
-from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime
+from unittest.mock import patch
 
 from app.core.pipeline import VenturePipeline
 from app.core.config import Settings

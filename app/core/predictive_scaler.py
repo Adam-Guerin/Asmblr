@@ -7,7 +7,7 @@ import asyncio
 import time
 import json
 import logging
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Any
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
@@ -18,9 +18,9 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
-from collections import defaultdict, deque
+from collections import deque
 import redis
-from prometheus_client import Gauge, Counter, Histogram
+from prometheus_client import Gauge, Counter
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -49,10 +49,10 @@ class LoadPrediction:
     """Prédiction de charge"""
     timestamp: datetime
     predicted_load: float
-    confidence_interval: Tuple[float, float]  # (min, max)
+    confidence_interval: tuple[float, float]  # (min, max)
     model_used: str
     accuracy_score: float
-    features_used: List[str]
+    features_used: list[str]
     prediction_horizon: int  # minutes
 
 
@@ -119,9 +119,9 @@ class PredictiveScaler:
         self.redis_client = redis.from_url(redis_url)
         
         # Modèles ML
-        self.models: Dict[str, Dict[str, Any]] = {}
-        self.scalers: Dict[str, StandardScaler] = {}
-        self.feature_columns: List[str] = []
+        self.models: dict[str, dict[str, Any]] = {}
+        self.scalers: dict[str, StandardScaler] = {}
+        self.feature_columns: list[str] = []
         
         # Historique des données
         self.historical_data: deque = deque(maxlen=historical_window * 24 * 60)  # Par minute
@@ -131,7 +131,7 @@ class PredictiveScaler:
         self.scaling_plans: deque = deque(maxlen=100)
         
         # Performance des modèles
-        self.model_performance: Dict[str, Dict[str, float]] = {}
+        self.model_performance: dict[str, dict[str, float]] = {}
         
         # Configuration des modèles
         self.model_configs = self._setup_model_configs()
@@ -150,7 +150,7 @@ class PredictiveScaler:
         
         logger.info("Predictive Scaler initialisé")
     
-    def _setup_model_configs(self) -> Dict[str, Dict[str, Any]]:
+    def _setup_model_configs(self) -> dict[str, dict[str, Any]]:
         """Configure les modèles de prédiction"""
         return {
             'linear_regression': {
@@ -255,7 +255,7 @@ class PredictiveScaler:
                 logger.error(f"Erreur lors de la collecte des données historiques: {e}")
                 await asyncio.sleep(120)
     
-    async def _collect_current_metrics(self, timestamp: datetime) -> Optional[FeatureData]:
+    async def _collect_current_metrics(self, timestamp: datetime) -> FeatureData | None:
         """Collecte les métriques actuelles pour créer les caractéristiques"""
         try:
             # Métriques de base
@@ -441,7 +441,7 @@ class PredictiveScaler:
                 logger.error(f"Erreur lors de la génération des prédictions: {e}")
                 await asyncio.sleep(300)
     
-    async def _predict_load(self, current_time: datetime) -> List[LoadPrediction]:
+    async def _predict_load(self, current_time: datetime) -> list[LoadPrediction]:
         """Prédit la charge pour différents horizons"""
         predictions = []
         
@@ -495,7 +495,7 @@ class PredictiveScaler:
         
         return predictions
     
-    def _create_future_features(self, current_features: FeatureData, future_time: datetime) -> Dict[str, float]:
+    def _create_future_features(self, current_features: FeatureData, future_time: datetime) -> dict[str, float]:
         """Crée les caractéristiques pour un timestamp futur"""
         # Copier les caractéristiques temporelles
         features = {
@@ -526,7 +526,7 @@ class PredictiveScaler:
         
         return features
     
-    async def _predict_with_model(self, model_name: str, features: Dict[str, float], timestamp: datetime) -> Optional[Dict[str, Any]]:
+    async def _predict_with_model(self, model_name: str, features: dict[str, float], timestamp: datetime) -> dict[str, Any] | None:
         """Prédit avec un modèle spécifique"""
         try:
             if model_name not in self.models:
@@ -556,7 +556,7 @@ class PredictiveScaler:
             logger.error(f"Erreur lors de la prédiction avec le modèle {model_name}: {e}")
             return None
     
-    def _ensemble_predictions(self, model_predictions: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    def _ensemble_predictions(self, model_predictions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         """Combine les prédictions de plusieurs modèles"""
         if not model_predictions:
             return {'value': 0, 'confidence_interval': (0, 0), 'accuracy': 0}
@@ -623,7 +623,7 @@ class PredictiveScaler:
                 logger.error(f"Erreur lors de la création des plans de scaling: {e}")
                 await asyncio.sleep(120)
     
-    async def _analyze_predictions_and_plan(self, predictions: List[LoadPrediction], current_time: datetime) -> Optional[ScalingPlan]:
+    async def _analyze_predictions_and_plan(self, predictions: list[LoadPrediction], current_time: datetime) -> ScalingPlan | None:
         """Analyse les prédictions et crée un plan de scaling"""
         try:
             # Trier les prédictions par timestamp
@@ -802,7 +802,7 @@ class PredictiveScaler:
         finally:
             self.is_training = False
     
-    async def _prepare_training_data(self) -> Tuple[np.ndarray, np.ndarray]:
+    async def _prepare_training_data(self) -> tuple[np.ndarray, np.ndarray]:
         """Prépare les données d'entraînement"""
         try:
             # Convertir l'historique en DataFrame
@@ -841,7 +841,7 @@ class PredictiveScaler:
             logger.error(f"Erreur lors de la préparation des données: {e}")
             return np.array([]), np.array([])
     
-    async def _train_single_model(self, model_name: str, config: Dict[str, Any], X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, y_test: np.ndarray):
+    async def _train_single_model(self, model_name: str, config: dict[str, Any], X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, y_test: np.ndarray):
         """Entraîne un modèle spécifique"""
         try:
             start_time = time.time()
@@ -944,7 +944,7 @@ class PredictiveScaler:
         except Exception as e:
             logger.error(f"Erreur lors de l'évaluation de l'exactitude: {e}")
     
-    async def _get_historical_load(self, timestamp: datetime) -> Optional[float]:
+    async def _get_historical_load(self, timestamp: datetime) -> float | None:
         """Récupère la charge réelle à un timestamp donné"""
         try:
             # Chercher dans l'historique
@@ -984,7 +984,7 @@ class PredictiveScaler:
         except Exception as e:
             logger.error(f"Erreur lors du chargement des modèles: {e}")
     
-    async def get_predictive_status(self) -> Dict[str, Any]:
+    async def get_predictive_status(self) -> dict[str, Any]:
         """Retourne le statut du scaling prédictif"""
         try:
             current_time = datetime.now()
@@ -1046,7 +1046,7 @@ class PredictiveScaler:
 
 
 # Singleton global
-_predictive_scaler: Optional[PredictiveScaler] = None
+_predictive_scaler: PredictiveScaler | None = None
 
 
 async def get_predictive_scaler() -> PredictiveScaler:

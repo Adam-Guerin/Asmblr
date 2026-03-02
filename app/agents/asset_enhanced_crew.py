@@ -4,8 +4,7 @@ Asset-Enhanced crew system with collaborative resource management.
 
 import json
 import re
-from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from loguru import logger
 
@@ -18,7 +17,7 @@ except Exception:  # pragma: no cover
 
 from app.core.config import Settings
 from app.core.llm import LLMClient
-from app.agents.shared_assets import SharedAssetManager, AssetType, AssetStatus
+from app.agents.shared_assets import SharedAssetManager
 from app.agents.asset_tools import AssetManagementTools, create_asset_management_prompts
 from app.langchain_tools import build_toolbox
 
@@ -27,7 +26,7 @@ def _create_asset_enhanced_agent(
     role: str,
     goal: str,
     backstory: str,
-    tools: List[Any],
+    tools: list[Any],
     asset_tools: AssetManagementTools,
     asset_prompt: str
 ) -> Agent:

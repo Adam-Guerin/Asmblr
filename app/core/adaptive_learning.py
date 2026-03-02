@@ -7,13 +7,11 @@ import asyncio
 import time
 import json
 import numpy as np
-import pickle
-from typing import Dict, Any, Optional, List, Union, Callable, Tuple
+from typing import Any
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta
 from enum import Enum
 from collections import defaultdict, deque
-import statistics
 from loguru import logger
 import redis.asyncio as redis
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
@@ -43,13 +41,13 @@ class ModelType(Enum):
 @dataclass
 class LearningData:
     """Learning data point"""
-    features: Dict[str, float]
-    target: Union[float, int, str]
+    features: dict[str, float]
+    target: float | int | str
     timestamp: datetime
     source: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
-    def to_vector(self, feature_names: List[str]) -> np.ndarray:
+    def to_vector(self, feature_names: list[str]) -> np.ndarray:
         """Convert to feature vector"""
         return np.array([self.features.get(name, 0.0) for name in feature_names])
 
@@ -65,7 +63,7 @@ class ModelMetrics:
     r2_score: float = 0.0
     training_time: float = 0.0
     prediction_time: float = 0.0
-    last_updated: Optional[datetime] = None
+    last_updated: datetime | None = None
 
 class AdaptiveLearningEngine:
     """Adaptive learning engine for continuous system improvement"""
@@ -202,10 +200,10 @@ class AdaptiveLearningEngine:
     async def add_learning_data(
         self,
         model_type: ModelType,
-        features: Dict[str, float],
-        target: Union[float, int, str],
+        features: dict[str, float],
+        target: float | int | str,
         source: str = "unknown",
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ):
         """Add learning data point"""
         try:
@@ -220,7 +218,7 @@ class AdaptiveLearningEngine:
             self.learning_data[model_type].append(data_point)
             
             # Update feature names
-            for feature_name in features.keys():
+            for feature_name in features:
                 if feature_name not in self.feature_names[model_type]:
                     self.feature_names[model_type].append(feature_name)
             
@@ -238,9 +236,9 @@ class AdaptiveLearningEngine:
     async def predict(
         self,
         model_type: ModelType,
-        features: Dict[str, float],
+        features: dict[str, float],
         return_confidence: bool = False
-    ) -> Union[float, int, str, Tuple[Union[float, int, str], float]]:
+    ) -> float | int | str | tuple[float | int | str, float]:
         """Make prediction using trained model"""
         try:
             if model_type not in self.models:
@@ -421,7 +419,7 @@ class AdaptiveLearningEngine:
             logger.error(f"Model evaluation error for {model_type.value}: {e}")
             return ModelMetrics()
     
-    async def get_feature_importance(self, model_type: ModelType) -> Dict[str, float]:
+    async def get_feature_importance(self, model_type: ModelType) -> dict[str, float]:
         """Get feature importance for model"""
         try:
             if model_type not in self.models:
@@ -633,7 +631,7 @@ class AdaptiveLearningEngine:
         except Exception as e:
             logger.error(f"Redis learning data storage error: {e}")
     
-    async def _store_prediction(self, model_type: ModelType, features: Dict[str, float], prediction: Any, confidence: float):
+    async def _store_prediction(self, model_type: ModelType, features: dict[str, float], prediction: Any, confidence: float):
         """Store prediction in Redis"""
         try:
             key = f"prediction:{model_type.value}:{datetime.now().isoformat()}"
@@ -703,7 +701,7 @@ class AdaptiveLearningEngine:
                     
                     # Load metadata
                     if os.path.exists(metadata_path):
-                        with open(metadata_path, 'r') as f:
+                        with open(metadata_path) as f:
                             metadata = json.load(f)
                         
                         self.feature_names[model_type] = metadata.get('feature_names', [])
@@ -718,7 +716,7 @@ class AdaptiveLearningEngine:
         except Exception as e:
             logger.error(f"Model loading error: {e}")
     
-    async def get_learning_insights(self) -> Dict[str, Any]:
+    async def get_learning_insights(self) -> dict[str, Any]:
         """Get insights from learning data"""
         try:
             insights = {
@@ -760,7 +758,7 @@ class AdaptiveLearningEngine:
             logger.error(f"Learning insights error: {e}")
             return {}
     
-    async def _generate_recommendations(self) -> List[str]:
+    async def _generate_recommendations(self) -> list[str]:
         """Generate learning recommendations"""
         recommendations = []
         

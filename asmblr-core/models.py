@@ -2,9 +2,9 @@
 Modèles Pydantic pour le service core d'Asmblr
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Any
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from enum import Enum
 
 
@@ -21,7 +21,7 @@ class PipelineStatus(str, Enum):
 class PipelineCreate(BaseModel):
     """Modèle pour la création d'un pipeline"""
     topic: str = Field(..., min_length=3, max_length=200, description="Sujet du pipeline")
-    config: Optional[Dict[str, Any]] = Field(default=None, description="Configuration du pipeline")
+    config: dict[str, Any] | None = Field(default=None, description="Configuration du pipeline")
     mode: str = Field(default="standard", description="Mode d'exécution")
 
 
@@ -30,32 +30,32 @@ class PipelineResponse(BaseModel):
     id: str
     topic: str
     status: PipelineStatus
-    config: Optional[Dict[str, Any]]
-    results: Optional[Dict[str, Any]]
+    config: dict[str, Any] | None
+    results: dict[str, Any] | None
     created_at: datetime
     updated_at: datetime
-    execution_history: List[Dict[str, Any]] = Field(default_factory=list)
+    execution_history: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class PipelineUpdate(BaseModel):
     """Modèle pour la mise à jour d'un pipeline"""
-    topic: Optional[str] = Field(None, min_length=3, max_length=200)
-    status: Optional[PipelineStatus] = None
-    config: Optional[Dict[str, Any]] = None
+    topic: str | None = Field(None, min_length=3, max_length=200)
+    status: PipelineStatus | None = None
+    config: dict[str, Any] | None = None
 
 
 class PipelineExecutionRequest(BaseModel):
     """Modèle pour l'exécution d'un pipeline"""
-    config_overrides: Optional[Dict[str, Any]] = Field(default=None, description="Configuration temporaire")
+    config_overrides: dict[str, Any] | None = Field(default=None, description="Configuration temporaire")
 
 
 class Topic(BaseModel):
     """Modèle pour un sujet d'analyse"""
     id: str
     name: str
-    description: Optional[str] = None
-    keywords: List[str] = Field(default_factory=list)
-    validation_data: Optional[Dict[str, Any]] = None
+    description: str | None = None
+    keywords: list[str] = Field(default_factory=list)
+    validation_data: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -63,8 +63,8 @@ class Topic(BaseModel):
 class TopicCreate(BaseModel):
     """Modèle pour la création d'un sujet"""
     name: str = Field(..., min_length=3, max_length=100)
-    description: Optional[str] = None
-    keywords: List[str] = Field(default_factory=list)
+    description: str | None = None
+    keywords: list[str] = Field(default_factory=list)
 
 
 class TopicValidation(BaseModel):
@@ -72,9 +72,9 @@ class TopicValidation(BaseModel):
     topic_id: str
     is_valid: bool
     score: float
-    issues: List[str]
-    suggestions: List[str]
-    market_signals: Dict[str, Any]
+    issues: list[str]
+    suggestions: list[str]
+    market_signals: dict[str, Any]
 
 
 class PipelineMetrics(BaseModel):
@@ -84,7 +84,7 @@ class PipelineMetrics(BaseModel):
     successful_executions: int
     average_duration: float
     success_rate: float
-    last_execution: Optional[datetime]
+    last_execution: datetime | None
 
 
 class ServiceMetrics(BaseModel):
@@ -106,4 +106,4 @@ class HealthCheck(BaseModel):
     service: str
     version: str
     timestamp: datetime
-    dependencies: Dict[str, str]
+    dependencies: dict[str, str]

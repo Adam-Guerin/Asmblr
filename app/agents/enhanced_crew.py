@@ -4,8 +4,7 @@ Enhanced crew system with facilitator agents for improved synergy and coordinati
 
 import json
 import re
-from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from loguru import logger
 
@@ -31,7 +30,7 @@ def _create_facilitator_tools(
     settings: Settings, 
     llm_client: LLMClient,
     run_id: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create tools for facilitator agents."""
     
     facilitator_tools = build_toolbox(settings, llm_client)

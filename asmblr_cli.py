@@ -6,31 +6,24 @@ Advanced command-line interface with AI-powered developer tools
 import asyncio
 import click
 import json
-import os
 import sys
 import time
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Any
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from enum import Enum
 import yaml
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.tree import Tree
-from rich.syntax import Syntax
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Confirm
 from loguru import logger
 
 # Import Asmblr components
 from app.core.config import get_settings
 from app.core.predictive_monitoring import predictive_monitoring, MetricType
 from app.core.adaptive_learning import adaptive_learning_engine, ModelType
-from app.core.ai_orchestrator import ai_orchestrator
-from app.core.intelligent_scheduler import intelligent_scheduler
 
 class CommandCategory(Enum):
     """CLI command categories"""
@@ -87,7 +80,7 @@ class AsmblrCLI:
         try:
             config_path = Path(self.config.config_file)
             if config_path.exists():
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     config_data = yaml.safe_load(f)
                     
                 # Update config with loaded values
@@ -405,7 +398,7 @@ def search(pattern):
             results = []
             for py_file in Path('.').rglob("*.py"):
                 try:
-                    with open(py_file, 'r') as f:
+                    with open(py_file) as f:
                         content = f.read()
                         if pattern in content:
                             results.append({

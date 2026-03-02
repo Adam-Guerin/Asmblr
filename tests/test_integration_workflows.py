@@ -4,14 +4,12 @@ Tests integration between all new components and end-to-end workflows
 """
 
 import asyncio
-import pytest
 import time
 import json
 import tempfile
 import os
-from pathlib import Path
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock
 import redis.asyncio as redis
 
 # Import all new features for integration testing
@@ -29,8 +27,6 @@ from app.core.llm_cache import LLMCacheManager
 from app.core.async_tasks import AsyncTaskManager
 from app.core.connection_pool import ConnectionPoolManager
 from app.core.load_balancer import LoadBalancer
-from app.core.db_optimizer import DBOptimizer
-from app.core.distributed_cache import DistributedCacheManager
 from app.core.security import SecurityManager
 from app.core.k8s_secrets import K8sSecretsManager
 

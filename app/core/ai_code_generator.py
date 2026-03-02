@@ -3,17 +3,12 @@ AI-Powered Code Generation Assistant for Asmblr
 Intelligent code generation with context awareness and best practices
 """
 
-import asyncio
-import ast
 import json
 import re
-from typing import Dict, Any, Optional, List, Union, Callable
+from typing import Any
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-import subprocess
-import tempfile
 from loguru import logger
 import redis.asyncio as redis
 
@@ -44,10 +39,10 @@ class CodeGenerationRequest:
     description: str
     code_type: CodeType
     style: CodeStyle = CodeStyle.SIMPLE
-    context: Optional[Dict[str, Any]] = None
-    requirements: List[str] = None
-    constraints: List[str] = None
-    examples: List[str] = None
+    context: dict[str, Any] | None = None
+    requirements: list[str] = None
+    constraints: list[str] = None
+    examples: list[str] = None
     
     def __post_init__(self):
         if self.context is None:
@@ -65,12 +60,12 @@ class CodeGenerationResult:
     code: str
     explanation: str
     confidence: float
-    suggestions: List[str]
-    imports: List[str]
-    dependencies: List[str]
-    tests: Optional[str] = None
-    documentation: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    suggestions: list[str]
+    imports: list[str]
+    dependencies: list[str]
+    tests: str | None = None
+    documentation: str | None = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -464,7 +459,7 @@ def test_{test_name}():
                 metadata={'error': str(e)}
             )
     
-    async def _analyze_request(self, request: CodeGenerationRequest) -> Dict[str, Any]:
+    async def _analyze_request(self, request: CodeGenerationRequest) -> dict[str, Any]:
         """Analyze the generation request"""
         try:
             analysis = {
@@ -498,7 +493,7 @@ def test_{test_name}():
             logger.error(f"Complexity assessment failed: {e}")
             return "medium"
     
-    def _extract_keywords(self, description: str) -> List[str]:
+    def _extract_keywords(self, description: str) -> list[str]:
         """Extract keywords from description"""
         try:
             # Simple keyword extraction
@@ -526,7 +521,7 @@ def test_{test_name}():
             logger.error(f"Keyword extraction failed: {e}")
             return []
     
-    def _extract_entities(self, description: str) -> List[str]:
+    def _extract_entities(self, description: str) -> list[str]:
         """Extract entities from description"""
         try:
             entities = []
@@ -589,7 +584,7 @@ pass
             logger.error(f"Template selection failed: {e}")
             return '# Error: Could not select template\npass'
     
-    async def _generate_components(self, request: CodeGenerationRequest, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_components(self, request: CodeGenerationRequest, analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate code components"""
         try:
             components = {}
@@ -611,7 +606,7 @@ pass
             logger.error(f"Component generation failed: {e}")
             return {}
     
-    async def _generate_function_components(self, request: CodeGenerationRequest, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_function_components(self, request: CodeGenerationRequest, analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate function-specific components"""
         try:
             components = {}
@@ -640,7 +635,7 @@ pass
             logger.error(f"Function component generation failed: {e}")
             return {}
     
-    def _generate_function_name(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_function_name(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate appropriate function name"""
         try:
             # Extract potential function names from entities
@@ -686,7 +681,7 @@ pass
             logger.error(f"Function name generation failed: {e}")
             return 'process_data'
     
-    def _generate_parameters(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_parameters(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate function parameters"""
         try:
             parameters = []
@@ -721,7 +716,7 @@ pass
             logger.error(f"Parameter generation failed: {e}")
             return ''
     
-    def _generate_function_body(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_function_body(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate function body"""
         try:
             body_lines = []
@@ -843,7 +838,7 @@ pass
             logger.error(f"Raises documentation generation failed: {e}")
             return 'Exception: For general errors'
     
-    async def _generate_class_components(self, request: CodeGenerationRequest, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_class_components(self, request: CodeGenerationRequest, analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate class-specific components"""
         try:
             components = {}
@@ -875,7 +870,7 @@ pass
             logger.error(f"Class component generation failed: {e}")
             return {}
     
-    def _generate_class_name(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_class_name(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate appropriate class name"""
         try:
             entities = analysis.get('entities', [])
@@ -901,7 +896,7 @@ pass
             logger.error(f"Class name generation failed: {e}")
             return 'DataManager'
     
-    def _generate_init_params(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_init_params(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate __init__ parameters"""
         try:
             params = []
@@ -923,7 +918,7 @@ pass
             logger.error(f"Init parameters generation failed: {e}")
             return ''
     
-    def _generate_init_body(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_init_body(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate __init__ body"""
         try:
             body_lines = []
@@ -952,7 +947,7 @@ pass
             logger.error(f"Init body generation failed: {e}")
             return '        # TODO: Initialize attributes'
     
-    def _generate_class_methods(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_class_methods(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate class methods"""
         try:
             methods = []
@@ -1014,7 +1009,7 @@ pass
             logger.error(f"Methods documentation generation failed: {e}")
             return 'General methods'
     
-    async def _generate_api_components(self, request: CodeGenerationRequest, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_api_components(self, request: CodeGenerationRequest, analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate API endpoint components"""
         try:
             components = {}
@@ -1069,7 +1064,7 @@ pass
             logger.error(f"HTTP method determination failed: {e}")
             return 'get'
     
-    def _generate_endpoint_name(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_endpoint_name(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate endpoint name"""
         try:
             entities = analysis.get('entities', [])
@@ -1100,7 +1095,7 @@ pass
             logger.error(f"Endpoint name generation failed: {e}")
             return "data_endpoint"
     
-    def _generate_api_parameters(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_api_parameters(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate API endpoint parameters"""
         try:
             parameters = []
@@ -1128,7 +1123,7 @@ pass
             logger.error(f"API parameters generation failed: {e}")
             return ''
     
-    def _generate_api_body(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_api_body(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate API endpoint body"""
         try:
             body_lines = []
@@ -1198,7 +1193,7 @@ pass
             logger.error(f"API args documentation generation failed: {e}")
             return 'No parameters'
     
-    async def _generate_test_components(self, request: CodeGenerationRequest, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_test_components(self, request: CodeGenerationRequest, analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate test components"""
         try:
             components = {}
@@ -1221,7 +1216,7 @@ pass
             logger.error(f"Test component generation failed: {e}")
             return {}
     
-    def _generate_test_name(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_test_name(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate test name"""
         try:
             entities = analysis.get('entities', [])
@@ -1243,7 +1238,7 @@ pass
             logger.error(f"Test name generation failed: {e}")
             return 'test_function'
     
-    def _generate_test_body(self, description: str, analysis: Dict[str, Any]) -> str:
+    def _generate_test_body(self, description: str, analysis: dict[str, Any]) -> str:
         """Generate test body"""
         try:
             body_lines = []
@@ -1305,7 +1300,7 @@ pass
             logger.error(f"Test cases documentation generation failed: {e}")
             return 'Basic functionality'
     
-    async def _generate_generic_components(self, request: CodeGenerationRequest, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_generic_components(self, request: CodeGenerationRequest, analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate generic components"""
         try:
             components = {}
@@ -1317,10 +1312,10 @@ pass
             return components
             
         except Exception as e:
-            logger.error(f"Generic component generation failed: {e})
+            logger.error(f"Generic component generation failed: {e}")
             return {}
     
-    def _fill_template(self, template: str, components: Dict[str, Any]) -> str:
+    def _fill_template(self, template: str, components: dict[str, Any]) -> str:
         """Fill template with components"""
         try:
             code = template
@@ -1337,7 +1332,7 @@ pass
             logger.error(f"Template filling failed: {e}")
             return '# Error: Could not fill template\npass'
     
-    async def _generate_explanation(self, request: CodeGenerationRequest, components: Dict[str, Any]) -> str:
+    async def _generate_explanation(self, request: CodeGenerationRequest, components: dict[str, Any]) -> str:
         """Generate code explanation"""
         try:
             explanation_parts = []
@@ -1371,7 +1366,7 @@ pass
             logger.error(f"Explanation generation failed: {e}")
             return f"Generated {request.code_type.value} code based on the description."
     
-    async def _generate_suggestions(self, request: CodeGenerationRequest, components: Dict[str, Any]) -> List[str]:
+    async def _generate_suggestions(self, request: CodeGenerationRequest, components: dict[str, Any]) -> list[str]:
         """Generate improvement suggestions"""
         try:
             suggestions = []
@@ -1408,7 +1403,7 @@ pass
             logger.error(f"Suggestion generation failed: {e}")
             return ["Review the generated code for improvements"]
     
-    def _extract_imports(self, code: str) -> List[str]:
+    def _extract_imports(self, code: str) -> list[str]:
         """Extract import statements from generated code"""
         try:
             imports = []
@@ -1430,7 +1425,7 @@ pass
             logger.error(f"Import extraction failed: {e}")
             return []
     
-    def _extract_dependencies(self, code: str) -> List[str]:
+    def _extract_dependencies(self, code: str) -> list[str]:
         """Extract dependencies from generated code"""
         try:
             dependencies = []
@@ -1455,7 +1450,7 @@ pass
             logger.error(f"Dependency extraction failed: {e}")
             return []
     
-    async def _generate_tests(self, request: CodeGenerationRequest, components: Dict[str, Any]) -> str:
+    async def _generate_tests(self, request: CodeGenerationRequest, components: dict[str, Any]) -> str:
         """Generate unit tests for the generated code"""
         try:
             test_code = []
@@ -1493,7 +1488,7 @@ pass
             logger.error(f"Test generation failed: {e}")
             return '# TODO: Add unit tests'
     
-    async def _generate_documentation(self, request: CodeGenerationRequest, components: Dict[str, Any]) -> str:
+    async def _generate_documentation(self, request: CodeGenerationRequest, components: dict[str, Any]) -> str:
         """Generate documentation for the generated code"""
         try:
             doc_lines = []
@@ -1534,7 +1529,7 @@ pass
             logger.error(f"Documentation generation failed: {e}")
             return f"# {request.description}\n\nDocumentation will be added here."
     
-    def _calculate_confidence(self, request: CodeGenerationRequest, analysis: Dict[str, Any], components: Dict[str, Any]) -> float:
+    def _calculate_confidence(self, request: CodeGenerationRequest, analysis: dict[str, Any], components: dict[str, Any]) -> float:
         """Calculate confidence in the generated code"""
         try:
             confidence = 0.5  # Base confidence
@@ -1576,7 +1571,7 @@ pass
         except Exception as e:
             logger.error(f"Redis generation result storage error: {e}")
     
-    async def get_generation_history(self, limit: int = 10) -> List[Dict[str, Any]]:
+    async def get_generation_history(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get generation history"""
         try:
             return self.generation_history[-limit:]

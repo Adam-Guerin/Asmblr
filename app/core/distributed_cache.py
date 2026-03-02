@@ -5,17 +5,13 @@ Multi-layer caching with intelligent eviction and distribution
 
 import asyncio
 import time
-import json
-import hashlib
 import pickle
-import zlib
 import gzip
-from typing import Dict, Any, Optional, List, Union, Callable
-from dataclasses import dataclass, asdict
+from typing import Any
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from collections import OrderedDict, defaultdict
-import redis.asyncio as redis
 import aioredis
 from loguru import logger
 import psutil
@@ -43,10 +39,10 @@ class CacheEntry:
     last_accessed: datetime
     access_count: int = 0
     size_bytes: int = 0
-    ttl_seconds: Optional[float] = None
-    expires_at: Optional[datetime] = None
+    ttl_seconds: float | None = None
+    expires_at: datetime | None = None
     level: CacheLevel = CacheLevel.L1_MEMORY
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
     
     def __post_init__(self):
         if self.ttl_seconds:
@@ -229,9 +225,9 @@ class AdvancedDistributedCache:
         self,
         key: str,
         value: Any,
-        ttl_seconds: Optional[float] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        level: Optional[CacheLevel] = None
+        ttl_seconds: float | None = None,
+        metadata: dict[str, Any] | None = None,
+        level: CacheLevel | None = None
     ) -> bool:
         """Set value in cache"""
         try:
@@ -317,7 +313,7 @@ class AdvancedDistributedCache:
             logger.error(f"Cache delete error for key {key}: {e}")
             return False
     
-    async def clear(self, pattern: Optional[str] = None) -> int:
+    async def clear(self, pattern: str | None = None) -> int:
         """Clear cache entries"""
         try:
             cleared_count = 0
@@ -549,7 +545,7 @@ class AdvancedDistributedCache:
                 logger.error(f"Metrics collection error: {e}")
                 await asyncio.sleep(60)
     
-    async def warmup_cache(self, keys: List[str], values: List[Any]):
+    async def warmup_cache(self, keys: list[str], values: list[Any]):
         """Warm up cache with common keys"""
         try:
             logger.info(f"Warming up cache with {len(keys)} keys")
@@ -563,7 +559,7 @@ class AdvancedDistributedCache:
         except Exception as e:
             logger.error(f"Cache warmup error: {e}")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         return {
             'total_requests': self.metrics.total_requests,

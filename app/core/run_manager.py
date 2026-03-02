@@ -4,7 +4,7 @@ import sqlite3
 import time
 import shutil
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any
 from collections.abc import Iterable
@@ -341,7 +341,7 @@ class RunManager:
         runs = self.list_runs()
         if not runs:
             return []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         keep: list[dict] = []
         purge: list[dict] = []
         for run in runs:
@@ -353,7 +353,7 @@ class RunManager:
             try:
                 ts = datetime.fromisoformat(updated_at)
                 if ts.tzinfo is None:
-                    ts = ts.replace(tzinfo=timezone.utc)
+                    ts = ts.replace(tzinfo=UTC)
             except Exception:
                 ts = now
             age_days = (now - ts).days
@@ -385,7 +385,7 @@ class RunManager:
             return []
         archive_dirs = list(dict.fromkeys([d.strip() for d in archive_dirs if d and d.strip()]))
         runs = self.list_runs()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         compressed: list[str] = []
         for run in runs:
             status = run.get("status")
@@ -398,7 +398,7 @@ class RunManager:
             try:
                 ts = datetime.fromisoformat(updated_at)
                 if ts.tzinfo is None:
-                    ts = ts.replace(tzinfo=timezone.utc)
+                    ts = ts.replace(tzinfo=UTC)
             except Exception:
                 ts = now
             age_days = (now - ts).days

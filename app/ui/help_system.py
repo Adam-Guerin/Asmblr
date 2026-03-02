@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 import streamlit as st
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 
@@ -23,10 +22,10 @@ class HelpContent:
     title: str
     content: str
     category: HelpCategory
-    related_topics: List[str]
-    tips: List[str]
-    video_url: Optional[str] = None
-    external_links: List[str] = None
+    related_topics: list[str]
+    tips: list[str]
+    video_url: str | None = None
+    external_links: list[str] = None
     
     def __post_init__(self):
         if self.external_links is None:
@@ -40,7 +39,7 @@ class HelpSystem:
         self.help_contents = self._initialize_help_contents()
         self.current_context = None
     
-    def _initialize_help_contents(self) -> Dict[str, HelpContent]:
+    def _initialize_help_contents(self) -> dict[str, HelpContent]:
         """Initialize all help content."""
         return {
             # Getting Started
@@ -842,16 +841,16 @@ class HelpSystem:
             )
         }
     
-    def get_help_content(self, key: str) -> Optional[HelpContent]:
+    def get_help_content(self, key: str) -> HelpContent | None:
         """Get help content by key."""
         return self.help_contents.get(key)
     
-    def get_help_by_category(self, category: HelpCategory) -> List[HelpContent]:
+    def get_help_by_category(self, category: HelpCategory) -> list[HelpContent]:
         """Get all help content for a category."""
         return [content for content in self.help_contents.values() 
                 if content.category == category]
     
-    def search_help(self, query: str) -> List[HelpContent]:
+    def search_help(self, query: str) -> list[HelpContent]:
         """Search help content by query."""
         query = query.lower()
         results = []

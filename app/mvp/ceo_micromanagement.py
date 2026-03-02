@@ -5,9 +5,8 @@ Aucune autonomie, contrôle total, supervision directe.
 """
 
 import json
-import asyncio
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Union
+from typing import Any
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
@@ -42,11 +41,11 @@ class AgentInstruction:
     """Instruction CEO spécifique pour un agent"""
     agent_type: AgentType
     instruction: str
-    constraints: List[str] = field(default_factory=list)
-    required_outputs: List[str] = field(default_factory=list)
-    forbidden_outputs: List[str] = field(default_factory=list)
+    constraints: list[str] = field(default_factory=list)
+    required_outputs: list[str] = field(default_factory=list)
+    forbidden_outputs: list[str] = field(default_factory=list)
     tone: str = "strict"
-    deadline: Optional[str] = None
+    deadline: str | None = None
 
 
 @dataclass
@@ -56,7 +55,7 @@ class AgentOutput:
     output: Any
     timestamp: datetime
     status: ApprovalStatus = ApprovalStatus.PENDING
-    ceo_feedback: Optional[str] = None
+    ceo_feedback: str | None = None
     revisions: int = 0
 
 
@@ -64,10 +63,10 @@ class AgentOutput:
 class MicromanagementSession:
     """Session de micromanagement CEO"""
     topic: str
-    agent_instructions: Dict[AgentType, AgentInstruction] = field(default_factory=dict)
-    agent_outputs: Dict[AgentType, List[AgentOutput]] = field(default_factory=dict)
-    approval_decisions: Dict[AgentType, ApprovalStatus] = field(default_factory=dict)
-    micromanagement_log: List[str] = field(default_factory=list)
+    agent_instructions: dict[AgentType, AgentInstruction] = field(default_factory=dict)
+    agent_outputs: dict[AgentType, list[AgentOutput]] = field(default_factory=dict)
+    approval_decisions: dict[AgentType, ApprovalStatus] = field(default_factory=dict)
+    micromanagement_log: list[str] = field(default_factory=list)
 
 
 class CEOMicromanager:
@@ -93,7 +92,7 @@ class CEOMicromanager:
         self.llm_client = llm_client
         self.toolkit = toolkit
         self.run_dir = run_dir
-        self.session: Optional[MicromanagementSession] = None
+        self.session: MicromanagementSession | None = None
         
     async def start_micromanagement_session(
         self,
@@ -191,7 +190,7 @@ class CEOMicromanager:
         self,
         topic: str,
         vision: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Instructions fallback si tout échoue"""
         
         return {
@@ -301,7 +300,7 @@ class CEOMicromanager:
         self,
         output: Any,
         instruction: AgentInstruction
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Évalue l'output d'un agent selon les instructions CEO"""
         
         evaluation_prompt = f"""
@@ -349,7 +348,7 @@ class CEOMicromanager:
         self,
         output: Any,
         instruction: AgentInstruction
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Évaluation fallback si tout échoue"""
         
         output_str = str(output)
@@ -468,7 +467,7 @@ class CEOMicromanager:
         
         return instruction
     
-    async def get_micromanagement_report(self) -> Dict[str, Any]:
+    async def get_micromanagement_report(self) -> dict[str, Any]:
         """Génère un rapport de micromanagement CEO"""
         
         report = {
@@ -539,7 +538,7 @@ class CEOMicromanager:
         
         return report_path
     
-    async def _create_readable_report(self, report: Dict[str, Any]) -> str:
+    async def _create_readable_report(self, report: dict[str, Any]) -> str:
         """Crée un rapport lisible"""
         
         readable = f"""# CEO Micromanagement Report

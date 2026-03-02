@@ -12,7 +12,7 @@ print('=' * 50)
 
 # 1. Test du smart logger
 try:
-    from app.core.smart_logger import get_smart_logger, LogLevel, LogCategory
+    from app.core.smart_logger import get_smart_logger, LogLevel
     smart_logger = get_smart_logger()
     
     # Test des différentes catégories de logs
@@ -95,7 +95,6 @@ print('=' * 50)
 
 # Analyse finale des TODO restants
 def analyze_remaining_issues():
-    import re
     
     issues = []
     directory = Path('app')
@@ -105,7 +104,7 @@ def analyze_remaining_issues():
             continue
             
         try:
-            with open(py_file, 'r', encoding='utf-8') as f:
+            with open(py_file, encoding='utf-8') as f:
                 content = f.read()
                 lines = content.split('\n')
                 

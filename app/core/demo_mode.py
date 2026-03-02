@@ -4,9 +4,8 @@ Provides pre-configured examples and demo data for public users
 """
 
 import json
-import time
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -18,9 +17,9 @@ class DemoExample:
     description: str
     topic: str
     icp: str
-    seed_pains: List[str]
-    seed_competitors: List[str]
-    expected_outcomes: List[str]
+    seed_pains: list[str]
+    seed_competitors: list[str]
+    expected_outcomes: list[str]
     difficulty: str  # easy, medium, hard
 
 
@@ -161,7 +160,7 @@ class DemoModeManager:
             )
         ]
     
-    def get_demo_examples(self) -> List[DemoExample]:
+    def get_demo_examples(self) -> list[DemoExample]:
         """Get all available demo examples"""
         return self.demo_examples
     
@@ -172,7 +171,7 @@ class DemoModeManager:
                 return example
         raise ValueError(f"Demo example '{name}' not found")
     
-    def generate_demo_config(self, example: DemoExample) -> Dict[str, Any]:
+    def generate_demo_config(self, example: DemoExample) -> dict[str, Any]:
         """Generate demo configuration for a specific example"""
         return {
             "demo_mode": True,
@@ -190,7 +189,7 @@ class DemoModeManager:
             "enable_demo_data": True
         }
     
-    def create_demo_run_data(self, example: DemoExample) -> Dict[str, Any]:
+    def create_demo_run_data(self, example: DemoExample) -> dict[str, Any]:
         """Create pre-generated demo run data for quick demonstration"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         run_id = f"demo_{timestamp}_{hash(example.name) % 1000000:06d}"
@@ -280,12 +279,12 @@ class DemoModeManager:
         
         return str(demo_file)
     
-    def load_demo_data(self, example_name: str) -> Dict[str, Any]:
+    def load_demo_data(self, example_name: str) -> dict[str, Any]:
         """Load demo data for a specific example"""
         demo_file = self.demo_data_dir / f"demo_{example_name.lower().replace(' ', '_')}.json"
         
         if demo_file.exists():
-            with open(demo_file, 'r', encoding='utf-8') as f:
+            with open(demo_file, encoding='utf-8') as f:
                 return json.load(f)
         
         # Generate and save if doesn't exist
@@ -293,7 +292,7 @@ class DemoModeManager:
         self.save_demo_data(example)
         return self.create_demo_run_data(example)
     
-    def get_demo_tour_steps(self) -> List[Dict[str, Any]]:
+    def get_demo_tour_steps(self) -> list[dict[str, Any]]:
         """Get interactive demo tour steps"""
         return [
             {
@@ -340,7 +339,7 @@ class DemoModeManager:
             }
         ]
     
-    def get_demo_checklist(self) -> Dict[str, Any]:
+    def get_demo_checklist(self) -> dict[str, Any]:
         """Get demo mode checklist for users"""
         return {
             "pre_demo": [
@@ -439,7 +438,7 @@ def run_demo_presentation(example_name: str = "AI Task Management"):
 
 
 # Demo data generator for testing
-def generate_sample_market_data(topic: str) -> Dict[str, Any]:
+def generate_sample_market_data(topic: str) -> dict[str, Any]:
     """Generate sample market research data for testing"""
     return {
         "topic": topic,

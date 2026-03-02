@@ -6,9 +6,8 @@ Focus sur les TODO critiques et l'optimisation du code
 import re
 import json
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Any
 from dataclasses import dataclass
-from datetime import datetime
 
 
 @dataclass
@@ -30,7 +29,7 @@ class FileMetrics:
     lines: int
     complexity: float
     maintainability: float
-    debt_items: List[TechnicalDebtItem]
+    debt_items: list[TechnicalDebtItem]
     debt_score: float
 
 
@@ -55,7 +54,7 @@ class TechnicalDebtAnalyzer:
     def analyze_file(self, file_path: Path) -> FileMetrics:
         """Analyse un fichier pour détecter la dette technique"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 content = f.read()
                 lines = content.split('\n')
         except Exception as e:
@@ -107,7 +106,7 @@ class TechnicalDebtAnalyzer:
         # Par défaut, les TODO sont medium
         return 'medium'
     
-    def _calculate_debt_score(self, debt_items: List[TechnicalDebtItem]) -> float:
+    def _calculate_debt_score(self, debt_items: list[TechnicalDebtItem]) -> float:
         """Calcule un score de dette (0-100, plus élevé = plus de dette)"""
         severity_weights = {
             'critical': 10,
@@ -149,7 +148,7 @@ class TechnicalDebtAnalyzer:
         maintainability = base_score - complexity_penalty - debt_penalty - length_penalty
         return max(maintainability, 0)
     
-    def analyze_project(self) -> Dict[str, Any]:
+    def analyze_project(self) -> dict[str, Any]:
         """Analyse tout le projet"""
         print("🔍 Analyse de la dette technique d'Asmblr...")
         
@@ -215,7 +214,7 @@ class TechnicalDebtAnalyzer:
             ]
         }
     
-    def generate_fixes(self, analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def generate_fixes(self, analysis: dict[str, Any]) -> list[dict[str, Any]]:
         """Génère des suggestions de correction"""
         fixes = []
         

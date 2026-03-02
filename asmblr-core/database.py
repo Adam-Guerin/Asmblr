@@ -2,12 +2,11 @@
 Base de données partagée pour les micro-services Asmblr
 """
 
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import Column, String, DateTime, Text, Integer, Boolean, JSON
+from sqlalchemy import Column, String, DateTime, Text, Integer, JSON
 from datetime import datetime
-from typing import Optional
 
 from app.core.config import get_settings
 

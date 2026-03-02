@@ -7,12 +7,12 @@ import asyncio
 import time
 import json
 import logging
-from typing import Dict, List, Optional, Tuple, Any
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from typing import Any
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 import numpy as np
-from collections import deque, defaultdict
+from collections import deque
 import psutil
 import docker
 from prometheus_client import Gauge, Counter, Histogram
@@ -93,8 +93,8 @@ class DynamicWorkerScaler:
         self.redis_client = redis.from_url(redis_url)
         
         # État des workers
-        self.workers: Dict[str, WorkerMetrics] = {}
-        self.worker_containers: Dict[str, docker.models.containers.Container] = {}
+        self.workers: dict[str, WorkerMetrics] = {}
+        self.worker_containers: dict[str, docker.models.containers.Container] = {}
         
         # Historique des métriques
         self.metrics_history = deque(maxlen=100)
@@ -494,7 +494,7 @@ class DynamicWorkerScaler:
                 logger.error(f"Erreur lors de la mise à jour des métriques Prometheus: {e}")
                 await asyncio.sleep(60)
     
-    async def get_scaling_status(self) -> Dict[str, Any]:
+    async def get_scaling_status(self) -> dict[str, Any]:
         """Retourne le statut actuel du scaling"""
         if not self.metrics_history:
             return {'status': 'initializing'}
@@ -577,7 +577,7 @@ class DynamicWorkerScaler:
 
 
 # Singleton global
-_dynamic_scaler: Optional[DynamicWorkerScaler] = None
+_dynamic_scaler: DynamicWorkerScaler | None = None
 
 
 async def get_dynamic_scaler() -> DynamicWorkerScaler:

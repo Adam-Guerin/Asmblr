@@ -5,9 +5,8 @@ pour créer un MVP parfaitement adapté à chaque idée spécifique.
 """
 
 import json
-import asyncio
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -24,13 +23,13 @@ class MVPOrchestrationPlan:
     """Plan d'orchestration MVP personnalisé"""
     idea_name: str
     target_icp: str
-    core_pains: List[str]
-    tech_stack: Dict[str, str]
-    features_prioritized: List[Dict[str, Any]]
+    core_pains: list[str]
+    tech_stack: dict[str, str]
+    features_prioritized: list[dict[str, Any]]
     mobile_required: bool
     monetization_strategy: str
     launch_timeline: str
-    custom_prompts: Dict[str, str]
+    custom_prompts: dict[str, str]
 
 
 class MVPOrchestrator:
@@ -52,9 +51,9 @@ class MVPOrchestrator:
     async def create_custom_mvp(
         self,
         topic: str,
-        seed_inputs: Optional[SeedInputs] = None,
+        seed_inputs: SeedInputs | None = None,
         fast_mode: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Crée un MVP 100% customisé pour l'idée spécifique
         
@@ -106,7 +105,7 @@ class MVPOrchestrator:
     async def _analyze_and_plan(
         self, 
         topic: str, 
-        seed_inputs: Optional[SeedInputs]
+        seed_inputs: SeedInputs | None
     ) -> MVPOrchestrationPlan:
         """Analyse l'idée et crée un plan d'orchestration personnalisé"""
         
@@ -162,7 +161,7 @@ class MVPOrchestrator:
     async def _generate_custom_prompts(
         self, 
         plan: MVPOrchestrationPlan
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Génère des prompts 100% personnalisés pour chaque agent"""
         
         base_context = f"""
@@ -313,10 +312,10 @@ class MVPOrchestrator:
         self,
         topic: str,
         plan: MVPOrchestrationPlan,
-        custom_prompts: Dict[str, str],
-        seed_inputs: Optional[SeedInputs],
+        custom_prompts: dict[str, str],
+        seed_inputs: SeedInputs | None,
         fast_mode: bool
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Exécute les agents avec les prompts personnalisés"""
         
         logger.info("Exécution des agents avec prompts customisés")
@@ -346,8 +345,8 @@ class MVPOrchestrator:
     async def _integrate_with_mvp_cycles(
         self,
         plan: MVPOrchestrationPlan,
-        crew_results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        crew_results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Intègre les résultats dans les cycles MVP existants"""
         
         logger.info("Intégration avec cycles MVP")
@@ -381,7 +380,7 @@ class MVPOrchestrator:
         self,
         mvp_progression: MVPProgression,
         plan: MVPOrchestrationPlan,
-        crew_results: Dict[str, Any]
+        crew_results: dict[str, Any]
     ):
         """Customise les prompts des cycles MVP avec le contexte spécifique"""
         
@@ -409,8 +408,8 @@ class MVPOrchestrator:
     async def _apply_final_optimizations(
         self,
         plan: MVPOrchestrationPlan,
-        mvp_result: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        mvp_result: dict[str, Any]
+    ) -> dict[str, Any]:
         """Applique les optimisations finales basées sur le plan"""
         
         logger.info("Application des optimisations finales")
@@ -427,7 +426,7 @@ class MVPOrchestrator:
         
         return mvp_result
     
-    def _get_performance_optimizations(self, plan: MVPOrchestrationPlan) -> List[str]:
+    def _get_performance_optimizations(self, plan: MVPOrchestrationPlan) -> list[str]:
         """Retourne les optimisations performance recommandées"""
         optimizations = [
             "Lazy loading des composants",
@@ -445,7 +444,7 @@ class MVPOrchestrator:
         
         return optimizations
     
-    def _get_seo_optimizations(self, plan: MVPOrchestrationPlan) -> List[str]:
+    def _get_seo_optimizations(self, plan: MVPOrchestrationPlan) -> list[str]:
         """Retourne les optimisations SEO recommandées"""
         return [
             f"Meta tags optimisées pour: {plan.idea_name}",
@@ -455,7 +454,7 @@ class MVPOrchestrator:
             "Open Graph tags"
         ]
     
-    def _get_mobile_optimizations(self, plan: MVPOrchestrationPlan) -> List[str]:
+    def _get_mobile_optimizations(self, plan: MVPOrchestrationPlan) -> list[str]:
         """Retourne les optimisations mobiles si requis"""
         if not plan.mobile_required:
             return []
@@ -468,7 +467,7 @@ class MVPOrchestrator:
             "Offline functionality"
         ]
     
-    def _get_monetization_setup(self, plan: MVPOrchestrationPlan) -> Dict[str, Any]:
+    def _get_monetization_setup(self, plan: MVPOrchestrationPlan) -> dict[str, Any]:
         """Retourne la configuration monétisation"""
         return {
             "strategy": plan.monetization_strategy,
@@ -477,7 +476,7 @@ class MVPOrchestrator:
             "analytics_events": self._get_monetization_events(plan)
         }
     
-    def _get_analytics_config(self, plan: MVPOrchestrationPlan) -> Dict[str, Any]:
+    def _get_analytics_config(self, plan: MVPOrchestrationPlan) -> dict[str, Any]:
         """Retourne la configuration analytics"""
         return {
             "tracking_provider": "Google Analytics 4",
@@ -491,7 +490,7 @@ class MVPOrchestrator:
             "conversion_goals": self._get_conversion_goals(plan)
         }
     
-    def _get_subscription_tiers(self, plan: MVPOrchestrationPlan) -> List[Dict]:
+    def _get_subscription_tiers(self, plan: MVPOrchestrationPlan) -> list[dict]:
         """Génère les tiers d'abonnement"""
         return [
             {
@@ -511,7 +510,7 @@ class MVPOrchestrator:
             }
         ]
     
-    def _get_monetization_events(self, plan: MVPOrchestrationPlan) -> List[str]:
+    def _get_monetization_events(self, plan: MVPOrchestrationPlan) -> list[str]:
         """Retourne les événements monétisation à tracker"""
         return [
             "subscription_started",
@@ -521,7 +520,7 @@ class MVPOrchestrator:
             "payment_failed"
         ]
     
-    def _get_conversion_goals(self, plan: MVPOrchestrationPlan) -> List[str]:
+    def _get_conversion_goals(self, plan: MVPOrchestrationPlan) -> list[str]:
         """Retourne les goals de conversion"""
         return [
             "sign_up_completion",
@@ -533,8 +532,8 @@ class MVPOrchestrator:
     def _create_fallback_plan(
         self, 
         topic: str, 
-        seed_inputs: Optional[SeedInputs]
-    ) -> Dict[str, Any]:
+        seed_inputs: SeedInputs | None
+    ) -> dict[str, Any]:
         """Crée un plan fallback si l'analyse IA échoue"""
         
         return {
@@ -587,9 +586,9 @@ async def create_custom_mvp(
     llm_client: LLMClient,
     run_id: str,
     run_dir: Path,
-    seed_inputs: Optional[SeedInputs] = None,
+    seed_inputs: SeedInputs | None = None,
     fast_mode: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Point d'entrée principal pour créer un MVP 100% customisé
     

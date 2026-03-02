@@ -1,6 +1,6 @@
 """Loveability Engineer Agent for creating Most Lovable Products (MLP)."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any
 from crewai import Agent, Task
 from langchain.tools import Tool
 from ..core.llm import LLMClient
@@ -41,7 +41,7 @@ class LoveabilityEngineerAgent:
             llm=self.llm_client
         )
     
-    def create_loveability_strategy_task(self, product_data: Dict[str, Any]) -> Task:
+    def create_loveability_strategy_task(self, product_data: dict[str, Any]) -> Task:
         """Create task for developing loveability strategy."""
         return Task(
             description=f"""
@@ -82,7 +82,7 @@ class LoveabilityEngineerAgent:
             expected_output="Comprehensive loveability strategy with emotional addiction patterns and magical experiences"
         )
     
-    def create_identity_integration_task(self, user_psychology: Dict[str, Any]) -> Task:
+    def create_identity_integration_task(self, user_psychology: dict[str, Any]) -> Task:
         """Create task for identity integration systems."""
         return Task(
             description=f"""
@@ -141,7 +141,7 @@ class LoveabilityEngineerAgent:
             expected_output="Identity integration system with visual badges, skill progression, and personal narrative tools"
         )
     
-    def create_community_culture_task(self, social_dynamics: Dict[str, Any]) -> Task:
+    def create_community_culture_task(self, social_dynamics: dict[str, Any]) -> Task:
         """Create task for building community culture and tribal bonding."""
         return Task(
             description=f"""
@@ -203,7 +203,7 @@ class LoveabilityEngineerAgent:
             expected_output="Community culture system with tribal bonding, mentorship networks, and shared knowledge"
         )
     
-    def create_habit_formation_task(self, behavioral_psychology: Dict[str, Any]) -> Task:
+    def create_habit_formation_task(self, behavioral_psychology: dict[str, Any]) -> Task:
         """Create task for habit formation and daily ritual engineering."""
         return Task(
             description=f"""
@@ -264,7 +264,7 @@ class LoveabilityEngineerAgent:
             expected_output="Habit formation system with daily rituals, streak celebrations, and meaningful routine integration"
         )
     
-    def create_magical_experiences_task(self, experience_design: Dict[str, Any]) -> Task:
+    def create_magical_experiences_task(self, experience_design: dict[str, Any]) -> Task:
         """Create task for engineering magical user experiences."""
         return Task(
             description=f"""
@@ -326,7 +326,7 @@ class LoveabilityEngineerAgent:
             expected_output="Magical experience system with predictive assistance, contextual magic, and delightful surprises"
         )
     
-    def get_loveability_tools(self) -> List[Tool]:
+    def get_loveability_tools(self) -> list[Tool]:
         """Get loveability engineering tools for the agent."""
         return [
             Tool(

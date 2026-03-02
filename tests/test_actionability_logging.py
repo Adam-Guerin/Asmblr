@@ -1,7 +1,7 @@
 """Test actionability scoring logging to ensure fallback behavior is properly tracked."""
 
 import pytest
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, patch
 from app.core.pipeline import VenturePipeline
 from app.core.models import Idea, IdeaScore
 from app.core.config import Settings

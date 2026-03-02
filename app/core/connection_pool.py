@@ -5,11 +5,8 @@ High-performance connection pooling with intelligent load balancing
 
 import asyncio
 import time
-import json
-import hashlib
-from typing import Dict, Any, Optional, List, Union
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from contextlib import asynccontextmanager
 import aioredis
@@ -17,7 +14,6 @@ import aiohttp
 import asyncpg
 import motor.motor_asyncio
 from loguru import logger
-import psutil
 
 class ConnectionType(Enum):
     """Connection types"""
@@ -39,9 +35,9 @@ class ConnectionConfig:
     """Connection configuration"""
     host: str
     port: int
-    database: Optional[str] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
+    database: str | None = None
+    username: str | None = None
+    password: str | None = None
     ssl: bool = False
     timeout: float = 30.0
     max_connections: int = 20
@@ -64,7 +60,7 @@ class PoolMetrics:
     avg_response_time: float = 0.0
     throughput_per_second: float = 0.0
     error_rate: float = 0.0
-    last_health_check: Optional[datetime] = None
+    last_health_check: datetime | None = None
     uptime_percentage: float = 100.0
 
 class AdvancedConnectionPool:
@@ -486,9 +482,7 @@ class AdvancedConnectionPool:
     async def _close_connection(self, connection):
         """Close a connection"""
         try:
-            if self.connection_type == ConnectionType.HTTP:
-                await connection.close()
-            elif self.connection_type == ConnectionType.POSTGRESQL:
+            if self.connection_type == ConnectionType.HTTP or self.connection_type == ConnectionType.POSTGRESQL:
                 await connection.close()
             elif self.connection_type == ConnectionType.MONGODB:
                 connection.close()

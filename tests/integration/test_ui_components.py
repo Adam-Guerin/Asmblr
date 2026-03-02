@@ -1,9 +1,7 @@
 """Integration tests for UI components."""
 
-import pytest
 import streamlit as st
-from unittest.mock import Mock, patch, MagicMock
-import pandas as pd
+from unittest.mock import Mock, patch
 
 from app.ui.theme_manager import ThemeManager, get_theme_manager
 from app.ui.charts import ChartManager, get_chart_manager

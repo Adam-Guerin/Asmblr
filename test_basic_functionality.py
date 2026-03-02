@@ -6,7 +6,6 @@ Tests core imports and basic functionality without Ollama
 
 import sys
 import traceback
-from pathlib import Path
 
 def test_import(module_name, description):
     """Test importing a module"""

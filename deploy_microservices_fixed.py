@@ -8,7 +8,6 @@ import sys
 import time
 import subprocess
 import requests
-from pathlib import Path
 
 class MicroservicesDeployer:
     def __init__(self):

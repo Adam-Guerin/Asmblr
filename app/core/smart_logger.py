@@ -6,11 +6,12 @@ Réduit le bruit et focus sur les informations importantes
 import sys
 import json
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 from dataclasses import dataclass, asdict
 from enum import Enum
 from pathlib import Path
 from loguru import logger
+from datetime import UTC
 
 
 class LogLevel(Enum):
@@ -42,9 +43,9 @@ class SmartLogEntry:
     category: LogCategory
     operation: str
     message: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     user_facing: bool = False
-    correlation_id: Optional[str] = None
+    correlation_id: str | None = None
 
 
 class LogFilter:
@@ -174,15 +175,15 @@ class SmartLogger:
     
     def __init__(self, 
                  enable_filtering: bool = True,
-                 log_file: Optional[Path] = None,
+                 log_file: Path | None = None,
                  max_entries: int = 10000):
         self.enable_filtering = enable_filtering
         self.log_file = log_file
         self.max_entries = max_entries
         
         self.filter = LogFilter()
-        self.log_entries: List[SmartLogEntry] = []
-        self.correlation_ids: Set[str] = set()
+        self.log_entries: list[SmartLogEntry] = []
+        self.correlation_ids: set[str] = set()
         
         # Configuration du logger loguru
         self._configure_loguru()
@@ -212,7 +213,7 @@ class SmartLogger:
                 filter=self._loguru_filter
             )
     
-    def _loguru_filter(self, record: Dict[str, Any]) -> bool:
+    def _loguru_filter(self, record: dict[str, Any]) -> bool:
         """Filtre loguru pour réduire le bruit"""
         if not self.enable_filtering:
             return True
@@ -246,9 +247,9 @@ class SmartLogger:
              category: LogCategory,
              operation: str,
              message: str,
-             metadata: Optional[Dict[str, Any]] = None,
+             metadata: dict[str, Any] | None = None,
              user_facing: bool = False,
-             correlation_id: Optional[str] = None) -> None:
+             correlation_id: str | None = None) -> None:
         """
         Enregistre une entrée de log intelligente
         
@@ -305,8 +306,8 @@ class SmartLogger:
     
     def _get_timestamp(self) -> str:
         """Génère un timestamp ISO"""
-        from datetime import datetime, timezone
-        return datetime.now(timezone.utc).isoformat()
+        from datetime import datetime
+        return datetime.now(UTC).isoformat()
     
     # Méthodes pratiques par niveau
     def critical(self, category: LogCategory, operation: str, message: str, **kwargs) -> None:
@@ -358,12 +359,12 @@ class SmartLogger:
         """Log business"""
         self.log(level, LogCategory.BUSINESS, operation, message, **kwargs)
     
-    def start_operation(self, operation: str, correlation_id: Optional[str] = None, **metadata) -> None:
+    def start_operation(self, operation: str, correlation_id: str | None = None, **metadata) -> None:
         """Démarre le logging d'une opération"""
         self.low(LogCategory.SYSTEM, operation, f"Début opération: {operation}", 
                 correlation_id=correlation_id, **metadata)
     
-    def end_operation(self, operation: str, correlation_id: Optional[str] = None, 
+    def end_operation(self, operation: str, correlation_id: str | None = None, 
                      success: bool = True, **metadata) -> None:
         """Termine le logging d'une opération"""
         status = "succès" if success else "échec"
@@ -371,14 +372,14 @@ class SmartLogger:
         self.low(LogCategory.SYSTEM, operation, f"Fin opération: {operation} ({status})", 
                 correlation_id=correlation_id, success=success, **metadata)
     
-    def get_operation_logs(self, correlation_id: str) -> List[SmartLogEntry]:
+    def get_operation_logs(self, correlation_id: str) -> list[SmartLogEntry]:
         """Récupère tous les logs pour une opération"""
         return [entry for entry in self.log_entries if entry.correlation_id == correlation_id]
     
     def get_recent_logs(self, 
                        minutes: int = 60,
-                       categories: Optional[List[LogCategory]] = None,
-                       levels: Optional[List[LogLevel]] = None) -> List[SmartLogEntry]:
+                       categories: list[LogCategory] | None = None,
+                       levels: list[LogLevel] | None = None) -> list[SmartLogEntry]:
         """
         Récupère les logs récents avec filtres
         
@@ -390,9 +391,9 @@ class SmartLogger:
         Returns:
             Liste des entrées de log filtrées
         """
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta
         
-        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        cutoff_time = datetime.now(UTC) - timedelta(minutes=minutes)
         
         filtered = []
         for entry in self.log_entries:
@@ -414,7 +415,7 @@ class SmartLogger:
         
         return filtered
     
-    def get_log_summary(self, hours: int = 24) -> Dict[str, Any]:
+    def get_log_summary(self, hours: int = 24) -> dict[str, Any]:
         """Retourne un résumé des logs"""
         recent_logs = self.get_recent_logs(minutes=hours * 60)
         
@@ -455,7 +456,7 @@ class SmartLogger:
     def export_logs(self, 
                    format_type: str = "json",
                    hours: int = 24,
-                   categories: Optional[List[LogCategory]] = None) -> str:
+                   categories: list[LogCategory] | None = None) -> str:
         """Exporte les logs filtrés"""
         logs = self.get_recent_logs(minutes=hours * 60, categories=categories)
         
@@ -480,7 +481,7 @@ class SmartLogger:
 
 
 # Instance globale du logger intelligent
-_smart_logger: Optional[SmartLogger] = None
+_smart_logger: SmartLogger | None = None
 
 
 def get_smart_logger() -> SmartLogger:
@@ -514,11 +515,11 @@ def log_user_action(operation: str, message: str, **kwargs):
     get_smart_logger().user_action(operation, message, **kwargs)
 
 
-def start_operation(operation: str, correlation_id: Optional[str] = None, **kwargs):
+def start_operation(operation: str, correlation_id: str | None = None, **kwargs):
     """Démarre le logging d'une opération"""
     get_smart_logger().start_operation(operation, correlation_id, **kwargs)
 
 
-def end_operation(operation: str, correlation_id: Optional[str] = None, success: bool = True, **kwargs):
+def end_operation(operation: str, correlation_id: str | None = None, success: bool = True, **kwargs):
     """Termine le logging d'une opération"""
     get_smart_logger().end_operation(operation, correlation_id, success, **kwargs)

@@ -4,7 +4,7 @@ import json
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.core.run_manager import RunManager
@@ -38,7 +38,7 @@ def test_write_json_atomic_basic():
             assert result_path.exists()
             
             # Verify content is correct
-            with open(result_path, 'r', encoding='utf-8') as f:
+            with open(result_path, encoding='utf-8') as f:
                 loaded_data = json.load(f)
             
             assert loaded_data == test_data
@@ -73,7 +73,7 @@ def test_write_json_atomic_overwrite():
             result_path = manager.write_json_atomic(run_id, "test.json", new_data)
             
             # Verify content was updated
-            with open(result_path, 'r', encoding='utf-8') as f:
+            with open(result_path, encoding='utf-8') as f:
                 loaded_data = json.load(f)
             
             assert loaded_data == new_data
@@ -119,7 +119,7 @@ def test_write_json_atomic_concurrent():
             assert target_path.exists()
             
             # Verify the file contains valid JSON
-            with open(target_path, 'r', encoding='utf-8') as f:
+            with open(target_path, encoding='utf-8') as f:
                 loaded_data = json.load(f)
             
             # Verify it has the expected structure
@@ -160,7 +160,7 @@ def test_write_json_atomic_fallback():
             assert result_path.exists()
             
             # Verify content is correct
-            with open(result_path, 'r', encoding='utf-8') as f:
+            with open(result_path, encoding='utf-8') as f:
                 loaded_data = json.load(f)
             
             assert loaded_data == test_data

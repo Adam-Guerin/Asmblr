@@ -4,7 +4,7 @@ import math
 import time
 import random
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any
 from collections.abc import Callable
@@ -38,11 +38,7 @@ from app.mvp.builder import MVPBuilder, MVPBuilderError
 from app.tools.repo_generator import generate_fastapi_skeleton
 from app.core.sanitizer import DataSanitizer
 from app.core.thresholds import (
-    IDEA_ACTIONABILITY_MIN_SCORE,
     IDEA_ACTIONABILITY_ADJUSTMENT_MAX,
-    LEARNING_HISTORY_MAX_RUNS,
-    LEARNING_EXPLORATION_RATE,
-    KEYWORD_LIST_MAX_SIZE,
     TOPIC_MIN_LENGTH,
     TOPIC_MAX_LENGTH,
     PAIN_SENTENCE_MIN_LENGTH,
@@ -52,38 +48,11 @@ from app.core.thresholds import (
     TRACEBACK_HINT_MAX_LENGTH,
     RECENT_FAILURES_COUNT,
     PROJECT_NAME_MAX_LENGTH,
-    THEME_CLEAN_MAX_LENGTH,
-    ICP_ALIGNMENT_BONUS_MAX,
 )
 from app.core.exceptions import (
-    AsmblrException,
     RunNotFoundError,
     InvalidTopicError,
     InvalidStateError,
-    PipelineStageError,
-    LLMUnavailableError,
-    ModelNotFoundError,
-    FileOperationError,
-    handle_file_operation_error,
-    convert_to_error_response,
-)
-from app.core.cache import (
-    get_cached_artifact_loader,
-    load_cached_json,
-    load_cached_text,
-    invalidate_cached_artifact,
-)
-from app.core.streaming import (
-    StreamingDataProcessor,
-    create_streaming_processor,
-    process_large_feedback_file,
-    process_large_historical_runs,
-)
-from app.core.cache import (
-    get_cached_artifact_loader,
-    load_cached_json,
-    load_cached_text,
-    invalidate_cached_artifact,
 )
 
 
@@ -207,7 +176,7 @@ class VenturePipeline:
             "retryable": retryable,
             "attempt": attempt,
             "max_attempts": max_attempts,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         if traceback_hint:
             payload["traceback_hint"] = traceback_hint[:TRACEBACK_HINT_MAX_LENGTH]
@@ -217,7 +186,7 @@ class VenturePipeline:
             "status": status,
             "last_stage": stage,
             "last_reason": reason[:FAILURE_REASON_MAX_LENGTH],
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
             "stage_failures": failures[-RECENT_FAILURES_COUNT:],
         }
         self.manager.write_json(run_id, "failure_report.json", report)
@@ -3975,7 +3944,7 @@ class VenturePipeline:
                 "topic": topic,
                 "unknown_fields": unknown_fields,
                 "actions": actions,
-                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
                 "rule_applied": "auto-propose-collection-for-unknown-critical-fields"
             })
             
@@ -4036,7 +4005,7 @@ class VenturePipeline:
             "landing_page": landing_content,
             "outreach_messages": outreach_messages,
             "target_kpis": target_kpis,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "next_steps": [
                 "1. Set up landing page with A/B test variants",
                 "2. Launch outreach campaigns to target segments",

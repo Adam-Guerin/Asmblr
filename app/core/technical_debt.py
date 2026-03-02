@@ -7,7 +7,7 @@ import ast
 import re
 import json
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any
 from dataclasses import dataclass
 from datetime import datetime
 from loguru import logger
@@ -22,10 +22,10 @@ class TechnicalDebtItem:
     description: str
     severity: str  # low, medium, high, critical
     estimated_effort: str  # hours, days, weeks
-    assignee: Optional[str] = None
+    assignee: str | None = None
     created_at: datetime = None
-    resolved_at: Optional[datetime] = None
-    resolution: Optional[str] = None
+    resolved_at: datetime | None = None
+    resolution: str | None = None
 
 
 @dataclass
@@ -46,8 +46,8 @@ class TechnicalDebtManager:
     
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
-        self.debt_items: List[TechnicalDebtItem] = []
-        self.file_metrics: Dict[str, FileMetrics] = {}
+        self.debt_items: list[TechnicalDebtItem] = []
+        self.file_metrics: dict[str, FileMetrics] = {}
         
         # Patterns for detecting technical debt
         self.debt_patterns = {
@@ -66,7 +66,7 @@ class TechnicalDebtManager:
             'low': ['minor', 'nice-to-have', 'suggestion', 'consider']
         }
     
-    def scan_repository(self) -> Dict[str, Any]:
+    def scan_repository(self) -> dict[str, Any]:
         """Scan entire repository for technical debt"""
         logger.info("Starting technical debt scan...")
         
@@ -83,7 +83,7 @@ class TechnicalDebtManager:
     def _analyze_file(self, file_path: Path) -> None:
         """Analyze a single file for technical debt and metrics"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 content = f.read()
                 lines = content.split('\n')
         except Exception as e:
@@ -147,9 +147,7 @@ class TechnicalDebtManager:
             complexity = 1  # Base complexity
             
             for node in ast.walk(tree):
-                if isinstance(node, (ast.If, ast.While, ast.For, ast.AsyncFor)):
-                    complexity += 1
-                elif isinstance(node, (ast.ExceptHandler, ast.With, ast.AsyncWith)):
+                if isinstance(node, (ast.If, ast.While, ast.For, ast.AsyncFor)) or isinstance(node, (ast.ExceptHandler, ast.With, ast.AsyncWith)):
                     complexity += 1
                 elif isinstance(node, ast.BoolOp):
                     complexity += len(node.values) - 1
@@ -198,7 +196,7 @@ class TechnicalDebtManager:
         maintainability = (comment_ratio * 40) + (40 - complexity_penalty * 20) + (20 - debt_penalty * 20)
         return max(0, min(100, maintainability))
     
-    def _generate_report(self) -> Dict[str, Any]:
+    def _generate_report(self) -> dict[str, Any]:
         """Generate comprehensive technical debt report"""
         # Aggregate statistics
         total_debt = len(self.debt_items)
@@ -267,7 +265,7 @@ class TechnicalDebtManager:
         priorities = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1}
         return priorities.get(severity, 0)
     
-    def suggest_refactoring_plan(self) -> Dict[str, Any]:
+    def suggest_refactoring_plan(self) -> dict[str, Any]:
         """Suggest refactoring plan based on analysis"""
         report = self._generate_report()
         
@@ -333,7 +331,7 @@ class TechnicalDebtManager:
         logger.info(f"Technical debt report exported to {output_path}")
 
 
-def run_technical_debt_analysis(base_dir: Path) -> Dict[str, Any]:
+def run_technical_debt_analysis(base_dir: Path) -> dict[str, Any]:
     """Run complete technical debt analysis"""
     manager = TechnicalDebtManager(base_dir)
     report = manager.scan_repository()

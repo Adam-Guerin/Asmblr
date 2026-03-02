@@ -2,18 +2,14 @@
 Motion Design System pour Asmblr - Création de campagnes marketing animées
 """
 
-import os
 import json
-import time
 import random
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+from dataclasses import dataclass
 from pathlib import Path
-import requests
 from PIL import Image, ImageDraw, ImageFont
 import io
-import base64
 
 from app.core.smart_logger import get_smart_logger, LogCategory, LogLevel
 from app.core.error_handler_v2 import handle_errors
@@ -25,7 +21,7 @@ class MotionAsset:
     name: str
     type: str  # image, video, audio, font
     content: bytes
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     created_at: datetime
 
 
@@ -34,8 +30,8 @@ class MotionScene:
     """Scène de motion design"""
     name: str
     duration: float  # en secondes
-    assets: List[MotionAsset]
-    transitions: List[Dict[str, Any]]
+    assets: list[MotionAsset]
+    transitions: list[dict[str, Any]]
     created_at: datetime
 
 
@@ -43,10 +39,10 @@ class MotionScene:
 class Campaign:
     """Campagne marketing avec motion design"""
     name: str
-    brand_guidelines: Dict[str, Any]
+    brand_guidelines: dict[str, Any]
     target_audience: str
     duration: float
-    scenes: List[MotionScene]
+    scenes: list[MotionScene]
     total_duration: float
     created_at: datetime
     status: str  # draft, in_progress, completed, published, archived
@@ -151,7 +147,7 @@ class MotionDesignSystem:
             raise
     
     @handle_errors("image_generation", reraise=False)
-    def generate_logo_variants(self, brand_name: str, tagline: str = None) -> List[MotionAsset]:
+    def generate_logo_variants(self, brand_name: str, tagline: str = None) -> list[MotionAsset]:
         """Génère des variantes de logo"""
         assets = []
         
@@ -210,8 +206,8 @@ class MotionDesignSystem:
             raise
     
     @handle_errors("scene_creation", reraise=False)
-    def create_scene(self, name: str, duration: float, assets: List[MotionAsset], 
-                   transitions: List[Dict[str, Any]] = None) -> MotionScene:
+    def create_scene(self, name: str, duration: float, assets: list[MotionAsset], 
+                   transitions: list[dict[str, Any]] = None) -> MotionScene:
         """Crée une scène de motion design"""
         try:
             scene = MotionScene(
@@ -240,7 +236,7 @@ class MotionDesignSystem:
     
     @handle_errors("campaign_creation", reraise=False)
     def create_campaign(self, name: str, brand_name: str, target_audience: str, 
-                     duration: float, brand_guidelines: Dict[str, Any] = None) -> Campaign:
+                     duration: float, brand_guidelines: dict[str, Any] = None) -> Campaign:
         """Crée une campagne marketing complète"""
         try:
             # Génération des assets de base
@@ -349,7 +345,7 @@ class MotionDesignSystem:
             )
             raise
     
-    def _get_default_brand_guidelines(self) -> Dict[str, Any]:
+    def _get_default_brand_guidelines(self) -> dict[str, Any]:
         """Retourne les guidelines de marque par défaut"""
         return {
             "colors": self.default_brand_colors,
@@ -393,7 +389,6 @@ class MotionDesignSystem:
                         "transitions": scene.transitions
                     } for scene in campaign.scenes
                 ]
-            }
             }
             
             if format_type == "json":
@@ -586,7 +581,7 @@ class CampaignVideoGenerator {{
         
         return main_js
     
-    def get_campaign_summary(self, campaign: Campaign) -> Dict[str, Any]:
+    def get_campaign_summary(self, campaign: Campaign) -> dict[str, Any]:
         """Retourne un résumé de la campagne"""
         return {
             "name": campaign.name,

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 import threading
-import time
 from enum import Enum
-from typing import Dict, Any, Optional, Callable
+from typing import Any
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -33,9 +33,9 @@ class ProgressUpdate:
     stage: PipelineStage
     progress: float  # 0.0 to 1.0
     message: str
-    details: Optional[Dict[str, Any]] = None
-    timestamp: Optional[datetime] = None
-    error: Optional[str] = None
+    details: dict[str, Any] | None = None
+    timestamp: datetime | None = None
+    error: str | None = None
 
     def __post_init__(self):
         if self.timestamp is None:
@@ -49,8 +49,8 @@ class ProgressTracker:
         self._current_stage = PipelineStage.INITIALIZING
         self._progress = 0.0
         self._message = "Starting pipeline..."
-        self._details: Dict[str, Any] = {}
-        self._error: Optional[str] = None
+        self._details: dict[str, Any] = {}
+        self._error: str | None = None
         self._callbacks: list[Callable[[ProgressUpdate], None]] = []
         self._lock = threading.Lock()
         self._start_time = datetime.now()
@@ -89,7 +89,7 @@ class ProgressTracker:
             except Exception as e:
                 logger.error(f"Error in progress callback: {e}")
     
-    def update_stage(self, stage: PipelineStage, message: str = "", details: Optional[Dict[str, Any]] = None) -> None:
+    def update_stage(self, stage: PipelineStage, message: str = "", details: dict[str, Any] | None = None) -> None:
         """Update the current pipeline stage."""
         with self._lock:
             self._current_stage = stage
@@ -110,7 +110,7 @@ class ProgressTracker:
             self._notify_callbacks(update)
             logger.info(f"Pipeline stage updated: {stage.value} - {message}")
     
-    def update_progress(self, stage_progress: float, message: str = "", details: Optional[Dict[str, Any]] = None) -> None:
+    def update_progress(self, stage_progress: float, message: str = "", details: dict[str, Any] | None = None) -> None:
         """Update progress within the current stage."""
         with self._lock:
             stage_weight = self._stage_weights.get(self._current_stage, 0.1)
@@ -136,7 +136,7 @@ class ProgressTracker:
             
             self._notify_callbacks(update)
     
-    def set_error(self, error: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def set_error(self, error: str, details: dict[str, Any] | None = None) -> None:
         """Set error state."""
         with self._lock:
             self._error = error
@@ -157,7 +157,7 @@ class ProgressTracker:
             self._notify_callbacks(update)
             logger.error(f"Pipeline error: {error}")
     
-    def complete(self, message: str = "Pipeline completed successfully!", details: Optional[Dict[str, Any]] = None) -> None:
+    def complete(self, message: str = "Pipeline completed successfully!", details: dict[str, Any] | None = None) -> None:
         """Mark pipeline as completed."""
         with self._lock:
             self._current_stage = PipelineStage.COMPLETED
@@ -195,7 +195,7 @@ class ProgressTracker:
             progress += weight
         return progress
     
-    def get_current_state(self) -> Dict[str, Any]:
+    def get_current_state(self) -> dict[str, Any]:
         """Get current progress state."""
         with self._lock:
             elapsed_time = (datetime.now() - self._start_time).total_seconds()

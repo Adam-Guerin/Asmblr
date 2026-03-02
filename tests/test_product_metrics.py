@@ -1,13 +1,11 @@
 """Test product metrics functionality."""
 
-import json
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
-from app.core.product_metrics import ProductMetrics, init_product_metrics, PRODUCT_METRICS
+from app.core.product_metrics import ProductMetrics, init_product_metrics
 
 
 def test_product_metrics_initialization():
@@ -185,7 +183,6 @@ def test_metrics_persistence():
 def test_global_metrics_initialization():
     """Test global metrics initialization."""
     # Reset global variable first
-    from app.core.product_metrics import PRODUCT_METRICS as GLOBAL_METRICS
     
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)

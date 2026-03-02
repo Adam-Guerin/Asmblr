@@ -6,7 +6,8 @@ Remplace les 260 occurrences dispersées par un système unifié
 import time
 import random
 import asyncio
-from typing import Any, Callable, Optional, Union, Type, TypeVar, Dict
+from typing import Any, TypeVar
+from collections.abc import Callable
 from functools import wraps
 from dataclasses import dataclass
 from enum import Enum
@@ -31,7 +32,7 @@ class RetryConfig:
     max_delay: float = 60.0
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL_BACKOFF
     jitter: bool = True
-    timeout: Optional[float] = None
+    timeout: float | None = None
     retryable_exceptions: tuple = (Exception,)
 
 
@@ -42,12 +43,12 @@ class RetryManager:
     """
     
     def __init__(self):
-        self.stats: Dict[str, Dict[str, Any]] = {}
+        self.stats: dict[str, dict[str, Any]] = {}
     
     def retry(self, 
-              config: Optional[RetryConfig] = None,
+              config: RetryConfig | None = None,
               operation_name: str = "unknown",
-              on_retry: Optional[Callable[[Exception, int], None]] = None):
+              on_retry: Callable[[Exception, int], None] | None = None):
         """
         Décorateur pour retry automatique
         
@@ -86,7 +87,7 @@ class RetryManager:
                           kwargs: dict,
                           config: RetryConfig,
                           operation_name: str,
-                          on_retry: Optional[Callable[[Exception, int], None]]) -> T:
+                          on_retry: Callable[[Exception, int], None] | None) -> T:
         """Exécution synchrone avec retry"""
         last_exception = None
         
@@ -140,7 +141,7 @@ class RetryManager:
                                       kwargs: dict,
                                       config: RetryConfig,
                                       operation_name: str,
-                                      on_retry: Optional[Callable[[Exception, int], None]]) -> T:
+                                      on_retry: Callable[[Exception, int], None] | None) -> T:
         """Exécution asynchrone avec retry"""
         last_exception = None
         
@@ -213,7 +214,6 @@ class RetryManager:
     
     def _execute_with_timeout(self, func: Callable[..., T], args: tuple, kwargs: dict, timeout: float) -> T:
         """Exécute une fonction avec timeout"""
-        import signal
         import threading
         
         result = None
@@ -244,7 +244,7 @@ class RetryManager:
         """Exécute une fonction async avec timeout"""
         try:
             return await asyncio.wait_for(func(*args, **kwargs), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise TimeoutError(f"Opération timeout après {timeout}s")
     
     def _record_success(self, operation_name: str, attempts: int) -> None:
@@ -281,7 +281,7 @@ class RetryManager:
             (self.stats[operation_name]["successes"] + self.stats[operation_name]["failures"])
         )
     
-    def get_stats(self) -> Dict[str, Dict[str, Any]]:
+    def get_stats(self) -> dict[str, dict[str, Any]]:
         """Retourne les statistiques de retry"""
         return self.stats.copy()
     
@@ -415,7 +415,7 @@ def with_async_timeout(timeout: float):
         async def wrapper(*args, **kwargs) -> T:
             try:
                 return await asyncio.wait_for(func(*args, **kwargs), timeout=timeout)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 raise TimeoutError(f"Opération timeout après {timeout}s")
         
         return wrapper

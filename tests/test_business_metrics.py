@@ -7,8 +7,7 @@ import pytest
 import asyncio
 import time
 import json
-from unittest.mock import AsyncMock, patch, MagicMock
-from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
 from app.monitoring.business_metrics import (
     BusinessMetricsCollector, BusinessMetric, MetricType,

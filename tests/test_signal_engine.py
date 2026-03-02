@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from app.core.config import Settings
 from app.signal_engine import SignalEngine
@@ -95,7 +95,7 @@ def test_signal_engine_recency_weight_affects_score(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     run_dir = settings.runs_dir / "run-weight"
     engine = SignalEngine(settings, run_dir, topic="ops")
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     text = "Teams struggle with manual onboarding and repetitive support escalations."
 
     low = engine._compute_signal_score(
@@ -129,7 +129,7 @@ def test_signal_engine_reddit_api_parsing(tmp_path: Path, monkeypatch) -> None:
                         "title": "Founders struggle with activation",
                         "selftext": "Activation drops after signup.",
                         "permalink": "/r/SaaS/comments/abc123/test/",
-                        "created_utc": datetime.now(timezone.utc).timestamp(),
+                        "created_utc": datetime.now(UTC).timestamp(),
                         "ups": 42,
                         "num_comments": 11,
                     }

@@ -2,8 +2,7 @@
 
 import re
 import json
-from typing import Any, Dict, List, Union
-from pathlib import Path
+from typing import Any
 
 
 class DataSanitizer:
@@ -58,8 +57,7 @@ class DataSanitizer:
         'auth_token', 'authtoken', 'bearer_token', 'bearertoken',
         'email', 'email_address', 'phone', 'phone_number', 'ssn', 'social_security',
         'credit_card', 'creditcard', 'cc_number', 'bank_account', 'bank_account_number',
-        'routing_number', 'swift_code', 'iban', 'account_number', 'account_number',
-        'user_password', 'user_pwd', 'passphrase', 'pass_key', 'master_key',
+        'routing_number', 'swift_code', 'iban', 'account_number', 'user_password', 'user_pwd', 'passphrase', 'pass_key', 'master_key',
         'encryption_key', 'decryption_key', 'ssl_key', 'tls_key', 'cert_key',
         'database_url', 'db_url', 'connection_string', 'conn_string',
         'redis_url', 'mongo_url', 'postgres_url', 'mysql_url',
@@ -106,7 +104,7 @@ class DataSanitizer:
         return text
     
     @classmethod
-    def sanitize_dict(cls, data: Dict[str, Any], max_depth: int = 10, max_length: int = 1000) -> Dict[str, Any]:
+    def sanitize_dict(cls, data: dict[str, Any], max_depth: int = 10, max_length: int = 1000) -> dict[str, Any]:
         """
         Recursively sanitize dictionary values.
         
@@ -139,7 +137,7 @@ class DataSanitizer:
         return sanitized
     
     @classmethod
-    def sanitize_list(cls, data: List[Any], max_depth: int = 10, max_length: int = 1000) -> List[Any]:
+    def sanitize_list(cls, data: list[Any], max_depth: int = 10, max_length: int = 1000) -> list[Any]:
         """
         Recursively sanitize list values.
         

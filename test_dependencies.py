@@ -111,7 +111,7 @@ def test_version_consistency():
             continue
             
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
                 
             # Extract versions using simple parsing
@@ -160,10 +160,10 @@ def test_lightweight_compatibility():
             return False
             
         # Count packages in lightweight vs full
-        with open("requirements.txt", 'r') as f:
+        with open("requirements.txt") as f:
             full_content = f.read()
             
-        with open("requirements-lightweight.txt", 'r') as f:
+        with open("requirements-lightweight.txt") as f:
             lightweight_content = f.read()
         
         full_packages = len([line for line in full_content.split('\n') 

@@ -6,15 +6,10 @@ Reduces API calls and improves response times for similar prompts
 import hashlib
 import json
 import time
-import asyncio
-from typing import Dict, Any, Optional, List, Union
+from typing import Any
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
-from pathlib import Path
 import redis.asyncio as redis
 from loguru import logger
-from functools import lru_cache
-import pickle
 
 from app.core.config import get_settings
 
@@ -29,13 +24,13 @@ class CacheEntry:
     ttl: int
     hit_count: int = 0
     similarity_score: float = 1.0
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CacheEntry':
+    def from_dict(cls, data: dict[str, Any]) -> 'CacheEntry':
         return cls(**data)
 
 
@@ -48,8 +43,8 @@ class LLMCacheManager:
         self.default_ttl = 3600  # 1 hour
         self.max_cache_size = 10000
         self.similarity_threshold = 0.85
-        self._redis_client: Optional[redis.Redis] = None
-        self._local_cache: Dict[str, CacheEntry] = {}
+        self._redis_client: redis.Redis | None = None
+        self._local_cache: dict[str, CacheEntry] = {}
         self._local_cache_size = 1000
         
     async def _get_redis_client(self) -> redis.Redis:
@@ -87,7 +82,7 @@ class LLMCacheManager:
         
         return len(intersection) / len(union)
     
-    async def get(self, prompt: str, model: str, **kwargs) -> Optional[str]:
+    async def get(self, prompt: str, model: str, **kwargs) -> str | None:
         """Get cached response for prompt"""
         try:
             # Try exact match first
@@ -137,7 +132,7 @@ class LLMCacheManager:
             logger.warning(f"Cache get error: {e}")
             return None
     
-    async def _get_similar_response(self, prompt: str, model: str, **kwargs) -> Optional[str]:
+    async def _get_similar_response(self, prompt: str, model: str, **kwargs) -> str | None:
         """Find similar cached responses"""
         try:
             redis_client = await self._get_redis_client()
@@ -179,7 +174,7 @@ class LLMCacheManager:
             logger.warning(f"Similarity search error: {e}")
             return None
     
-    async def set(self, prompt: str, response: str, model: str, ttl: Optional[int] = None, **kwargs) -> None:
+    async def set(self, prompt: str, response: str, model: str, ttl: int | None = None, **kwargs) -> None:
         """Cache response for prompt"""
         try:
             if ttl is None:
@@ -212,7 +207,7 @@ class LLMCacheManager:
         except Exception as e:
             logger.warning(f"Cache set error: {e}")
     
-    def get_sync(self, prompt: str, model: str, **kwargs) -> Optional[str]:
+    def get_sync(self, prompt: str, model: str, **kwargs) -> str | None:
         """Synchronous version of get for non-async contexts"""
         try:
             # Try exact match first
@@ -236,7 +231,7 @@ class LLMCacheManager:
             logger.warning(f"Cache get sync error: {e}")
             return None
     
-    def set_sync(self, prompt: str, response: str, model: str, ttl: Optional[int] = None, **kwargs) -> None:
+    def set_sync(self, prompt: str, response: str, model: str, ttl: int | None = None, **kwargs) -> None:
         """Synchronous version of set for non-async contexts"""
         try:
             if ttl is None:
@@ -315,7 +310,7 @@ class LLMCacheManager:
             logger.warning(f"Cache clear model error: {e}")
             return 0
     
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         try:
             redis_client = await self._get_redis_client()

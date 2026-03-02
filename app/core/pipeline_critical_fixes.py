@@ -3,12 +3,12 @@ Corrections critiques pour pipeline.py
 Résout les TODO et problèmes de gestion d'erreurs identifiés
 """
 
-from typing import Any, Dict, List
+from typing import Any
 from loguru import logger
 
 # Importer les systèmes améliorés
 from app.core.error_handler_v2 import get_error_handler, handle_errors, ValidationException
-from app.core.smart_logger import get_smart_logger, LogCategory, LogLevel
+from app.core.smart_logger import get_smart_logger, LogLevel
 
 
 def fix_text_missing_or_unknown_check():
@@ -33,7 +33,7 @@ def fix_text_missing_or_unknown_check():
         invalid_values = {
             "", "unknown", "n/a", "none", "null", "tbd", "todo",
             "undefined", "missing", "not applicable", "na",
-            "n.d.", "nd", "null", "nil", "void"
+            "n.d.", "nd", "nil", "void"
         }
         
         return text in invalid_values
@@ -48,10 +48,10 @@ def fix_actionability_logging():
     """
     smart_logger = get_smart_logger()
     
-    def log_actionability_assessment(assessments: Dict[str, Any], 
+    def log_actionability_assessment(assessments: dict[str, Any], 
                                   threshold: float,
-                                  eligible: List[str],
-                                  blocked: List[str]) -> None:
+                                  eligible: list[str],
+                                  blocked: list[str]) -> None:
         """
         Log intelligent de l'évaluation d'actionabilité
         Remplace le TODO par un logging structuré
@@ -133,7 +133,7 @@ def fix_generic_phrase_detection():
     Corrige la détection de phrases génériques
     Version améliorée avec plus de patterns et validation
     """
-    def _detect_generic_phrases_fixed(text: str) -> List[str]:
+    def _detect_generic_phrases_fixed(text: str) -> list[str]:
         """
         Détecte les phrases génériques dans un texte
         Version améliorée avec plus de patterns

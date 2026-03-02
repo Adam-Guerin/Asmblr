@@ -7,14 +7,14 @@ import os
 import asyncio
 import json
 import uuid
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List
+from datetime import datetime
+from typing import Any
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import redis.asyncio as redis
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from loguru import logger
 from prometheus_client import Counter, Histogram, generate_latest
@@ -43,18 +43,18 @@ storage_path.mkdir(parents=True, exist_ok=True)
 class MediaGenerationRequest(BaseModel):
     media_type: str = Field(..., description="Type of media to generate")
     prompt: str = Field(..., description="Prompt for generation")
-    config: Optional[Dict[str, Any]] = Field(default={}, description="Generation configuration")
-    metadata: Optional[Dict[str, Any]] = Field(default={}, description="Additional metadata")
+    config: dict[str, Any] | None = Field(default={}, description="Generation configuration")
+    metadata: dict[str, Any] | None = Field(default={}, description="Additional metadata")
 
 
 class MediaResponse(BaseModel):
     media_id: str
     media_type: str
     status: str
-    url: Optional[str] = None
-    file_path: Optional[str] = None
-    generation_time: Optional[float] = None
-    metadata: Optional[Dict[str, Any]] = None
+    url: str | None = None
+    file_path: str | None = None
+    generation_time: float | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class UploadResponse(BaseModel):
@@ -107,7 +107,7 @@ app = FastAPI(
 )
 
 
-async def store_media_metadata(media_id: str, metadata: Dict[str, Any]):
+async def store_media_metadata(media_id: str, metadata: dict[str, Any]):
     """Stocke les métadonnées d'un média"""
     if redis_client:
         await redis_client.hset(
@@ -117,7 +117,7 @@ async def store_media_metadata(media_id: str, metadata: Dict[str, Any]):
         await redis_client.expire(f"media:{media_id}", 86400)  # 24h
 
 
-async def get_media_metadata(media_id: str) -> Optional[Dict[str, Any]]:
+async def get_media_metadata(media_id: str) -> dict[str, Any] | None:
     """Récupère les métadonnées d'un média"""
     if redis_client:
         metadata = await redis_client.hgetall(f"media:{media_id}")
@@ -125,7 +125,7 @@ async def get_media_metadata(media_id: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-async def generate_image(prompt: str, config: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_image(prompt: str, config: dict[str, Any]) -> dict[str, Any]:
     """Génère une image (simulation)"""
     start_time = asyncio.get_event_loop().time()
     
@@ -184,7 +184,7 @@ async def generate_image(prompt: str, config: Dict[str, Any]) -> Dict[str, Any]:
         }
 
 
-async def generate_document(prompt: str, config: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_document(prompt: str, config: dict[str, Any]) -> dict[str, Any]:
     """Génère un document (simulation)"""
     start_time = asyncio.get_event_loop().time()
     
@@ -432,7 +432,7 @@ async def get_media_info(media_id: str):
 
 
 @app.get("/api/v1/media/list")
-async def list_media(media_type: Optional[str] = None, limit: int = 50, offset: int = 0):
+async def list_media(media_type: str | None = None, limit: int = 50, offset: int = 0):
     """Liste les médias"""
     try:
         if not redis_client:

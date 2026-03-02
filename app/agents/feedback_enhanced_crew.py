@@ -4,8 +4,7 @@ Enhanced crew system with integrated feedback loops for continuous improvement.
 
 import json
 import re
-from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from loguru import logger
 
@@ -22,8 +21,6 @@ from app.agents.facilitators import SharedContext, FacilitatorTools
 from app.agents.feedback_loops import (
     FeedbackLoopManager, 
     FeedbackTools, 
-    FeedbackType, 
-    FeedbackPriority,
     create_feedback_prompts
 )
 from app.langchain_tools import build_toolbox
@@ -33,7 +30,7 @@ def _create_feedback_enhanced_agent(
     role: str,
     goal: str, 
     backstory: str,
-    tools: List[Any],
+    tools: list[Any],
     feedback_tools: FeedbackTools,
     feedback_prompt: str
 ) -> Agent:

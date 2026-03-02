@@ -3,20 +3,14 @@ Enterprise Features for Asmblr
 Advanced enterprise-grade security, compliance, and management capabilities
 """
 
-import asyncio
 import json
-import time
-import hashlib
-import secrets
-from typing import Dict, Any, Optional, List, Union, Callable, Type
+from typing import Any
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
 import uuid
 from loguru import logger
 import redis.asyncio as redis
-from abc import ABC, abstractmethod
 
 class UserRole(Enum):
     """User roles for enterprise access control"""
@@ -107,15 +101,15 @@ class User:
     email: str
     full_name: str
     role: UserRole
-    permissions: List[Permission]
+    permissions: list[Permission]
     department: str
-    manager_id: Optional[str]
+    manager_id: str | None
     created_at: datetime
-    last_login: Optional[datetime]
+    last_login: datetime | None
     active: bool
     mfa_enabled: bool
-    sso_provider: Optional[str]
-    metadata: Dict[str, Any]
+    sso_provider: str | None
+    metadata: dict[str, Any]
     
     def __post_init__(self):
         if not hasattr(self, 'permissions'):
@@ -129,11 +123,11 @@ class Role:
     id: str
     name: str
     description: str
-    permissions: List[Permission]
+    permissions: list[Permission]
     created_at: datetime
     updated_at: datetime
     is_system_role: bool
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     
     def __post_init__(self):
         if not hasattr(self, 'permissions'):
@@ -150,13 +144,13 @@ class AuditLog:
     action: AuditAction
     resource_type: str
     resource_id: str
-    details: Dict[str, Any]
+    details: dict[str, Any]
     ip_address: str
     user_agent: str
     timestamp: datetime
     success: bool
-    error_message: Optional[str]
-    compliance_tags: List[ComplianceStandard]
+    error_message: str | None
+    compliance_tags: list[ComplianceStandard]
     
     def __post_init__(self):
         if not hasattr(self, 'compliance_tags'):
@@ -170,8 +164,8 @@ class ComplianceReport:
     period_start: datetime
     period_end: datetime
     status: str
-    findings: List[Dict[str, Any]]
-    recommendations: List[str]
+    findings: list[dict[str, Any]]
+    recommendations: list[str]
     score: float
     generated_at: datetime
     generated_by: str
@@ -260,7 +254,7 @@ class EnterpriseSSO:
         except Exception as e:
             logger.error(f"Failed to initialize LDAP provider: {e}")
     
-    async def authenticate(self, provider: str, credentials: Dict[str, Any]) -> Optional[User]:
+    async def authenticate(self, provider: str, credentials: dict[str, Any]) -> User | None:
         """Authenticate user via SSO provider"""
         try:
             if provider == 'saml':
@@ -276,7 +270,7 @@ class EnterpriseSSO:
             logger.error(f"SSO authentication failed: {e}")
             return None
     
-    async def _authenticate_saml(self, credentials: Dict[str, Any]) -> Optional[User]:
+    async def _authenticate_saml(self, credentials: dict[str, Any]) -> User | None:
         """Authenticate via SAML"""
         try:
             # SAML authentication logic
@@ -317,7 +311,7 @@ class EnterpriseSSO:
             logger.error(f"SAML authentication failed: {e}")
             return None
     
-    async def _authenticate_oauth2(self, credentials: Dict[str, Any]) -> Optional[User]:
+    async def _authenticate_oauth2(self, credentials: dict[str, Any]) -> User | None:
         """Authenticate via OAuth2"""
         try:
             # OAuth2 authentication logic
@@ -350,7 +344,7 @@ class EnterpriseSSO:
             logger.error(f"OAuth2 authentication failed: {e}")
             return None
     
-    async def _authenticate_ldap(self, credentials: Dict[str, Any]) -> Optional[User]:
+    async def _authenticate_ldap(self, credentials: dict[str, Any]) -> User | None:
         """Authenticate via LDAP"""
         try:
             # LDAP authentication logic
@@ -593,7 +587,7 @@ class RoleBasedAccessControl:
             logger.error(f"Permission check failed: {e}")
             return False
     
-    def has_any_permission(self, user: User, permissions: List[Permission]) -> bool:
+    def has_any_permission(self, user: User, permissions: list[Permission]) -> bool:
         """Check if user has any of the specified permissions"""
         try:
             return any(self.has_permission(user, perm) for perm in permissions)
@@ -602,7 +596,7 @@ class RoleBasedAccessControl:
             logger.error(f"Permission check failed: {e}")
             return False
     
-    def has_all_permissions(self, user: User, permissions: List[Permission]) -> bool:
+    def has_all_permissions(self, user: User, permissions: list[Permission]) -> bool:
         """Check if user has all specified permissions"""
         try:
             return all(self.has_permission(user, perm) for perm in permissions)
@@ -611,7 +605,7 @@ class RoleBasedAccessControl:
             logger.error(f"Permission check failed: {e}")
             return False
     
-    async def create_role(self, name: str, description: str, permissions: List[Permission]) -> Role:
+    async def create_role(self, name: str, description: str, permissions: list[Permission]) -> Role:
         """Create new role"""
         try:
             role = Role(
@@ -846,12 +840,12 @@ class AuditLoggingSystem:
         action: AuditAction,
         resource_type: str,
         resource_id: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
         ip_address: str,
         user_agent: str,
         success: bool = True,
-        error_message: Optional[str] = None,
-        compliance_tags: Optional[List[ComplianceStandard]] = None
+        error_message: str | None = None,
+        compliance_tags: list[ComplianceStandard] | None = None
     ):
         """Log audit action"""
         try:
@@ -950,13 +944,13 @@ class AuditLoggingSystem:
     
     async def get_audit_logs(
         self,
-        user_id: Optional[str] = None,
-        action: Optional[AuditAction] = None,
-        resource_type: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        user_id: str | None = None,
+        action: AuditAction | None = None,
+        resource_type: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         limit: int = 100
-    ) -> List[AuditLog]:
+    ) -> list[AuditLog]:
         """Get audit logs with filters"""
         try:
             filtered_logs = self.audit_logs
@@ -1084,7 +1078,7 @@ class AuditLoggingSystem:
             logger.error(f"Failed to check audit trail gaps: {e}")
             return 0
     
-    async def _check_unencrypted_access(self, logs: List[AuditLog]) -> int:
+    async def _check_unencrypted_access(self, logs: list[AuditLog]) -> int:
         """Check for unencrypted data access"""
         try:
             # This would check for unencrypted data access
@@ -1134,7 +1128,7 @@ class EnterpriseManager:
             logger.error(f"Failed to initialize enterprise features: {e}")
             raise
     
-    async def authenticate_user(self, provider: str, credentials: Dict[str, Any], context: Dict[str, Any]) -> Optional[User]:
+    async def authenticate_user(self, provider: str, credentials: dict[str, Any], context: dict[str, Any]) -> User | None:
         """Authenticate user with enterprise SSO"""
         try:
             # Authenticate via SSO
@@ -1194,10 +1188,10 @@ class EnterpriseManager:
         action: AuditAction,
         resource_type: str,
         resource_id: str,
-        details: Dict[str, Any],
-        context: Dict[str, Any],
+        details: dict[str, Any],
+        context: dict[str, Any],
         success: bool = True,
-        error_message: Optional[str] = None
+        error_message: str | None = None
     ):
         """Log user action"""
         try:
@@ -1231,7 +1225,7 @@ class EnterpriseManager:
             logger.error(f"Failed to generate compliance report: {e}")
             raise
     
-    async def get_audit_logs(self, **filters) -> List[AuditLog]:
+    async def get_audit_logs(self, **filters) -> list[AuditLog]:
         """Get audit logs"""
         try:
             return await self.audit.get_audit_logs(**filters)
@@ -1240,7 +1234,7 @@ class EnterpriseManager:
             logger.error(f"Failed to get audit logs: {e}")
             return []
     
-    async def create_role(self, name: str, description: str, permissions: List[Permission]) -> Role:
+    async def create_role(self, name: str, description: str, permissions: list[Permission]) -> Role:
         """Create new role"""
         try:
             return await self.rbac.create_role(name, description, permissions)

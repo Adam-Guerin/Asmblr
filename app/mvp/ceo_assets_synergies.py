@@ -5,9 +5,8 @@ Identifie les synergies et optimise l'utilisation des ressources.
 """
 
 import json
-import asyncio
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
+from typing import Any
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
@@ -60,14 +59,14 @@ class Asset:
     asset_type: AssetType
     name: str
     path: Path
-    content: Optional[str] = None
+    content: str | None = None
     status: AssetStatus = AssetStatus.CREATED
     created_at: datetime = field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
-    dependencies: List[str] = field(default_factory=list)
-    related_assets: List[str] = field(default_factory=dict)
+    updated_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
+    related_assets: list[str] = field(default_factory=dict)
 
 
 @dataclass
@@ -78,7 +77,7 @@ class Synergy:
     synergy_type: SynergyType
     strength: float  # 0.0 à 1.0
     description: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -118,13 +117,13 @@ class CEOAssetAndSynergyManager:
         self.run_dir = run_dir
         
         # Stockage des assets
-        self.assets: Dict[str, Asset] = {}
+        self.assets: dict[str, Asset] = {}
         
         # Stockage des synergies
-        self.synergies: Dict[str, Synergy] = {}
+        self.synergies: dict[str, Synergy] = {}
         
         # Stockage des utilisations
-        self.asset_usage: Dict[str, List[AssetUsage]] = {}
+        self.asset_usage: dict[str, list[AssetUsage]] = {}
         
         # Statistiques
         self.asset_stats = {
@@ -142,9 +141,9 @@ class CEOAssetAndSynergyManager:
         asset_type: AssetType,
         name: str,
         path: Union[str, Path],
-        content: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        tags: Optional[List[str]] = None
+        content: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        tags: list[str] | None = None
     ) -> Asset:
         """
         Enregistre un asset créé par un agent
@@ -240,7 +239,7 @@ class CEOAssetAndSynergyManager:
         self,
         asset1: Asset,
         asset2: Asset
-    ) -> Optional[Synergy]:
+    ) -> Synergy | None:
         """Analyse la synergie potentielle entre deux assets"""
         
         # Critères de synergie
@@ -314,7 +313,7 @@ class CEOAssetAndSynergyManager:
         self,
         asset_id: str,
         max_results: int = 5
-    ) -> List[Asset]:
+    ) -> list[Asset]:
         """
         Trouve les assets liés à un asset donné
         
@@ -344,7 +343,7 @@ class CEOAssetAndSynergyManager:
         self,
         topic: str,
         vision: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Optimise l'utilisation des assets
         
@@ -424,7 +423,7 @@ class CEOAssetAndSynergyManager:
         
         return synergies_text or "No synergies identified"
     
-    def _create_default_optimizations(self) -> Dict[str, Any]:
+    def _create_default_optimizations(self) -> dict[str, Any]:
         """Crée des optimisations par défaut"""
         
         return {
@@ -477,7 +476,7 @@ class CEOAssetAndSynergyManager:
         
         logger.info(f"📊 Asset usage tracked: {asset_id} used by {used_by_agent.value}")
     
-    async def get_asset_report(self) -> Dict[str, Any]:
+    async def get_asset_report(self) -> dict[str, Any]:
         """Génère un rapport des assets"""
         
         report = {
@@ -563,7 +562,7 @@ class CEOAssetAndSynergyManager:
         
         return report_path
     
-    async def _create_readable_asset_report(self, report: Dict[str, Any]) -> str:
+    async def _create_readable_asset_report(self, report: dict[str, Any]) -> str:
         """Crée un rapport lisible"""
         
         readable = f"""# CEO Assets Report

@@ -5,13 +5,11 @@ Corrections des TODO et gestion d'erreurs unifiée
 
 import json
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 from dataclasses import dataclass
-from pathlib import Path
-from loguru import logger
 
-from app.core.error_handler_v2 import get_error_handler, handle_errors, FileIOException
-from app.core.smart_logger import get_smart_logger, LogCategory, LogLevel
+from app.core.error_handler_v2 import get_error_handler, handle_errors
+from app.core.smart_logger import get_smart_logger, LogCategory
 
 
 @dataclass
@@ -32,7 +30,7 @@ class CacheManagerFixed:
     def __init__(self, max_size: int = 1000, ttl_seconds: int = 3600):
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self.cache: Dict[str, CacheEntry] = {}
+        self.cache: dict[str, CacheEntry] = {}
         self.error_handler = get_error_handler()
         self.smart_logger = get_smart_logger()
         
@@ -45,7 +43,7 @@ class CacheManagerFixed:
         }
     
     @handle_errors("cache_get", reraise=False)
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Récupère une valeur du cache avec gestion d'erreurs
         
@@ -218,7 +216,7 @@ class CacheManagerFixed:
             self.error_handler.handle_exception(e, "cache_clear")
             return False
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Retourne les statistiques du cache
         
@@ -325,7 +323,7 @@ class CacheManagerFixed:
 
 
 # Instance globale du cache corrigé
-_cache_manager_fixed: Optional[CacheManagerFixed] = None
+_cache_manager_fixed: CacheManagerFixed | None = None
 
 
 def get_cache_manager_fixed(max_size: int = 1000, ttl_seconds: int = 3600) -> CacheManagerFixed:
@@ -388,7 +386,7 @@ def cache_clear() -> bool:
     return cache.clear()
 
 
-def cache_stats() -> Dict[str, Any]:
+def cache_stats() -> dict[str, Any]:
     """
     Retourne les statistiques du cache
     

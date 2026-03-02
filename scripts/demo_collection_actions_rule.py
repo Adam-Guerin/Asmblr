@@ -73,7 +73,7 @@ def main():
         # Read and display the generated collection actions
         collection_actions_file = run_dir / "collection_actions.json"
         if collection_actions_file.exists():
-            with open(collection_actions_file, 'r', encoding='utf-8') as f:
+            with open(collection_actions_file, encoding='utf-8') as f:
                 collection_actions = json.load(f)
             
             print("📋 Generated Collection Actions:")

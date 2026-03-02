@@ -4,7 +4,6 @@ import pytest
 import tempfile
 import json
 from pathlib import Path
-from unittest.mock import Mock
 
 from app.core.code_quality import (
     CodeQualityAnalyzer, CodeQualityFixer, QualityIssue,
@@ -263,7 +262,7 @@ class TestCodeQualityFixer:
             assert "corrigé" in correction.lower()
             
             # Vérifier que le fichier n'est pas modifié en dry run
-            with open(temp_path, 'r') as f:
+            with open(temp_path) as f:
                 content = f.read()
             assert 'print("debug message")' in content
             

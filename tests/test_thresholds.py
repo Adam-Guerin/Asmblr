@@ -129,7 +129,7 @@ class TestThresholdRationale:
         expected_buffer = 5
         expected_threshold = expected_neutral + expected_buffer
         
-        assert IDEA_ACTIONABILITY_MIN_SCORE == expected_threshold
+        assert expected_threshold == IDEA_ACTIONABILITY_MIN_SCORE
         
         # Should be based on 0-100 scale
         assert 0 <= IDEA_ACTIONABILITY_MIN_SCORE <= 100

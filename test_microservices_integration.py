@@ -8,7 +8,7 @@ import httpx
 import json
 import time
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Any
 
 # Configuration des services
 SERVICES = {
@@ -25,7 +25,7 @@ class MicroserviceTester:
         self.client = httpx.AsyncClient(timeout=30.0)
         self.results = {}
     
-    async def test_service_health(self, service_name: str, url: str) -> Dict[str, Any]:
+    async def test_service_health(self, service_name: str, url: str) -> dict[str, Any]:
         """Test le health check d'un service"""
         try:
             response = await self.client.get(f"{url}/health")
@@ -44,7 +44,7 @@ class MicroserviceTester:
                 "response_time": None
             }
     
-    async def test_service_readiness(self, service_name: str, url: str) -> Dict[str, Any]:
+    async def test_service_readiness(self, service_name: str, url: str) -> dict[str, Any]:
         """Test le readiness check d'un service"""
         try:
             response = await self.client.get(f"{url}/ready")
@@ -63,7 +63,7 @@ class MicroserviceTester:
                 "response_time": None
             }
     
-    async def test_api_gateway_routing(self) -> Dict[str, Any]:
+    async def test_api_gateway_routing(self) -> dict[str, Any]:
         """Test le routing de l'API Gateway"""
         gateway_url = SERVICES["api_gateway"]
         tests = []
@@ -132,7 +132,7 @@ class MicroserviceTester:
             "success_rate": len([t for t in tests if t["status"] == "success"]) / len(tests) * 100
         }
     
-    async def test_service_isolation(self) -> Dict[str, Any]:
+    async def test_service_isolation(self) -> dict[str, Any]:
         """Test l'isolation des services"""
         tests = []
         
@@ -190,7 +190,7 @@ class MicroserviceTester:
             "success_rate": len([t for t in tests if t["status"] == "success"]) / len(tests) * 100
         }
     
-    async def test_pipeline_flow(self) -> Dict[str, Any]:
+    async def test_pipeline_flow(self) -> dict[str, Any]:
         """Test un flux complet de pipeline"""
         gateway_url = SERVICES["api_gateway"]
         steps = []
@@ -271,7 +271,7 @@ class MicroserviceTester:
             "success_rate": success_count / len(steps) * 100 if steps else 0
         }
     
-    async def test_monitoring(self) -> Dict[str, Any]:
+    async def test_monitoring(self) -> dict[str, Any]:
         """Test les endpoints de monitoring"""
         tests = []
         
@@ -298,7 +298,7 @@ class MicroserviceTester:
             "success_rate": len([t for t in tests if t["status"] == "success"]) / len(tests) * 100
         }
     
-    async def run_all_tests(self) -> Dict[str, Any]:
+    async def run_all_tests(self) -> dict[str, Any]:
         """Exécute tous les tests d'intégration"""
         print("🚀 DÉMARRAGE DES TESTS D'INTÉGRATION MICRO-SERVICES")
         print("=" * 60)

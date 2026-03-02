@@ -4,20 +4,15 @@ Implements stronger secret generation, input validation, and improved logging re
 """
 
 import os
-import asyncio
-import hashlib
 import secrets
 import time
 import re
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Set, Pattern
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass
-from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
-from fastapi import HTTPException, Request, Response
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
+from fastapi.security import HTTPBearer
 from passlib.context import CryptContext
 from loguru import logger
 from prometheus_client import Counter, Histogram
@@ -116,10 +111,10 @@ class SecurityEvent:
     ip_address: str
     user_agent: str
     timestamp: datetime
-    metadata: Dict[str, Any]
-    user_id: Optional[str] = None
-    session_id: Optional[str] = None
-    request_id: Optional[str] = None
+    metadata: dict[str, Any]
+    user_id: str | None = None
+    session_id: str | None = None
+    request_id: str | None = None
 
 
 @dataclass
@@ -132,7 +127,7 @@ class UserSession:
     created_at: datetime
     last_activity: datetime
     is_active: bool
-    security_flags: List[str] = None
+    security_flags: list[str] = None
     risk_score: float = 0.0
 
 
@@ -141,9 +136,9 @@ class EnhancedSecurityManager:
     
     def __init__(self):
         self.redis_client = None
-        self.blocked_ips: Set[str] = set()
-        self.active_sessions: Dict[str, UserSession] = {}
-        self.security_events: List[SecurityEvent] = []
+        self.blocked_ips: set[str] = set()
+        self.active_sessions: dict[str, UserSession] = {}
+        self.security_events: list[SecurityEvent] = []
         self.input_validator = InputValidator()
         
         # Enhanced patterns for logging redaction
@@ -213,7 +208,7 @@ class EnhancedSecurityManager:
         
         return redacted
     
-    def validate_input(self, data: Any, context: str = "default") -> tuple[bool, Optional[str]]:
+    def validate_input(self, data: Any, context: str = "default") -> tuple[bool, str | None]:
         """Enhanced input validation"""
         try:
             if isinstance(data, dict):
@@ -236,7 +231,7 @@ class EnhancedSecurityManager:
             INPUT_VALIDATION_FAILURES.inc()
             return False, f"Input validation failed: {str(e)}"
     
-    async def check_rate_limit(self, identifier: str, limit: int = 100, window: int = 60) -> tuple[bool, Dict[str, Any]]:
+    async def check_rate_limit(self, identifier: str, limit: int = 100, window: int = 60) -> tuple[bool, dict[str, Any]]:
         """Enhanced rate limiting with Redis"""
         if not self.redis_client:
             return True, {"remaining": limit, "reset_time": time.time() + window}

@@ -5,18 +5,13 @@ Advanced UI improvements, personalization, and user interaction optimization
 
 import asyncio
 import json
-import time
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
+from typing import Any
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
 from collections import defaultdict, deque
-import hashlib
 import redis
-from pathlib import Path
-import pickle
-from concurrent.futures import ThreadPoolExecutor
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -54,7 +49,7 @@ class UserPreference:
     created_at: datetime
     updated_at: datetime
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'user_id': self.user_id,
             'preference_type': self.preference_type.value,
@@ -71,11 +66,11 @@ class UserInteraction:
     user_id: str
     interaction_type: InteractionType
     element: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     timestamp: datetime
     session_id: str
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'user_id': self.user_id,
             'interaction_type': self.interaction_type.value,
@@ -90,14 +85,14 @@ class UserInteraction:
 class UserProfile:
     """User profile with preferences and behavior patterns"""
     user_id: str
-    preferences: Dict[str, Any]
-    interaction_patterns: Dict[str, Any]
+    preferences: dict[str, Any]
+    interaction_patterns: dict[str, Any]
     skill_level: str
     usage_frequency: str
     last_active: datetime
     created_at: datetime
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'user_id': self.user_id,
             'preferences': self.preferences,
@@ -114,12 +109,12 @@ class PersonalizationEngine:
     
     def __init__(self, redis_url: str = "redis://localhost:6379/0"):
         self.redis_client = redis.from_url(redis_url)
-        self.user_profiles: Dict[str, UserProfile] = {}
-        self.interaction_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
+        self.user_profiles: dict[str, UserProfile] = {}
+        self.interaction_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
         self.preference_defaults = self._load_preference_defaults()
-        self.ml_models: Dict[str, Any] = {}
+        self.ml_models: dict[str, Any] = {}
         
-    def _load_preference_defaults(self) -> Dict[str, Any]:
+    def _load_preference_defaults(self) -> dict[str, Any]:
         """Load default user preferences"""
         return {
             'theme': {
@@ -179,7 +174,7 @@ class PersonalizationEngine:
         logger.info(f"Created user profile for {user_id}")
         return profile
     
-    async def get_user_profile(self, user_id: str) -> Optional[UserProfile]:
+    async def get_user_profile(self, user_id: str) -> UserProfile | None:
         """Get user profile"""
         
         if user_id in self.user_profiles:
@@ -232,7 +227,7 @@ class PersonalizationEngine:
         return True
     
     async def record_interaction(self, user_id: str, interaction_type: InteractionType,
-                               element: str, metadata: Dict[str, Any] = None, session_id: str = None) -> None:
+                               element: str, metadata: dict[str, Any] = None, session_id: str = None) -> None:
         """Record user interaction"""
         
         if not session_id:
@@ -339,7 +334,7 @@ class PersonalizationEngine:
             else:
                 profile.usage_frequency = 'occasional'
     
-    async def get_personalized_recommendations(self, user_id: str) -> Dict[str, Any]:
+    async def get_personalized_recommendations(self, user_id: str) -> dict[str, Any]:
         """Get personalized recommendations for user"""
         
         profile = await self.get_user_profile(user_id)
@@ -416,7 +411,7 @@ class PersonalizationEngine:
         
         return recommendations
     
-    async def get_ui_personalization(self, user_id: str) -> Dict[str, Any]:
+    async def get_ui_personalization(self, user_id: str) -> dict[str, Any]:
         """Get UI personalization settings"""
         
         profile = await self.get_user_profile(user_id)
@@ -425,7 +420,7 @@ class PersonalizationEngine:
         
         return profile.preferences
     
-    def get_interaction_analytics(self, user_id: str, days: int = 30) -> Dict[str, Any]:
+    def get_interaction_analytics(self, user_id: str, days: int = 30) -> dict[str, Any]:
         """Get interaction analytics for user"""
         
         cutoff_date = datetime.utcnow() - timedelta(days=days)
@@ -462,11 +457,11 @@ class UIOptimizer:
     """UI performance and experience optimizer"""
     
     def __init__(self):
-        self.performance_metrics: Dict[str, List[float]] = defaultdict(list)
+        self.performance_metrics: dict[str, list[float]] = defaultdict(list)
         self.ui_config = self._load_ui_config()
         self.optimization_rules = self._load_optimization_rules()
         
-    def _load_ui_config(self) -> Dict[str, Any]:
+    def _load_ui_config(self) -> dict[str, Any]:
         """Load UI configuration"""
         return {
             'animation_duration': 0.3,
@@ -477,7 +472,7 @@ class UIOptimizer:
             'batch_size': 20
         }
     
-    def _load_optimization_rules(self) -> Dict[str, Any]:
+    def _load_optimization_rules(self) -> dict[str, Any]:
         """Load UI optimization rules"""
         return {
             'performance_thresholds': {
@@ -508,7 +503,7 @@ class UIOptimizer:
         if len(self.performance_metrics[metric_name]) > 100:
             self.performance_metrics[metric_name] = self.performance_metrics[metric_name][-100:]
     
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary"""
         
         summary = {}
@@ -526,7 +521,7 @@ class UIOptimizer:
         
         return summary
     
-    def optimize_for_connection(self, connection_speed: str) -> Dict[str, Any]:
+    def optimize_for_connection(self, connection_speed: str) -> dict[str, Any]:
         """Optimize UI settings based on connection speed"""
         
         if connection_speed in self.optimization_rules['adaptive_settings']:
@@ -539,7 +534,7 @@ class UIOptimizer:
             'increase_cache': False
         }
     
-    def get_optimization_recommendations(self) -> List[str]:
+    def get_optimization_recommendations(self) -> list[str]:
         """Get UI optimization recommendations"""
         
         recommendations = []
@@ -573,9 +568,9 @@ class AccessibilityHelper:
     
     def __init__(self):
         self.accessibility_config = self._load_accessibility_config()
-        self.user_preferences: Dict[str, Dict[str, Any]] = {}
+        self.user_preferences: dict[str, dict[str, Any]] = {}
         
-    def _load_accessibility_config(self) -> Dict[str, Any]:
+    def _load_accessibility_config(self) -> dict[str, Any]:
         """Load accessibility configuration"""
         return {
             'keyboard_navigation': True,
@@ -597,12 +592,12 @@ class AccessibilityHelper:
         
         self.user_preferences[user_id][setting] = value
     
-    def get_accessibility_settings(self, user_id: str) -> Dict[str, Any]:
+    def get_accessibility_settings(self, user_id: str) -> dict[str, Any]:
         """Get accessibility settings for user"""
         
         return self.user_preferences.get(user_id, self.accessibility_config)
     
-    def validate_accessibility(self, ui_element: Dict[str, Any]) -> List[str]:
+    def validate_accessibility(self, ui_element: dict[str, Any]) -> list[str]:
         """Validate UI element for accessibility"""
         
         issues = []
@@ -666,7 +661,7 @@ class EnhancedUserExperience:
         self.ui_optimizer = UIOptimizer()
         self.accessibility = AccessibilityHelper()
         
-    async def initialize_user_session(self, user_id: str, session_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def initialize_user_session(self, user_id: str, session_data: dict[str, Any]) -> dict[str, Any]:
         """Initialize user session with personalization"""
         
         # Get or create user profile
@@ -694,7 +689,7 @@ class EnhancedUserExperience:
             'session_id': session_data.get('session_id', str(uuid.uuid4()))
         }
     
-    async def track_user_interaction(self, user_id: str, interaction_data: Dict[str, Any]) -> None:
+    async def track_user_interaction(self, user_id: str, interaction_data: dict[str, Any]) -> None:
         """Track user interaction for personalization"""
         
         interaction_type = InteractionType(interaction_data.get('type', 'click'))
@@ -711,7 +706,7 @@ class EnhancedUserExperience:
         
         self.ui_optimizer.record_performance_metric(metric_name, value)
     
-    async def get_user_dashboard(self, user_id: str) -> Dict[str, Any]:
+    async def get_user_dashboard(self, user_id: str) -> dict[str, Any]:
         """Get personalized user dashboard"""
         
         profile = await self.personalization.get_user_profile(user_id)
@@ -727,7 +722,7 @@ class EnhancedUserExperience:
             'optimization_recommendations': self.ui_optimizer.get_optimization_recommendations()
         }
     
-    async def update_user_preferences(self, user_id: str, preferences: Dict[str, Any]) -> bool:
+    async def update_user_preferences(self, user_id: str, preferences: dict[str, Any]) -> bool:
         """Update user preferences"""
         
         success = True
@@ -742,13 +737,13 @@ class EnhancedUserExperience:
         
         return success
     
-    async def update_accessibility_settings(self, user_id: str, settings: Dict[str, bool]) -> None:
+    async def update_accessibility_settings(self, user_id: str, settings: dict[str, bool]) -> None:
         """Update accessibility settings"""
         
         for setting, value in settings.items():
             await self.accessibility.set_accessibility_preference(user_id, setting, value)
     
-    def validate_ui_accessibility(self, ui_elements: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+    def validate_ui_accessibility(self, ui_elements: list[dict[str, Any]]) -> dict[str, list[str]]:
         """Validate UI elements for accessibility"""
         
         results = {}

@@ -7,7 +7,6 @@ import pytest
 import asyncio
 import time
 from unittest.mock import AsyncMock, patch
-from pathlib import Path
 
 from app.core.async_tasks import (
     AsyncTaskManager, AsyncTask, TaskStatus, TaskPriority,
