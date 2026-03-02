@@ -1,0 +1,148 @@
+{
+  "artifact_manifest_version": "1.1",
+  "artifacts": [
+    {
+      "file": "calibration_bins.csv",
+      "path": "c:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\calibration_bins.csv",
+      "bytes": 14888758,
+      "rows": 85170,
+      "columns": [
+        "record_type",
+        "architecture",
+        "context_id",
+        "seed",
+        "predicted_confidence",
+        "correctness",
+        "predicted_decision",
+        "reference_decision",
+        "ece_bin_id",
+        "bin_id",
+        "bin_accuracy",
+        "bin_confidence",
+        "bin_count",
+        "mean_confidence",
+        "empirical_accuracy",
+        "bin_size",
+        "ece_decomposition_term"
+      ],
+      "md5": "fee96aca20a8d0b7ec0cfaaf9dacc2e9",
+      "sha256": "1816de32cc5c6365f515361fda01a00aac32e63e301ea34073724badbb39aff4"
+    },
+    {
+      "file": "context_level_metrics.csv",
+      "path": "c:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\context_level_metrics.csv",
+      "bytes": 15884536,
+      "rows": 85000,
+      "columns": [
+        "architecture",
+        "context_id",
+        "seed",
+        "predicted_decision",
+        "reference_decision",
+        "predicted_confidence",
+        "correctness",
+        "regret",
+        "ECE",
+        "SHR",
+        "OBR",
+        "WMR",
+        "EDI",
+        "disagreement_entropy",
+        "tokens",
+        "latency",
+        "uncertainty_level",
+        "signal_sparsity_score",
+        "disagreement_entropy_baseline",
+        "evidence_sufficiency_score"
+      ],
+      "md5": "bd2904d90724239c76f7f1381bf8b144",
+      "sha256": "6e3353e4c8b99158fcbe81690ed8d4682b7bddd655b19e1f4d6d05a8773d6419"
+    },
+    {
+      "file": "stratified_summary.csv",
+      "path": "c:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\stratified_summary.csv",
+      "bytes": 17827,
+      "rows": 51,
+      "columns": [
+        "architecture",
+        "uncertainty_level",
+        "mean_regret",
+        "std_regret",
+        "ci95_regret_low",
+        "ci95_regret_high",
+        "mean_ECE",
+        "std_ECE",
+        "ci95_ECE_low",
+        "ci95_ECE_high",
+        "mean_SHR",
+        "mean_OBR",
+        "mean_WMR",
+        "mean_EDI",
+        "mean_tokens",
+        "mean_latency",
+        "cohens_d_regret_vs_monolithic",
+        "cohens_d_ECE_vs_monolithic",
+        "cohens_d_vs_monolithic"
+      ],
+      "md5": "0b8caf27a878ddd0eaf5b528c144b022",
+      "sha256": "31525a68e870ca8c90038f50217afd021a163fe66c3a683f53416c293b4ab836"
+    },
+    {
+      "file": "pareto_points.csv",
+      "path": "c:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\pareto_points.csv",
+      "bytes": 9628807,
+      "rows": 85000,
+      "columns": [
+        "architecture",
+        "context_id",
+        "seed",
+        "tokens",
+        "regret",
+        "latency",
+        "ECE",
+        "is_pareto_frontier",
+        "pareto_frontier_index",
+        "auf",
+        "marginal_delta_regret_per_token"
+      ],
+      "md5": "17ae6867e690c7c93d0210b89fa3977a",
+      "sha256": "e18e4b9fc3c149ea2aad059861db1913ffc966c878dc3443ba76d23ab8f9376a"
+    },
+    {
+      "file": "ablation_deltas.csv",
+      "path": "c:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\ablation_deltas.csv",
+      "bytes": 2307,
+      "rows": 12,
+      "columns": [
+        "architecture",
+        "delta_regret_vs_A0",
+        "delta_ECE_vs_A0",
+        "delta_SHR_vs_A0",
+        "delta_OBR_vs_A0",
+        "delta_WMR_vs_A0",
+        "delta_EDI_vs_A0",
+        "delta_tokens_vs_A0",
+        "delta_latency_vs_A0",
+        "cohens_d_vs_A0",
+        "p_value_paired"
+      ],
+      "md5": "4546b982c57313be52cc58ab345a2d11",
+      "sha256": "054c4b575c20e2949d38d0d40acd768808a37da678f306d1e2ef5937b0e80463"
+    },
+    {
+      "file": "sensitivity_rankings.csv",
+      "path": "c:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\sensitivity_rankings.csv",
+      "bytes": 10130,
+      "rows": 153,
+      "columns": [
+        "perturbation",
+        "architecture",
+        "rank",
+        "mean_regret",
+        "kendall_tau_vs_baseline"
+      ],
+      "md5": "af1a49c6b615ca9376d4320f139c6666",
+      "sha256": "e197f1219c331ea2599e03bd1d80f08db8056251e21b4227690f4870356c8896"
+    }
+  ]
+}
