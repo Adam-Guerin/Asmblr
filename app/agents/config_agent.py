@@ -3,7 +3,7 @@ Agent de configuration spécialisé pour Asmblr
 Gère dynamiquement les paramètres selon le contexte et les performances
 """
 
-from typing import Any
+from typing import Any, Optional
 from dataclasses import dataclass
 from loguru import logger
 
@@ -345,7 +345,7 @@ class ConfigCrewManager:
         else:
             self.crew = None
     
-    def _create_crew(self) -> Crew | None:
+    def _create_crew(self) -> Optional['Crew']:
         """Crée l'équipage CrewAI pour la configuration"""
         try:
             tasks = [

@@ -384,5 +384,13 @@ class SecurityManager:
             logger.error(f"Failed to cleanup old secrets: {e}")
             return 0
 
-# Global security manager instance
-security_manager = SecurityManager()
+# Global security manager instance - lazy initialization
+def get_security_manager():
+    """Get security manager with proper error handling"""
+    try:
+        return SecurityManager()
+    except Exception as e:
+        logger.warning(f"Failed to initialize security manager: {e}")
+        return None
+
+security_manager = get_security_manager()

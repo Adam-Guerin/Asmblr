@@ -1,53 +1,75 @@
 """Dashboard UI for product metrics."""
 from pathlib import Path
+from typing import Optional
 
 import streamlit as st
 from app.core.product_metrics import PRODUCT_METRICS
 
+class DashboardManager:
+    """Manages dashboard functionality."""
+    
+    def __init__(self):
+        self.product_metrics = PRODUCT_METRICS
+    
+    def render_dashboard(self) -> None:
+        """Render the product metrics dashboard."""
+        if self.product_metrics is None:
+            st.error("Product metrics not initialized")
+            return
+        
+        st.title("📊 Tableau de Bord Produit")
+        
+        # Get metrics for last 30 days
+        metrics = self.product_metrics.get_dashboard_metrics(days=30)
+        
+        # Display KPIs in columns
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric(
+                label="% MVP Publiés",
+                value=f"{metrics['mvp_published_pct']}%",
+                help="Pourcentage de runs ayant abouti à un MVP publié"
+            )
+        
+        with col2:
+            st.metric(
+                label="Temps Moyen Idée → Landing",
+                value=f"{metrics['avg_idea_to_landing_days']}j",
+                help="Délai moyen entre la génération d'une idée et la création d'une landing page"
+            )
+        
+        with col3:
+            st.metric(
+                label="% Runs avec Feedback",
+                value=f"{metrics['runs_with_feedback_pct']}%",
+                help="Pourcentage de runs ayant reçu du feedback utilisateur"
+            )
+        
+        with col4:
+            st.metric(
+                label="% Runs Itérés",
+                value=f"{metrics['runs_with_iterations_pct']}%",
+                help="Pourcentage de runs ayant été itérés suite à du feedback"
+            )
+        
+        # Add some visualizations
+        st.markdown("---")
+
 def show_dashboard():
     """Render the product metrics dashboard."""
-    if PRODUCT_METRICS is None:
-        st.error("Product metrics not initialized")
-        return
-    
-    st.title("📊 Tableau de Bord Produit")
-    
-    # Get metrics for last 30 days
-    metrics = PRODUCT_METRICS.get_dashboard_metrics(days=30)
-    
-    # Display KPIs in columns
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric(
-            label="% MVP Publiés",
-            value=f"{metrics['mvp_published_pct']}%",
-            help="Pourcentage de runs ayant abouti à un MVP publié"
-        )
-    
-    with col2:
-        st.metric(
-            label="Temps Moyen Idée → Landing",
-            value=f"{metrics['avg_idea_to_landing_days']}j",
-            help="Délai moyen entre la génération d'une idée et la création d'une landing page"
-        )
-    
-    with col3:
-        st.metric(
-            label="% Runs avec Feedback",
-            value=f"{metrics['runs_with_feedback_pct']}%",
-            help="Pourcentage de runs ayant reçu du feedback utilisateur"
-        )
-    
-    with col4:
-        st.metric(
-            label="% Runs Itérés",
-            value=f"{metrics['runs_with_iterations_pct']}%",
-            help="Pourcentage de runs ayant été itérés suite à du feedback"
-        )
-    
-    # Add some visualizations
-    st.markdown("---")
+    manager = DashboardManager()
+    manager.render_dashboard()
+
+# Create global instance
+_dashboard_manager: Optional[DashboardManager] = None
+
+def get_dashboard_manager() -> DashboardManager:
+    """Get the global dashboard manager instance."""
+    global _dashboard_manager
+    if _dashboard_manager is None:
+        _dashboard_manager = DashboardManager()
+    return _dashboard_manager
     
     col1, col2 = st.columns(2)
     

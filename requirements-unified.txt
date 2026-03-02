@@ -1,0 +1,40 @@
+# Unified Requirements for Asmblr
+# Core dependencies only - heavy libraries loaded on-demand
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Essential utilities
+requests==2.31.0
+beautifulsoup4==4.12.3
+jinja2==3.1.2
+pyyaml==6.0.2
+python-dotenv==1.0.1
+loguru==0.7.3
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+
+# Caching
+redis==5.0.1
+diskcache==5.6.3
+
+# Async support
+aiofiles==23.2.1
+aiohttp==3.9.1
+
+# Development tools
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.3.0
+ruff==0.1.6
+mypy==1.5.1
+
+# Optional heavy dependencies (loaded on-demand)
+# torch==2.4.1  # Load only when needed
+# transformers==4.49.0  # Load only when needed
+# diffusers==0.36.0  # Load only when needed

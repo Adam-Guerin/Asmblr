@@ -1,0 +1,35 @@
+# Performance-optimized requirements
+# Core dependencies only - heavy ML libraries loaded on-demand
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Essential utilities
+requests==2.31.0
+beautifulsoup4==4.12.3
+jinja2==3.1.2
+pyyaml==6.0.2
+python-dotenv==1.0.1
+loguru==0.7.3
+
+# Caching
+redis==5.0.1
+diskcache==5.6.3
+
+# Database
+sqlalchemy==2.0.23
+
+# Async
+aiofiles==23.2.1
+
+# ML/AI - Optional/Lazy loading
+# torch==2.4.1  # Load only when needed
+# transformers==4.49.0  # Load only when needed
+# diffusers==0.36.0  # Load only when needed
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0

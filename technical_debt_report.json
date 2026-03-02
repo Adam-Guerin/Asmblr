@@ -1,68 +1,78 @@
 {
-  "generated_at": "2026-02-14T10:31:57.864283",
+  "generated_at": "2026-03-02T21:44:06.911413",
   "analysis": {
     "summary": {
-      "total_debt_items": 8,
-      "files_analyzed": 266,
-      "avg_complexity": 34.55,
-      "avg_maintainability": 47.12,
-      "large_files_count": 37,
-      "high_complexity_files_count": 117,
-      "low_maintainability_files_count": 171
+      "total_debt_items": 48,
+      "files_analyzed": 1557,
+      "avg_complexity": 31.14,
+      "avg_maintainability": 48.8,
+      "large_files_count": 190,
+      "high_complexity_files_count": 591,
+      "low_maintainability_files_count": 897
     },
     "debt_by_type": {
-      "TODO": 5,
-      "FIXME": 1,
-      "BUG": 1,
-      "HACK": 1
+      "TODO": 48
     },
     "debt_by_severity": {
-      "medium": 8
+      "medium": 44,
+      "critical": 4
     },
     "priority_files": {
       "large_files": [
+        {
+          "path": "analyze_monitoring.py",
+          "lines": 564
+        },
+        {
+          "path": "asmblr_cli.py",
+          "lines": 638
+        },
         {
           "path": "asmblr_lightweight.py",
           "lines": 676
         },
         {
           "path": "auto_optimizer.py",
-          "lines": 535
+          "lines": 534
         },
         {
-          "path": "performance_tests.py",
-          "lines": 524
+          "path": "export_paper_artifacts.py",
+          "lines": 652
         },
         {
-          "path": "security_hardening.py",
-          "lines": 602
+          "path": "final_validation_suite.py",
+          "lines": 560
         },
         {
-          "path": "ui.py",
-          "lines": 511
+          "path": "fix_code_quality.py",
+          "lines": 1347
         },
         {
-          "path": "app\\mvp_cycles.py",
-          "lines": 1705
+          "path": "fix_code_quality_simple.py",
+          "lines": 649
         },
         {
-          "path": "app\\ui.py",
-          "lines": 561
+          "path": "fix_maintenance_nightmare.py",
+          "lines": 1259
         },
         {
-          "path": "app\\ui_quality.py",
-          "lines": 520
-        },
-        {
-          "path": "app\\agents\\asset_enhanced_crew.py",
-          "lines": 627
-        },
-        {
-          "path": "app\\agents\\crew.py",
-          "lines": 566
+          "path": "fix_maintenance_simple.py",
+          "lines": 1114
         }
       ],
       "high_complexity": [
+        {
+          "path": "analyze_monitoring.py",
+          "complexity": 49.0
+        },
+        {
+          "path": "analyze_technical_debt.py",
+          "complexity": 55.0
+        },
+        {
+          "path": "asmblr_cli.py",
+          "complexity": 100.0
+        },
         {
           "path": "asmblr_lightweight.py",
           "complexity": 45.0
@@ -72,96 +82,464 @@
           "complexity": 73.0
         },
         {
+          "path": "demo_monitoring.py",
+          "complexity": 45.0
+        },
+        {
           "path": "deploy_microservices_fixed.py",
           "complexity": 44.0
         },
         {
-          "path": "performance_tests.py",
-          "complexity": 45.0
+          "path": "deploy_production.py",
+          "complexity": 43.0
         },
         {
-          "path": "security_hardening.py",
-          "complexity": 79.0
+          "path": "export_paper_artifacts.py",
+          "complexity": 67.0
         },
         {
-          "path": "setup.py",
-          "complexity": 37.0
-        },
-        {
-          "path": "test_microservices_integration.py",
-          "complexity": 55.0
-        },
-        {
-          "path": "ui.py",
-          "complexity": 63.0
-        },
-        {
-          "path": "worker_improved_v3.py",
-          "complexity": 56.0
-        },
-        {
-          "path": "api-gateway\\main.py",
-          "complexity": 29.0
+          "path": "final_validation_suite.py",
+          "complexity": 70.0
         }
       ],
       "low_maintainability": [
+        {
+          "path": "analyze_monitoring.py",
+          "index": 41.27659574468085
+        },
+        {
+          "path": "analyze_technical_debt.py",
+          "index": 41.074927953890494
+        },
+        {
+          "path": "asmblr_cli.py",
+          "index": 41.9435736677116
+        },
         {
           "path": "asmblr_lightweight.py",
           "index": 41.77514792899409
         },
         {
           "path": "auto_optimizer.py",
-          "index": 42.61682242990654
+          "index": 42.62172284644195
+        },
+        {
+          "path": "demo_monitoring.py",
+          "index": 44.30493273542601
         },
         {
           "path": "deploy_microservices_fixed.py",
+          "index": 42.58373205741627
+        },
+        {
+          "path": "deploy_production.py",
+          "index": 43.53808353808354
+        },
+        {
+          "path": "export_paper_artifacts.py",
+          "index": 40.42944785276073
+        },
+        {
+          "path": "final_validation_suite.py",
           "index": 42.57142857142857
-        },
-        {
-          "path": "performance_tests.py",
-          "index": 41.45038167938931
-        },
-        {
-          "path": "security_hardening.py",
-          "index": 42.45847176079734
-        },
-        {
-          "path": "setup.py",
-          "index": 42.549019607843135
-        },
-        {
-          "path": "test_microservices_integration.py",
-          "index": 41.8140589569161
-        },
-        {
-          "path": "test_phase1_improvements.py",
-          "index": 43.943661971830984
-        },
-        {
-          "path": "ui.py",
-          "index": 43.60078277886497
-        },
-        {
-          "path": "worker_improved_v3.py",
-          "index": 42.116402116402114
         }
       ],
       "most_debt": [
         {
-          "path": "tests\\test_code_quality.py",
-          "count": 6
+          "path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+          "count": 12
         },
         {
-          "path": "app\\core\\technical_debt.py",
+          "path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+          "count": 12
+        },
+        {
+          "path": "app\\core\\ai_code_generator.py",
+          "count": 8
+        },
+        {
+          "path": ".tmp\\antigravity-awesome-skills\\skills\\api-design-principles\\assets\\rest-api-template.py",
+          "count": 3
+        },
+        {
+          "path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\api-design-principles\\assets\\rest-api-template.py",
+          "count": 3
+        },
+        {
+          "path": "analyze_technical_debt.py",
           "count": 1
         },
         {
-          "path": "trash\\simple_analysis.py",
+          "path": "fix_code_quality.py",
+          "count": 1
+        },
+        {
+          "path": "fix_code_quality_simple.py",
+          "count": 1
+        },
+        {
+          "path": ".tmp\\antigravity-awesome-skills\\skills\\skill-creator\\scripts\\init_skill.py",
+          "count": 1
+        },
+        {
+          "path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\skill-creator\\scripts\\init_skill.py",
           "count": 1
         }
       ]
     },
     "detailed_items": [
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\api-design-principles\\assets\\rest-api-template.py",
+        "line_number": 25,
+        "type": "TODO",
+        "description": "Configure this in production, e.g. [\"api.example.com\"]",
+        "severity": "critical",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\api-design-principles\\assets\\rest-api-template.py",
+        "line_number": 31,
+        "type": "TODO",
+        "description": "Update this with specific origins in production",
+        "severity": "critical",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\api-design-principles\\assets\\rest-api-template.py",
+        "line_number": 25,
+        "type": "TODO",
+        "description": "Configure this in production, e.g. [\"api.example.com\"]",
+        "severity": "critical",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\api-design-principles\\assets\\rest-api-template.py",
+        "line_number": 31,
+        "type": "TODO",
+        "description": "Update this with specific origins in production",
+        "severity": "critical",
+        "effort": "hours"
+      },
+      {
+        "file_path": "analyze_technical_debt.py",
+        "line_number": 18,
+        "type": "TODO",
+        "description": ", FIXME, BUG, HACK",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "fix_code_quality.py",
+        "line_number": 1044,
+        "type": "TODO",
+        "description": "')",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "fix_code_quality_simple.py",
+        "line_number": 476,
+        "type": "TODO",
+        "description": "')",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\api-design-principles\\assets\\rest-api-template.py",
+        "line_number": 32,
+        "type": "TODO",
+        "description": "Set to True if you need cookies/auth headers, but restrict origins",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\skill-creator\\scripts\\init_skill.py",
+        "line_number": 119,
+        "type": "TODO",
+        "description": "Add actual script logic here",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 160,
+        "type": "TODO",
+        "description": "Implement Deepgram transcriber",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 171,
+        "type": "TODO",
+        "description": "Implement AssemblyAI transcriber",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 176,
+        "type": "TODO",
+        "description": "Implement Azure transcriber",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 181,
+        "type": "TODO",
+        "description": "Implement Google transcriber",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 190,
+        "type": "TODO",
+        "description": "Implement OpenAI agent",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 201,
+        "type": "TODO",
+        "description": "Implement Gemini agent",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 212,
+        "type": "TODO",
+        "description": "Implement Claude agent",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 221,
+        "type": "TODO",
+        "description": "Implement ElevenLabs synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 232,
+        "type": "TODO",
+        "description": "Implement Azure synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 237,
+        "type": "TODO",
+        "description": "Implement Google synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 242,
+        "type": "TODO",
+        "description": "Implement Polly synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 247,
+        "type": "TODO",
+        "description": "Implement Play.ht synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\api-design-principles\\assets\\rest-api-template.py",
+        "line_number": 32,
+        "type": "TODO",
+        "description": "Set to True if you need cookies/auth headers, but restrict origins",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\skill-creator\\scripts\\init_skill.py",
+        "line_number": 119,
+        "type": "TODO",
+        "description": "Add actual script logic here",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 160,
+        "type": "TODO",
+        "description": "Implement Deepgram transcriber",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 171,
+        "type": "TODO",
+        "description": "Implement AssemblyAI transcriber",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 176,
+        "type": "TODO",
+        "description": "Implement Azure transcriber",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 181,
+        "type": "TODO",
+        "description": "Implement Google transcriber",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 190,
+        "type": "TODO",
+        "description": "Implement OpenAI agent",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 201,
+        "type": "TODO",
+        "description": "Implement Gemini agent",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 212,
+        "type": "TODO",
+        "description": "Implement Claude agent",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 221,
+        "type": "TODO",
+        "description": "Implement ElevenLabs synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 232,
+        "type": "TODO",
+        "description": "Implement Azure synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 237,
+        "type": "TODO",
+        "description": "Implement Google synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 242,
+        "type": "TODO",
+        "description": "Implement Polly synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": ".tmp\\antigravity-awesome-skills\\web-app\\public\\skills\\voice-ai-engine-development\\templates\\multi_provider_factory_template.py",
+        "line_number": 247,
+        "type": "TODO",
+        "description": "Implement Play.ht synthesizer",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\advanced_testing.py",
+        "line_number": 914,
+        "type": "TODO",
+        "description": "Implement actual test logic",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\ai_code_generator.py",
+        "line_number": 579,
+        "type": "TODO",
+        "description": "Implement this code",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\ai_code_generator.py",
+        "line_number": 766,
+        "type": "TODO",
+        "description": "Implement function logic\\n    pass'",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\ai_code_generator.py",
+        "line_number": 948,
+        "type": "TODO",
+        "description": "Initialize attributes'",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\ai_code_generator.py",
+        "line_number": 1166,
+        "type": "TODO",
+        "description": "Implement endpoint logic\\n    return {\"status\": \"not_implemented\"}'",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\ai_code_generator.py",
+        "line_number": 1282,
+        "type": "TODO",
+        "description": "Implement test\\n    assert True'",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\ai_code_generator.py",
+        "line_number": 1310,
+        "type": "TODO",
+        "description": "Implement {request.description}\\npass'",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\ai_code_generator.py",
+        "line_number": 1481,
+        "type": "TODO",
+        "description": "Implement test')",
+        "severity": "medium",
+        "effort": "hours"
+      },
+      {
+        "file_path": "app\\core\\ai_code_generator.py",
+        "line_number": 1489,
+        "type": "TODO",
+        "description": "Add unit tests'",
+        "severity": "medium",
+        "effort": "hours"
+      },
       {
         "file_path": "app\\core\\technical_debt.py",
         "line_number": 21,
@@ -171,50 +549,18 @@
         "effort": "hours"
       },
       {
-        "file_path": "tests\\test_code_quality.py",
-        "line_number": 25,
+        "file_path": "app\\monitoring\\ml_anomaly_detector.py",
+        "line_number": 634,
         "type": "TODO",
-        "description": "Impl\u00e9menter cette fonction",
+        "description": "Int\u00e9grer avec Slack, Email, etc.",
         "severity": "medium",
         "effort": "hours"
       },
       {
-        "file_path": "tests\\test_code_quality.py",
+        "file_path": "scripts\\refactor_tool.py",
         "line_number": 27,
-        "type": "FIXME",
-        "description": "Corriger la logique ici",
-        "severity": "medium",
-        "effort": "hours"
-      },
-      {
-        "file_path": "tests\\test_code_quality.py",
-        "line_number": 30,
-        "type": "BUG",
-        "description": "Cette fonction a un probl\u00e8me",
-        "severity": "medium",
-        "effort": "hours"
-      },
-      {
-        "file_path": "tests\\test_code_quality.py",
-        "line_number": 32,
-        "type": "HACK",
-        "description": "Solution temporaire",
-        "severity": "medium",
-        "effort": "hours"
-      },
-      {
-        "file_path": "tests\\test_code_quality.py",
-        "line_number": 42,
         "type": "TODO",
-        "description": ", FIXME, BUG",
-        "severity": "medium",
-        "effort": "hours"
-      },
-      {
-        "file_path": "tests\\test_code_quality.py",
-        "line_number": 321,
-        "type": "TODO",
-        "description": "Fix this",
+        "description": "')",
         "severity": "medium",
         "effort": "hours"
       },
@@ -231,6 +577,33 @@
   "refactoring_plan": {
     "immediate_actions": [
       {
+        "path": "analyze_monitoring.py",
+        "issues": [
+          "High complexity (49.0)"
+        ],
+        "recommendations": [
+          "Extract functions/classes"
+        ]
+      },
+      {
+        "path": "analyze_technical_debt.py",
+        "issues": [
+          "High complexity (55.0)"
+        ],
+        "recommendations": [
+          "Extract functions/classes"
+        ]
+      },
+      {
+        "path": "asmblr_cli.py",
+        "issues": [
+          "High complexity (100.0)"
+        ],
+        "recommendations": [
+          "Extract functions/classes"
+        ]
+      },
+      {
         "path": "asmblr_lightweight.py",
         "issues": [
           "High complexity (45.0)"
@@ -243,33 +616,6 @@
         "path": "auto_optimizer.py",
         "issues": [
           "High complexity (73.0)"
-        ],
-        "recommendations": [
-          "Extract functions/classes"
-        ]
-      },
-      {
-        "path": "deploy_microservices_fixed.py",
-        "issues": [
-          "High complexity (44.0)"
-        ],
-        "recommendations": [
-          "Extract functions/classes"
-        ]
-      },
-      {
-        "path": "performance_tests.py",
-        "issues": [
-          "High complexity (45.0)"
-        ],
-        "recommendations": [
-          "Extract functions/classes"
-        ]
-      },
-      {
-        "path": "security_hardening.py",
-        "issues": [
-          "High complexity (79.0)"
         ],
         "recommendations": [
           "Extract functions/classes"

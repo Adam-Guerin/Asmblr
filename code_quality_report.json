@@ -1,0 +1,167 @@
+{
+  "timestamp": 1772486887.108421,
+  "analysis": {
+    "total_files_analyzed": 1543,
+    "total_issues": 71,
+    "issues_by_category": {
+      "High Complexity": [
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\analyze_technical_debt.py', line_number=275, issue_type='High Complexity', severity='high', description=\"Function 'main' has complexity 11\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\final_validation_suite.py', line_number=329, issue_type='High Complexity', severity='high', description=\"Function 'test_security' has complexity 13\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='    def test_security(self) -> bool:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_technical_debt.py', line_number=354, issue_type='High Complexity', severity='high', description=\"Function 'main' has complexity 11\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\run_complex_tests.py', line_number=11, issue_type='High Complexity', severity='high', description=\"Function 'run_test_suite' has complexity 20\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='def run_test_suite(test_type=\"all\"):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\setup.py', line_number=129, issue_type='High Complexity', severity='high', description=\"Function 'main' has complexity 11\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\setup_public.py', line_number=308, issue_type='High Complexity', severity='high', description=\"Function 'main' has complexity 11\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_dependencies.py', line_number=94, issue_type='High Complexity', severity='high', description=\"Function 'test_version_consistency' has complexity 14\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='def test_version_consistency():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_no_timeout.py', line_number=28, issue_type='High Complexity', severity='high', description=\"Function 'test_no_timeout' has complexity 16\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='def test_no_timeout():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\validate_optimization.py', line_number=314, issue_type='High Complexity', severity='high', description=\"Function 'validate_configuration_files' has complexity 11\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='    def validate_configuration_files(self) -> Dict[str, Any]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\validate_optimization.py', line_number=380, issue_type='High Complexity', severity='high', description=\"Function 'generate_validation_report' has complexity 12\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='    def generate_validation_report(self, results: Dict[str, Any]) -> None:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\worker_improved_v3.py', line_number=111, issue_type='High Complexity', severity='high', description=\"Function '_setup_routes' has complexity 13\", suggestion='Break down into smaller functions or reduce nesting', code_snippet='    def _setup_routes(self):')"
+      ],
+      "Long Function": [
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\analyze_technical_debt.py', line_number=151, issue_type='Long Function', severity='high', description=\"Function 'analyze_project' is 53 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def analyze_project(self) -> dict[str, Any]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\deploy_microservices_fixed.py', line_number=13, issue_type='Long Function', severity='high', description=\"Function '__init__' is 52 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def __init__(self):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\export_paper_artifacts.py', line_number=210, issue_type='Long Function', severity='high', description=\"Function '_simulate_context_level' is 78 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def _simulate_context_level(')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\export_paper_artifacts.py', line_number=303, issue_type='Long Function', severity='high', description=\"Function '_build_calibration_table' is 80 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def _build_calibration_table(context_df: pd.DataFrame) -> pd.DataFrame:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\final_validation_suite.py', line_number=410, issue_type='Long Function', severity='high', description=\"Function 'generate_report' is 61 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def generate_report(self) -> str:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\final_validation_suite.py', line_number=492, issue_type='Long Function', severity='high', description=\"Function 'main' is 51 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_code_quality_simple.py', line_number=505, issue_type='Long Function', severity='high', description=\"Function '_implement_quality_gates' is 71 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def _implement_quality_gates(self) -> Dict[str, Any]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_performance_resources.py', line_number=334, issue_type='Long Function', severity='critical', description=\"Function '_fix_cache_issues' is 105 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def _fix_cache_issues(self) -> Dict[str, Any]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_performance_resources.py', line_number=469, issue_type='Long Function', severity='critical', description=\"Function '_add_resource_monitoring' is 106 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def _add_resource_monitoring(self) -> Dict[str, Any]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_performance_resources.py', line_number=603, issue_type='Long Function', severity='high', description=\"Function '_implement_lazy_loading' is 87 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def _implement_lazy_loading(self) -> Dict[str, Any]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_technical_debt.py', line_number=32, issue_type='Long Function', severity='high', description=\"Function '_fix_pipeline_todos' is 86 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def _fix_pipeline_todos(self) -> list[dict[str, Any]]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_technical_debt.py', line_number=141, issue_type='Long Function', severity='high', description=\"Function '_fix_cache_todos' is 52 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def _fix_cache_todos(self) -> list[dict[str, Any]]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\implement_performance_fixes.py', line_number=141, issue_type='Long Function', severity='critical', description=\"Function 'create_memory_profiler' is 135 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def create_memory_profiler():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\implement_performance_fixes.py', line_number=320, issue_type='Long Function', severity='high', description=\"Function 'implement_resource_limits' is 98 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def implement_resource_limits():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\implement_performance_fixes.py', line_number=455, issue_type='Long Function', severity='high', description=\"Function 'main' is 56 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\performance_optimizer.py', line_number=238, issue_type='Long Function', severity='high', description=\"Function 'generate_optimization_report' is 75 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def generate_optimization_report(self) -> str:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\run_complex_tests.py', line_number=11, issue_type='Long Function', severity='critical', description=\"Function 'run_test_suite' is 133 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def run_test_suite(test_type=\"all\"):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\run_optimized_tests.py', line_number=34, issue_type='Long Function', severity='high', description=\"Function 'run_test_suite' is 56 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def run_test_suite(self, suite_name: str, test_files: list[str], timeout: int = 300) -> dict[str, Any]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\run_optimized_tests.py', line_number=152, issue_type='Long Function', severity='high', description=\"Function 'generate_report' is 58 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def generate_report(self, results: dict[str, Any]) -> None:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\run_optimized_tests.py', line_number=281, issue_type='Long Function', severity='high', description=\"Function 'main' is 52 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\run_tests.py', line_number=109, issue_type='Long Function', severity='high', description=\"Function 'main' is 70 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\setup.py', line_number=129, issue_type='Long Function', severity='high', description=\"Function 'main' is 53 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_basic_functionality.py', line_number=21, issue_type='Long Function', severity='high', description=\"Function 'test_basic_functionality' is 51 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def test_basic_functionality():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_dependencies.py', line_number=37, issue_type='Long Function', severity='high', description=\"Function 'test_core_imports' is 52 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def test_core_imports():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_final.py', line_number=22, issue_type='Long Function', severity='critical', description=\"Function 'test_final' is 255 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def test_final():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_manual.py', line_number=21, issue_type='Long Function', severity='critical', description=\"Function 'test_manual' is 155 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def test_manual():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_no_timeout.py', line_number=28, issue_type='Long Function', severity='critical', description=\"Function 'test_no_timeout' is 196 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def test_no_timeout():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_simple.py', line_number=19, issue_type='Long Function', severity='high', description=\"Function 'test_pitch_deck_simple' is 85 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def test_pitch_deck_simple():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\ui.py', line_number=60, issue_type='Long Function', severity='high', description=\"Function 'show_dashboard' is 54 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='def show_dashboard():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\validate_optimization.py', line_number=202, issue_type='Long Function', severity='high', description=\"Function 'validate_optimization_features' is 51 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def validate_optimization_features(self) -> Dict[str, Any]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\validate_optimization.py', line_number=380, issue_type='Long Function', severity='high', description=\"Function 'generate_validation_report' is 88 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def generate_validation_report(self, results: Dict[str, Any]) -> None:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\worker_improved_v3.py', line_number=111, issue_type='Long Function', severity='critical', description=\"Function '_setup_routes' is 108 lines long\", suggestion='Break down into smaller, more focused functions', code_snippet='    def _setup_routes(self):')"
+      ],
+      "Missing Documentation": [
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\asmblr_lightweight.py', line_number=93, issue_type='Missing Documentation', severity='medium', description=\"Function 'get' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='    def get(self, key: str) -> Any | None:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\asmblr_lightweight.py', line_number=99, issue_type='Missing Documentation', severity='medium', description=\"Function 'set' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='    def set(self, key: str, value: Any, ttl: int = 300) -> None:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\export_paper_artifacts.py', line_number=598, issue_type='Missing Documentation', severity='medium', description=\"Function 'generate_artifacts' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='def generate_artifacts(output_dir: Path | str, n_contexts: int = 1000, k_seeds: int = 5, bootstrap_samples: int = 1000) -> dict[str, Path]:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\export_paper_artifacts.py', line_number=640, issue_type='Missing Documentation', severity='medium', description=\"Function 'main' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='def main() -> None:')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_code_quality_simple.py', line_number=105, issue_type='Missing Documentation', severity='medium', description=\"Function 'visit_FunctionDef' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='            def visit_FunctionDef(self, node):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_code_quality_simple.py', line_number=176, issue_type='Missing Documentation', severity='medium', description=\"Function 'visit_FunctionDef' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='            def visit_FunctionDef(self, node):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_code_quality_simple.py', line_number=249, issue_type='Missing Documentation', severity='medium', description=\"Function 'visit_FunctionDef' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='            def visit_FunctionDef(self, node):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_code_quality_simple.py', line_number=258, issue_type='Missing Documentation', severity='medium', description=\"Function 'visit_ClassDef' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='            def visit_ClassDef(self, node):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_code_quality_simple.py', line_number=622, issue_type='Missing Documentation', severity='medium', description=\"Function 'main' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='def main():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\security_hardening.py', line_number=541, issue_type='Missing Documentation', severity='medium', description=\"Function 'decorator' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='    def decorator(func):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\security_hardening.py', line_number=564, issue_type='Missing Documentation', severity='medium', description=\"Function 'decorator' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='    def decorator(func):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_phase1_improvements.py', line_number=97, issue_type='Missing Documentation', severity='medium', description=\"Function 'analyze_remaining_issues' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='def analyze_remaining_issues():')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck.py', line_number=34, issue_type='Missing Documentation', severity='medium', description=\"Function 'available' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def available(self):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck.py', line_number=37, issue_type='Missing Documentation', severity='medium', description=\"Function 'generate' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def generate(self, prompt):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_final.py', line_number=34, issue_type='Missing Documentation', severity='medium', description=\"Function 'available' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def available(self):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_final.py', line_number=37, issue_type='Missing Documentation', severity='medium', description=\"Function 'generate' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def generate(self, prompt):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_manual.py', line_number=33, issue_type='Missing Documentation', severity='medium', description=\"Function 'available' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def available(self):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_manual.py', line_number=36, issue_type='Missing Documentation', severity='medium', description=\"Function 'generate' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def generate(self, prompt):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_no_timeout.py', line_number=39, issue_type='Missing Documentation', severity='medium', description=\"Function 'available' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def available(self):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_no_timeout.py', line_number=42, issue_type='Missing Documentation', severity='medium', description=\"Function 'generate' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def generate(self, prompt):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_simple.py', line_number=31, issue_type='Missing Documentation', severity='medium', description=\"Function 'available' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def available(self):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_simple.py', line_number=34, issue_type='Missing Documentation', severity='medium', description=\"Function 'generate' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def generate(self, prompt):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_pitch_deck_simple.py', line_number=90, issue_type='Missing Documentation', severity='medium', description=\"Function 'mock_generate_content' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='    def mock_generate_content(prompt):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\ui.py', line_number=270, issue_type='Missing Documentation', severity='medium', description=\"Function 'progress_callback' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def progress_callback(update: ProgressUpdate):')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\ui.py', line_number=288, issue_type='Missing Documentation', severity='medium', description=\"Function 'run_pipeline' missing docstring\", suggestion='Add docstring explaining function purpose and parameters', code_snippet='        def run_pipeline():')"
+      ],
+      "Syntax Error": [
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_code_quality.py', line_number=1, issue_type='Syntax Error', severity='critical', description='File contains syntax errors', suggestion='Fix syntax errors before analysis', code_snippet='')"
+      ],
+      "Naming Convention": [
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\fix_code_quality_simple.py', line_number=150, issue_type='Naming Convention', severity='medium', description=\"Class 'to' should use PascalCase\", suggestion='Rename class to follow PascalCase convention', code_snippet='suggestion=\"Rename class to follow PascalCase convention\",')",
+        "CodeQualityIssue(file_path='C:\\\\Users\\\\adamg\\\\3D Objects\\\\8. Solopreuneur\\\\Asmblr\\\\test_lightweight.py', line_number=118, issue_type='Naming Convention', severity='medium', description=\"Class 'integration' should use PascalCase\", suggestion='Rename class to follow PascalCase convention', code_snippet='\"\"\"Test Settings class integration\"\"\"')"
+      ]
+    },
+    "severity_distribution": {
+      "low": 0,
+      "medium": 27,
+      "high": 35,
+      "critical": 9
+    },
+    "top_problematic_files": [
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\fix_code_quality_simple.py",
+        "issue_count": 7
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\export_paper_artifacts.py",
+        "issue_count": 4
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\test_pitch_deck_no_timeout.py",
+        "issue_count": 4
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\test_pitch_deck_simple.py",
+        "issue_count": 4
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\validate_optimization.py",
+        "issue_count": 4
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\final_validation_suite.py",
+        "issue_count": 3
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\fix_performance_resources.py",
+        "issue_count": 3
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\fix_technical_debt.py",
+        "issue_count": 3
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\implement_performance_fixes.py",
+        "issue_count": 3
+      },
+      {
+        "file": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\run_optimized_tests.py",
+        "issue_count": 3
+      }
+    ]
+  },
+  "fixes_applied": {
+    "create_style_guide": {
+      "fix_applied": "Style guide created",
+      "file_path": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\CODE_STYLE_GUIDE.md"
+    },
+    "implement_linter": {
+      "fix_applied": "Enhanced linter configuration",
+      "file_path": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\pyproject.toml"
+    },
+    "setup_precommit": {
+      "fix_applied": "Pre-commit hooks configured",
+      "file_path": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\.pre-commit-config.yaml"
+    },
+    "create_refactoring_tools": {
+      "fix_applied": "Refactoring tool created",
+      "file_path": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\scripts\\refactor_tool.py"
+    },
+    "implement_quality_gates": {
+      "fix_applied": "Quality gates implemented",
+      "file_path": "C:\\Users\\adamg\\3D Objects\\8. Solopreuneur\\Asmblr\\scripts\\quality_gate.py"
+    }
+  },
+  "summary": {
+    "total_issues": 71,
+    "files_analyzed": 1543,
+    "critical_issues": 9,
+    "high_issues": 35,
+    "quality_score": 93
+  }
+}
