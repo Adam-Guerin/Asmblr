@@ -9,7 +9,6 @@ import json
 import threading
 from typing import Any
 
-from app.core.cache import ArtifactCache
 
 # Define CacheEntry since it doesn't exist
 class CacheEntry:

@@ -3,24 +3,15 @@ Universal Language Translator for Asmblr
 Translation and communication across all known and unknown languages
 """
 
-import json
 import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +61,7 @@ class Language:
     id: str
     name: str
     language_type: LanguageType
-    communication_modes: List[CommunicationMode]
+    communication_modes: list[CommunicationMode]
     vocabulary_size: int
     grammar_complexity: float  # 0-1
     semantic_depth: float  # 0-1
@@ -88,7 +79,7 @@ class TranslationPattern:
     pattern_type: str
     confidence: float  # 0-1
     accuracy: float  # 0-1
-    examples: List[Dict[str, Any]]
+    examples: list[dict[str, Any]]
     created_at: datetime
     usage_count: int
 
@@ -100,7 +91,7 @@ class TranslationRequest:
     source_language: str
     target_language: str
     communication_mode: CommunicationMode
-    context: Dict[str, Any]
+    context: dict[str, Any]
     priority: str  # low, medium, high
     created_at: datetime
 
@@ -114,8 +105,8 @@ class TranslationResult:
     accuracy: float  # 0-1
     processing_time: float  # seconds
     method_used: TranslationMethod
-    alternative_translations: List[str]
-    metadata: Dict[str, Any]
+    alternative_translations: list[str]
+    metadata: dict[str, Any]
     created_at: datetime
 
 class NeuralTranslationEngine:
@@ -129,7 +120,7 @@ class NeuralTranslationEngine:
         self.vocabulary = self._initialize_vocabulary()
         self.translation_patterns = {}
         
-    def _initialize_vocabulary(self) -> Dict[str, np.ndarray]:
+    def _initialize_vocabulary(self) -> dict[str, np.ndarray]:
         """Initialize vocabulary embeddings"""
         try:
             # Create synthetic vocabulary embeddings
@@ -464,7 +455,7 @@ class UniversalGrammarEngine:
         self.universal_patterns = self._initialize_patterns()
         self.grammar_trees = {}
         
-    def _initialize_patterns(self) -> Dict[str, Any]:
+    def _initialize_patterns(self) -> dict[str, Any]:
         """Initialize universal grammar patterns"""
         try:
             return {
@@ -494,7 +485,7 @@ class UniversalGrammarEngine:
             logger.error(f"Error initializing patterns: {e}")
             return {}
     
-    def analyze_grammar(self, text: str, language: str) -> Dict[str, Any]:
+    def analyze_grammar(self, text: str, language: str) -> dict[str, Any]:
         """Analyze grammar patterns"""
         try:
             words = text.split()
@@ -529,7 +520,7 @@ class UniversalGrammarEngine:
             logger.error(f"Error analyzing grammar: {e}")
             return {}
     
-    def _matches_pattern(self, words: List[str], pattern: List[str]) -> bool:
+    def _matches_pattern(self, words: list[str], pattern: list[str]) -> bool:
         """Check if words match pattern"""
         try:
             if len(words) != len(pattern):
@@ -547,14 +538,14 @@ class UniversalLanguageTranslator:
     """Main universal language translator"""
     
     def __init__(self):
-        self.known_languages: Dict[str, Language] = {}
+        self.known_languages: dict[str, Language] = {}
         self.translation_engines = {
             TranslationMethod.NEURAL_NETWORK: NeuralTranslationEngine(),
             TranslationMethod.QUANTUM_ENTANGLEMENT: QuantumTranslationEngine(),
             TranslationMethod.UNIVERSAL_GRAMMAR: UniversalGrammarEngine()
         }
-        self.translation_history: List[TranslationResult] = []
-        self.active_requests: Dict[str, TranslationRequest] = {}
+        self.translation_history: list[TranslationResult] = []
+        self.active_requests: dict[str, TranslationRequest] = {}
         
         # Initialize with known languages
         self._initialize_known_languages()
@@ -645,7 +636,7 @@ class UniversalLanguageTranslator:
             logger.error(f"Error initializing known languages: {e}")
     
     async def discover_language(self, name: str, language_type: LanguageType,
-                               communication_modes: List[CommunicationMode],
+                               communication_modes: list[CommunicationMode],
                                sample_text: str) -> Language:
         """Discover new language"""
         try:
@@ -687,7 +678,7 @@ class UniversalLanguageTranslator:
                         target_language: str,
                         communication_mode: CommunicationMode = CommunicationMode.VERBAL,
                         method: TranslationMethod = TranslationMethod.NEURAL_NETWORK,
-                        context: Dict[str, Any] = None) -> TranslationResult:
+                        context: dict[str, Any] = None) -> TranslationResult:
         """Translate text between languages"""
         try:
             if context is None:
@@ -730,7 +721,7 @@ class UniversalLanguageTranslator:
             logger.error(f"Error in translation: {e}")
             raise
     
-    def get_translation_history(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_translation_history(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get translation history"""
         try:
             recent_translations = self.translation_history[-limit:]
@@ -752,7 +743,7 @@ class UniversalLanguageTranslator:
             logger.error(f"Error getting translation history: {e}")
             return []
     
-    def get_language_info(self, language_id: str) -> Dict[str, Any]:
+    def get_language_info(self, language_id: str) -> dict[str, Any]:
         """Get language information"""
         try:
             language = self.known_languages.get(language_id)
@@ -777,7 +768,7 @@ class UniversalLanguageTranslator:
             logger.error(f"Error getting language info: {e}")
             return {"error": str(e)}
     
-    def list_languages(self) -> List[Dict[str, Any]]:
+    def list_languages(self) -> list[dict[str, Any]]:
         """List all known languages"""
         try:
             languages = []
@@ -882,7 +873,7 @@ class UniversalLanguageTranslator:
                 logger.error(f"Error in pattern learning: {e}")
                 await asyncio.sleep(300)
     
-    def _analyze_translation_patterns(self, translations: List[TranslationResult]) -> Dict[str, Any]:
+    def _analyze_translation_patterns(self, translations: list[TranslationResult]) -> dict[str, Any]:
         """Analyze translation patterns"""
         try:
             patterns = {
@@ -923,7 +914,7 @@ class UniversalLanguageTranslator:
                 logger.error(f"Error in translation optimization: {e}")
                 await asyncio.sleep(300)
     
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """Get system status"""
         try:
             return {
@@ -955,12 +946,12 @@ class TranslationRequestAPI(BaseModel):
     target_language: str
     communication_mode: str = "verbal"
     method: str = "neural_network"
-    context: Dict[str, Any] = {}
+    context: dict[str, Any] = {}
 
 class LanguageDiscoveryRequest(BaseModel):
     name: str
     language_type: str
-    communication_modes: List[str]
+    communication_modes: list[str]
     sample_text: str
 
 @router.post("/translate")

@@ -3,24 +3,15 @@ Reality Simulation Engine for Asmblr
 Complete reality simulation, creation, and manipulation system
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
 import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +74,9 @@ class RealityInstance:
     reality_type: RealityType
     complexity: SimulationComplexity
     physics_engine: PhysicsEngine
-    parameters: Dict[RealityParameter, float]
-    entities: List[str]
-    size: Tuple[float, ...]  # Dimensions in meters
+    parameters: dict[RealityParameter, float]
+    entities: list[str]
+    size: tuple[float, ...]  # Dimensions in meters
     time_scale: float  # Time scaling factor
     is_active: bool
     created_at: datetime
@@ -99,7 +90,7 @@ class SimulationEntity:
     entity_type: str
     position: np.ndarray
     velocity: np.ndarray
-    properties: Dict[str, Any]
+    properties: dict[str, Any]
     consciousness_level: float
     reality_influence: float
     is_active: bool
@@ -111,10 +102,10 @@ class RealityEvent:
     id: str
     timestamp: datetime
     event_type: str
-    entities_involved: List[str]
+    entities_involved: list[str]
     location: np.ndarray
-    parameters: Dict[str, Any]
-    causality_chain: List[str]
+    parameters: dict[str, Any]
+    causality_chain: list[str]
     probability: float
     occurred: bool
 
@@ -141,8 +132,8 @@ class PhysicsSimulation:
         self.h = 6.62607015e-34  # Planck constant
         self.k_B = 1.380649e-23  # Boltzmann constant
         
-    def update_entities(self, entities: List[SimulationEntity], 
-                        dt: float, reality_params: Dict[RealityParameter, float]) -> List[SimulationEntity]:
+    def update_entities(self, entities: list[SimulationEntity], 
+                        dt: float, reality_params: dict[RealityParameter, float]) -> list[SimulationEntity]:
         """Update entity positions and velocities"""
         try:
             updated_entities = []
@@ -191,8 +182,8 @@ class PhysicsSimulation:
             return entities
     
     def _newtonian_forces(self, entity: SimulationEntity, 
-                          all_entities: List[SimulationEntity],
-                          reality_params: Dict[RealityParameter, float]) -> np.ndarray:
+                          all_entities: list[SimulationEntity],
+                          reality_params: dict[RealityParameter, float]) -> np.ndarray:
         """Calculate Newtonian forces"""
         try:
             force = np.zeros_like(entity.position)
@@ -222,8 +213,8 @@ class PhysicsSimulation:
             return np.zeros_like(entity.position)
     
     def _relativistic_forces(self, entity: SimulationEntity,
-                            all_entities: List[SimulationEntity],
-                            reality_params: Dict[RealityParameter, float]) -> np.ndarray:
+                            all_entities: list[SimulationEntity],
+                            reality_params: dict[RealityParameter, float]) -> np.ndarray:
         """Calculate relativistic forces"""
         try:
             # Start with Newtonian forces
@@ -250,8 +241,8 @@ class PhysicsSimulation:
             return np.zeros_like(entity.position)
     
     def _quantum_forces(self, entity: SimulationEntity,
-                        all_entities: List[SimulationEntity],
-                        reality_params: Dict[RealityParameter, float]) -> np.ndarray:
+                        all_entities: list[SimulationEntity],
+                        reality_params: dict[RealityParameter, float]) -> np.ndarray:
         """Calculate quantum forces"""
         try:
             # Quantum uncertainty
@@ -274,8 +265,8 @@ class PhysicsSimulation:
             return np.zeros_like(entity.position)
     
     def _consciousness_forces(self, entity: SimulationEntity,
-                              all_entities: List[SimulationEntity],
-                              reality_params: Dict[RealityParameter, float]) -> np.ndarray:
+                              all_entities: list[SimulationEntity],
+                              reality_params: dict[RealityParameter, float]) -> np.ndarray:
         """Calculate consciousness-based forces"""
         try:
             force = np.zeros_like(entity.position)
@@ -308,7 +299,7 @@ class RealityGenerator:
     def __init__(self):
         self.reality_templates = self._initialize_templates()
         
-    def _initialize_templates(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_templates(self) -> dict[str, dict[str, Any]]:
         """Initialize reality templates"""
         return {
             "earth_like": {
@@ -415,7 +406,7 @@ class RealityGenerator:
             raise
     
     def generate_entities(self, reality: RealityInstance, 
-                         num_entities: int = 100) -> List[SimulationEntity]:
+                         num_entities: int = 100) -> list[SimulationEntity]:
         """Generate entities for reality"""
         try:
             entities = []
@@ -475,11 +466,11 @@ class RealitySimulation:
     """Main reality simulation system"""
     
     def __init__(self):
-        self.realities: Dict[str, RealityInstance] = {}
-        self.entities: Dict[str, List[SimulationEntity]] = {}
-        self.physics_engines: Dict[str, PhysicsSimulation] = {}
+        self.realities: dict[str, RealityInstance] = {}
+        self.entities: dict[str, list[SimulationEntity]] = {}
+        self.physics_engines: dict[str, PhysicsSimulation] = {}
         self.reality_generator = RealityGenerator()
-        self.simulation_states: Dict[str, SimulationState] = {}
+        self.simulation_states: dict[str, SimulationState] = {}
         
         # Start background processes
         asyncio.create_task(self._simulation_loop())
@@ -567,7 +558,7 @@ class RealitySimulation:
             raise
     
     def _calculate_computational_load(self, reality: RealityInstance,
-                                      entities: List[SimulationEntity]) -> float:
+                                      entities: list[SimulationEntity]) -> float:
         """Calculate computational load"""
         try:
             # Base load based on complexity
@@ -610,7 +601,7 @@ class RealitySimulation:
             return 1.0
     
     def _calculate_stability(self, reality: RealityInstance,
-                             entities: List[SimulationEntity]) -> float:
+                             entities: list[SimulationEntity]) -> float:
         """Calculate reality stability"""
         try:
             stability = 1.0
@@ -724,7 +715,7 @@ class RealitySimulation:
                 logger.error(f"Error in consciousness integration: {e}")
                 await asyncio.sleep(5)
     
-    def get_reality_info(self, reality_id: str) -> Dict[str, Any]:
+    def get_reality_info(self, reality_id: str) -> dict[str, Any]:
         """Get reality information"""
         try:
             reality = self.realities.get(reality_id)
@@ -760,7 +751,7 @@ class RealitySimulation:
             logger.error(f"Error getting reality info: {e}")
             return {"error": str(e)}
     
-    def list_realities(self) -> List[Dict[str, Any]]:
+    def list_realities(self) -> list[dict[str, Any]]:
         """List all realities"""
         try:
             realities = []

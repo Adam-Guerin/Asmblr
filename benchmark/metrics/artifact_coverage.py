@@ -2,7 +2,7 @@
 Artifact Coverage metric - percentage of required artifacts produced.
 """
 
-from typing import Dict, List, Any, Set
+from typing import Any
 
 from .base import BaseMetric, MetricResult
 
@@ -31,7 +31,7 @@ class ArtifactCoverage(BaseMetric):
             "mvp_repo": {"weight": 0.15, "essential": False}
         }
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute artifact coverage score."""
         artifacts = run_result.get("artifacts", {})
         missing_artifacts = run_result.get("missing_artifacts", [])
@@ -112,10 +112,10 @@ class ArtifactCoverage(BaseMetric):
             }
         )
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return list(self.required_artifacts.keys())
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return []

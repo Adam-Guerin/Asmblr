@@ -5,7 +5,6 @@ Synthetic market dataset - programmatically generated with controllable noise.
 import json
 import random
 from pathlib import Path
-from typing import List, Dict, Optional
 
 
 class SyntheticMarketDataset:
@@ -14,7 +13,7 @@ class SyntheticMarketDataset:
     has_ground_truth = True
     size = 100  # Default size
     
-    def __init__(self, custom_path: Optional[str] = None, size: int = 100, noise_level: float = 0.1):
+    def __init__(self, custom_path: str | None = None, size: int = 100, noise_level: float = 0.1):
         self.custom_path = custom_path
         self.size = size
         self.noise_level = noise_level
@@ -61,14 +60,14 @@ class SyntheticMarketDataset:
             "Communication breakdown in {context} causes delays"
         ]
     
-    def load(self) -> List[Dict]:
+    def load(self) -> list[dict]:
         """Load or generate the synthetic dataset."""
         if self.data is not None:
             return self.data
         
         if self.custom_path:
             # Load from custom path
-            with open(self.custom_path, 'r', encoding='utf-8') as f:
+            with open(self.custom_path, encoding='utf-8') as f:
                 self.data = json.load(f)
         else:
             # Generate synthetic data
@@ -76,7 +75,7 @@ class SyntheticMarketDataset:
         
         return self.data
     
-    def _generate_synthetic_data(self) -> List[Dict]:
+    def _generate_synthetic_data(self) -> list[dict]:
         """Generate synthetic market data."""
         data = []
         
@@ -104,7 +103,7 @@ class SyntheticMarketDataset:
         
         return data
     
-    def _generate_documents(self, topic: str, index: int) -> List[Dict]:
+    def _generate_documents(self, topic: str, index: int) -> list[dict]:
         """Generate synthetic documents for a topic."""
         num_documents = random.randint(2, 4)
         documents = []
@@ -159,7 +158,7 @@ class SyntheticMarketDataset:
         template_list = templates.get(source, templates["reddit"])
         return random.choice(template_list)
     
-    def _generate_ground_truth(self, topic: str, index: int) -> Dict:
+    def _generate_ground_truth(self, topic: str, index: int) -> dict:
         """Generate ground truth for a topic."""
         # Generate pains
         num_pains = random.randint(2, 4)
@@ -278,7 +277,7 @@ class SyntheticMarketDataset:
         
         return problem
     
-    def _add_noise(self, ground_truth: Dict) -> Dict:
+    def _add_noise(self, ground_truth: dict) -> dict:
         """Add controlled noise to ground truth."""
         noisy_gt = ground_truth.copy()
         
@@ -311,7 +310,7 @@ class SyntheticMarketDataset:
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
     
-    def get_schema(self) -> Dict:
+    def get_schema(self) -> dict:
         """Get dataset schema (same as toy_pains)."""
         return {
             "type": "object",

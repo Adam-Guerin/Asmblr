@@ -3,16 +3,13 @@ Main CLI entry point for the benchmark suite.
 """
 
 import argparse
-import asyncio
 import logging
 import sys
-from pathlib import Path
 
-from .core import BenchmarkRunner, ExperimentConfig, set_seed, load_json, save_json
-from .datasets import DatasetRegistry, load_dataset, create_sample_dataset
-from .baselines import BaselineRegistry, run_baseline
-from .metrics import MetricRegistry, compute_all_metrics
-from .reporting import ReportGenerator
+from .core import BenchmarkRunner, ExperimentConfig, set_seed
+from .datasets import DatasetRegistry, create_sample_dataset
+from .baselines import BaselineRegistry
+from .metrics import MetricRegistry
 
 # Configure logging
 logging.basicConfig(

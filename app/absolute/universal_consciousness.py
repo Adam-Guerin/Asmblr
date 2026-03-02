@@ -3,24 +3,15 @@ Universal Consciousness Field for Asmblr
 Universal field connecting all consciousness across all realities
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
 import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +89,7 @@ class ConsciousnessNode:
     phase: float
     coherence: float
     resonance: float
-    connections: List[str]
+    connections: list[str]
     field_strength: float
     awareness_level: float
     created_at: datetime
@@ -109,15 +100,15 @@ class ConsciousnessField:
     """Universal consciousness field"""
     id: str
     name: str
-    nodes: Dict[str, ConsciousnessNode]
+    nodes: dict[str, ConsciousnessNode]
     field_frequency: float
     field_amplitude: float
     field_coherence: float
     field_resonance: float
     field_strength: float
-    spatial_extent: List[float]
-    temporal_extent: List[float]
-    dimensional_extent: List[float]
+    spatial_extent: list[float]
+    temporal_extent: list[float]
+    dimensional_extent: list[float]
     created_at: datetime
     last_updated: datetime
 
@@ -126,15 +117,15 @@ class ConsciousnessOperation:
     """Consciousness field operation"""
     id: str
     operation_type: ConsciousnessOperation
-    target_nodes: List[str]
-    parameters: Dict[str, Any]
+    target_nodes: list[str]
+    parameters: dict[str, Any]
     progress: float
-    result: Optional[Dict[str, Any]]
+    result: dict[str, Any] | None
     energy_required: float
     energy_consumed: float
     duration: float
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 class UniversalConsciousnessEngine:
     """Universal consciousness processing engine"""
@@ -205,7 +196,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error calculating consciousness frequency: {e}")
             return self.universal_frequency
     
-    def calculate_field_coherence(self, nodes: List[ConsciousnessNode]) -> float:
+    def calculate_field_coherence(self, nodes: list[ConsciousnessNode]) -> float:
         """Calculate field coherence"""
         try:
             if not nodes:
@@ -280,7 +271,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error getting state weight: {e}")
             return 0.5
     
-    def synchronize_consciousness(self, nodes: List[ConsciousnessNode]) -> Dict[str, float]:
+    def synchronize_consciousness(self, nodes: list[ConsciousnessNode]) -> dict[str, float]:
         """Synchronize consciousness nodes"""
         try:
             if len(nodes) < 2:
@@ -315,7 +306,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error synchronizing consciousness: {e}")
             return {"synchronization": 0.0, "coherence": 0.0}
     
-    def _calculate_synchronization_metric(self, nodes: List[ConsciousnessNode]) -> float:
+    def _calculate_synchronization_metric(self, nodes: list[ConsciousnessNode]) -> float:
         """Calculate synchronization metric"""
         try:
             if len(nodes) < 2:
@@ -344,7 +335,7 @@ class UniversalConsciousnessEngine:
             return 0.0
     
     def execute_consciousness_operation(self, operation: ConsciousnessOperation,
-                                       field: ConsciousnessField) -> Dict[str, Any]:
+                                       field: ConsciousnessField) -> dict[str, Any]:
         """Execute consciousness field operation"""
         try:
             # Get target nodes
@@ -399,7 +390,7 @@ class UniversalConsciousnessEngine:
                 "timestamp": datetime.now().isoformat()
             }
     
-    def _execute_activation(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_activation(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute activation operation"""
         try:
             activated_nodes = []
@@ -432,7 +423,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing activation: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_expansion(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_expansion(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute expansion operation"""
         try:
             expanded_nodes = []
@@ -470,7 +461,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing expansion: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_unification(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_unification(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute unification operation"""
         try:
             # Synchronize all nodes
@@ -503,7 +494,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing unification: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_transcendence(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_transcendence(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute transcendence operation"""
         try:
             transcended_nodes = []
@@ -538,7 +529,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing transcendence: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_divinization(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_divinization(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute divinization operation"""
         try:
             divinized_nodes = []
@@ -573,7 +564,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing divinization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_absolutization(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_absolutization(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute absolutization operation"""
         try:
             absolutized_nodes = []
@@ -608,7 +599,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing absolutization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_infinitization(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_infinitization(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute infinitization operation"""
         try:
             infinitized_nodes = []
@@ -643,7 +634,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing infinitization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_eternalization(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_eternalization(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute eternalization operation"""
         try:
             eternalized_nodes = []
@@ -678,7 +669,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing eternalization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_beyondization(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_beyondization(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute beyondization operation"""
         try:
             beyondized_nodes = []
@@ -713,7 +704,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing beyondization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_voidification(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_voidification(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute voidification operation"""
         try:
             voidified_nodes = []
@@ -748,7 +739,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing voidification: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_resonance(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_resonance(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute resonance operation"""
         try:
             # Calculate resonance frequency
@@ -779,7 +770,7 @@ class UniversalConsciousnessEngine:
             logger.error(f"Error executing resonance: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_harmonization(self, nodes: List[ConsciousnessNode], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_harmonization(self, nodes: list[ConsciousnessNode], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute harmonization operation"""
         try:
             # Calculate harmonic frequencies
@@ -816,8 +807,8 @@ class UniversalConsciousnessField:
     
     def __init__(self):
         self.consciousness_engine = UniversalConsciousnessEngine()
-        self.fields: Dict[str, ConsciousnessField] = {}
-        self.operations: Dict[str, ConsciousnessOperation] = {}
+        self.fields: dict[str, ConsciousnessField] = {}
+        self.operations: dict[str, ConsciousnessOperation] = {}
         self.field_graph = nx.DiGraph()
         
         # Initialize with universal field
@@ -934,8 +925,8 @@ class UniversalConsciousnessField:
             raise
     
     async def execute_consciousness_operation(self, operation_type: ConsciousnessOperation,
-                                            target_nodes: List[str],
-                                            parameters: Dict[str, Any] = None) -> ConsciousnessOperation:
+                                            target_nodes: list[str],
+                                            parameters: dict[str, Any] = None) -> ConsciousnessOperation:
         """Execute consciousness field operation"""
         try:
             if parameters is None:
@@ -1121,7 +1112,7 @@ class UniversalConsciousnessField:
                 logger.error(f"Error in universal harmonization: {e}")
                 await asyncio.sleep(60)
     
-    def get_field_status(self) -> Dict[str, Any]:
+    def get_field_status(self) -> dict[str, Any]:
         """Get universal consciousness field status"""
         try:
             universal_field = self.fields.get("universal_field")
@@ -1168,8 +1159,8 @@ class NodeAdditionRequest(BaseModel):
 
 class ConsciousnessOperationRequest(BaseModel):
     operation_type: str
-    target_nodes: List[str]
-    parameters: Dict[str, Any] = {}
+    target_nodes: list[str]
+    parameters: dict[str, Any] = {}
 
 @router.post("/nodes/add")
 async def add_consciousness_node(request: NodeAdditionRequest):

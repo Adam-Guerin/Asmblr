@@ -5,13 +5,10 @@ Advanced conversational AI with context awareness and business intelligence
 
 import json
 import time
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from pathlib import Path
-import re
+from datetime import datetime
+from typing import Any
+from dataclasses import dataclass
 from enum import Enum
 import openai
 from langchain.chains import ConversationChain
@@ -19,7 +16,6 @@ from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 from langchain.llms import OpenAI
 from langchain.agents import Tool, AgentExecutor, create_react_agent
-from langchain.utilities import SearchAPIWrapper
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -41,13 +37,13 @@ class ConversationContext:
     """Conversation context and state"""
     user_id: str
     session_id: str
-    intent: Optional[IntentType]
-    project_context: Optional[Dict[str, Any]]
-    previous_interactions: List[Dict[str, Any]]
-    user_preferences: Dict[str, Any]
-    business_domain: Optional[str]
+    intent: IntentType | None
+    project_context: dict[str, Any] | None
+    previous_interactions: list[dict[str, Any]]
+    user_preferences: dict[str, Any]
+    business_domain: str | None
     expertise_level: str  # beginner, intermediate, advanced
-    current_mvp_state: Optional[Dict[str, Any]]
+    current_mvp_state: dict[str, Any] | None
     collaboration_mode: bool = False
 
 @dataclass
@@ -56,11 +52,11 @@ class AIResponse:
     content: str
     intent: IntentType
     confidence: float
-    suggested_actions: List[str]
-    follow_up_questions: List[str]
-    resources: List[Dict[str, str]]
-    execution_plan: Optional[Dict[str, Any]] = None
-    collaboration_invites: List[str] = None
+    suggested_actions: list[str]
+    follow_up_questions: list[str]
+    resources: list[dict[str, str]]
+    execution_plan: dict[str, Any] | None = None
+    collaboration_invites: list[str] = None
 
 class IntentClassifier:
     """Classify user intents using ML"""
@@ -115,7 +111,7 @@ class IntentClassifier:
             self.intent_vectors = self.vectorizer.transform(texts)
             self.intent_labels = labels
     
-    def classify_intent(self, text: str) -> Tuple[IntentType, float]:
+    def classify_intent(self, text: str) -> tuple[IntentType, float]:
         """Classify user intent"""
         if not hasattr(self, 'intent_vectors'):
             return IntentType.HELP, 0.5
@@ -186,15 +182,15 @@ class BusinessKnowledgeBase:
             }
         }
     
-    def get_business_model_info(self, model_type: str) -> Dict[str, Any]:
+    def get_business_model_info(self, model_type: str) -> dict[str, Any]:
         """Get business model information"""
         return self.business_models.get(model_type.lower(), {})
     
-    def get_market_insights(self, sector: str) -> Dict[str, Any]:
+    def get_market_insights(self, sector: str) -> dict[str, Any]:
         """Get market insights for sector"""
         return self.market_insights.get(sector.lower(), {})
     
-    def suggest_mvp_features(self, business_type: str, target_market: str) -> List[str]:
+    def suggest_mvp_features(self, business_type: str, target_market: str) -> list[str]:
         """Suggest MVP features based on business type and market"""
         base_features = ["User authentication", "Dashboard", "Analytics"]
         
@@ -218,8 +214,8 @@ class IntelligentAssistant:
         self.openai_api_key = openai_api_key
         self.intent_classifier = IntentClassifier()
         self.knowledge_base = BusinessKnowledgeBase()
-        self.conversation_history: Dict[str, ConversationContext] = {}
-        self.active_collaborations: Dict[str, List[str]] = {}
+        self.conversation_history: dict[str, ConversationContext] = {}
+        self.active_collaborations: dict[str, list[str]] = {}
         
         # Initialize LangChain components
         self._initialize_langchain()
@@ -267,7 +263,7 @@ class IntelligentAssistant:
             prompt=self.prompt
         )
     
-    def _create_tools(self) -> List[Tool]:
+    def _create_tools(self) -> list[Tool]:
         """Create tools for the agent"""
         tools = [
             Tool(
@@ -677,7 +673,7 @@ class IntelligentAssistant:
             ]
         )
     
-    def _extract_business_idea(self, message: str) -> Dict[str, str]:
+    def _extract_business_idea(self, message: str) -> dict[str, str]:
         """Extract business idea from message"""
         # Simple extraction - in production, use NLP
         idea = {"type": "saas", "market": "general", "description": message}
@@ -704,7 +700,7 @@ class IntelligentAssistant:
         
         return "general"
     
-    def _extract_collaboration_details(self, message: str) -> Dict[str, Any]:
+    def _extract_collaboration_details(self, message: str) -> dict[str, Any]:
         """Extract collaboration details from message"""
         # Simple extraction - in production, use NLP
         details = {"invite_users": []}
@@ -764,17 +760,17 @@ router = APIRouter(prefix="/assistant", tags=["intelligent-assistant"])
 class MessageRequest(BaseModel):
     user_id: str
     message: str
-    session_id: Optional[str] = None
+    session_id: str | None = None
 
 class MessageResponse(BaseModel):
     content: str
     intent: str
     confidence: float
-    suggested_actions: List[str]
-    follow_up_questions: List[str]
-    resources: List[Dict[str, str]]
-    execution_plan: Optional[Dict[str, Any]] = None
-    collaboration_invites: List[str] = None
+    suggested_actions: list[str]
+    follow_up_questions: list[str]
+    resources: list[dict[str, str]]
+    execution_plan: dict[str, Any] | None = None
+    collaboration_invites: list[str] = None
 
 @router.post("/chat", response_model=MessageResponse)
 async def chat_with_assistant(request: MessageRequest):
@@ -828,7 +824,7 @@ async def get_user_context(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/collaborate/{session_id}")
-async def invite_to_collaborate(session_id: str, user_emails: List[str]):
+async def invite_to_collaborate(session_id: str, user_emails: list[str]):
     """Invite users to collaborate"""
     try:
         if session_id not in intelligent_assistant.conversation_history:

@@ -5,7 +5,6 @@ Configuration management for benchmark experiments.
 import yaml
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,7 +16,7 @@ class ExperimentConfig:
     
     # Dataset configuration
     dataset_name: str = "toy_pains_v1"
-    dataset_path: Optional[str] = None
+    dataset_path: str | None = None
     train_split: float = 0.7
     val_split: float = 0.15
     test_split: float = 0.15
@@ -25,16 +24,16 @@ class ExperimentConfig:
     # Run configuration
     seed: int = 42
     output_dir: str = "benchmark_outputs"
-    experiment_id: Optional[str] = None
+    experiment_id: str | None = None
     
     # Asmblr run directories (for evaluation)
-    asmblr_run_dirs: List[str] = field(default_factory=list)
+    asmblr_run_dirs: list[str] = field(default_factory=list)
     
     # Baselines to run
-    baselines: List[str] = field(default_factory=lambda: ["random", "rule_based", "single_agent"])
+    baselines: list[str] = field(default_factory=lambda: ["random", "rule_based", "single_agent"])
     
     # Metrics to compute
-    metrics: List[str] = field(default_factory=lambda: [
+    metrics: list[str] = field(default_factory=lambda: [
         "pain_extraction_quality",
         "pain_specificity_score", 
         "clustering_quality",
@@ -49,8 +48,8 @@ class ExperimentConfig:
     ])
     
     # Metric thresholds and weights
-    metric_weights: Dict[str, float] = field(default_factory=dict)
-    thresholds: Dict[str, float] = field(default_factory=dict)
+    metric_weights: dict[str, float] = field(default_factory=dict)
+    thresholds: dict[str, float] = field(default_factory=dict)
     
     # Bootstrap configuration
     bootstrap_samples: int = 1000
@@ -121,7 +120,7 @@ class ExperimentConfig:
         if not config_path.exists():
             raise FileNotFoundError(f"Config file not found: {config_path}")
         
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             config_dict = yaml.safe_load(f)
         
         logger.info(f"Loaded config from {config_path}")
@@ -167,7 +166,7 @@ class ExperimentConfig:
             return base_path / Path(*path_parts)
         return base_path
     
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """Validate configuration and return list of issues."""
         issues = []
         

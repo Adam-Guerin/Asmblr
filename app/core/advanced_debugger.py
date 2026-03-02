@@ -7,7 +7,7 @@ import time
 import json
 import traceback
 import sys
-from typing import Any, Tuple
+from typing import Any
 from collections.abc import Callable
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -581,7 +581,7 @@ class AdvancedDebugger:
         *args,
         session_id: str | None = None,
         **kwargs
-    ) -> Tuple[Any, PerformanceProfile]:
+    ) -> tuple[Any, PerformanceProfile]:
         """Profile function performance"""
         try:
             # Start monitoring

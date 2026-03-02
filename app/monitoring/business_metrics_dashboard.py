@@ -4,15 +4,13 @@ Real-time KPIs and business intelligence
 """
 
 import json
-import time
 import asyncio
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Any
 from dataclasses import dataclass, asdict
 import logging
 from pathlib import Path
 import sqlite3
-from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +21,8 @@ class BusinessMetric:
     value: float
     unit: str
     timestamp: datetime
-    tags: Dict[str, str]
-    metadata: Dict[str, Any]
+    tags: dict[str, str]
+    metadata: dict[str, Any]
 
 @dataclass
 class PipelineMetrics:
@@ -45,7 +43,7 @@ class LLMMetrics:
     average_response_time: float
     total_tokens: int
     average_tokens_per_request: float
-    model_usage: Dict[str, int]
+    model_usage: dict[str, int]
     cost_estimate: float
 
 @dataclass
@@ -56,7 +54,7 @@ class UserMetrics:
     new_users_today: int
     user_retention_rate: float
     average_session_duration: float
-    feature_adoption: Dict[str, float]
+    feature_adoption: dict[str, float]
 
 class BusinessMetricsCollector:
     """Collects and aggregates business metrics"""
@@ -299,7 +297,7 @@ class BusinessMetricsCollector:
                 feature_adoption=feature_adoption
             )
     
-    def get_metric_history(self, metric_name: str, time_range: timedelta = timedelta(days=7)) -> List[BusinessMetric]:
+    def get_metric_history(self, metric_name: str, time_range: timedelta = timedelta(days=7)) -> list[BusinessMetric]:
         """Get historical data for a specific metric"""
         start_time = datetime.now() - time_range
         
@@ -330,7 +328,7 @@ class BusinessMetricsAPI:
     def __init__(self, collector: BusinessMetricsCollector):
         self.collector = collector
     
-    def get_dashboard_data(self) -> Dict[str, Any]:
+    def get_dashboard_data(self) -> dict[str, Any]:
         """Get complete dashboard data"""
         pipeline_metrics = self.collector.get_pipeline_metrics()
         llm_metrics = self.collector.get_llm_metrics()
@@ -371,7 +369,7 @@ class BusinessMetricsAPI:
             """, (five_min_ago,))
             return cursor.fetchone()[0] or 0
     
-    def _get_system_health(self) -> Dict[str, Any]:
+    def _get_system_health(self) -> dict[str, Any]:
         """Get system health metrics"""
         return {
             "status": "healthy",
@@ -399,7 +397,6 @@ metrics_api = BusinessMetricsAPI(metrics_collector)
 
 # FastAPI integration
 from fastapi import APIRouter, HTTPException
-from typing import List
 
 router = APIRouter(prefix="/metrics", tags=["business-metrics"])
 

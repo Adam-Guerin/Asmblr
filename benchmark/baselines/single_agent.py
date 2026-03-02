@@ -3,7 +3,7 @@ Single-agent baseline - monolithic output using deterministic heuristics.
 """
 
 import re
-from typing import Dict, List, Any
+from typing import Any
 from collections import Counter
 
 from .base import BaseBaseline
@@ -38,7 +38,7 @@ class SingleAgentBaseline(BaseBaseline):
             "low": 1, "medium": 2, "high": 3, "critical": 4, "severe": 5
         }
     
-    def process_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def process_item(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process a single dataset item using single-agent heuristics."""
         topic = item.get("topic", "Unknown Topic")
         documents = item.get("documents", [])
@@ -67,7 +67,7 @@ class SingleAgentBaseline(BaseBaseline):
             "analysis": analysis
         }
     
-    def _analyze_single_agent(self, text: str) -> Dict[str, Any]:
+    def _analyze_single_agent(self, text: str) -> dict[str, Any]:
         """Perform single-agent analysis of text."""
         text_lower = text.lower()
         
@@ -110,7 +110,7 @@ class SingleAgentBaseline(BaseBaseline):
             "sentence_count": len(re.split(r'[.!?]+', text))
         }
     
-    def _generate_pains_single_agent(self, topic: str, analysis: Dict[str, Any]) -> List[Dict]:
+    def _generate_pains_single_agent(self, topic: str, analysis: dict[str, Any]) -> list[dict]:
         """Generate pains using single-agent analysis."""
         pains = []
         
@@ -174,8 +174,8 @@ class SingleAgentBaseline(BaseBaseline):
         
         return actor_mapping.get(domain, "User")
     
-    def _generate_opportunities_single_agent(self, topic: str, pains: List[Dict], 
-                                          analysis: Dict[str, Any]) -> List[Dict]:
+    def _generate_opportunities_single_agent(self, topic: str, pains: list[dict], 
+                                          analysis: dict[str, Any]) -> list[dict]:
         """Generate opportunities using single-agent analysis."""
         opportunities = []
         
@@ -233,7 +233,7 @@ class SingleAgentBaseline(BaseBaseline):
         
         return opportunities
     
-    def _generate_competitors_single_agent(self, topic: str, analysis: Dict[str, Any]) -> List[Dict]:
+    def _generate_competitors_single_agent(self, topic: str, analysis: dict[str, Any]) -> list[dict]:
         """Generate competitors using single-agent analysis."""
         competitors = []
         
@@ -255,9 +255,9 @@ class SingleAgentBaseline(BaseBaseline):
         
         return competitors
     
-    def _make_decision_single_agent(self, analysis: Dict[str, Any], 
-                                   opportunities: List[Dict], 
-                                   competitors: List[Dict]) -> tuple[str, float]:
+    def _make_decision_single_agent(self, analysis: dict[str, Any], 
+                                   opportunities: list[dict], 
+                                   competitors: list[dict]) -> tuple[str, float]:
         """Make decision using single-agent analysis."""
         # Decision logic based on analysis scores
         opportunity_strength = len(opportunities) * 0.3

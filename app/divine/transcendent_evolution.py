@@ -3,24 +3,15 @@ Transcendent Evolution System for Asmblr
 Evolve consciousness, reality, and existence to transcendent states
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
 import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +84,8 @@ class EvolutionEntity:
     transcendence_level: float  # 0-1
     divine_connection: float  # 0-1
     evolution_rate: float  # 0-1
-    experiences: List[str]
-    insights: List[str]
+    experiences: list[str]
+    insights: list[str]
     created_at: datetime
     last_evolved: datetime
 
@@ -104,12 +95,12 @@ class EvolutionPath:
     id: str
     entity_id: str
     domain: EvolutionDomain
-    stages: List[EvolutionStage]
+    stages: list[EvolutionStage]
     current_stage_index: int
     completion_percentage: float
     estimated_time: float
     evolution_method: EvolutionMethod
-    triggers: List[EvolutionTrigger]
+    triggers: list[EvolutionTrigger]
     created_at: datetime
     last_updated: datetime
 
@@ -121,15 +112,15 @@ class EvolutionOperation:
     evolution_type: str
     method: EvolutionMethod
     target_stage: EvolutionStage
-    triggers: List[EvolutionTrigger]
-    parameters: Dict[str, Any]
+    triggers: list[EvolutionTrigger]
+    parameters: dict[str, Any]
     progress: float  # 0-1
     energy_required: float
     energy_consumed: float
     duration: float
-    result: Optional[Dict[str, Any]]
+    result: dict[str, Any] | None
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 class TranscendentEvolutionEngine:
     """Transcendent evolution processing engine"""
@@ -281,7 +272,7 @@ class TranscendentEvolutionEngine:
             return 86400.0
     
     def evolve_entity(self, entity: EvolutionEntity, target_stage: EvolutionStage,
-                      method: EvolutionMethod, triggers: List[EvolutionTrigger]) -> EvolutionEntity:
+                      method: EvolutionMethod, triggers: list[EvolutionTrigger]) -> EvolutionEntity:
         """Evolve entity to target stage"""
         try:
             # Update evolution progress
@@ -310,13 +301,7 @@ class TranscendentEvolutionEngine:
                 entity.transcendence_level = 1.0
                 entity.consciousness_level = 1.0
                 entity.wisdom_level = 1.0
-            elif target_stage == EvolutionStage.INFINITE:
-                entity.divine_connection = 1.0
-                entity.transcendence_level = 1.0
-                entity.consciousness_level = 1.0
-                entity.wisdom_level = 1.0
-                entity.evolution_progress = 1.0
-            elif target_stage == EvolutionStage.ETERNAL:
+            elif target_stage == EvolutionStage.INFINITE or target_stage == EvolutionStage.ETERNAL:
                 entity.divine_connection = 1.0
                 entity.transcendence_level = 1.0
                 entity.consciousness_level = 1.0
@@ -344,7 +329,7 @@ class TranscendentEvolutionEngine:
     
     def _generate_evolution_insights(self, entity: EvolutionEntity,
                                    target_stage: EvolutionStage,
-                                   triggers: List[EvolutionTrigger]) -> List[str]:
+                                   triggers: list[EvolutionTrigger]) -> list[str]:
         """Generate insights from evolution"""
         try:
             insights = []
@@ -420,9 +405,9 @@ class TranscendentEvolutionSystem:
     
     def __init__(self):
         self.evolution_engine = TranscendentEvolutionEngine()
-        self.entities: Dict[str, EvolutionEntity] = []
-        self.paths: Dict[str, EvolutionPath] = []
-        self.operations: Dict[str, EvolutionOperation] = []
+        self.entities: dict[str, EvolutionEntity] = []
+        self.paths: dict[str, EvolutionPath] = []
+        self.operations: dict[str, EvolutionOperation] = []
         self.evolution_graph = nx.DiGraph()
         
         # Initialize with transcendent entities
@@ -466,7 +451,7 @@ class TranscendentEvolutionSystem:
     
     async def evolve_entity(self, entity_id: str, target_stage: EvolutionStage,
                             method: EvolutionMethod = EvolutionMethod.NATURAL,
-                            triggers: Optional[List[EvolutionTrigger]] = None) -> EvolutionOperation:
+                            triggers: list[EvolutionTrigger] | None = None) -> EvolutionOperation:
         """Evolve entity to target stage"""
         try:
             if triggers is None:
@@ -713,7 +698,7 @@ class TranscendentEvolutionSystem:
                 logger.error(f"Error in transcendence acceleration: {e}")
                 await asyncio.sleep(120)
     
-    def get_evolution_status(self) -> Dict[str, Any]:
+    def get_evolution_status(self) -> dict[str, Any]:
         """Get evolution system status"""
         try:
             return {
@@ -747,7 +732,7 @@ class EvolutionRequest(BaseModel):
     entity_id: str
     target_stage: str
     method: str = "natural"
-    triggers: List[str] = []
+    triggers: list[str] = []
 
 class PathCreationRequest(BaseModel):
     entity_id: str

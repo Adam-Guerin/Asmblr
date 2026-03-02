@@ -1,358 +1,163 @@
-"""
-Tests unitaires pour le module core.llm
-Couvre le client LLM, la gestion des modèles et les appels API
-"""
+from __future__ import annotations
+
+from types import SimpleNamespace
 
 import pytest
-import asyncio
-import json
-from unittest.mock import Mock, patch
-import httpx
 
-from app.core.llm import LLMClient
-
-# Define LLMResponse since it doesn't exist in the module
-class LLMResponse:
-    def __init__(self, text: str, done: bool = True, total_duration: int = 0):
-        self.text = text
-        self.done = done
-        self.total_duration = total_duration
+from app.core import llm as llm_module
+from app.core.llm import LLMClient, check_ollama
 
 
-class TestLLMClient:
-    """Tests complets pour la classe LLMClient"""
+class _FakeMessage:
+    def __init__(self, content: str) -> None:
+        self.content = content
 
-    @pytest.fixture
-    def client(self):
-        """Fixture pour le client LLM de test"""
-        return LLMClient("http://localhost:11434", "llama3.1:8b")
 
-    def test_client_initialization(self):
-        """Test l'initialisation du client"""
-        base_url = "http://localhost:11434"
-        model = "llama3.1:8b"
-        
-        client = LLMClient(base_url, model)
-        
-        assert client.base_url == base_url
-        assert client.model == model
-        assert client.timeout == 30
-        assert client.max_retries == 3
+class _FakeChatClient:
+    def __init__(self, *args, **kwargs) -> None:
+        self.calls = 0
+        self.last_prompt = ""
+        self.response = "ok"
 
-    def test_client_initialization_with_options(self):
-        """Test l'initialisation avec options personnalisées"""
-        client = LLMClient(
-            base_url="http://custom:11434",
-            model="custom_model",
-            timeout=60,
-            max_retries=5
-        )
-        
-        assert client.base_url == "http://custom:11434"
-        assert client.model == "custom_model"
-        assert client.timeout == 60
-        assert client.max_retries == 5
+    def __call__(self, messages):
+        self.calls += 1
+        self.last_prompt = messages[0].content
+        return SimpleNamespace(content=self.response)
 
-    @pytest.mark.asyncio
-    async def test_available_success(self, client):
-        """Test la vérification de disponibilité réussie"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"models": [{"name": "llama3.1:8b"}]}
-        
-        with patch('httpx.AsyncClient.get', return_value=mock_response):
-            result = await client.available()
-            assert result is True
 
-    @pytest.mark.asyncio
-    async def test_available_connection_error(self, client):
-        """Test la gestion d'erreur de connexion"""
-        with patch('httpx.AsyncClient.get', side_effect=httpx.ConnectError("Connection failed")):
-            result = await client.available()
-            assert result is False
+@pytest.fixture(autouse=True)
+def _patch_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(llm_module, "get_settings", lambda: SimpleNamespace(enable_cache=False))
 
-    @pytest.mark.asyncio
-    async def test_available_model_not_found(self, client):
-        """Test quand le modèle n'est pas trouvé"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"models": [{"name": "other_model"}]}
-        
-        with patch('httpx.AsyncClient.get', return_value=mock_response):
-            result = await client.available()
-            assert result is False
 
-    @pytest.mark.asyncio
-    async def test_generate_success(self, client):
-        """Test la génération réussie"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "response": "Generated text",
-            "done": True,
-            "total_duration": 1000
-        }
-        
-        with patch('httpx.AsyncClient.post', return_value=mock_response):
-            response = await client.generate("Test prompt")
-            
-            assert isinstance(response, LLMResponse)
-            assert response.text == "Generated text"
-            assert response.done is True
-            assert response.total_duration == 1000
+@pytest.fixture
+def client(monkeypatch: pytest.MonkeyPatch) -> LLMClient:
+    monkeypatch.setattr(llm_module, "HumanMessage", _FakeMessage)
+    fake_factory = _FakeChatClient
+    monkeypatch.setattr(llm_module, "ChatOllama", fake_factory)
+    return LLMClient("http://localhost:11434", "llama3.1:8b")
 
-    @pytest.mark.asyncio
-    async def test_generate_with_options(self, client):
-        """Test la génération avec options personnalisées"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "response": "Generated text",
-            "done": True
-        }
-        
-        with patch('httpx.AsyncClient.post') as mock_post:
-            mock_post.return_value = mock_response
-            await client.generate(
-                "Test prompt",
-                temperature=0.5,
-                max_tokens=100,
-                stream=False
-            )
-            
-            # Vérification que les options ont été passées
-            call_args = mock_post.call_args
-            request_data = json.loads(call_args[1]["content"])
-            assert request_data["options"]["temperature"] == 0.5
-            assert request_data["options"]["num_predict"] == 100
 
-    @pytest.mark.asyncio
-    async def test_generate_api_error(self, client):
-        """Test la gestion d'erreur API"""
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_response.text = "Internal Server Error"
-        
-        with patch('httpx.AsyncClient.post', return_value=mock_response):
-            with pytest.raises(Exception, match="API error"):
-                await client.generate("Test prompt")
+def test_available_false_when_client_missing() -> None:
+    c = LLMClient("http://localhost:11434", "llama3.1:8b")
+    c._client = None
+    assert c.available() is False
 
-    @pytest.mark.asyncio
-    async def test_generate_with_retry(self, client):
-        """Test la logique de retry"""
-        # Premier appel échoue, deuxième réussit
-        responses = [
-            Mock(status_code=500, text="First error"),
-            Mock(status_code=200, json=Mock(return_value={"response": "Success", "done": True}))
-        ]
-        
-        with patch('httpx.AsyncClient.post', side_effect=responses):
-            response = await client.generate("Test prompt")
-            assert response.text == "Success"
 
-    @pytest.mark.asyncio
-    async def test_generate_max_retries_exceeded(self, client):
-        """Test l'échec après max retries"""
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_response.text = "Persistent error"
-        
-        with patch('httpx.AsyncClient.post', return_value=mock_response):
-            with pytest.raises(Exception, match="API error"):
-                await client.generate("Test prompt")
+def test_generate_raises_when_unavailable() -> None:
+    c = LLMClient("http://localhost:11434", "llama3.1:8b")
+    c._client = None
+    with pytest.raises(RuntimeError, match="LLM not available"):
+        c.generate("hello")
 
-    @pytest.mark.asyncio
-    async def test_generate_stream(self, client):
-        """Test la génération en streaming"""
-        # Simulation de streaming
-        chunks = [
-            '{"response": "Hello", "done": false}',
-            '{"response": " world", "done": false}',
-            '{"response": "!", "done": true}'
-        ]
-        
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.aiter_bytes.return_value = [
-            chunk.encode() for chunk in chunks
-        ]
-        
-        with patch('httpx.AsyncClient.post', return_value=mock_response):
-            responses = []
-            async for response in client.generate_stream("Test prompt"):
-                responses.append(response)
-            
-            assert len(responses) == 3
-            assert responses[0].text == "Hello"
-            assert responses[1].text == " world"
-            assert responses[2].text == "!"
-            assert responses[2].done is True
 
-    @pytest.mark.asyncio
-    async def test_list_models(self, client):
-        """Test la liste des modèles disponibles"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "models": [
-                {"name": "llama3.1:8b", "size": 8000000000},
-                {"name": "qwen2.5:7b", "size": 7000000000}
-            ]
-        }
-        
-        with patch('httpx.AsyncClient.get', return_value=mock_response):
-            models = await client.list_models()
-            
-            assert len(models) == 2
-            assert models[0]["name"] == "llama3.1:8b"
-            assert models[1]["name"] == "qwen2.5:7b"
+def test_generate_uses_client_and_updates_usage(client: LLMClient) -> None:
+    out = client.generate("hello world")
+    assert out == "ok"
+    usage = client.usage_snapshot()
+    assert usage["requests"] == 1
+    assert usage["prompt_chars"] == len("hello world")
+    assert usage["tokens_est"] > 0
 
-    @pytest.mark.asyncio
-    async def test_pull_model(self, client):
-        """Test le téléchargement d'un modèle"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"status": "pulling model"}
-        
-        with patch('httpx.AsyncClient.post', return_value=mock_response):
-            result = await client.pull_model("new_model")
-            assert result["status"] == "pulling model"
 
-    @pytest.mark.asyncio
-    async def test_delete_model(self, client):
-        """Test la suppression d'un modèle"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"status": "deleted"}
-        
-        with patch('httpx.AsyncClient.delete', return_value=mock_response):
-            result = await client.delete_model("old_model")
-            assert result["status"] == "deleted"
+def test_generate_json_parses_plain_json(client: LLMClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(client, "generate", lambda _prompt: '{"x": 1, "name": "ok"}')
+    parsed = client.generate_json("prompt")
+    assert parsed["x"] == 1
+    assert parsed["name"] == "ok"
 
-    def test_build_request_data(self, client):
-        """Test la construction des données de requête"""
-        prompt = "Test prompt"
-        options = {
-            "temperature": 0.7,
-            "max_tokens": 150,
-            "top_p": 0.9
-        }
-        
-        data = client._build_request_data(prompt, **options)
-        
-        assert data["model"] == client.model
-        assert data["prompt"] == prompt
-        assert data["options"]["temperature"] == 0.7
-        assert data["options"]["num_predict"] == 150
-        assert data["options"]["top_p"] == 0.9
 
-    def test_parse_response(self, client):
-        """Test le parsing de la réponse API"""
-        api_response = {
-            "response": "Generated text",
-            "done": True,
-            "total_duration": 1500,
-            "load_duration": 100,
-            "prompt_eval_count": 10,
-            "eval_count": 20
-        }
-        
-        response = client._parse_response(api_response)
-        
-        assert isinstance(response, LLMResponse)
-        assert response.text == "Generated text"
-        assert response.done is True
-        assert response.total_duration == 1500
-        assert response.load_duration == 100
-        assert response.prompt_eval_count == 10
-        assert response.eval_count == 20
+def test_generate_json_parses_markdown_json(client: LLMClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(client, "generate", lambda _prompt: '```json\n{"status":"ok"}\n```')
+    parsed = client.generate_json("prompt")
+    assert parsed == {"status": "ok"}
 
-    def test_parse_stream_chunk(self, client):
-        """Test le parsing d'un chunk de streaming"""
-        chunk_data = '{"response": "Partial text", "done": false}'
-        
-        response = client._parse_stream_chunk(chunk_data)
-        
-        assert isinstance(response, LLMResponse)
-        assert response.text == "Partial text"
-        assert response.done is False
 
-    def test_is_model_available_true(self, client):
-        """Test la vérification de disponibilité d'un modèle (positif)"""
-        models = [
-            {"name": "llama3.1:8b"},
-            {"name": "qwen2.5:7b"}
-        ]
-        
-        result = client._is_model_available(models, "llama3.1:8b")
-        assert result is True
+def test_generate_json_returns_empty_dict_on_invalid_json(
+    client: LLMClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(client, "generate", lambda _prompt: "not-json")
+    assert client.generate_json("prompt") == {}
 
-    def test_is_model_available_false(self, client):
-        """Test la vérification de disponibilité d'un modèle (négatif)"""
-        models = [
-            {"name": "llama3.1:8b"},
-            {"name": "qwen2.5:7b"}
-        ]
-        
-        result = client._is_model_available(models, "nonexistent_model")
-        assert result is False
 
-    def test_context_window_info(self, client):
-        """Test les informations sur la fenêtre de contexte"""
-        info = client.get_context_window_info()
-        
-        assert "max_tokens" in info
-        assert "recommended_max" in info
-        assert info["max_tokens"] > 0
-        assert info["recommended_max"] < info["max_tokens"]
+def test_cache_key_and_local_cache_roundtrip(client: LLMClient) -> None:
+    key = client._cache_key("json", "prompt")
+    client._cache_set(key, {"a": 1})
+    assert client._cache_get(key) == {"a": 1}
 
-    def test_estimate_tokens(self, client):
-        """Test l'estimation du nombre de tokens"""
-        text = "This is a test text for token estimation."
-        
-        token_count = client.estimate_tokens(text)
-        
-        assert isinstance(token_count, int)
-        assert token_count > 0
-        # Estimation approximative: ~4 caractères par token
-        expected_approx = len(text) // 4
-        assert abs(token_count - expected_approx) < expected_approx * 0.5
 
-    def test_truncate_to_token_limit(self, client):
-        """Test la troncation à la limite de tokens"""
-        long_text = "word " * 1000  # Texte long
-        
-        truncated = client.truncate_to_token_limit(long_text, max_tokens=100)
-        
-        assert len(truncated) < len(long_text)
-        estimated_tokens = client.estimate_tokens(truncated)
-        assert estimated_tokens <= 100
+def test_cache_eviction(client: LLMClient) -> None:
+    client._cache_max = 1
+    client._cache_set("a", 1)
+    client._cache_set("b", 2)
+    assert client._cache_get("a") is None
+    assert client._cache_get("b") == 2
 
-    @pytest.mark.asyncio
-    async def test_concurrent_requests(self, client):
-        """Test les requêtes concurrentes"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "response": "Response",
-            "done": True
-        }
-        
-        with patch('httpx.AsyncClient.post', return_value=mock_response):
-            # Exécution concurrente de plusieurs requêtes
-            tasks = [
-                client.generate(f"Prompt {i}")
-                for i in range(5)
-            ]
-            responses = await asyncio.gather(*tasks)
-            
-            assert len(responses) == 5
-            assert all(isinstance(r, LLMResponse) for r in responses)
 
-    def test_client_repr(self, client):
-        """Test la représentation textuelle du client"""
-        repr_str = repr(client)
-        
-        assert "LLMClient" in repr_str
-        assert client.base_url in repr_str
-        assert client.model in repr_str
+def test_with_retry_eventually_succeeds(client: LLMClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(llm_module.time, "sleep", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(llm_module.random, "uniform", lambda *_args, **_kwargs: 0.0)
+
+    state = {"count": 0}
+
+    def flaky():
+        state["count"] += 1
+        if state["count"] < 2:
+            raise RuntimeError("temp")
+        return "done"
+
+    assert client._with_retry(flaky) == "done"
+    assert state["count"] == 2
+
+
+def test_with_retry_raises_after_max_attempts(
+    client: LLMClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(llm_module.time, "sleep", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(llm_module.random, "uniform", lambda *_args, **_kwargs: 0.0)
+
+    with pytest.raises(RuntimeError, match="hard-fail"):
+        client._with_retry(lambda: (_ for _ in ()).throw(RuntimeError("hard-fail")))
+
+
+def test_reset_usage(client: LLMClient) -> None:
+    client._usage["requests"] = 3
+    client.reset_usage()
+    assert client.usage_snapshot()["requests"] == 0
+
+
+def test_check_ollama_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    payload = {"models": [{"name": "llama3.1:8b"}]}
+
+    class _Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return payload
+
+    monkeypatch.setattr(llm_module.httpx, "get", lambda *_args, **_kwargs: _Resp())
+    result = check_ollama("http://localhost:11434", ["llama3.1:8b"])
+    assert result == payload
+
+
+def test_check_ollama_raises_when_missing_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    class _Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"models": [{"name": "other"}]}
+
+    monkeypatch.setattr(llm_module.httpx, "get", lambda *_args, **_kwargs: _Resp())
+    with pytest.raises(RuntimeError, match="missing models"):
+        check_ollama("http://localhost:11434", ["required-model"])
+
+
+def test_check_ollama_raises_when_unreachable(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _raise(*_args, **_kwargs):
+        raise RuntimeError("network down")
+
+    monkeypatch.setattr(llm_module.httpx, "get", _raise)
+    with pytest.raises(RuntimeError, match="not reachable"):
+        check_ollama("http://localhost:11434", ["any"])

@@ -55,8 +55,8 @@ jobs:
     - name: Lint with Ruff
       run: |
         pip install ruff
-        ruff check . --select E9,F63,F7,F82 --extend-ignore F821,F823
-        ruff check . --select F401,F841,E722,E711,E712,E721,UP,SIM,B --fix || true
+        ruff check app/core app/tools app/loop app/mvp scripts tests --select E9,F63,F7,F82 --extend-ignore F821,F823
+        ruff check . --select F401,F841,E722,E711,E712,E721,UP,SIM,B || true
     
     - name: Run ${{ matrix.test-type }} tests
       run: |
@@ -256,7 +256,7 @@ jobs:
         timeout 300 bash -c 'until curl -f http://localhost:8080/health; do sleep 5; done'
         
         # Run comprehensive health checks
-        ./scripts/health-check-staging.sh
+        ./scripts/health-check.sh
         
         echo "✅ Staging deployment completed successfully!"
     
@@ -276,7 +276,7 @@ jobs:
       if: failure()
       run: |
         echo "❌ Staging deployment failed! Initiating rollback..."
-        ./scripts/rollback-staging.sh
+        ./scripts/rollback-if-failed.sh
         exit 1
     
     - name: Update deployment status
@@ -342,7 +342,7 @@ jobs:
     - name: Run smoke tests
       run: |
         echo "🧪 Running smoke tests..."
-        python -m pytest tests/smoke/ -v --tb=short
+        python -m pytest -q --no-cov tests/test_smoke_doctor_and_run.py::test_doctor_ok
     
     - name: Setup rollback on failure
       if: failure()

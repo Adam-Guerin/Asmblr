@@ -2,7 +2,7 @@
 Tech Spec Actionability metric - checklist score for technical specification completeness.
 """
 
-from typing import Dict, List, Any, Set
+from typing import Any
 import re
 
 from .base import BaseMetric, MetricResult
@@ -45,7 +45,7 @@ class TechSpecActionability(BaseMetric):
             }
         }
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute tech spec actionability score."""
         # Extract tech spec content
         tech_spec_content = self._extract_tech_spec_content(run_result)
@@ -96,7 +96,7 @@ class TechSpecActionability(BaseMetric):
             }
         )
     
-    def _extract_tech_spec_content(self, run_result: Dict[str, Any]) -> str:
+    def _extract_tech_spec_content(self, run_result: dict[str, Any]) -> str:
         """Extract tech spec content from system output."""
         # Try tech_spec.md
         tech_spec_md = self._extract_artifact(run_result, "tech_spec")
@@ -105,7 +105,7 @@ class TechSpecActionability(BaseMetric):
         
         return ""
     
-    def _calculate_section_score(self, content: str, section_config: Dict) -> tuple[float, List[str]]:
+    def _calculate_section_score(self, content: str, section_config: dict) -> tuple[float, list[str]]:
         """Calculate score for a specific section."""
         content_lower = content.lower()
         keywords = section_config["keywords"]
@@ -177,10 +177,10 @@ class TechSpecActionability(BaseMetric):
         # Return average context score
         return sum(context_scores) / len(context_scores) if context_scores else 0.0
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["tech_spec"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return []

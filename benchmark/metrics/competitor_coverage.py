@@ -2,7 +2,7 @@
 Competitor Coverage metric - competitor precision/recall vs ground truth.
 """
 
-from typing import Dict, List, Any, Set, Tuple
+from typing import Any
 import re
 
 from .base import BaseMetric, MetricResult
@@ -14,7 +14,7 @@ class CompetitorCoverage(BaseMetric):
     requires_ground_truth = True
     output_type = "score"
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute competitor coverage metrics."""
         # Extract system competitors
         system_competitors = self._extract_system_competitors(run_result)
@@ -64,7 +64,7 @@ class CompetitorCoverage(BaseMetric):
             }
         )
     
-    def _extract_system_competitors(self, run_result: Dict[str, Any]) -> List[Dict]:
+    def _extract_system_competitors(self, run_result: dict[str, Any]) -> list[dict]:
         """Extract competitors from system output."""
         competitors = []
         
@@ -98,7 +98,7 @@ class CompetitorCoverage(BaseMetric):
         
         return normalized_competitors
     
-    def _normalize_competitor(self, competitor: Any) -> Optional[Dict]:
+    def _normalize_competitor(self, competitor: Any) -> Optional[dict]:
         """Normalize competitor to standard format."""
         if isinstance(competitor, dict):
             return {
@@ -120,7 +120,7 @@ class CompetitorCoverage(BaseMetric):
             }
         return None
     
-    def _extract_ground_truth_competitors(self, dataset: List[Dict]) -> List[Dict]:
+    def _extract_ground_truth_competitors(self, dataset: list[dict]) -> list[dict]:
         """Extract ground truth competitors from dataset."""
         all_competitors = []
         
@@ -133,9 +133,9 @@ class CompetitorCoverage(BaseMetric):
         
         return all_competitors
     
-    def _find_competitor_matches(self, system_competitors: List[Dict], 
-                                 ground_truth_competitors: List[Dict],
-                                 similarity_threshold: float = 0.7) -> List[Tuple[int, int, float]]:
+    def _find_competitor_matches(self, system_competitors: list[dict], 
+                                 ground_truth_competitors: list[dict],
+                                 similarity_threshold: float = 0.7) -> list[tuple[int, int, float]]:
         """Find matches between system and ground truth competitors."""
         matches = []
         
@@ -156,7 +156,7 @@ class CompetitorCoverage(BaseMetric):
         
         return matches
     
-    def _calculate_competitor_similarity(self, comp1: Dict, comp2: Dict) -> float:
+    def _calculate_competitor_similarity(self, comp1: dict, comp2: dict) -> float:
         """Calculate similarity between two competitors."""
         # Extract text fields
         name1 = comp1.get("name", "").lower()
@@ -196,10 +196,10 @@ class CompetitorCoverage(BaseMetric):
         
         return len(intersection) / len(union)
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["competitor_analysis", "opportunities_structured"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return ["competitors"]

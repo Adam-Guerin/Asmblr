@@ -3,8 +3,7 @@ Rule-based baseline - simple keyword extraction and heuristic scoring.
 """
 
 import re
-from typing import Dict, List, Any, Set
-from collections import Counter
+from typing import Any
 
 from .base import BaseBaseline
 
@@ -41,7 +40,7 @@ class RuleBasedBaseline(BaseBaseline):
             "ABORT": ["unclear", "no market", "technical", "impossible", "regulatory"]
         }
     
-    def process_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def process_item(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process a single dataset item using rule-based approach."""
         topic = item.get("topic", "Unknown Topic")
         documents = item.get("documents", [])
@@ -72,7 +71,7 @@ class RuleBasedBaseline(BaseBaseline):
             "success": True
         }
     
-    def _extract_pains_rule_based(self, text: str, documents: List[Dict]) -> List[Dict]:
+    def _extract_pains_rule_based(self, text: str, documents: list[dict]) -> list[dict]:
         """Extract pains using keyword-based rules."""
         pains = []
         
@@ -136,7 +135,7 @@ class RuleBasedBaseline(BaseBaseline):
         
         return "General"
     
-    def _generate_opportunities_rule_based(self, topic: str, pains: List[Dict], text: str) -> List[Dict]:
+    def _generate_opportunities_rule_based(self, topic: str, pains: list[dict], text: str) -> list[dict]:
         """Generate opportunities using rule-based heuristics."""
         opportunities = []
         
@@ -166,7 +165,7 @@ class RuleBasedBaseline(BaseBaseline):
         
         return opportunities
     
-    def _extract_pain_themes(self, pains: List[Dict]) -> List[Dict]:
+    def _extract_pain_themes(self, pains: list[dict]) -> list[dict]:
         """Extract common themes from pains."""
         themes = []
         
@@ -204,7 +203,7 @@ class RuleBasedBaseline(BaseBaseline):
         
         return sorted(themes, key=lambda x: x["count"], reverse=True)
     
-    def _extract_competitors_rule_based(self, text: str) -> List[Dict]:
+    def _extract_competitors_rule_based(self, text: str) -> list[dict]:
         """Extract competitors using keyword matching."""
         competitors = []
         
@@ -232,8 +231,8 @@ class RuleBasedBaseline(BaseBaseline):
         
         return competitors
     
-    def _make_decision_rule_based(self, opportunities: List[Dict], 
-                                competitors: List[Dict], 
+    def _make_decision_rule_based(self, opportunities: list[dict], 
+                                competitors: list[dict], 
                                 text: str) -> tuple[str, float]:
         """Make decision using rule-based logic."""
         # Count positive and negative indicators

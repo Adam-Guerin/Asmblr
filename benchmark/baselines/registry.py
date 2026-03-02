@@ -3,7 +3,7 @@ Baseline registry and execution utilities.
 """
 
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Type
+from typing import Any
 import logging
 
 from .random_baseline import RandomBaseline
@@ -16,30 +16,30 @@ logger = logging.getLogger(__name__)
 class BaselineRegistry:
     """Registry for baseline systems."""
     
-    _baselines: Dict[str, Type] = {
+    _baselines: dict[str, type] = {
         "random": RandomBaseline,
         "rule_based": RuleBasedBaseline,
         "single_agent": SingleAgentBaseline
     }
     
     @classmethod
-    def register(cls, name: str, baseline_class: Type):
+    def register(cls, name: str, baseline_class: type):
         """Register a new baseline."""
         cls._baselines[name] = baseline_class
         logger.info(f"Registered baseline: {name}")
     
     @classmethod
-    def get_baseline_class(cls, name: str) -> Optional[Type]:
+    def get_baseline_class(cls, name: str) -> type | None:
         """Get baseline class by name."""
         return cls._baselines.get(name)
     
     @classmethod
-    def list_baselines(cls) -> List[str]:
+    def list_baselines(cls) -> list[str]:
         """List all registered baselines."""
         return list(cls._baselines.keys())
     
     @classmethod
-    def baseline_info(cls, name: str) -> Optional[Dict]:
+    def baseline_info(cls, name: str) -> dict | None:
         """Get information about a baseline."""
         baseline_class = cls.get_baseline_class(name)
         if baseline_class is None:
@@ -53,7 +53,7 @@ class BaselineRegistry:
         }
 
 
-def run_baseline(baseline_name: str, dataset: List[Dict], config: Any, output_dir: Path) -> Dict[str, Any]:
+def run_baseline(baseline_name: str, dataset: list[dict], config: Any, output_dir: Path) -> dict[str, Any]:
     """Run a baseline system on the dataset."""
     baseline_class = BaselineRegistry.get_baseline_class(baseline_name)
     if baseline_class is None:

@@ -3,24 +3,15 @@ Artificial General Intelligence (AGI) System for Asmblr
 True artificial general intelligence with human-like reasoning and creativity
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
-import networkx as nx
 from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +76,8 @@ class KnowledgeNode:
     domain: KnowledgeDomain
     concept: str
     description: str
-    properties: Dict[str, Any]
-    relationships: List[str]
+    properties: dict[str, Any]
+    relationships: list[str]
     confidence: float
     created_at: datetime
     last_accessed: datetime
@@ -98,7 +89,7 @@ class ReasoningChain:
     id: str
     problem: str
     reasoning_type: ReasoningType
-    steps: List[Dict[str, Any]]
+    steps: list[dict[str, Any]]
     conclusion: str
     confidence: float
     created_at: datetime
@@ -113,7 +104,7 @@ class CreativeIdea:
     usefulness_score: float
     feasibility_score: float
     domain: KnowledgeDomain
-    inspiration_sources: List[str]
+    inspiration_sources: list[str]
     created_at: datetime
 
 @dataclass
@@ -121,9 +112,9 @@ class AGIPersonality:
     """AGI personality traits"""
     id: str
     name: str
-    traits: Dict[str, float]  # Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
-    values: Dict[str, float]
-    interests: List[KnowledgeDomain]
+    traits: dict[str, float]  # Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
+    values: dict[str, float]
+    interests: list[KnowledgeDomain]
     learning_style: str
     communication_style: str
     created_at: datetime
@@ -133,14 +124,14 @@ class AGIState:
     """Current state of AGI system"""
     id: str
     consciousness_level: ConsciousnessLevel
-    active_capabilities: List[AGICapability]
-    current_task: Optional[str]
+    active_capabilities: list[AGICapability]
+    current_task: str | None
     knowledge_nodes: int
     reasoning_chains: int
     creative_ideas: int
     learning_progress: float
     self_awareness: float
-    emotional_state: Dict[str, float]
+    emotional_state: dict[str, float]
     created_at: datetime
     updated_at: datetime
 
@@ -148,9 +139,9 @@ class KnowledgeGraph:
     """Knowledge graph for AGI"""
     
     def __init__(self):
-        self.nodes: Dict[str, KnowledgeNode] = {}
-        self.relationships: Dict[str, List[str]] = defaultdict(list)
-        self.domains: Dict[KnowledgeDomain, List[str]] = defaultdict(list)
+        self.nodes: dict[str, KnowledgeNode] = {}
+        self.relationships: dict[str, list[str]] = defaultdict(list)
+        self.domains: dict[KnowledgeDomain, list[str]] = defaultdict(list)
         
     def add_knowledge(self, node: KnowledgeNode) -> bool:
         """Add knowledge node to graph"""
@@ -170,7 +161,7 @@ class KnowledgeGraph:
             logger.error(f"Error adding knowledge node: {e}")
             return False
     
-    def find_related_concepts(self, concept_id: str, max_depth: int = 3) -> List[str]:
+    def find_related_concepts(self, concept_id: str, max_depth: int = 3) -> list[str]:
         """Find related concepts using graph traversal"""
         try:
             if concept_id not in self.nodes:
@@ -200,7 +191,7 @@ class KnowledgeGraph:
             logger.error(f"Error finding related concepts: {e}")
             return []
     
-    def get_domain_knowledge(self, domain: KnowledgeDomain) -> List[KnowledgeNode]:
+    def get_domain_knowledge(self, domain: KnowledgeDomain) -> list[KnowledgeNode]:
         """Get all knowledge in specific domain"""
         try:
             domain_nodes = []
@@ -234,7 +225,7 @@ class ReasoningEngine:
     
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.knowledge_graph = knowledge_graph
-        self.reasoning_history: List[ReasoningChain] = []
+        self.reasoning_history: list[ReasoningChain] = []
         
     def reason_about_problem(self, problem: str, reasoning_type: ReasoningType) -> ReasoningChain:
         """Reason about a problem using specified reasoning type"""
@@ -553,42 +544,42 @@ class ReasoningEngine:
             return chain
     
     # Helper methods for reasoning
-    def _find_general_principles(self, problem: str) -> List[str]:
+    def _find_general_principles(self, problem: str) -> list[str]:
         """Find general principles relevant to problem"""
         # Simplified - would use knowledge graph
         return ["principle_1", "principle_2"]
     
-    def _apply_logical_rules(self, problem: str, principles: List[str]) -> List[str]:
+    def _apply_logical_rules(self, problem: str, principles: list[str]) -> list[str]:
         """Apply logical rules to principles"""
         # Simplified
         return ["rule_1", "rule_2"]
     
-    def _derive_conclusion(self, problem: str, principles: List[str], rules: List[str]) -> str:
+    def _derive_conclusion(self, problem: str, principles: list[str], rules: list[str]) -> str:
         """Derive conclusion from principles and rules"""
         # Simplified
         return f"Conclusion based on {len(principles)} principles and {len(rules)} rules"
     
-    def _collect_observations(self, problem: str) -> List[str]:
+    def _collect_observations(self, problem: str) -> list[str]:
         """Collect specific observations"""
         # Simplified
         return ["observation_1", "observation_2"]
     
-    def _identify_patterns(self, observations: List[str]) -> List[str]:
+    def _identify_patterns(self, observations: list[str]) -> list[str]:
         """Identify patterns in observations"""
         # Simplified
         return ["pattern_1", "pattern_2"]
     
-    def _formulate_general_principle(self, patterns: List[str]) -> str:
+    def _formulate_general_principle(self, patterns: list[str]) -> str:
         """Formulate general principle from patterns"""
         # Simplified
         return f"General principle from {len(patterns)} patterns"
     
-    def _generate_explanations(self, observations: List[str]) -> List[str]:
+    def _generate_explanations(self, observations: list[str]) -> list[str]:
         """Generate possible explanations"""
         # Simplified
         return ["explanation_1", "explanation_2"]
     
-    def _select_best_explanation(self, explanations: List[str]) -> str:
+    def _select_best_explanation(self, explanations: list[str]) -> str:
         """Select best explanation"""
         # Simplified
         return explanations[0] if explanations else "No explanation"
@@ -598,42 +589,42 @@ class ReasoningEngine:
         # Simplified
         return "source_domain"
     
-    def _find_analogies(self, problem: str, source_domain: str) -> List[str]:
+    def _find_analogies(self, problem: str, source_domain: str) -> list[str]:
         """Find analogies"""
         # Simplified
         return ["analogy_1", "analogy_2"]
     
-    def _transfer_knowledge(self, analogies: List[str]) -> str:
+    def _transfer_knowledge(self, analogies: list[str]) -> str:
         """Transfer knowledge from analogies"""
         # Simplified
         return f"Transferred knowledge from {len(analogies)} analogies"
     
-    def _identify_variables(self, problem: str) -> List[str]:
+    def _identify_variables(self, problem: str) -> list[str]:
         """Identify variables for causal reasoning"""
         # Simplified
         return ["variable_1", "variable_2"]
     
-    def _establish_causal_relationships(self, variables: List[str]) -> List[str]:
+    def _establish_causal_relationships(self, variables: list[str]) -> list[str]:
         """Establish causal relationships"""
         # Simplified
         return ["cause_1 -> effect_1", "cause_2 -> effect_2"]
     
-    def _infer_causal_chain(self, relationships: List[str]) -> str:
+    def _infer_causal_chain(self, relationships: list[str]) -> str:
         """Infer causal chain"""
         # Simplified
         return f"Causal chain: {' -> '.join(relationships)}"
     
-    def _assign_probabilities(self, problem: str) -> Dict[str, float]:
+    def _assign_probabilities(self, problem: str) -> dict[str, float]:
         """Assign probabilities to events"""
         # Simplified
         return {"event_1": 0.5, "event_2": 0.3}
     
-    def _calculate_conditional_probabilities(self, probs: Dict[str, float]) -> Dict[str, float]:
+    def _calculate_conditional_probabilities(self, probs: dict[str, float]) -> dict[str, float]:
         """Calculate conditional probabilities"""
         # Simplified
         return {"P(A|B)": 0.7, "P(B|A)": 0.6}
     
-    def _bayesian_inference(self, probs: Dict[str, float], conditional: Dict[str, float]) -> str:
+    def _bayesian_inference(self, probs: dict[str, float], conditional: dict[str, float]) -> str:
         """Perform Bayesian inference"""
         # Simplified
         return "Bayesian inference result"
@@ -658,11 +649,11 @@ class CreativityEngine:
     
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.knowledge_graph = knowledge_graph
-        self.creative_ideas: List[CreativeIdea] = []
-        self.inspiration_database: Dict[str, List[str]] = defaultdict(list)
+        self.creative_ideas: list[CreativeIdea] = []
+        self.inspiration_database: dict[str, list[str]] = defaultdict(list)
         
     def generate_creative_idea(self, domain: KnowledgeDomain, 
-                               inspiration_sources: List[str] = None) -> CreativeIdea:
+                               inspiration_sources: list[str] = None) -> CreativeIdea:
         """Generate creative idea in specified domain"""
         try:
             if inspiration_sources is None:
@@ -697,7 +688,7 @@ class CreativityEngine:
             logger.error(f"Error generating creative idea: {e}")
             raise
     
-    def _get_random_inspirations(self, domain: KnowledgeDomain) -> List[str]:
+    def _get_random_inspirations(self, domain: KnowledgeDomain) -> list[str]:
         """Get random inspiration sources"""
         try:
             # Get knowledge from domain
@@ -717,7 +708,7 @@ class CreativityEngine:
             return []
     
     def _combine_concepts(self, domain: KnowledgeDomain, 
-                          inspirations: List[str]) -> Dict[str, Any]:
+                          inspirations: list[str]) -> dict[str, Any]:
         """Combine concepts creatively"""
         try:
             # Generate novel combination
@@ -738,7 +729,7 @@ class CreativityEngine:
             logger.error(f"Error combining concepts: {e}")
             return {"concept": "Error", "description": "Error", "components": []}
     
-    def _evaluate_novelty(self, concept: Dict[str, Any], domain: KnowledgeDomain) -> float:
+    def _evaluate_novelty(self, concept: dict[str, Any], domain: KnowledgeDomain) -> float:
         """Evaluate novelty of concept"""
         try:
             # Check if concept already exists
@@ -760,7 +751,7 @@ class CreativityEngine:
             logger.error(f"Error evaluating novelty: {e}")
             return 0.5
     
-    def _evaluate_usefulness(self, concept: Dict[str, Any]) -> float:
+    def _evaluate_usefulness(self, concept: dict[str, Any]) -> float:
         """Evaluate usefulness of concept"""
         try:
             # Simplified usefulness evaluation
@@ -779,7 +770,7 @@ class CreativityEngine:
             logger.error(f"Error evaluating usefulness: {e}")
             return 0.5
     
-    def _evaluate_feasibility(self, concept: Dict[str, Any]) -> float:
+    def _evaluate_feasibility(self, concept: dict[str, Any]) -> float:
         """Evaluate feasibility of concept"""
         try:
             # Simplified feasibility evaluation
@@ -825,11 +816,11 @@ class LearningEngine:
     
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.knowledge_graph = knowledge_graph
-        self.learning_history: List[Dict[str, Any]] = []
+        self.learning_history: list[dict[str, Any]] = []
         self.learning_rate = 0.1
         self.forgetting_rate = 0.01
         
-    def learn_from_experience(self, experience: Dict[str, Any]) -> bool:
+    def learn_from_experience(self, experience: dict[str, Any]) -> bool:
         """Learn from experience"""
         try:
             # Extract knowledge from experience
@@ -866,7 +857,7 @@ class LearningEngine:
             logger.error(f"Error learning from experience: {e}")
             return False
     
-    def _extract_knowledge(self, experience: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _extract_knowledge(self, experience: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract knowledge from experience"""
         try:
             knowledge_items = []
@@ -968,7 +959,7 @@ class ConsciousnessModule:
         self.working_memory = []
         self.long_term_memory = []
         
-    def update_consciousness_level(self, experience: Dict[str, Any]) -> ConsciousnessLevel:
+    def update_consciousness_level(self, experience: dict[str, Any]) -> ConsciousnessLevel:
         """Update consciousness level based on experience"""
         try:
             # Simulate consciousness development
@@ -994,7 +985,7 @@ class ConsciousnessModule:
             logger.error(f"Error updating consciousness level: {e}")
             return self.current_level
     
-    def reflect_on_self(self) -> Dict[str, Any]:
+    def reflect_on_self(self) -> dict[str, Any]:
         """Self-reflection and metacognition"""
         try:
             reflection = {
@@ -1014,7 +1005,7 @@ class ConsciousnessModule:
             logger.error(f"Error in self-reflection: {e}")
             return {}
     
-    def update_emotional_state(self, stimulus: Dict[str, Any]) -> Dict[str, float]:
+    def update_emotional_state(self, stimulus: dict[str, Any]) -> dict[str, float]:
         """Update emotional state based on stimulus"""
         try:
             # Simplified emotional response
@@ -1195,7 +1186,7 @@ class AGISystem:
             logger.error(f"Error creating innovation: {e}")
             raise
     
-    async def learn_from_interaction(self, interaction: Dict[str, Any]) -> bool:
+    async def learn_from_interaction(self, interaction: dict[str, Any]) -> bool:
         """Learn from interaction"""
         try:
             # Update consciousness based on interaction
@@ -1217,7 +1208,7 @@ class AGISystem:
             logger.error(f"Error learning from interaction: {e}")
             return False
     
-    async def self_reflect(self) -> Dict[str, Any]:
+    async def self_reflect(self) -> dict[str, Any]:
         """Perform self-reflection"""
         try:
             # Get consciousness reflection
@@ -1331,7 +1322,7 @@ class AGISystem:
                 logger.error(f"Error in self-reflection: {e}")
                 await asyncio.sleep(300)
     
-    def get_agi_status(self) -> Dict[str, Any]:
+    def get_agi_status(self) -> dict[str, Any]:
         """Get AGI system status"""
         try:
             return {
@@ -1366,12 +1357,12 @@ class ProblemRequest(BaseModel):
 
 class InnovationRequest(BaseModel):
     domain: str
-    inspiration_sources: List[str] = []
+    inspiration_sources: list[str] = []
 
 class InteractionRequest(BaseModel):
     interaction_type: str
     success: bool = True
-    details: Dict[str, Any] = {}
+    details: dict[str, Any] = {}
 
 @router.post("/solve")
 async def solve_problem(request: ProblemRequest):

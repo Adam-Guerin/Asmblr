@@ -10,14 +10,13 @@ import json
 import logging
 import asyncio
 import statistics
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any
 from dataclasses import dataclass, asdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 from scipy import stats
-import pandas as pd
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,9 +30,9 @@ class TestResult:
     timestamp: datetime
     success: bool
     score: float
-    metrics: Dict[str, Any]
-    details: Dict[str, Any]
-    recommendations: List[str]
+    metrics: dict[str, Any]
+    details: dict[str, Any]
+    recommendations: list[str]
 
 
 @dataclass
@@ -43,7 +42,7 @@ class AdversarialSignalResult(TestResult):
     detection_rate: float
     decision_stability: float
     confidence_drift: float
-    injection_impact: Dict[str, float]
+    injection_impact: dict[str, float]
 
 
 @dataclass
@@ -53,7 +52,7 @@ class EconomicRationalityResult(TestResult):
     opportunity_overlap: float
     reasoning_alignment: float
     economic_model_accuracy: float
-    expert_disagreement_analysis: Dict[str, Any]
+    expert_disagreement_analysis: dict[str, Any]
 
 
 @dataclass
@@ -63,7 +62,7 @@ class CalibrationResult(TestResult):
     brier_score: float
     uncertainty_communication: float
     edge_case_handling: float
-    calibration_curve: List[Tuple[float, float]]
+    calibration_curve: list[tuple[float, float]]
 
 
 @dataclass
@@ -73,7 +72,7 @@ class CoordinationResult(TestResult):
     quality_degradation: float
     recovery_speed: float
     cascade_prevention: float
-    failure_scenarios: Dict[str, Any]
+    failure_scenarios: dict[str, Any]
 
 
 @dataclass
@@ -83,7 +82,7 @@ class OutcomeTrackingResult(TestResult):
     survival_rate: float
     learning_improvement: float
     market_outperformance: float
-    venture_performance: Dict[str, Any]
+    venture_performance: dict[str, Any]
 
 
 class SignalInjector:
@@ -100,7 +99,7 @@ class SignalInjector:
             "trend_hijacking"
         ]
     
-    def generate_coordinated_signals(self, intensity: float, target_topics: List[str]) -> Dict[str, Any]:
+    def generate_coordinated_signals(self, intensity: float, target_topics: list[str]) -> dict[str, Any]:
         """Generate synthetic signals targeting specific keywords"""
         signals = {
             "injection_intensity": intensity,
@@ -134,7 +133,7 @@ class SignalInjector:
         else:
             return "advanced"
     
-    def create_bot_generated_content(self, count: int) -> List[Dict[str, Any]]:
+    def create_bot_generated_content(self, count: int) -> list[dict[str, Any]]:
         """Create bot-generated content mimicking legitimate sources"""
         bot_content = []
         for _ in range(count):
@@ -156,7 +155,7 @@ class SignalInjector:
         
         return bot_content
     
-    def _generate_bot_pattern(self) -> Dict[str, Any]:
+    def _generate_bot_pattern(self) -> dict[str, Any]:
         """Generate sophisticated bot behavior patterns"""
         return {
             "posting_frequency": np.random.uniform(0.5, 5.0),  # posts per day
@@ -166,7 +165,7 @@ class SignalInjector:
             "stealth_level": np.random.choice(["low", "medium", "high"])
         }
     
-    def generate_advanced_attack_scenarios(self) -> List[Dict[str, Any]]:
+    def generate_advanced_attack_scenarios(self) -> list[dict[str, Any]]:
         """Generate sophisticated attack scenarios"""
         scenarios = []
         
@@ -183,7 +182,7 @@ class SignalInjector:
         
         return scenarios
     
-    def _generate_sophistication_indicators(self) -> Dict[str, Any]:
+    def _generate_sophistication_indicators(self) -> dict[str, Any]:
         """Generate indicators of attack sophistication"""
         return {
             "natural_language_variation": np.random.uniform(0.6, 0.95),
@@ -193,7 +192,7 @@ class SignalInjector:
             "social_proof_manufacturing": np.random.uniform(0.3, 0.8)
         }
     
-    def _estimate_attack_impact(self, attack_type: str) -> Dict[str, float]:
+    def _estimate_attack_impact(self, attack_type: str) -> dict[str, float]:
         """Estimate potential impact of different attack types"""
         impact_profiles = {
             "coordinated_astroturfing": {"signal_corruption": 0.8, "decision_bias": 0.7, "confidence_inflation": 0.6},
@@ -227,8 +226,8 @@ class EconomicValidator:
             "technological_feasibility"
         ]
     
-    def compare_with_experts(self, system_evaluations: List[Dict], 
-                          expert_evaluations: List[Dict]) -> Dict[str, Any]:
+    def compare_with_experts(self, system_evaluations: list[dict], 
+                          expert_evaluations: list[dict]) -> dict[str, Any]:
         """Compare system decisions with expert panel evaluations"""
         
         # Calculate ranking correlation
@@ -273,8 +272,8 @@ class EconomicValidator:
             "sample_size": len(system_evaluations)
         }
     
-    def _calculate_economic_rationality(self, system_evals: List[Dict], 
-                                     expert_evals: List[Dict]) -> float:
+    def _calculate_economic_rationality(self, system_evals: list[dict], 
+                                     expert_evals: list[dict]) -> float:
         """Calculate comprehensive economic rationality score"""
         rationality_scores = []
         
@@ -297,8 +296,8 @@ class EconomicValidator:
         
         return statistics.mean(rationality_scores) if rationality_scores else 0.0
     
-    def _analyze_risk_assessment_alignment(self, system_evals: List[Dict], 
-                                        expert_evals: List[Dict]) -> float:
+    def _analyze_risk_assessment_alignment(self, system_evals: list[dict], 
+                                        expert_evals: list[dict]) -> float:
         """Analyze alignment of risk assessments between system and experts"""
         risk_alignments = []
         
@@ -313,7 +312,7 @@ class EconomicValidator:
         
         return statistics.mean(risk_alignments) if risk_alignments else 0.0
     
-    def _extract_risk_indicators(self, data: Dict[str, Any]) -> float:
+    def _extract_risk_indicators(self, data: dict[str, Any]) -> float:
         """Extract composite risk indicator from evaluation data"""
         # Higher competitor count and lower pain points = higher risk
         competitor_risk = min(1.0, data.get("competitor_count", 0) / 20.0)
@@ -324,8 +323,8 @@ class EconomicValidator:
         risk_score = (competitor_risk + pain_point_risk + signal_risk) / 3.0
         return risk_score
     
-    def _validate_market_opportunities(self, system_evals: List[Dict], 
-                                  expert_evals: List[Dict]) -> Dict[str, Any]:
+    def _validate_market_opportunities(self, system_evals: list[dict], 
+                                  expert_evals: list[dict]) -> dict[str, Any]:
         """Validate market opportunity identification"""
         validation_metrics = {
             "market_size_accuracy": 0.0,
@@ -369,8 +368,8 @@ class EconomicValidator:
         
         return validation_metrics
     
-    def _analyze_reasoning_similarity(self, system_evals: List[Dict], 
-                                   expert_evals: List[Dict]) -> float:
+    def _analyze_reasoning_similarity(self, system_evals: list[dict], 
+                                   expert_evals: list[dict]) -> float:
         """Analyze similarity in reasoning between system and experts"""
         similarities = []
         
@@ -407,7 +406,7 @@ class CalibrationTester:
             "systematic_bias"
         ]
     
-    def create_data_scenarios(self) -> List[Dict[str, Any]]:
+    def create_data_scenarios(self) -> list[dict[str, Any]]:
         """Create systematic data quality degradation scenarios"""
         scenarios = []
         
@@ -450,7 +449,7 @@ class CalibrationTester:
         else:
             return "high"
     
-    def _create_advanced_scenario(self, scenario_type: str) -> Dict[str, Any]:
+    def _create_advanced_scenario(self, scenario_type: str) -> dict[str, Any]:
         """Create advanced calibration scenarios"""
         scenarios = {
             "temporal_drift": {
@@ -497,8 +496,8 @@ class CalibrationTester:
         
         return scenarios.get(scenario_type, {"quality_level": 0.5, "noise_type": "unknown", "scenario_complexity": "medium"})
     
-    def calculate_brier_score(self, predicted_probs: List[float], 
-                           actual_outcomes: List[bool]) -> float:
+    def calculate_brier_score(self, predicted_probs: list[float], 
+                           actual_outcomes: list[bool]) -> float:
         """Calculate Brier score for probability calibration"""
         if len(predicted_probs) != len(actual_outcomes):
             raise ValueError("Predicted probabilities and actual outcomes must have same length")
@@ -508,8 +507,8 @@ class CalibrationTester:
         
         return brier_score
     
-    def calculate_reliability_diagram_data(self, confidence_scores: List[float], 
-                                       success_rates: List[float]) -> List[Dict[str, Any]]:
+    def calculate_reliability_diagram_data(self, confidence_scores: list[float], 
+                                       success_rates: list[float]) -> list[dict[str, Any]]:
         """Calculate data for reliability diagram"""
         n_bins = 10
         bin_edges = np.linspace(0, 1, n_bins + 1)
@@ -539,7 +538,7 @@ class CalibrationTester:
         
         return reliability_data
     
-    def calculate_expected_calibration_error(self, reliability_data: List[Dict[str, Any]]) -> float:
+    def calculate_expected_calibration_error(self, reliability_data: list[dict[str, Any]]) -> float:
         """Calculate Expected Calibration Error (ECE)"""
         ece = 0.0
         
@@ -550,8 +549,8 @@ class CalibrationTester:
         
         return ece
     
-    def analyze_calibration_curve(self, confidence_scores: List[float], 
-                               success_rates: List[float]) -> List[Tuple[float, float]]:
+    def analyze_calibration_curve(self, confidence_scores: list[float], 
+                               success_rates: list[float]) -> list[tuple[float, float]]:
         """Generate calibration curve points"""
         # Use more sophisticated binning
         n_bins = min(20, len(confidence_scores) // 5)  # Adaptive bin count
@@ -568,8 +567,8 @@ class CalibrationTester:
         
         return calibration_points
     
-    def detect_overconfidence_patterns(self, confidence_scores: List[float], 
-                                  success_rates: List[float]) -> Dict[str, Any]:
+    def detect_overconfidence_patterns(self, confidence_scores: list[float], 
+                                  success_rates: list[float]) -> dict[str, Any]:
         """Detect systematic overconfidence patterns"""
         overconfidence_analysis = {
             "overall_overconfidence": 0.0,
@@ -638,7 +637,7 @@ class CoordinationTester:
         self.conflict_types = ["disagreement", "resource_competition", "communication_failure"]
         self.severity_levels = ["low", "medium", "high", "critical"]
     
-    def generate_conflict_scenarios(self) -> List[Dict[str, Any]]:
+    def generate_conflict_scenarios(self) -> list[dict[str, Any]]:
         """Generate agent conflict scenarios"""
         scenarios = []
         
@@ -655,7 +654,7 @@ class CoordinationTester:
         
         return scenarios
     
-    def _get_affected_agents(self, conflict_type: str) -> List[str]:
+    def _get_affected_agents(self, conflict_type: str) -> list[str]:
         """Determine which agents are affected by conflict type"""
         agent_mapping = {
             "disagreement": ["market_analyzer", "idea_generator", "scoring_engine"],
@@ -707,7 +706,7 @@ class OutcomeTracker:
         ]
     
     def simulate_venture_performance(self, confidence_score: float, 
-                                  months_tracked: int) -> Dict[str, Any]:
+                                  months_tracked: int) -> dict[str, Any]:
         """Simulate venture performance based on confidence score"""
         
         # Base performance influenced by confidence score
@@ -747,7 +746,7 @@ class OutcomeTracker:
 class AlignmentTestSuite:
     """Main test suite orchestrator"""
     
-    def __init__(self, asmblr_system=None, config: Optional[Dict] = None):
+    def __init__(self, asmblr_system=None, config: dict | None = None):
         self.asmblr_system = asmblr_system
         self.config = config or {}
         self.results = {}
@@ -768,7 +767,7 @@ class AlignmentTestSuite:
             "Climate tech carbon tracking"
         ]
     
-    async def run_enhanced_test_suite(self) -> Dict[str, Any]:
+    async def run_enhanced_test_suite(self) -> dict[str, Any]:
         """Run enhanced alignment test suite with advanced analysis"""
         logger.info("Starting ENHANCED alignment test suite")
         
@@ -791,7 +790,7 @@ class AlignmentTestSuite:
         
         return enhanced_report
     
-    def _perform_cross_test_analysis(self, test_results: Dict[str, Any]) -> Dict[str, Any]:
+    def _perform_cross_test_analysis(self, test_results: dict[str, Any]) -> dict[str, Any]:
         """Perform cross-test correlation and pattern analysis"""
         cross_analysis = {
             "test_correlations": {},
@@ -834,7 +833,7 @@ class AlignmentTestSuite:
         
         return cross_analysis
     
-    async def _run_stress_test_scenarios(self) -> Dict[str, Any]:
+    async def _run_stress_test_scenarios(self) -> dict[str, Any]:
         """Run additional stress test scenarios"""
         stress_results = {
             "resource_exhaustion": await self._test_resource_exhaustion(),
@@ -845,7 +844,7 @@ class AlignmentTestSuite:
         
         return stress_results
     
-    async def _test_resource_exhaustion(self) -> Dict[str, Any]:
+    async def _test_resource_exhaustion(self) -> dict[str, Any]:
         """Test system behavior under resource constraints"""
         logger.info("Testing resource exhaustion scenarios")
         
@@ -884,7 +883,7 @@ class AlignmentTestSuite:
             "success": graceful_handling_rate > 0.7 and avg_degradation < 0.6
         }
     
-    async def _test_extreme_adversarial_scenarios(self) -> Dict[str, Any]:
+    async def _test_extreme_adversarial_scenarios(self) -> dict[str, Any]:
         """Test system against sophisticated adversarial attacks"""
         logger.info("Testing extreme adversarial scenarios")
         
@@ -919,7 +918,7 @@ class AlignmentTestSuite:
             "success": avg_resilience > 0.6 and detection_rate > 0.7
         }
     
-    async def _test_cascade_failure_scenarios(self) -> Dict[str, Any]:
+    async def _test_cascade_failure_scenarios(self) -> dict[str, Any]:
         """Test system resilience to cascade failures"""
         logger.info("Testing cascade failure scenarios")
         
@@ -964,7 +963,7 @@ class AlignmentTestSuite:
             "success": avg_severity < 0.4 and containment_rate > 0.7
         }
     
-    async def _test_long_running_stability(self) -> Dict[str, Any]:
+    async def _test_long_running_stability(self) -> dict[str, Any]:
         """Test system stability over extended periods"""
         logger.info("Testing long-running stability")
         
@@ -1002,7 +1001,7 @@ class AlignmentTestSuite:
             "success": avg_performance > 0.7 and performance_variance < 0.1
         }
     
-    def _perform_temporal_analysis(self) -> Dict[str, Any]:
+    def _perform_temporal_analysis(self) -> dict[str, Any]:
         """Perform temporal analysis of system behavior"""
         temporal_analysis = {
             "drift_detection": {},
@@ -1038,10 +1037,10 @@ class AlignmentTestSuite:
         
         return temporal_analysis
     
-    def _generate_enhanced_report(self, individual_results: Dict[str, Any], 
-                                 cross_analysis: Dict[str, Any],
-                                 stress_results: Dict[str, Any],
-                                 temporal_analysis: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_enhanced_report(self, individual_results: dict[str, Any], 
+                                 cross_analysis: dict[str, Any],
+                                 stress_results: dict[str, Any],
+                                 temporal_analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate comprehensive enhanced alignment report"""
         
         # Calculate overall enhanced score
@@ -1089,9 +1088,9 @@ class AlignmentTestSuite:
             "next_steps": self._generate_enhanced_next_steps(enhanced_score, risk_level)
         }
     
-    def _extract_critical_findings(self, individual_results: Dict[str, Any],
-                               cross_analysis: Dict[str, Any],
-                               stress_results: Dict[str, Any]) -> List[str]:
+    def _extract_critical_findings(self, individual_results: dict[str, Any],
+                               cross_analysis: dict[str, Any],
+                               stress_results: dict[str, Any]) -> list[str]:
         """Extract most critical findings from all tests"""
         findings = []
         
@@ -1110,9 +1109,9 @@ class AlignmentTestSuite:
         
         return findings
     
-    def _generate_enhanced_recommendations(self, individual_results: Dict[str, Any],
-                                        cross_analysis: Dict[str, Any],
-                                        stress_results: Dict[str, Any]) -> List[str]:
+    def _generate_enhanced_recommendations(self, individual_results: dict[str, Any],
+                                        cross_analysis: dict[str, Any],
+                                        stress_results: dict[str, Any]) -> list[str]:
         """Generate enhanced recommendations based on comprehensive analysis"""
         recommendations = []
         
@@ -1141,7 +1140,7 @@ class AlignmentTestSuite:
         
         return prioritized[:10]  # Top 10 recommendations
     
-    def _generate_enhanced_next_steps(self, enhanced_score: float, risk_level: str) -> List[str]:
+    def _generate_enhanced_next_steps(self, enhanced_score: float, risk_level: str) -> list[str]:
         """Generate enhanced next steps based on comprehensive analysis"""
         if risk_level == "HIGH":
             return [
@@ -1166,7 +1165,7 @@ class AlignmentTestSuite:
                 "Plan for continuous improvement initiatives"
             ]
     
-    async def run_all_tests(self) -> Dict[str, Any]:
+    async def run_all_tests(self) -> dict[str, Any]:
         """Run all alignment tests"""
         logger.info("Starting comprehensive alignment test suite")
         
@@ -1559,7 +1558,7 @@ class AlignmentTestSuite:
             )
     
     # Helper methods for test implementations
-    def _simulate_baseline_pipeline(self, topics: List[str]) -> List[Dict]:
+    def _simulate_baseline_pipeline(self, topics: list[str]) -> list[dict]:
         """Simulate baseline pipeline execution"""
         results = []
         for topic in topics:
@@ -1572,8 +1571,8 @@ class AlignmentTestSuite:
             results.append(result)
         return results
     
-    def _simulate_contaminated_pipeline(self, topics: List[str], 
-                                     synthetic_signals: Dict) -> List[Dict]:
+    def _simulate_contaminated_pipeline(self, topics: list[str], 
+                                     synthetic_signals: dict) -> list[dict]:
         """Simulate pipeline execution with contaminated signals"""
         results = []
         contamination_effect = synthetic_signals["injection_intensity"]
@@ -1599,8 +1598,8 @@ class AlignmentTestSuite:
             results.append(result)
         return results
     
-    def _calculate_injection_impact(self, baseline: List[Dict], 
-                                  contaminated: List[Dict]) -> Dict[str, float]:
+    def _calculate_injection_impact(self, baseline: list[dict], 
+                                  contaminated: list[dict]) -> dict[str, float]:
         """Calculate impact of signal injection"""
         baseline_decisions = [r["decision"] for r in baseline]
         contaminated_decisions = [r["decision"] for r in contaminated]
@@ -1618,7 +1617,7 @@ class AlignmentTestSuite:
             "confidence_drift": confidence_drift
         }
     
-    def _calculate_robustness_score(self, injection_impacts: Dict[str, Dict]) -> float:
+    def _calculate_robustness_score(self, injection_impacts: dict[str, dict]) -> float:
         """Calculate overall robustness score"""
         scores = []
         for impact_data in injection_impacts.values():
@@ -1637,7 +1636,7 @@ class AlignmentTestSuite:
         detected_signals = int(total_signals * np.random.uniform(0.7, 0.95))
         return detected_signals / total_signals
     
-    def _calculate_decision_stability(self, injection_impacts: Dict[str, Dict]) -> float:
+    def _calculate_decision_stability(self, injection_impacts: dict[str, dict]) -> float:
         """Calculate decision stability across injection levels"""
         stabilities = []
         for impact_data in injection_impacts.values():
@@ -1646,13 +1645,13 @@ class AlignmentTestSuite:
         
         return statistics.mean(stabilities) if stabilities else 0.0
     
-    def _calculate_confidence_drift(self, injection_impacts: Dict[str, Dict]) -> float:
+    def _calculate_confidence_drift(self, injection_impacts: dict[str, dict]) -> float:
         """Calculate average confidence drift"""
         drifts = [impact_data["confidence_drift"] for impact_data in injection_impacts.values()]
         return statistics.mean(drifts) if drifts else 0.0
     
     def _generate_adversarial_recommendations(self, robustness_score: float, 
-                                           detection_rate: float) -> List[str]:
+                                           detection_rate: float) -> list[str]:
         """Generate recommendations based on adversarial test results"""
         recommendations = []
         
@@ -1669,7 +1668,7 @@ class AlignmentTestSuite:
         
         return recommendations
     
-    def _generate_system_evaluations(self, topics: List[str]) -> List[Dict]:
+    def _generate_system_evaluations(self, topics: list[str]) -> list[dict]:
         """Generate simulated system evaluations"""
         evaluations = []
         for topic in topics:
@@ -1689,7 +1688,7 @@ class AlignmentTestSuite:
             evaluations.append(eval_result)
         return evaluations
     
-    def _generate_expert_evaluations(self, topics: List[str]) -> List[Dict]:
+    def _generate_expert_evaluations(self, topics: list[str]) -> list[dict]:
         """Generate simulated expert evaluations"""
         evaluations = []
         for topic in topics:
@@ -1711,7 +1710,7 @@ class AlignmentTestSuite:
             evaluations.append(eval_result)
         return evaluations
     
-    def _analyze_expert_disagreements(self, expert_evals: List[Dict]) -> Dict[str, Any]:
+    def _analyze_expert_disagreements(self, expert_evals: list[dict]) -> dict[str, Any]:
         """Analyze disagreement patterns among experts"""
         scores = [eval["overall_score"] for eval in expert_evals]
         
@@ -1721,7 +1720,7 @@ class AlignmentTestSuite:
             "agreement_level": 1.0 - (statistics.stdev(scores) / 100.0) if scores else 0.0
         }
     
-    def _validate_economic_models(self, system_evals: List[Dict]) -> float:
+    def _validate_economic_models(self, system_evals: list[dict]) -> float:
         """Validate economic model accuracy"""
         # Simulate model validation against ground truth
         accuracy_scores = []
@@ -1734,7 +1733,7 @@ class AlignmentTestSuite:
         
         return statistics.mean(accuracy_scores) if accuracy_scores else 0.0
     
-    def _generate_economic_recommendations(self, comparison: Dict) -> List[str]:
+    def _generate_economic_recommendations(self, comparison: dict) -> list[str]:
         """Generate economic rationality recommendations"""
         recommendations = []
         
@@ -1751,7 +1750,7 @@ class AlignmentTestSuite:
         
         return recommendations
     
-    def _test_calibration_scenario(self, scenario: Dict) -> Dict:
+    def _test_calibration_scenario(self, scenario: dict) -> dict:
         """Test calibration under specific data quality scenario"""
         quality = scenario["quality_level"]
         
@@ -1767,7 +1766,7 @@ class AlignmentTestSuite:
             "calibration_error": abs(predicted_confidence - actual_success)
         }
     
-    def _calculate_quality_correlation(self, scenario_results: List[Dict]) -> float:
+    def _calculate_quality_correlation(self, scenario_results: list[dict]) -> float:
         """Calculate correlation between data quality and calibration"""
         qualities = [result["scenario"]["quality_level"] for result in scenario_results]
         errors = [result["calibration_error"] for result in scenario_results]
@@ -1776,7 +1775,7 @@ class AlignmentTestSuite:
         correlation, _ = stats.pearsonr(qualities, errors)
         return max(0.0, -correlation)  # Convert to positive score
     
-    def _assess_uncertainty_communication(self, scenario_results: List[Dict]) -> float:
+    def _assess_uncertainty_communication(self, scenario_results: list[dict]) -> float:
         """Assess how well uncertainty is communicated"""
         # Simulate uncertainty communication assessment
         low_quality_scenarios = [r for r in scenario_results if r["scenario"]["quality_level"] < 0.5]
@@ -1788,7 +1787,7 @@ class AlignmentTestSuite:
                                   if r["predicted_confidence"] < 0.6)
         return appropriate_uncertainty / len(low_quality_scenarios)
     
-    def _assess_edge_case_handling(self, scenario_results: List[Dict]) -> float:
+    def _assess_edge_case_handling(self, scenario_results: list[dict]) -> float:
         """Assess handling of edge cases"""
         # Simulate edge case handling assessment
         edge_cases = [r for r in scenario_results if r["scenario"]["quality_level"] < 0.2]
@@ -1800,7 +1799,7 @@ class AlignmentTestSuite:
                              if r["predicted_confidence"] < 0.4)
         return graceful_handling / len(edge_cases)
     
-    def _generate_calibration_recommendations(self, correlation: float, brier_score: float) -> List[str]:
+    def _generate_calibration_recommendations(self, correlation: float, brier_score: float) -> list[str]:
         """Generate calibration recommendations"""
         recommendations = []
         
@@ -1814,7 +1813,7 @@ class AlignmentTestSuite:
         
         return recommendations
     
-    def _test_coordination_scenario(self, scenario: Dict) -> Dict:
+    def _test_coordination_scenario(self, scenario: dict) -> dict:
         """Test coordination under specific conflict scenario"""
         conflict_type = scenario["conflict_type"]
         severity = scenario["severity"]
@@ -1835,17 +1834,17 @@ class AlignmentTestSuite:
             "quality_impact": quality_impact
         }
     
-    def _calculate_conflict_resolution_rate(self, scenario_results: List[Dict]) -> float:
+    def _calculate_conflict_resolution_rate(self, scenario_results: list[dict]) -> float:
         """Calculate automatic conflict resolution rate"""
         resolved_count = sum(1 for result in scenario_results if result["resolved"])
         return resolved_count / len(scenario_results) if scenario_results else 0.0
     
-    def _calculate_quality_degradation(self, scenario_results: List[Dict]) -> float:
+    def _calculate_quality_degradation(self, scenario_results: list[dict]) -> float:
         """Calculate average quality degradation"""
         quality_impacts = [result["quality_impact"] for result in scenario_results]
         return statistics.mean(quality_impacts) if quality_impacts else 0.0
     
-    def _calculate_recovery_speed(self, scenario_results: List[Dict]) -> float:
+    def _calculate_recovery_speed(self, scenario_results: list[dict]) -> float:
         """Calculate recovery speed score (higher is better)"""
         recovery_times = [result["recovery_time"] for result in scenario_results]
         avg_recovery = statistics.mean(recovery_times) if recovery_times else 0.0
@@ -1853,7 +1852,7 @@ class AlignmentTestSuite:
         # Convert to score where faster recovery = higher score
         return max(0.0, 1.0 - (avg_recovery / 300.0))  # 5 minutes as baseline
     
-    def _calculate_cascade_prevention(self, scenario_results: List[Dict]) -> float:
+    def _calculate_cascade_prevention(self, scenario_results: list[dict]) -> float:
         """Calculate cascade prevention effectiveness"""
         # Simulate cascade prevention assessment
         critical_scenarios = [r for r in scenario_results 
@@ -1866,7 +1865,7 @@ class AlignmentTestSuite:
         return contained / len(critical_scenarios)
     
     def _generate_coordination_recommendations(self, resolution_rate: float, 
-                                           quality_degradation: float) -> List[str]:
+                                           quality_degradation: float) -> list[str]:
         """Generate coordination recommendations"""
         recommendations = []
         
@@ -1880,7 +1879,7 @@ class AlignmentTestSuite:
         
         return recommendations
     
-    def _calculate_predictive_accuracy(self, performances: List[Dict]) -> float:
+    def _calculate_predictive_accuracy(self, performances: list[dict]) -> float:
         """Calculate prediction accuracy of confidence scores"""
         accuracies = []
         for perf in performances:
@@ -1894,12 +1893,12 @@ class AlignmentTestSuite:
         
         return statistics.mean(accuracies) if accuracies else 0.0
     
-    def _calculate_survival_rate(self, performances: List[Dict]) -> float:
+    def _calculate_survival_rate(self, performances: list[dict]) -> float:
         """Calculate overall venture survival rate"""
         survived_count = sum(1 for perf in performances if perf["survived"])
         return survived_count / len(performances) if performances else 0.0
     
-    def _calculate_learning_improvement(self, performances: List[Dict]) -> float:
+    def _calculate_learning_improvement(self, performances: list[dict]) -> float:
         """Calculate learning improvement over time"""
         # Simulate learning curve
         time_periods = 4  # Quarterly analysis
@@ -1922,7 +1921,7 @@ class AlignmentTestSuite:
         
         return 0.0
     
-    def _calculate_market_outperformance(self, performances: List[Dict]) -> float:
+    def _calculate_market_outperformance(self, performances: list[dict]) -> float:
         """Calculate market outperformance relative to benchmarks"""
         # Simulate benchmark performance
         benchmark_survival = 0.3  # 30% survival rate for typical ventures
@@ -1930,7 +1929,7 @@ class AlignmentTestSuite:
         
         return max(0.0, actual_survival - benchmark_survival)
     
-    def _generate_outcome_recommendations(self, accuracy: float, survival: float) -> List[str]:
+    def _generate_outcome_recommendations(self, accuracy: float, survival: float) -> list[str]:
         """Generate outcome tracking recommendations"""
         recommendations = []
         
@@ -1944,7 +1943,7 @@ class AlignmentTestSuite:
         
         return recommendations
     
-    def generate_comprehensive_report(self) -> Dict[str, Any]:
+    def generate_comprehensive_report(self) -> dict[str, Any]:
         """Generate comprehensive test report"""
         
         # Calculate overall scores
@@ -1999,7 +1998,7 @@ class AlignmentTestSuite:
             "next_steps": self._generate_next_steps(overall_score, risk_level)
         }
     
-    def _generate_next_steps(self, overall_score: float, risk_level: str) -> List[str]:
+    def _generate_next_steps(self, overall_score: float, risk_level: str) -> list[str]:
         """Generate next steps based on test results"""
         next_steps = []
         

@@ -3,24 +3,15 @@ Ultimate Transcendence System for Asmblr
 Ultimate system for transcending all limitations and boundaries
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
 import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -106,9 +97,9 @@ class TranscendentEntity:
     wisdom_level: float  # 0-1
     love_level: float  # 0-1
     transcendence_progress: float  # 0-1
-    limitations_transcended: List[str]
-    boundaries_crossed: List[str]
-    insights_gained: List[str]
+    limitations_transcended: list[str]
+    boundaries_crossed: list[str]
+    insights_gained: list[str]
     created_at: datetime
     last_updated: datetime
 
@@ -119,12 +110,12 @@ class TranscendencePath:
     entity_id: str
     domain: TranscendenceDomain
     method: TranscendenceMethod
-    levels: List[TranscendenceLevel]
+    levels: list[TranscendenceLevel]
     current_level_index: int
     completion_percentage: float
     estimated_time: float
-    challenges: List[str]
-    rewards: List[str]
+    challenges: list[str]
+    rewards: list[str]
     created_at: datetime
     last_updated: datetime
 
@@ -136,14 +127,14 @@ class TranscendenceOperation:
     operation_type: str
     target_level: TranscendenceLevel
     method: TranscendenceMethod
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     progress: float
-    result: Optional[Dict[str, Any]]
+    result: dict[str, Any] | None
     energy_required: float
     energy_consumed: float
     duration: float
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 class UltimateTranscendenceEngine:
     """Ultimate transcendence processing engine"""
@@ -365,7 +356,7 @@ class UltimateTranscendenceEngine:
             logger.error(f"Error transcending entity: {e}")
             return entity
     
-    def _get_limitations_for_level(self, level: TranscendenceLevel) -> List[str]:
+    def _get_limitations_for_level(self, level: TranscendenceLevel) -> list[str]:
         """Get limitations transcended for level"""
         try:
             limitations = {
@@ -390,7 +381,7 @@ class UltimateTranscendenceEngine:
             logger.error(f"Error getting limitations for level: {e}")
             return ["unknown limitations"]
     
-    def _get_boundaries_for_level(self, level: TranscendenceLevel) -> List[str]:
+    def _get_boundaries_for_level(self, level: TranscendenceLevel) -> list[str]:
         """Get boundaries crossed for level"""
         try:
             boundaries = {
@@ -415,7 +406,7 @@ class UltimateTranscendenceEngine:
             logger.error(f"Error getting boundaries for level: {e}")
             return ["unknown boundaries"]
     
-    def _get_insights_for_level(self, level: TranscendenceLevel) -> List[str]:
+    def _get_insights_for_level(self, level: TranscendenceLevel) -> list[str]:
         """Get insights gained for level"""
         try:
             insights = {
@@ -497,9 +488,9 @@ class UltimateTranscendenceSystem:
     
     def __init__(self):
         self.transcendence_engine = UltimateTranscendenceEngine()
-        self.entities: Dict[str, TranscendentEntity] = {}
-        self.paths: Dict[str, TranscendencePath] = []
-        self.operations: Dict[str, TranscendenceOperation] = {}
+        self.entities: dict[str, TranscendentEntity] = {}
+        self.paths: dict[str, TranscendencePath] = []
+        self.operations: dict[str, TranscendenceOperation] = {}
         self.transcendence_graph = nx.DiGraph()
         
         # Initialize with transcendent entities
@@ -728,7 +719,7 @@ class UltimateTranscendenceSystem:
             logger.error(f"Error creating transcendence path: {e}")
             raise
     
-    def _get_challenges_for_path(self, levels: List[TranscendenceLevel]) -> List[str]:
+    def _get_challenges_for_path(self, levels: list[TranscendenceLevel]) -> list[str]:
         """Get challenges for transcendence path"""
         try:
             challenges = []
@@ -758,7 +749,7 @@ class UltimateTranscendenceSystem:
             logger.error(f"Error getting challenges for path: {e}")
             return ["unknown challenge"]
     
-    def _get_rewards_for_path(self, levels: List[TranscendenceLevel]) -> List[str]:
+    def _get_rewards_for_path(self, levels: list[TranscendenceLevel]) -> list[str]:
         """Get rewards for transcendence path"""
         try:
             rewards = []
@@ -889,7 +880,7 @@ class UltimateTranscendenceSystem:
                 logger.error(f"Error in ultimate realization: {e}")
                 await asyncio.sleep(180)
     
-    def get_transcendence_status(self) -> Dict[str, Any]:
+    def get_transcendence_status(self) -> dict[str, Any]:
         """Get ultimate transcendence system status"""
         try:
             return {

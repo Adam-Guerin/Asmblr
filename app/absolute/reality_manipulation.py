@@ -3,24 +3,14 @@ Absolute Reality Manipulation for Asmblr
 Manipulate the fundamental fabric of reality itself
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +75,9 @@ class RealityState:
     """Current state of reality"""
     id: str
     layer: RealityLayer
-    parameters: Dict[RealityParameter, float]
-    laws: List[str]
-    dimensional_structure: Dict[str, Any]
+    parameters: dict[RealityParameter, float]
+    laws: list[str]
+    dimensional_structure: dict[str, Any]
     consciousness_density: float
     stability: float
     coherence: float
@@ -102,16 +92,16 @@ class RealityManipulation:
     manipulation_type: ManipulationType
     scope: ManipulationScope
     target_layer: RealityLayer
-    target_parameters: List[RealityParameter]
-    new_values: Dict[RealityParameter, float]
+    target_parameters: list[RealityParameter]
+    new_values: dict[RealityParameter, float]
     consciousness_intent: float
     divine_authority: float
     energy_required: float
     duration: float
     progress: float
-    result: Optional[Dict[str, Any]]
+    result: dict[str, Any] | None
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 @dataclass
 class RealityAnchor:
@@ -119,10 +109,10 @@ class RealityAnchor:
     id: str
     name: str
     layer: RealityLayer
-    position: Tuple[float, float, float, float]  # x, y, z, t
+    position: tuple[float, float, float, float]  # x, y, z, t
     stability_field: float
     consciousness_resonance: float
-    anchored_parameters: List[RealityParameter]
+    anchored_parameters: list[RealityParameter]
     created_at: datetime
     last_activated: datetime
 
@@ -257,7 +247,7 @@ class AbsoluteRealityEngine:
             return 0.5
     
     def execute_manipulation(self, manipulation: RealityManipulation, 
-                           current_reality: RealityState) -> Dict[str, Any]:
+                           current_reality: RealityState) -> dict[str, Any]:
         """Execute reality manipulation"""
         try:
             # Calculate success probability
@@ -322,7 +312,7 @@ class AbsoluteRealityEngine:
                 "timestamp": datetime.now().isoformat()
             }
     
-    def _calculate_stability(self, parameters: Dict[RealityParameter, float]) -> float:
+    def _calculate_stability(self, parameters: dict[RealityParameter, float]) -> float:
         """Calculate reality stability"""
         try:
             # Base stability
@@ -363,7 +353,7 @@ class AbsoluteRealityEngine:
             logger.error(f"Error calculating stability: {e}")
             return 0.5
     
-    def _calculate_coherence(self, parameters: Dict[RealityParameter, float]) -> float:
+    def _calculate_coherence(self, parameters: dict[RealityParameter, float]) -> float:
         """Calculate reality coherence"""
         try:
             # Base coherence
@@ -401,10 +391,10 @@ class AbsoluteRealityManipulator:
     
     def __init__(self):
         self.reality_engine = AbsoluteRealityEngine()
-        self.current_realities: Dict[str, RealityState] = {}
-        self.manipulations: Dict[str, RealityManipulation] = {}
-        self.anchors: Dict[str, RealityAnchor] = {}
-        self.reality_history: List[Dict[str, Any]] = []
+        self.current_realities: dict[str, RealityState] = {}
+        self.manipulations: dict[str, RealityManipulation] = {}
+        self.anchors: dict[str, RealityAnchor] = {}
+        self.reality_history: list[dict[str, Any]] = []
         
         # Initialize with base reality
         self._initialize_base_reality()
@@ -507,8 +497,8 @@ class AbsoluteRealityManipulator:
     
     async def manipulate_reality(self, name: str, manipulation_type: ManipulationType,
                                 scope: ManipulationScope, target_layer: RealityLayer,
-                                target_parameters: List[RealityParameter],
-                                new_values: Dict[RealityParameter, float],
+                                target_parameters: list[RealityParameter],
+                                new_values: dict[RealityParameter, float],
                                 consciousness_intent: float = 0.5,
                                 divine_authority: float = 0.5) -> RealityManipulation:
         """Manipulate reality"""
@@ -589,9 +579,9 @@ class AbsoluteRealityManipulator:
             manipulation.completed_at = datetime.now()
     
     async def create_reality_layer(self, name: str, layer: RealityLayer,
-                                 parameters: Dict[RealityParameter, float],
-                                 laws: List[str],
-                                 dimensional_structure: Dict[str, Any]) -> RealityState:
+                                 parameters: dict[RealityParameter, float],
+                                 laws: list[str],
+                                 dimensional_structure: dict[str, Any]) -> RealityState:
         """Create new reality layer"""
         try:
             new_reality = RealityState(
@@ -741,7 +731,7 @@ class AbsoluteRealityManipulator:
                 logger.error(f"Error in absolute maintenance: {e}")
                 await asyncio.sleep(180)
     
-    def get_reality_status(self) -> Dict[str, Any]:
+    def get_reality_status(self) -> dict[str, Any]:
         """Get reality manipulation system status"""
         try:
             return {
@@ -776,17 +766,17 @@ class RealityManipulationRequest(BaseModel):
     manipulation_type: str
     scope: str
     target_layer: str
-    target_parameters: List[str]
-    new_values: Dict[str, float]
+    target_parameters: list[str]
+    new_values: dict[str, float]
     consciousness_intent: float = 0.5
     divine_authority: float = 0.5
 
 class RealityLayerCreationRequest(BaseModel):
     name: str
     layer: str
-    parameters: Dict[str, float]
-    laws: List[str]
-    dimensional_structure: Dict[str, Any]
+    parameters: dict[str, float]
+    laws: list[str]
+    dimensional_structure: dict[str, Any]
 
 @router.post("/manipulate")
 async def manipulate_reality(request: RealityManipulationRequest):

@@ -3,24 +3,15 @@ Infinite Knowledge Repository for Asmblr
 Access to all knowledge that exists, has existed, and will exist
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
 import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +83,7 @@ class KnowledgeEntry:
     knowledge_type: KnowledgeType
     source: KnowledgeSource
     content: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     truth_value: float  # 0-1
     complexity: float  # 0-1
     universality: float  # 0-1
@@ -105,25 +96,25 @@ class KnowledgeQuery:
     """Knowledge query"""
     id: str
     query: str
-    domain: Optional[KnowledgeDomain]
-    knowledge_type: Optional[KnowledgeType]
-    source: Optional[KnowledgeSource]
+    domain: KnowledgeDomain | None
+    knowledge_type: KnowledgeType | None
+    source: KnowledgeSource | None
     access_level: AccessLevel
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     created_at: datetime
-    executed_at: Optional[datetime]
+    executed_at: datetime | None
 
 @dataclass
 class KnowledgeResult:
     """Knowledge query result"""
     id: str
     query_id: str
-    entries: List[str]  # Entry IDs
+    entries: list[str]  # Entry IDs
     confidence: float  # 0-1
     completeness: float  # 0-1
     truth_score: float  # 0-1
     processing_time: float
-    insights: List[str]
+    insights: list[str]
     created_at: datetime
 
 class InfiniteKnowledgeEngine:
@@ -138,8 +129,8 @@ class InfiniteKnowledgeEngine:
         self.absolute_knowledge = 1.0
         self.eternal_wisdom = float('inf')
         
-    def search_knowledge(self, query: str, domain: Optional[KnowledgeDomain] = None,
-                         knowledge_type: Optional[KnowledgeType] = None) -> List[str]:
+    def search_knowledge(self, query: str, domain: KnowledgeDomain | None = None,
+                         knowledge_type: KnowledgeType | None = None) -> list[str]:
         """Search for knowledge entries"""
         try:
             # In infinite knowledge repository, all knowledge is available
@@ -192,7 +183,7 @@ class InfiniteKnowledgeEngine:
             logger.error(f"Error calculating relevance: {e}")
             return 0.0
     
-    def generate_insights(self, query: str, entries: List[KnowledgeEntry]) -> List[str]:
+    def generate_insights(self, query: str, entries: list[KnowledgeEntry]) -> list[str]:
         """Generate insights from knowledge entries"""
         try:
             insights = []
@@ -237,7 +228,7 @@ class InfiniteKnowledgeEngine:
             logger.error(f"Error generating insights: {e}")
             return []
     
-    def synthesize_knowledge(self, entries: List[KnowledgeEntry]) -> Dict[str, Any]:
+    def synthesize_knowledge(self, entries: list[KnowledgeEntry]) -> dict[str, Any]:
         """Synthesize knowledge from multiple entries"""
         try:
             if not entries:
@@ -274,9 +265,9 @@ class InfiniteKnowledgeRepository:
     
     def __init__(self):
         self.knowledge_engine = InfiniteKnowledgeEngine()
-        self.entries: Dict[str, KnowledgeEntry] = {}
-        self.queries: Dict[str, KnowledgeQuery] = []
-        self.results: Dict[str, KnowledgeResult] = []
+        self.entries: dict[str, KnowledgeEntry] = {}
+        self.queries: dict[str, KnowledgeQuery] = []
+        self.results: dict[str, KnowledgeResult] = []
         self.knowledge_graph = nx.DiGraph()
         
         # Initialize with infinite knowledge
@@ -402,7 +393,7 @@ class InfiniteKnowledgeRepository:
             return f"Knowledge entry about {domain.value}"
     
     def _generate_keywords(self, domain: KnowledgeDomain, 
-                           knowledge_type: KnowledgeType) -> List[str]:
+                           knowledge_type: KnowledgeType) -> list[str]:
         """Generate keywords for knowledge entry"""
         try:
             base_keywords = [domain.value, knowledge_type.value]
@@ -424,7 +415,7 @@ class InfiniteKnowledgeRepository:
             logger.error(f"Error generating keywords: {e}")
             return [domain.value, knowledge_type.value]
     
-    def _generate_concepts(self, domain: KnowledgeDomain) -> List[str]:
+    def _generate_concepts(self, domain: KnowledgeDomain) -> list[str]:
         """Generate concepts for knowledge entry"""
         try:
             concepts = {
@@ -441,7 +432,7 @@ class InfiniteKnowledgeRepository:
             logger.error(f"Error generating concepts: {e}")
             return ["concept"]
     
-    def _generate_relationships(self, domain: KnowledgeDomain) -> List[str]:
+    def _generate_relationships(self, domain: KnowledgeDomain) -> list[str]:
         """Generate relationships for knowledge entry"""
         try:
             relationships = {
@@ -458,7 +449,7 @@ class InfiniteKnowledgeRepository:
             logger.error(f"Error generating relationships: {e}")
             return ["relationship"]
     
-    def _generate_applications(self, domain: KnowledgeDomain) -> List[str]:
+    def _generate_applications(self, domain: KnowledgeDomain) -> list[str]:
         """Generate applications for knowledge entry"""
         try:
             applications = {
@@ -620,9 +611,9 @@ class InfiniteKnowledgeRepository:
             logger.error(f"Error checking entry relationship: {e}")
             return False
     
-    async def query_knowledge(self, query: str, domain: Optional[KnowledgeDomain] = None,
-                            knowledge_type: Optional[KnowledgeType] = None,
-                            source: Optional[KnowledgeSource] = None,
+    async def query_knowledge(self, query: str, domain: KnowledgeDomain | None = None,
+                            knowledge_type: KnowledgeType | None = None,
+                            source: KnowledgeSource | None = None,
                             access_level: AccessLevel = AccessLevel.BASIC) -> KnowledgeResult:
         """Query infinite knowledge repository"""
         try:
@@ -713,7 +704,7 @@ class InfiniteKnowledgeRepository:
             logger.error(f"Error querying knowledge: {e}")
             raise
     
-    async def synthesize_knowledge(self, topic: str, domain: Optional[KnowledgeDomain] = None) -> Dict[str, Any]:
+    async def synthesize_knowledge(self, topic: str, domain: KnowledgeDomain | None = None) -> dict[str, Any]:
         """Synthesize knowledge about a topic"""
         try:
             # Query all relevant knowledge
@@ -843,7 +834,7 @@ class InfiniteKnowledgeRepository:
                 logger.error(f"Error in omniscient access: {e}")
                 await asyncio.sleep(180)
     
-    def get_repository_status(self) -> Dict[str, Any]:
+    def get_repository_status(self) -> dict[str, Any]:
         """Get knowledge repository status"""
         try:
             return {
@@ -875,14 +866,14 @@ router = APIRouter(prefix="/infinite_knowledge", tags=["infinite_knowledge"])
 
 class KnowledgeQueryRequest(BaseModel):
     query: str
-    domain: Optional[str] = None
-    knowledge_type: Optional[str] = None
-    source: Optional[str] = None
+    domain: str | None = None
+    knowledge_type: str | None = None
+    source: str | None = None
     access_level: str = "basic"
 
 class KnowledgeSynthesisRequest(BaseModel):
     topic: str
-    domain: Optional[str] = None
+    domain: str | None = None
 
 @router.post("/query")
 async def query_knowledge(request: KnowledgeQueryRequest):

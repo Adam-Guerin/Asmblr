@@ -5,17 +5,11 @@ Collects ≥1,000 real startup contexts from multiple sources with better covera
 
 import json
 import asyncio
-import aiohttp
-import requests
-from bs4 import BeautifulSoup
-import re
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any
 from dataclasses import dataclass, asdict
 import random
-import hashlib
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,11 +23,11 @@ class StartupContext:
     timestamp: str
     source_url: str
     industry_tag: str
-    extracted_pains: List[str]
-    extracted_competitors: List[str]
+    extracted_pains: list[str]
+    extracted_competitors: list[str]
     estimated_stage: str
     geographic_cluster: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class EnhancedDataCollector:
@@ -44,7 +38,7 @@ class EnhancedDataCollector:
         self.output_dir.mkdir(exist_ok=True)
         self.session = None
         
-    async def collect_crunchbase_data(self, limit: int = 300) -> List[StartupContext]:
+    async def collect_crunchbase_data(self, limit: int = 300) -> list[StartupContext]:
         """Collect startup data from Crunchbase (using public pages)."""
         logger.info(f"Collecting Crunchbase data (target: {limit})")
         contexts = []
@@ -130,7 +124,7 @@ class EnhancedDataCollector:
         logger.info(f"Generated {len(contexts)} Crunchbase-style contexts")
         return contexts
     
-    async def collect_indiehackers_data(self, limit: int = 300) -> List[StartupContext]:
+    async def collect_indiehackers_data(self, limit: int = 300) -> list[StartupContext]:
         """Collect IndieHackers project discussions."""
         logger.info(f"Collecting IndieHackers data (target: {limit})")
         contexts = []
@@ -193,7 +187,7 @@ class EnhancedDataCollector:
         logger.info(f"Generated {len(contexts)} IndieHackers-style contexts")
         return contexts
     
-    async def collect_landing_pages_data(self, limit: int = 300) -> List[StartupContext]:
+    async def collect_landing_pages_data(self, limit: int = 300) -> list[StartupContext]:
         """Collect data from public SaaS landing pages."""
         logger.info(f"Collecting landing page data (target: {limit})")
         contexts = []
@@ -265,7 +259,7 @@ class EnhancedDataCollector:
         logger.info(f"Generated {len(contexts)} landing page contexts")
         return contexts
     
-    def collect_synthetic_realistic_data(self, limit: int = 500) -> List[StartupContext]:
+    def collect_synthetic_realistic_data(self, limit: int = 500) -> list[StartupContext]:
         """Generate synthetic but realistic startup contexts."""
         logger.info(f"Generating synthetic realistic data (target: {limit})")
         contexts = []
@@ -351,7 +345,7 @@ class EnhancedDataCollector:
         else:
             return 'global'
     
-    async def collect_all_sources_enhanced(self, target_size: int = 1000) -> List[StartupContext]:
+    async def collect_all_sources_enhanced(self, target_size: int = 1000) -> list[StartupContext]:
         """Collect from all enhanced sources to reach target size."""
         logger.info(f"Starting enhanced data collection (target: {target_size} contexts)")
         

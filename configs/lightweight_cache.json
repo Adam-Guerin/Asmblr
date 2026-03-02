@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-02T13:35:42.886627",
+  "timestamp": "2026-03-02T18:03:42.629034",
   "config": {
     "DEFAULT_N_IDEAS": "8",
     "MAX_SOURCES": "8",
@@ -14,11 +14,11 @@
     "CACHE_TTL": "3600"
   },
   "system_resources": {
-    "available_memory_gb": 6.855934143066406,
+    "available_memory_gb": 3.9852523803710938,
     "total_memory_gb": 31.156780242919922,
     "cpu_count": 12,
-    "available_disk_gb": 1209.830394744873,
-    "cpu_percent": 37.3,
-    "memory_percent": 78.0
+    "available_disk_gb": 1207.909797668457,
+    "cpu_percent": 48.5,
+    "memory_percent": 87.2
   }
 }

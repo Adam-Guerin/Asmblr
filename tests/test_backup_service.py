@@ -11,7 +11,6 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from pathlib import Path
 
 # Import backup service
-import sys
 import importlib.util
 from pathlib import Path
 

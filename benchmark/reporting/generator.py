@@ -4,7 +4,7 @@ Report generator for creating markdown and JSON reports.
 
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 import json
 import logging
 
@@ -17,10 +17,10 @@ class ReportGenerator:
     def __init__(self):
         self.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    def generate_markdown_report(self, dataset: List[Dict], 
+    def generate_markdown_report(self, dataset: list[dict], 
                             config: Any,
-                            metrics_results: Dict[str, Dict],
-                            aggregated_results: Dict[str, Any],
+                            metrics_results: dict[str, dict],
+                            aggregated_results: dict[str, Any],
                             output_path: Path):
         """Generate comprehensive markdown report."""
         report_content = self._build_markdown_content(dataset, config, metrics_results, aggregated_results)
@@ -30,10 +30,10 @@ class ReportGenerator:
         
         logger.info(f"Generated markdown report: {output_path}")
     
-    def generate_json_summary(self, dataset: List[Dict],
+    def generate_json_summary(self, dataset: list[dict],
                           config: Any,
-                          metrics_results: Dict[str, Dict],
-                          aggregated_results: Dict[str, Any],
+                          metrics_results: dict[str, dict],
+                          aggregated_results: dict[str, Any],
                           output_path: Path):
         """Generate JSON summary report."""
         summary = {
@@ -62,10 +62,10 @@ class ReportGenerator:
         
         logger.info(f"Generated JSON summary: {output_path}")
     
-    def _build_markdown_content(self, dataset: List[Dict], 
+    def _build_markdown_content(self, dataset: list[dict], 
                              config: Any,
-                             metrics_results: Dict[str, Dict],
-                             aggregated_results: Dict[str, Any]) -> str:
+                             metrics_results: dict[str, dict],
+                             aggregated_results: dict[str, Any]) -> str:
         """Build the complete markdown report content."""
         content = []
         
@@ -203,8 +203,8 @@ class ReportGenerator:
         }
         return descriptions.get(dataset_name, "Custom dataset")
     
-    def _generate_analysis(self, metrics_results: Dict[str, Dict], 
-                        aggregated_results: Dict[str, Any]) -> List[str]:
+    def _generate_analysis(self, metrics_results: dict[str, dict], 
+                        aggregated_results: dict[str, Any]) -> list[str]:
         """Generate analysis of results."""
         analysis = []
         
@@ -234,8 +234,8 @@ class ReportGenerator:
         
         return analysis
     
-    def _generate_recommendations(self, metrics_results: Dict[str, Dict], 
-                              aggregated_results: Dict[str, Any]) -> List[str]:
+    def _generate_recommendations(self, metrics_results: dict[str, dict], 
+                              aggregated_results: dict[str, Any]) -> list[str]:
         """Generate recommendations based on results."""
         recommendations = []
         
@@ -270,7 +270,7 @@ class ReportGenerator:
         
         return recommendations[:10]  # Top 10 recommendations
     
-    def _analyze_failure_modes(self, metrics_results: Dict[str, Dict], config: Any) -> List[str]:
+    def _analyze_failure_modes(self, metrics_results: dict[str, dict], config: Any) -> list[str]:
         """Analyze failure modes from metrics."""
         failure_modes = []
         
@@ -297,7 +297,7 @@ class ReportGenerator:
         
         return failure_modes
     
-    def _generate_conclusion(self, aggregated_results: Dict[str, Any]) -> List[str]:
+    def _generate_conclusion(self, aggregated_results: dict[str, Any]) -> list[str]:
         """Generate conclusion from results."""
         conclusions = []
         
@@ -320,7 +320,7 @@ class ReportGenerator:
         
         return conclusions
     
-    def _get_overall_score(self, run_metrics: Dict[str, Dict]) -> float:
+    def _get_overall_score(self, run_metrics: dict[str, dict]) -> float:
         """Calculate overall score for a run."""
         scores = []
         for metric, result in run_metrics.items():

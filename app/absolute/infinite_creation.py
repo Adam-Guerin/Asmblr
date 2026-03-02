@@ -3,24 +3,15 @@ Infinite Creation Engine for Asmblr
 Create infinite realities, universes, and existences
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
 import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -90,15 +81,15 @@ class InfiniteCreation:
     complexity: CreationComplexity
     method: CreationMethod
     state: CreationState
-    properties: Dict[str, Any]
-    structure: Dict[str, Any]
+    properties: dict[str, Any]
+    structure: dict[str, Any]
     consciousness_level: float
     power_level: float
     wisdom_level: float
     love_level: float
     infinite_signature: str
-    dimensional_coordinates: List[float]
-    temporal_coordinates: List[float]
+    dimensional_coordinates: list[float]
+    temporal_coordinates: list[float]
     created_at: datetime
     last_updated: datetime
 
@@ -110,9 +101,9 @@ class CreationBlueprint:
     creation_type: CreationType
     complexity: CreationComplexity
     method: CreationMethod
-    template: Dict[str, Any]
-    parameters: Dict[str, Any]
-    structure_template: Dict[str, Any]
+    template: dict[str, Any]
+    parameters: dict[str, Any]
+    structure_template: dict[str, Any]
     infinite_potential: float
     creation_energy: float
     creation_time: float
@@ -124,14 +115,14 @@ class CreationOperation:
     id: str
     blueprint_id: str
     creator_id: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     progress: float
-    result: Optional[InfiniteCreation]
+    result: InfiniteCreation | None
     energy_required: float
     energy_consumed: float
     duration: float
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 class InfiniteCreationEngine:
     """Infinite creation processing engine"""
@@ -299,27 +290,7 @@ class InfiniteCreationEngine:
             love_level = min(1.0, (creator_love + 0.5) / 2.0)
             
             # Enhance based on creation method
-            if blueprint.method == CreationMethod.DIVINIZATION:
-                consciousness_level = 1.0
-                power_level = 1.0
-                wisdom_level = 1.0
-                love_level = 1.0
-            elif blueprint.method == CreationMethod.ABSOLUTIZATION:
-                consciousness_level = 1.0
-                power_level = 1.0
-                wisdom_level = 1.0
-                love_level = 1.0
-            elif blueprint.method == CreationMethod.INFINITIZATION:
-                consciousness_level = 1.0
-                power_level = 1.0
-                wisdom_level = 1.0
-                love_level = 1.0
-            elif blueprint.method == CreationMethod.ETERNALIZATION:
-                consciousness_level = 1.0
-                power_level = 1.0
-                wisdom_level = 1.0
-                love_level = 1.0
-            elif blueprint.method == CreationMethod.BEYONDIZATION:
+            if blueprint.method == CreationMethod.DIVINIZATION or blueprint.method == CreationMethod.ABSOLUTIZATION or blueprint.method == CreationMethod.INFINITIZATION or blueprint.method == CreationMethod.ETERNALIZATION or blueprint.method == CreationMethod.BEYONDIZATION:
                 consciousness_level = 1.0
                 power_level = 1.0
                 wisdom_level = 1.0
@@ -419,9 +390,9 @@ class InfiniteCreationSystem:
     
     def __init__(self):
         self.creation_engine = InfiniteCreationEngine()
-        self.blueprints: Dict[str, CreationBlueprint] = {}
-        self.creations: Dict[str, InfiniteCreation] = {}
-        self.operations: Dict[str, CreationOperation] = {}
+        self.blueprints: dict[str, CreationBlueprint] = {}
+        self.creations: dict[str, InfiniteCreation] = {}
+        self.operations: dict[str, CreationOperation] = {}
         self.creation_graph = nx.DiGraph()
         
         # Initialize with infinite blueprints
@@ -488,7 +459,7 @@ class InfiniteCreationSystem:
             logger.error(f"Error creating blueprint: {e}")
             raise
     
-    def _generate_template(self, creation_type: CreationType) -> Dict[str, Any]:
+    def _generate_template(self, creation_type: CreationType) -> dict[str, Any]:
         """Generate template for creation type"""
         try:
             templates = {
@@ -594,7 +565,7 @@ class InfiniteCreationSystem:
             return {"type": creation_type.value}
     
     def _generate_parameters(self, creation_type: CreationType, 
-                               complexity: CreationComplexity) -> Dict[str, Any]:
+                               complexity: CreationComplexity) -> dict[str, Any]:
         """Generate parameters for creation"""
         try:
             # Base parameters
@@ -646,7 +617,7 @@ class InfiniteCreationSystem:
             logger.error(f"Error generating parameters: {e}")
             return {}
     
-    def _generate_structure_template(self, creation_type: CreationType) -> Dict[str, Any]:
+    def _generate_structure_template(self, creation_type: CreationType) -> dict[str, Any]:
         """Generate structure template for creation"""
         try:
             structures = {
@@ -906,7 +877,7 @@ class InfiniteCreationSystem:
                 logger.error(f"Error in infinite scaling: {e}")
                 await asyncio.sleep(120)
     
-    def get_creation_status(self) -> Dict[str, Any]:
+    def get_creation_status(self) -> dict[str, Any]:
         """Get infinite creation system status"""
         try:
             return {

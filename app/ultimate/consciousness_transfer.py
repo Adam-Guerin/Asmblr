@@ -3,24 +3,14 @@ Consciousness Transfer System for Asmblr
 Mind uploading, consciousness copying, and digital immortality
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -75,10 +65,10 @@ class ConsciousnessPattern:
     id: str
     neural_activity: np.ndarray
     connectivity_matrix: np.ndarray
-    memory_patterns: Dict[str, np.ndarray]
-    personality_profile: Dict[str, float]
-    emotional_state: Dict[str, float]
-    cognitive_abilities: Dict[str, float]
+    memory_patterns: dict[str, np.ndarray]
+    personality_profile: dict[str, float]
+    emotional_state: dict[str, float]
+    cognitive_abilities: dict[str, float]
     created_at: datetime
     stability: float
 
@@ -93,7 +83,7 @@ class Substrate:
     memory_capacity: float  # GB
     energy_consumption: float  # Watts
     is_active: bool
-    compatibility: Dict[str, float]
+    compatibility: dict[str, float]
     created_at: datetime
 
 @dataclass
@@ -101,13 +91,13 @@ class ConsciousnessEntity:
     """Consciousness entity"""
     id: str
     name: str
-    original_entity_id: Optional[str]
+    original_entity_id: str | None
     consciousness_type: ConsciousnessType
     current_substrate_id: str
     pattern: ConsciousnessPattern
-    transfer_history: List[str]
-    memories: List[Dict[str, Any]]
-    experiences: List[Dict[str, Any]]
+    transfer_history: list[str]
+    memories: list[dict[str, Any]]
+    experiences: list[dict[str, Any]]
     is_active: bool
     created_at: datetime
     last_updated: datetime
@@ -125,9 +115,9 @@ class TransferOperation:
     energy_cost: float
     duration: float
     start_time: datetime
-    end_time: Optional[datetime]
+    end_time: datetime | None
     success: bool
-    error_message: Optional[str]
+    error_message: str | None
 
 class NeuralScanner:
     """Neural scanning and mapping system"""
@@ -182,7 +172,7 @@ class NeuralScanner:
             logger.error(f"Error mapping connectivity: {e}")
             return np.zeros((self.scanning_resolution, self.scanning_resolution))
     
-    def extract_memory_patterns(self, neural_activity: np.ndarray) -> Dict[str, np.ndarray]:
+    def extract_memory_patterns(self, neural_activity: np.ndarray) -> dict[str, np.ndarray]:
         """Extract memory patterns from neural activity"""
         try:
             memory_patterns = {}
@@ -205,7 +195,7 @@ class NeuralScanner:
             logger.error(f"Error extracting memory patterns: {e}")
             return {}
     
-    def analyze_personality(self, neural_activity: np.ndarray) -> Dict[str, float]:
+    def analyze_personality(self, neural_activity: np.ndarray) -> dict[str, float]:
         """Analyze personality from neural activity"""
         try:
             # Big Five personality traits
@@ -223,7 +213,7 @@ class NeuralScanner:
             logger.error(f"Error analyzing personality: {e}")
             return {}
     
-    def assess_emotional_state(self, neural_activity: np.ndarray) -> Dict[str, float]:
+    def assess_emotional_state(self, neural_activity: np.ndarray) -> dict[str, float]:
         """Assess emotional state"""
         try:
             emotions = {
@@ -252,9 +242,9 @@ class ConsciousnessTransferEngine:
     def __init__(self):
         self.neural_scanner = NeuralScanner()
         self.transfer_methods = self._initialize_transfer_methods()
-        self.transfer_history: List[TransferOperation] = []
+        self.transfer_history: list[TransferOperation] = []
         
-    def _initialize_transfer_methods(self) -> Dict[TransferMethod, Dict[str, Any]]:
+    def _initialize_transfer_methods(self) -> dict[TransferMethod, dict[str, Any]]:
         """Initialize transfer method configurations"""
         return {
             TransferMethod.NEURAL_MAPPING: {
@@ -573,8 +563,8 @@ class DigitalConsciousness:
     """Digital consciousness management"""
     
     def __init__(self):
-        self.entities: Dict[str, ConsciousnessEntity] = {}
-        self.substrates: Dict[str, Substrate] = {}
+        self.entities: dict[str, ConsciousnessEntity] = {}
+        self.substrates: dict[str, Substrate] = {}
         self.transfer_engine = ConsciousnessTransferEngine()
         
         # Initialize default substrates
@@ -644,7 +634,7 @@ class DigitalConsciousness:
             logger.error(f"Error initializing substrates: {e}")
     
     async def create_digital_entity(self, name: str, source_type: str,
-                                    source_data: Dict[str, Any]) -> ConsciousnessEntity:
+                                    source_data: dict[str, Any]) -> ConsciousnessEntity:
         """Create digital consciousness entity"""
         try:
             # Create consciousness pattern from source data
@@ -901,7 +891,7 @@ class DigitalConsciousness:
                 logger.error(f"Error in substrate maintenance: {e}")
                 await asyncio.sleep(300)
     
-    def get_entity_info(self, entity_id: str) -> Dict[str, Any]:
+    def get_entity_info(self, entity_id: str) -> dict[str, Any]:
         """Get entity information"""
         try:
             entity = self.entities.get(entity_id)
@@ -929,7 +919,7 @@ class DigitalConsciousness:
             logger.error(f"Error getting entity info: {e}")
             return {"error": str(e)}
     
-    def list_entities(self) -> List[Dict[str, Any]]:
+    def list_entities(self) -> list[dict[str, Any]]:
         """List all consciousness entities"""
         try:
             entities = []
@@ -952,7 +942,7 @@ class DigitalConsciousness:
             logger.error(f"Error listing entities: {e}")
             return []
     
-    def get_substrate_info(self, substrate_id: str) -> Dict[str, Any]:
+    def get_substrate_info(self, substrate_id: str) -> dict[str, Any]:
         """Get substrate information"""
         try:
             substrate = self.substrates.get(substrate_id)
@@ -975,7 +965,7 @@ class DigitalConsciousness:
             logger.error(f"Error getting substrate info: {e}")
             return {"error": str(e)}
     
-    def list_substrates(self) -> List[Dict[str, Any]]:
+    def list_substrates(self) -> list[dict[str, Any]]:
         """List all substrates"""
         try:
             substrates = []
@@ -1007,7 +997,7 @@ router = APIRouter(prefix="/consciousness", tags=["consciousness_transfer"])
 class EntityCreationRequest(BaseModel):
     name: str
     source_type: str
-    source_data: Dict[str, Any]
+    source_data: dict[str, Any]
 
 class TransferRequest(BaseModel):
     entity_id: str

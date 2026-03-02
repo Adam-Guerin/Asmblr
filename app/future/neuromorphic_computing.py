@@ -3,24 +3,14 @@ Neuromorphic Computing Architecture for Asmblr
 Brain-inspired computing systems with spiking neural networks
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, asdict
-from pathlib import Path
+from datetime import datetime
+from typing import Any
+from dataclasses import dataclass
 from enum import Enum
-import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
 import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +57,7 @@ class SpikeEvent:
     neuron_id: str
     timestamp: float
     spike_amplitude: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 @dataclass
 class SynapticConnection:
@@ -81,22 +71,22 @@ class SynapticConnection:
     plasticity: bool
     last_spike_time: float
     spike_count: int
-    learning_rule: Optional[LearningRule]
+    learning_rule: LearningRule | None
 
 @dataclass
 class Neuron:
     """Neuron in neuromorphic system"""
     id: str
     neuron_type: NeuronType
-    position: Tuple[float, float, float]
+    position: tuple[float, float, float]
     membrane_potential: float
     threshold: float
     refractory_period: float
     last_spike_time: float
-    spike_times: List[float]
-    parameters: Dict[str, Any]
-    connections_in: List[str]
-    connections_out: List[str]
+    spike_times: list[float]
+    parameters: dict[str, Any]
+    connections_in: list[str]
+    connections_out: list[str]
     is_active: bool
 
 @dataclass
@@ -105,10 +95,10 @@ class NeuromorphicLayer:
     id: str
     name: str
     neuron_type: NeuronType
-    neurons: List[Neuron]
-    connections: List[SynapticConnection]
+    neurons: list[Neuron]
+    connections: list[SynapticConnection]
     learning_enabled: bool
-    plasticity_rules: List[LearningRule]
+    plasticity_rules: list[LearningRule]
     created_at: datetime
 
 @dataclass
@@ -116,13 +106,13 @@ class NeuromorphicNetwork:
     """Complete neuromorphic network"""
     id: str
     name: str
-    layers: List[NeuromorphicLayer]
-    global_connections: List[SynapticConnection]
-    input_neurons: List[str]
-    output_neurons: List[str]
+    layers: list[NeuromorphicLayer]
+    global_connections: list[SynapticConnection]
+    input_neurons: list[str]
+    output_neurons: list[str]
     simulation_time: float
     time_step: float
-    spike_events: List[SpikeEvent]
+    spike_events: list[SpikeEvent]
     learning_enabled: bool
     created_at: datetime
     updated_at: datetime
@@ -130,7 +120,7 @@ class NeuromorphicNetwork:
 class LIFNeuron:
     """Leaky Integrate-and-Fire neuron model"""
     
-    def __init__(self, neuron_id: str, parameters: Dict[str, Any]):
+    def __init__(self, neuron_id: str, parameters: dict[str, Any]):
         self.id = neuron_id
         self.membrane_potential = parameters.get("v_rest", -70.0)  # mV
         self.threshold = parameters.get("v_threshold", -50.0)  # mV
@@ -180,7 +170,7 @@ class LIFNeuron:
 class IzhikevichNeuron:
     """Izhikevich neuron model"""
     
-    def __init__(self, neuron_id: str, parameters: Dict[str, Any]):
+    def __init__(self, neuron_id: str, parameters: dict[str, Any]):
         self.id = neuron_id
         self.a = parameters.get("a", 0.02)
         self.b = parameters.get("b", 0.2)
@@ -228,7 +218,7 @@ class IzhikevichNeuron:
 class AdaptiveExponentialNeuron:
     """Adaptive Exponential neuron model"""
     
-    def __init__(self, neuron_id: str, parameters: Dict[str, Any]):
+    def __init__(self, neuron_id: str, parameters: dict[str, Any]):
         self.id = neuron_id
         self.C_m = parameters.get("C_m", 281.0)  # pF
         self.g_L = parameters.get("g_L", 30.0)  # nS
@@ -287,7 +277,7 @@ class AdaptiveExponentialNeuron:
 class STDPPlasticity:
     """Spike-Timing Dependent Plasticity learning rule"""
     
-    def __init__(self, parameters: Dict[str, Any]):
+    def __init__(self, parameters: dict[str, Any]):
         self.A_plus = parameters.get("A_plus", 0.1)
         self.A_minus = parameters.get("A_minus", -0.1)
         self.tau_plus = parameters.get("tau_plus", 20.0)  # ms
@@ -321,15 +311,15 @@ class NeuromorphicProcessor:
     """Neuromorphic computing processor"""
     
     def __init__(self):
-        self.neurons: Dict[str, Union[LIFNeuron, IzhikevichNeuron, AdaptiveExponentialNeuron]] = {}
-        self.connections: Dict[str, SynapticConnection] = {}
-        self.spike_events: List[SpikeEvent] = []
-        self.plasticity_rules: Dict[str, STDPPlasticity] = {}
+        self.neurons: dict[str, LIFNeuron | IzhikevichNeuron | AdaptiveExponentialNeuron] = {}
+        self.connections: dict[str, SynapticConnection] = {}
+        self.spike_events: list[SpikeEvent] = []
+        self.plasticity_rules: dict[str, STDPPlasticity] = {}
         self.current_time = 0.0
         self.time_step = 0.1  # ms
         
     def add_neuron(self, neuron_id: str, neuron_type: NeuronType, 
-                   parameters: Dict[str, Any]) -> bool:
+                   parameters: dict[str, Any]) -> bool:
         """Add neuron to processor"""
         try:
             if neuron_type == NeuronType.LIF:
@@ -352,7 +342,7 @@ class NeuromorphicProcessor:
     def add_connection(self, connection_id: str, pre_neuron_id: str, 
                         post_neuron_id: str, synapse_type: SynapseType,
                         weight: float, delay: float, 
-                        learning_rule: Optional[LearningRule] = None) -> bool:
+                        learning_rule: LearningRule | None = None) -> bool:
         """Add synaptic connection"""
         try:
             if pre_neuron_id not in self.neurons or post_neuron_id not in self.neurons:
@@ -389,7 +379,7 @@ class NeuromorphicProcessor:
             logger.error(f"Error adding connection: {e}")
             return False
     
-    def simulate_step(self, external_inputs: Dict[str, float]) -> List[SpikeEvent]:
+    def simulate_step(self, external_inputs: dict[str, float]) -> list[SpikeEvent]:
         """Simulate one time step"""
         try:
             spike_events = []
@@ -485,7 +475,7 @@ class NeuromorphicProcessor:
         except Exception as e:
             logger.error(f"Error updating plasticity: {e}")
     
-    def simulate(self, duration: float, external_inputs: Dict[str, float]) -> Dict[str, Any]:
+    def simulate(self, duration: float, external_inputs: dict[str, float]) -> dict[str, Any]:
         """Run simulation for specified duration"""
         try:
             num_steps = int(duration / self.time_step)
@@ -525,7 +515,7 @@ class NeuromorphicProcessor:
             logger.error(f"Error in simulation: {e}")
             return {}
     
-    def get_network_graph(self) -> Dict[str, Any]:
+    def get_network_graph(self) -> dict[str, Any]:
         """Get network graph representation"""
         try:
             graph = nx.DiGraph()
@@ -584,7 +574,7 @@ class NeuromorphicNetworkBuilder:
         self.processor = NeuromorphicNetworkBuilder()
         self.network_config = {}
     
-    def create_feedforward_network(self, input_size: int, hidden_sizes: List[int], 
+    def create_feedforward_network(self, input_size: int, hidden_sizes: list[int], 
                                   output_size: int, neuron_type: NeuronType = NeuronType.LIF) -> NeuromorphicProcessor:
         """Create feedforward neuromorphic network"""
         try:
@@ -835,8 +825,8 @@ class NeuromorphicManager:
     """Manager for neuromorphic computing systems"""
     
     def __init__(self):
-        self.processors: Dict[str, NeuromorphicProcessor] = {}
-        self.networks: Dict[str, NeuromorphicNetwork] = {}
+        self.processors: dict[str, NeuromorphicProcessor] = {}
+        self.networks: dict[str, NeuromorphicNetwork] = {}
         self.builder = NeuromorphicNetworkBuilder()
         
         # Start background tasks
@@ -857,7 +847,7 @@ class NeuromorphicManager:
             raise
     
     async def create_feedforward_network(self, network_id: str, input_size: int,
-                                        hidden_sizes: List[int], output_size: int) -> NeuromorphicProcessor:
+                                        hidden_sizes: list[int], output_size: int) -> NeuromorphicProcessor:
         """Create feedforward neuromorphic network"""
         try:
             processor = self.builder.create_feedforward_network(
@@ -901,7 +891,7 @@ class NeuromorphicManager:
             raise
     
     async def run_simulation(self, processor_id: str, duration: float,
-                            external_inputs: Dict[str, float]) -> Dict[str, Any]:
+                            external_inputs: dict[str, float]) -> dict[str, Any]:
         """Run neuromorphic simulation"""
         try:
             processor = self.processors.get(processor_id)
@@ -917,7 +907,7 @@ class NeuromorphicManager:
             logger.error(f"Error running simulation: {e}")
             raise
     
-    async def get_network_visualization(self, processor_id: str) -> Dict[str, Any]:
+    async def get_network_visualization(self, processor_id: str) -> dict[str, Any]:
         """Get network visualization data"""
         try:
             processor = self.processors.get(processor_id)
@@ -1008,7 +998,7 @@ class NeuromorphicManager:
                 logger.error(f"Error in performance monitoring: {e}")
                 await asyncio.sleep(10)
     
-    def get_processor_status(self, processor_id: str) -> Dict[str, Any]:
+    def get_processor_status(self, processor_id: str) -> dict[str, Any]:
         """Get processor status"""
         try:
             processor = self.processors.get(processor_id)
@@ -1039,7 +1029,7 @@ router = APIRouter(prefix="/neuromorphic", tags=["neuromorphic_computing"])
 
 class FeedforwardNetworkRequest(BaseModel):
     input_size: int
-    hidden_sizes: List[int]
+    hidden_sizes: list[int]
     output_size: int
     neuron_type: str = "lif"
 
@@ -1056,7 +1046,7 @@ class LSMRequest(BaseModel):
 class SimulationRequest(BaseModel):
     processor_id: str
     duration: float
-    external_inputs: Dict[str, float] = {}
+    external_inputs: dict[str, float] = {}
 
 @router.post("/processors/create")
 async def create_processor(processor_id: str):

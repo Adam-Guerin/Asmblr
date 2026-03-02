@@ -2,8 +2,7 @@
 Clustering Quality metric - Adjusted Rand Index vs ground truth clusters.
 """
 
-from typing import Dict, List, Any, Set, Tuple
-import numpy as np
+from typing import Any
 from collections import defaultdict
 
 from .base import BaseMetric, MetricResult
@@ -15,7 +14,7 @@ class ClusteringQuality(BaseMetric):
     requires_ground_truth = True
     output_type = "score"
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute clustering quality metrics."""
         # Extract system clusters
         system_clusters = self._extract_system_clusters(run_result)
@@ -58,7 +57,7 @@ class ClusteringQuality(BaseMetric):
             }
         )
     
-    def _extract_system_clusters(self, run_result: Dict[str, Any]) -> List[Dict]:
+    def _extract_system_clusters(self, run_result: dict[str, Any]) -> list[dict]:
         """Extract clusters from system output."""
         clusters = []
         
@@ -84,7 +83,7 @@ class ClusteringQuality(BaseMetric):
         
         return clusters
     
-    def _extract_ground_truth_clusters(self, dataset: List[Dict]) -> List[Dict]:
+    def _extract_ground_truth_clusters(self, dataset: list[dict]) -> list[dict]:
         """Extract ground truth clusters from dataset."""
         all_clusters = []
         
@@ -97,8 +96,8 @@ class ClusteringQuality(BaseMetric):
         
         return all_clusters
     
-    def _calculate_adjusted_rand_index(self, system_clusters: List[Dict], 
-                                   ground_truth_clusters: List[Dict]) -> float:
+    def _calculate_adjusted_rand_index(self, system_clusters: list[dict], 
+                                   ground_truth_clusters: list[dict]) -> float:
         """Calculate Adjusted Rand Index."""
         # Create label assignments
         system_labels = self._create_label_assignment(system_clusters)
@@ -124,7 +123,7 @@ class ClusteringQuality(BaseMetric):
             # Fallback implementation
             return self._calculate_ari_fallback(system_label_list, gt_label_list)
     
-    def _calculate_ari_fallback(self, system_labels: List[int], gt_labels: List[int]) -> float:
+    def _calculate_ari_fallback(self, system_labels: list[int], gt_labels: list[int]) -> float:
         """Fallback ARI calculation without sklearn."""
         from itertools import combinations
         
@@ -170,8 +169,8 @@ class ClusteringQuality(BaseMetric):
         ari = (index - expected_index) / (max_index - expected_index)
         return max(0.0, ari)
     
-    def _calculate_purity(self, system_clusters: List[Dict], 
-                         ground_truth_clusters: List[Dict]) -> float:
+    def _calculate_purity(self, system_clusters: list[dict], 
+                         ground_truth_clusters: list[dict]) -> float:
         """Calculate clustering purity."""
         system_labels = self._create_label_assignment(system_clusters)
         gt_labels = self._create_label_assignment(ground_truth_clusters)
@@ -206,8 +205,8 @@ class ClusteringQuality(BaseMetric):
         purity = total_correct / total_items if total_items > 0 else 1.0
         return purity
     
-    def _calculate_normalized_mutual_info(self, system_clusters: List[Dict], 
-                                       ground_truth_clusters: List[Dict]) -> float:
+    def _calculate_normalized_mutual_info(self, system_clusters: list[dict], 
+                                       ground_truth_clusters: list[dict]) -> float:
         """Calculate Normalized Mutual Information."""
         system_labels = self._create_label_assignment(system_clusters)
         gt_labels = self._create_label_assignment(ground_truth_clusters)
@@ -228,7 +227,7 @@ class ClusteringQuality(BaseMetric):
             # Fallback: simple entropy-based calculation
             return self._calculate_nmi_fallback(system_label_list, gt_label_list)
     
-    def _calculate_nmi_fallback(self, system_labels: List[int], gt_labels: List[int]) -> float:
+    def _calculate_nmi_fallback(self, system_labels: list[int], gt_labels: list[int]) -> float:
         """Fallback NMI calculation without sklearn."""
         from collections import Counter
         import math
@@ -272,7 +271,7 @@ class ClusteringQuality(BaseMetric):
         nmi = 2 * mi / (H_system + H_gt)
         return nmi
     
-    def _create_label_assignment(self, clusters: List[Dict]) -> Dict[int, int]:
+    def _create_label_assignment(self, clusters: list[dict]) -> dict[int, int]:
         """Create label assignment from clusters."""
         assignment = {}
         
@@ -283,8 +282,8 @@ class ClusteringQuality(BaseMetric):
         
         return assignment
     
-    def _analyze_cluster_mapping(self, system_clusters: List[Dict], 
-                              ground_truth_clusters: List[Dict]) -> Dict[str, Any]:
+    def _analyze_cluster_mapping(self, system_clusters: list[dict], 
+                              ground_truth_clusters: list[dict]) -> dict[str, Any]:
         """Analyze mapping between system and ground truth clusters."""
         system_labels = self._create_label_assignment(system_clusters)
         gt_labels = self._create_label_assignment(ground_truth_clusters)
@@ -306,10 +305,10 @@ class ClusteringQuality(BaseMetric):
             }
         }
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["opportunities_structured", "pains_structured"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return ["clusters"]

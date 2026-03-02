@@ -9,13 +9,11 @@ import json
 import tempfile
 import os
 from datetime import datetime, timedelta
-from typing import Any, Tuple
 from unittest.mock import Mock
 import redis.asyncio as redis
 
 # Import all new features for integration testing
 from app.core.ai_orchestrator import AIOrchestrator
-from app.core.predictive_monitoring import PredictiveMonitoringSystem
 from app.core.predictive_dashboard import PredictiveDashboard
 from app.core.advanced_debugger import AdvancedDebugger
 from app.core.ai_code_generator import AICodeGenerator

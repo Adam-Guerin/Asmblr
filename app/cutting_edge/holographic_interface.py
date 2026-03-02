@@ -3,26 +3,17 @@ Holographic Interface and 3D Projection for Asmblr
 Advanced holographic displays and 3D interaction systems
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
 from abc import ABC, abstractmethod
 import cv2
 from PIL import Image, ImageDraw, ImageFont
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +64,10 @@ class HolographicContent:
     id: str
     name: str
     content_type: ContentType
-    data: Dict[str, Any]
-    position: Tuple[float, float, float]
-    rotation: Tuple[float, float, float]
-    scale: Tuple[float, float, float]
+    data: dict[str, Any]
+    position: tuple[float, float, float]
+    rotation: tuple[float, float, float]
+    scale: tuple[float, float, float]
     opacity: float
     interactive: bool
     animation_enabled: bool
@@ -88,8 +79,8 @@ class HologramLayer:
     """Hologram layer for depth"""
     id: str
     depth: float
-    content: List[HolographicContent]
-    resolution: Tuple[int, int]
+    content: list[HolographicContent]
+    resolution: tuple[int, int]
     refresh_rate: int
     color_depth: int
     transparency: float
@@ -102,16 +93,16 @@ class HolographicDisplay:
     name: str
     hologram_type: HologramType
     projection_technology: ProjectionTechnology
-    resolution: Tuple[int, int]
-    field_of_view: Tuple[float, float]
-    depth_range: Tuple[float, float]
+    resolution: tuple[int, int]
+    field_of_view: tuple[float, float]
+    depth_range: tuple[float, float]
     refresh_rate: int
     brightness: float
     contrast: float
     color_gamut: str
-    layers: List[HologramLayer]
+    layers: list[HologramLayer]
     is_active: bool
-    calibration_data: Dict[str, Any]
+    calibration_data: dict[str, Any]
 
 @dataclass
 class GestureData:
@@ -119,12 +110,12 @@ class GestureData:
     gesture_id: str
     gesture_type: str
     hand_id: str
-    position: Tuple[float, float, float]
-    velocity: Tuple[float, float, float]
-    acceleration: Tuple[float, float, float]
+    position: tuple[float, float, float]
+    velocity: tuple[float, float, float]
+    acceleration: tuple[float, float, float]
     confidence: float
     timestamp: datetime
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 @dataclass
 class VoiceCommand:
@@ -144,7 +135,7 @@ class InteractionEvent:
     interaction_type: InteractionMethod
     target_content_id: str
     action: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     timestamp: datetime
     user_id: str
     confidence: float
@@ -158,7 +149,7 @@ class HolographicRenderer(ABC):
         self.is_rendering = False
     
     @abstractmethod
-    async def render_frame(self, content: List[HolographicContent]) -> bytes:
+    async def render_frame(self, content: list[HolographicContent]) -> bytes:
         """Render holographic frame"""
         pass
     
@@ -175,7 +166,7 @@ class VolumetricRenderer(HolographicRenderer):
         self.voxel_resolution = 64  # 64x64x64 voxel grid
         self.voxel_data = np.zeros((self.voxel_resolution, self.voxel_resolution, self.voxel_resolution))
     
-    async def render_frame(self, content: List[HolographicContent]) -> bytes:
+    async def render_frame(self, content: list[HolographicContent]) -> bytes:
         """Render volumetric holographic frame"""
         try:
             # Clear voxel data
@@ -337,7 +328,7 @@ class VolumetricRenderer(HolographicRenderer):
         except Exception as e:
             logger.error(f"Error rendering data visualization: {e}")
     
-    async def _render_scatter_plot(self, data: List[Dict], content: HolographicContent):
+    async def _render_scatter_plot(self, data: list[dict], content: HolographicContent):
         """Render 3D scatter plot"""
         try:
             for point in data:
@@ -359,7 +350,7 @@ class VolumetricRenderer(HolographicRenderer):
         except Exception as e:
             logger.error(f"Error rendering scatter plot: {e}")
     
-    async def _render_bar_chart(self, data: List[Dict], content: HolographicContent):
+    async def _render_bar_chart(self, data: list[dict], content: HolographicContent):
         """Render 3D bar chart"""
         try:
             bar_width = 2
@@ -384,7 +375,7 @@ class VolumetricRenderer(HolographicRenderer):
         except Exception as e:
             logger.error(f"Error rendering bar chart: {e}")
     
-    async def _render_surface_plot(self, data: List[Dict], content: HolographicContent):
+    async def _render_surface_plot(self, data: list[dict], content: HolographicContent):
         """Render 3D surface plot"""
         try:
             # Create mesh from data points
@@ -567,7 +558,7 @@ class PepperGhostRenderer(HolographicRenderer):
         self.reflection_angle = 45  # degrees
         self.screen_size = (1920, 1080)
     
-    async def render_frame(self, content: List[HolographicContent]) -> bytes:
+    async def render_frame(self, content: list[HolographicContent]) -> bytes:
         """Render Pepper's Ghost holographic frame"""
         try:
             # Create reflection surface
@@ -722,12 +713,12 @@ class HolographicInterfaceManager:
     """Manager for holographic interfaces"""
     
     def __init__(self):
-        self.displays: Dict[str, HolographicDisplay] = {}
-        self.content: Dict[str, HolographicContent] = {}
-        self.renderers: Dict[str, HolographicRenderer] = {}
-        self.interaction_events: List[InteractionEvent] = []
-        self.gesture_data: List[GestureData] = []
-        self.voice_commands: List[VoiceCommand] = []
+        self.displays: dict[str, HolographicDisplay] = {}
+        self.content: dict[str, HolographicContent] = {}
+        self.renderers: dict[str, HolographicRenderer] = {}
+        self.interaction_events: list[InteractionEvent] = []
+        self.gesture_data: list[GestureData] = []
+        self.voice_commands: list[VoiceCommand] = []
         
         # Initialize default displays
         self._initialize_default_displays()
@@ -786,7 +777,7 @@ class HolographicInterfaceManager:
         except Exception as e:
             logger.error(f"Error initializing default displays: {e}")
     
-    async def create_content(self, content_config: Dict[str, Any]) -> HolographicContent:
+    async def create_content(self, content_config: dict[str, Any]) -> HolographicContent:
         """Create holographic content"""
         try:
             content = HolographicContent(
@@ -813,7 +804,7 @@ class HolographicInterfaceManager:
             logger.error(f"Error creating holographic content: {e}")
             raise
     
-    async def update_content(self, content_id: str, updates: Dict[str, Any]) -> bool:
+    async def update_content(self, content_id: str, updates: dict[str, Any]) -> bool:
         """Update holographic content"""
         try:
             content = self.content.get(content_id)
@@ -968,7 +959,7 @@ class HolographicInterfaceManager:
             logger.error(f"Error processing voice command: {e}")
             return None
     
-    async def _find_content_at_position(self, position: Tuple[float, float, float]) -> Optional[HolographicContent]:
+    async def _find_content_at_position(self, position: tuple[float, float, float]) -> HolographicContent | None:
         """Find content at given position"""
         try:
             # Check all displays
@@ -990,7 +981,7 @@ class HolographicInterfaceManager:
             logger.error(f"Error finding content at position: {e}")
             return None
     
-    async def _parse_voice_command(self, command: VoiceCommand) -> Optional[HolographicContent]:
+    async def _parse_voice_command(self, command: VoiceCommand) -> HolographicContent | None:
         """Parse voice command to find target content"""
         try:
             # Simple command parsing
@@ -1115,7 +1106,7 @@ class HolographicInterfaceManager:
                 logger.error(f"Error in interaction processing loop: {e}")
                 await asyncio.sleep(1)
     
-    def get_display_status(self, display_id: str) -> Dict[str, Any]:
+    def get_display_status(self, display_id: str) -> dict[str, Any]:
         """Get display status"""
         try:
             display = self.displays.get(display_id)
@@ -1137,7 +1128,7 @@ class HolographicInterfaceManager:
             logger.error(f"Error getting display status: {e}")
             return {"error": str(e)}
     
-    def get_content_list(self) -> List[Dict[str, Any]]:
+    def get_content_list(self) -> list[dict[str, Any]]:
         """Get list of all content"""
         try:
             content_list = []
@@ -1170,10 +1161,10 @@ router = APIRouter(prefix="/holographic", tags=["holographic_interface"])
 class ContentCreationRequest(BaseModel):
     name: str
     content_type: str
-    data: Dict[str, Any] = {}
-    position: List[float] = [0.0, 0.0, 0.0]
-    rotation: List[float] = [0.0, 0.0, 0.0]
-    scale: List[float] = [1.0, 1.0, 1.0]
+    data: dict[str, Any] = {}
+    position: list[float] = [0.0, 0.0, 0.0]
+    rotation: list[float] = [0.0, 0.0, 0.0]
+    scale: list[float] = [1.0, 1.0, 1.0]
     opacity: float = 1.0
     interactive: bool = False
     animation_enabled: bool = False
@@ -1182,9 +1173,9 @@ class GestureRequest(BaseModel):
     gesture_id: str
     gesture_type: str
     hand_id: str
-    position: List[float]
-    velocity: List[float]
-    acceleration: List[float]
+    position: list[float]
+    velocity: list[float]
+    acceleration: list[float]
     confidence: float
 
 class VoiceCommandRequest(BaseModel):
@@ -1217,7 +1208,7 @@ async def create_holographic_content(request: ContentCreationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/content/{content_id}")
-async def update_holographic_content(content_id: str, updates: Dict[str, Any]):
+async def update_holographic_content(content_id: str, updates: dict[str, Any]):
     """Update holographic content"""
     try:
         success = await holo_manager.update_content(content_id, updates)

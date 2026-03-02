@@ -2,8 +2,7 @@
 Feasibility Score metric - heuristic rubric for technical and economic feasibility.
 """
 
-from typing import Dict, List, Any
-import re
+from typing import Any
 
 from .base import BaseMetric, MetricResult
 
@@ -26,7 +25,7 @@ class FeasibilityScore(BaseMetric):
             "timeline_realism": 0.1
         }
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute feasibility score."""
         # Extract system ideas
         system_ideas = self._extract_system_ideas(run_result)
@@ -69,7 +68,7 @@ class FeasibilityScore(BaseMetric):
             }
         )
     
-    def _extract_system_ideas(self, run_result: Dict[str, Any]) -> List[Dict]:
+    def _extract_system_ideas(self, run_result: dict[str, Any]) -> list[dict]:
         """Extract ideas from system output."""
         ideas = []
         
@@ -88,7 +87,7 @@ class FeasibilityScore(BaseMetric):
         
         return ideas
     
-    def _calculate_idea_feasibility(self, idea: Dict) -> tuple[float, Dict]:
+    def _calculate_idea_feasibility(self, idea: dict) -> tuple[float, dict]:
         """Calculate feasibility score for a single idea."""
         # Extract text fields
         title = idea.get("title", "")
@@ -233,10 +232,10 @@ class FeasibilityScore(BaseMetric):
         else:
             return 0.8
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["opportunities_structured", "opportunities"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return []

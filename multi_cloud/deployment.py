@@ -7,19 +7,16 @@ import json
 import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
-import yaml
 import boto3
 from google.cloud import container_v1
 from google.cloud import compute_v1
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.containerservice import ContainerServiceClient
-import kubernetes
 from kubernetes import client, config
 
 logger = logging.getLogger(__name__)
@@ -35,12 +32,12 @@ class CloudConfig:
     """Cloud provider configuration"""
     provider: CloudProvider
     region: str
-    project_id: Optional[str] = None  # GCP specific
-    subscription_id: Optional[str] = None  # Azure specific
-    credentials_path: Optional[str] = None
-    resource_group: Optional[str] = None  # Azure specific
-    vpc_id: Optional[str] = None
-    subnet_id: Optional[str] = None
+    project_id: str | None = None  # GCP specific
+    subscription_id: str | None = None  # Azure specific
+    credentials_path: str | None = None
+    resource_group: str | None = None  # Azure specific
+    vpc_id: str | None = None
+    subnet_id: str | None = None
     cluster_name: str = "asmblr-cluster"
     node_count: int = 3
     machine_type: str = "t3.medium"
@@ -53,10 +50,10 @@ class DeploymentResult:
     provider: CloudProvider
     region: str
     cluster_name: str
-    endpoint: Optional[str] = None
-    error_message: Optional[str] = None
+    endpoint: str | None = None
+    error_message: str | None = None
     deployment_time: datetime = datetime.now()
-    resources_created: List[str] = None
+    resources_created: list[str] = None
 
 class AWSDeployer:
     """AWS EKS deployment"""
@@ -550,7 +547,7 @@ class MultiCloudDeployer:
             CloudProvider.GCP: GCPDeployer,
             CloudProvider.AZURE: AzureDeployer
         }
-        self.deployment_history: List[DeploymentResult] = []
+        self.deployment_history: list[DeploymentResult] = []
     
     async def deploy_to_cloud(self, config: CloudConfig) -> DeploymentResult:
         """Deploy to specified cloud provider"""
@@ -595,7 +592,7 @@ class MultiCloudDeployer:
         process = await asyncio.create_subprocess_shell(cmd)
         await process.communicate()
     
-    async def deploy_multi_cloud(self, configs: List[CloudConfig]) -> List[DeploymentResult]:
+    async def deploy_multi_cloud(self, configs: list[CloudConfig]) -> list[DeploymentResult]:
         """Deploy to multiple clouds simultaneously"""
         tasks = []
         for config in configs:
@@ -622,7 +619,7 @@ class MultiCloudDeployer:
         
         return deployment_results
     
-    async def setup_global_load_balancer(self, deployments: List[DeploymentResult]):
+    async def setup_global_load_balancer(self, deployments: list[DeploymentResult]):
         """Setup global load balancer across multiple clouds"""
         try:
             # This would typically use a global load balancing service
@@ -644,7 +641,7 @@ class MultiCloudDeployer:
         except Exception as e:
             logger.error(f"Error setting up global load balancer: {e}")
     
-    def get_deployment_status(self) -> Dict[str, Any]:
+    def get_deployment_status(self) -> dict[str, Any]:
         """Get deployment status across all clouds"""
         successful_deployments = [d for d in self.deployment_history if d.success]
         failed_deployments = [d for d in self.deployment_history if not d.success]
@@ -679,9 +676,9 @@ router = APIRouter(prefix="/multi-cloud", tags=["multi-cloud"])
 class CloudDeploymentRequest(BaseModel):
     provider: str
     region: str
-    project_id: Optional[str] = None
-    subscription_id: Optional[str] = None
-    resource_group: Optional[str] = None
+    project_id: str | None = None
+    subscription_id: str | None = None
+    resource_group: str | None = None
     cluster_name: str = "asmblr-cluster"
     node_count: int = 3
     machine_type: str = "t3.medium"
@@ -710,7 +707,7 @@ async def deploy_to_cloud(request: CloudDeploymentRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/deploy-multi")
-async def deploy_multi_cloud(requests: List[CloudDeploymentRequest]):
+async def deploy_multi_cloud(requests: list[CloudDeploymentRequest]):
     """Deploy to multiple clouds simultaneously"""
     try:
         configs = []

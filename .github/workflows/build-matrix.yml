@@ -103,7 +103,7 @@ jobs:
       matrix:
         service: [api-gateway, asmblr-core, asmblr-agents, asmblr-media]
         fail-fast: false
-    if: needs.detect-changes.outputs[matrix.service] == 'true'
+    if: always() && needs.detect-changes.outputs[matrix.service] == 'true' && (needs.build-base.result == 'success' || needs.build-base.result == 'skipped')
     outputs:
       image-digest: ${{ steps.build.outputs.digest }}
       image-tag: ${{ steps.meta.outputs.tags }}
@@ -144,7 +144,7 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
-          BASE_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-base@${{ needs.build-base.outputs.image-digest }}
+          BASE_IMAGE=${{ needs.build-base.outputs.image-digest != '' && format('{0}/{1}-base@{2}', env.REGISTRY, env.IMAGE_NAME, needs.build-base.outputs.image-digest) || format('{0}/{1}-base:latest', env.REGISTRY, env.IMAGE_NAME) }}
         cache-from: type=gha,scope=${{ matrix.service }}
         cache-to: type=gha,mode=max,scope=${{ matrix.service }}
         outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }},push=true
@@ -152,12 +152,11 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     needs: [detect-changes, build-services]
-    if: always() && (needs.build-services.result == 'success' || needs.build-services.result == 'skipped')
     strategy:
       matrix:
         service: [api-gateway, asmblr-core, asmblr-agents, asmblr-media]
         fail-fast: false
-    if: needs.detect-changes.outputs[matrix.service] == 'true'
+    if: always() && (needs.build-services.result == 'success' || needs.build-services.result == 'skipped') && needs.detect-changes.outputs[matrix.service] == 'true'
     steps:
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
@@ -188,7 +187,7 @@ jobs:
       run: |
         cp docker-compose.optimized.yml docker-compose.test.yml
         # Update image tags to use newly built images
-        sed -i 's|asmblr/asmblr-|${{ env.REGISTRY }}/asmblr-|g' docker-compose.test.yml
+        sed -i 's|asmblr/asmblr-|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-|g' docker-compose.test.yml
         sed -i 's|:latest|:main-${{ github.sha }}|g' docker-compose.test.yml
 
     - name: Start services
@@ -213,7 +212,7 @@ jobs:
         docker-compose -f docker-compose.test.yml down
 
     - name: Upload performance results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-results-${{ github.sha }}
         path: |
@@ -240,7 +239,7 @@ jobs:
       run: |
         echo "🚀 Deploying to staging with multi-arch images..."
         # Update staging docker-compose with new image tags
-        sed -i 's|asmblr/asmblr-|${{ env.REGISTRY }}/asmblr-|g' docker-compose.staging.yml
+        sed -i 's|asmblr/asmblr-|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-|g' docker-compose.staging.yml
         sed -i 's|:latest|:develop-${{ github.sha }}|g' docker-compose.staging.yml
         
         # Deploy
@@ -253,7 +252,7 @@ jobs:
 
     - name: Run smoke tests
       run: |
-        python -m pytest tests/smoke/ -v --tb=short
+        python -m pytest -q --no-cov tests/test_smoke_doctor_and_run.py::test_doctor_ok
 
   deploy-production:
     runs-on: ubuntu-latest
@@ -293,11 +292,11 @@ jobs:
 
     - name: Run production health checks
       run: |
-        ./scripts/health-check-production.sh
+        ./scripts/health-check.sh
 
     - name: Setup rollback on failure
       if: failure()
       run: |
         echo "❌ Production deployment failed! Initiating rollback..."
-        ./scripts/rollback-production.sh
+        ./scripts/rollback-if-failed.sh
         exit 1

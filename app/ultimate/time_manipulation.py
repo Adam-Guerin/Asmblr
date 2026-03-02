@@ -3,24 +3,15 @@ Time Manipulation Systems for Asmblr
 Temporal control, time travel, and chronodynamics
 """
 
-import json
-import time
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
 import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +64,10 @@ class TemporalEvent:
     timestamp: datetime
     event_type: str
     description: str
-    participants: List[str]
-    location: Tuple[float, float, float]
-    causal_links: List[str]
-    temporal_coordinates: Tuple[float, float, float, float]  # x, y, z, t
+    participants: list[str]
+    location: tuple[float, float, float]
+    causal_links: list[str]
+    temporal_coordinates: tuple[float, float, float, float]  # x, y, z, t
     is_fixed: bool
     is_paradoxical: bool
     created_at: datetime
@@ -86,11 +77,11 @@ class Timeline:
     """Timeline representation"""
     id: str
     name: str
-    events: List[TemporalEvent]
+    events: list[TemporalEvent]
     state: TimelineState
-    divergence_point: Optional[datetime]
-    parent_timeline: Optional[str]
-    child_timelines: List[str]
+    divergence_point: datetime | None
+    parent_timeline: str | None
+    child_timelines: list[str]
     temporal_stability: float
     paradox_count: int
     created_at: datetime
@@ -119,11 +110,11 @@ class TemporalAnchor:
     name: str
     timeline_id: str
     anchor_time: datetime
-    anchor_location: Tuple[float, float, float]
+    anchor_location: tuple[float, float, float]
     stability: float
     is_active: bool
     created_at: datetime
-    expires_at: Optional[datetime]
+    expires_at: datetime | None
 
 class TemporalPhysics:
     """Temporal physics calculations"""
@@ -257,7 +248,7 @@ class TimelineManager:
     """Timeline management system"""
     
     def __init__(self):
-        self.timelines: Dict[str, Timeline] = {}
+        self.timelines: dict[str, Timeline] = {}
         self.temporal_physics = TemporalPhysics()
         self.paradox_detector = ParadoxDetector()
         
@@ -493,7 +484,7 @@ class ParadoxDetector:
     def __init__(self):
         self.paradox_patterns = self._initialize_paradox_patterns()
         
-    def _initialize_paradox_patterns(self) -> Dict[str, Any]:
+    def _initialize_paradox_patterns(self) -> dict[str, Any]:
         """Initialize paradox detection patterns"""
         return {
             "grandfather_paradox": {
@@ -519,7 +510,7 @@ class ParadoxDetector:
         }
     
     def detect_paradoxes(self, new_event: TemporalEvent, 
-                         existing_events: List[TemporalEvent]) -> List[Dict[str, Any]]:
+                         existing_events: list[TemporalEvent]) -> list[dict[str, Any]]:
         """Detect temporal paradoxes"""
         try:
             paradoxes = []
@@ -545,7 +536,7 @@ class ParadoxDetector:
             return []
     
     def _check_grandfather_paradox(self, new_event: TemporalEvent, 
-                                   existing_events: List[TemporalEvent]) -> Optional[Dict[str, Any]]:
+                                   existing_events: list[TemporalEvent]) -> dict[str, Any] | None:
         """Check for grandfather paradox"""
         try:
             # Look for events that would prevent the traveler's existence
@@ -565,7 +556,7 @@ class ParadoxDetector:
             return None
     
     def _check_bootstrap_paradox(self, new_event: TemporalEvent, 
-                                existing_events: List[TemporalEvent]) -> Optional[Dict[str, Any]]:
+                                existing_events: list[TemporalEvent]) -> dict[str, Any] | None:
         """Check for bootstrap paradox"""
         try:
             # Look for causal loops without origin
@@ -597,7 +588,7 @@ class ParadoxDetector:
             return None
     
     def _check_causality_violations(self, new_event: TemporalEvent, 
-                                   existing_events: List[TemporalEvent]) -> List[Dict[str, Any]]:
+                                   existing_events: list[TemporalEvent]) -> list[dict[str, Any]]:
         """Check for causality violations"""
         try:
             violations = []
@@ -625,8 +616,8 @@ class TimeTravelController:
     def __init__(self):
         self.timeline_manager = TimelineManager()
         self.temporal_physics = TemporalPhysics()
-        self.active_travels: Dict[str, TimeTravel] = {}
-        self.temporal_anchors: Dict[str, TemporalAnchor] = {}
+        self.active_travels: dict[str, TimeTravel] = {}
+        self.temporal_anchors: dict[str, TemporalAnchor] = {}
         
     def initiate_time_travel(self, traveler_id: str, method: TimeTravelMethod,
                             destination_time: datetime, 
@@ -808,7 +799,7 @@ class TimeTravelController:
     
     def create_temporal_anchor(self, name: str, timeline_id: str,
                               anchor_time: datetime,
-                              anchor_location: Tuple[float, float, float],
+                              anchor_location: tuple[float, float, float],
                               duration_hours: float = 24.0) -> TemporalAnchor:
         """Create temporal anchor"""
         try:
@@ -906,7 +897,7 @@ class TimeManipulationSystem:
         asyncio.create_task(self._temporal_anchor_maintenance())
     
     async def manipulate_time(self, timeline_id: str, operation: TemporalOperation,
-                            parameters: Dict[str, Any]) -> Dict[str, Any]:
+                            parameters: dict[str, Any]) -> dict[str, Any]:
         """Perform time manipulation operation"""
         try:
             timeline = self.timeline_manager.timelines.get(timeline_id)
@@ -952,7 +943,7 @@ class TimeManipulationSystem:
             return {"error": str(e)}
     
     async def _apply_time_dilation(self, timeline: Timeline, 
-                                  parameters: Dict[str, Any]) -> Dict[str, Any]:
+                                  parameters: dict[str, Any]) -> dict[str, Any]:
         """Apply time dilation"""
         try:
             velocity = parameters.get("velocity", 0.5 * self.temporal_physics.c)
@@ -989,7 +980,7 @@ class TimeManipulationSystem:
             return {"success": False, "error": str(e)}
     
     async def _apply_time_acceleration(self, timeline: Timeline,
-                                      parameters: Dict[str, Any]) -> Dict[str, Any]:
+                                      parameters: dict[str, Any]) -> dict[str, Any]:
         """Apply time acceleration"""
         try:
             acceleration_factor = parameters.get("acceleration_factor", 2.0)
@@ -1022,7 +1013,7 @@ class TimeManipulationSystem:
             return {"success": False, "error": str(e)}
     
     async def _apply_time_reversal(self, timeline: Timeline,
-                                   parameters: Dict[str, Any]) -> Dict[str, Any]:
+                                   parameters: dict[str, Any]) -> dict[str, Any]:
         """Apply time reversal"""
         try:
             reversal_duration = parameters.get("duration", 60.0)  # seconds
@@ -1055,7 +1046,7 @@ class TimeManipulationSystem:
             return {"success": False, "error": str(e)}
     
     async def _apply_time_pause(self, timeline: Timeline,
-                               parameters: Dict[str, Any]) -> Dict[str, Any]:
+                               parameters: dict[str, Any]) -> dict[str, Any]:
         """Apply time pause"""
         try:
             pause_duration = parameters.get("duration", 60.0)
@@ -1072,7 +1063,7 @@ class TimeManipulationSystem:
             return {"success": False, "error": str(e)}
     
     async def _apply_time_jump(self, timeline: Timeline,
-                               parameters: Dict[str, Any]) -> Dict[str, Any]:
+                               parameters: dict[str, Any]) -> dict[str, Any]:
         """Apply time jump"""
         try:
             destination_time = parameters.get("destination_time", datetime.now())
@@ -1099,7 +1090,7 @@ class TimeManipulationSystem:
             return {"success": False, "error": str(e)}
     
     async def _create_parallel_timeline(self, timeline: Timeline,
-                                     parameters: Dict[str, Any]) -> Dict[str, Any]:
+                                     parameters: dict[str, Any]) -> dict[str, Any]:
         """Create parallel timeline"""
         try:
             divergence_point = parameters.get("divergence_point", datetime.now())
@@ -1122,7 +1113,7 @@ class TimeManipulationSystem:
             return {"success": False, "error": str(e)}
     
     async def _create_time_loop(self, timeline: Timeline,
-                               parameters: Dict[str, Any]) -> Dict[str, Any]:
+                               parameters: dict[str, Any]) -> dict[str, Any]:
         """Create time loop"""
         try:
             loop_duration = parameters.get("duration", 3600.0)  # 1 hour
@@ -1161,7 +1152,7 @@ class TimeManipulationSystem:
             return {"success": False, "error": str(e)}
     
     async def _create_temporal_anchor(self, timeline: Timeline,
-                                     parameters: Dict[str, Any]) -> Dict[str, Any]:
+                                     parameters: dict[str, Any]) -> dict[str, Any]:
         """Create temporal anchor"""
         try:
             anchor_name = parameters.get("anchor_name", "Temporal Anchor")
@@ -1336,7 +1327,7 @@ class TimeManipulationSystem:
                 logger.error(f"Error in temporal anchor maintenance: {e}")
                 await asyncio.sleep(300)
     
-    def get_timeline_info(self, timeline_id: str) -> Dict[str, Any]:
+    def get_timeline_info(self, timeline_id: str) -> dict[str, Any]:
         """Get timeline information"""
         try:
             timeline = self.timeline_manager.timelines.get(timeline_id)
@@ -1361,7 +1352,7 @@ class TimeManipulationSystem:
             logger.error(f"Error getting timeline info: {e}")
             return {"error": str(e)}
     
-    def list_timelines(self) -> List[Dict[str, Any]]:
+    def list_timelines(self) -> list[dict[str, Any]]:
         """List all timelines"""
         try:
             timelines = []
@@ -1394,7 +1385,7 @@ router = APIRouter(prefix="/time_manipulation", tags=["time_manipulation"])
 class TimeManipulationRequest(BaseModel):
     timeline_id: str
     operation: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 
 class TimeTravelRequest(BaseModel):
     traveler_id: str
@@ -1406,7 +1397,7 @@ class TemporalAnchorRequest(BaseModel):
     name: str
     timeline_id: str
     anchor_time: datetime
-    anchor_location: List[float]
+    anchor_location: list[float]
     duration_hours: float = 24.0
 
 class TimelineBranchRequest(BaseModel):

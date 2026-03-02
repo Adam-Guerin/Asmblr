@@ -4,22 +4,16 @@ Post-quantum cryptographic algorithms and security systems
 """
 
 import json
-import time
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
 import hashlib
 import os
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import base64
 
 logger = logging.getLogger(__name__)
@@ -61,12 +55,12 @@ class QuantumResistantKey:
     security_level: SecurityLevel
     key_type: KeyType
     key_data: bytes
-    public_key: Optional[bytes]
-    private_key: Optional[bytes]
-    signature: Optional[bytes]
-    metadata: Dict[str, Any]
+    public_key: bytes | None
+    private_key: bytes | None
+    signature: bytes | None
+    metadata: dict[str, Any]
     created_at: datetime
-    expires_at: Optional[datetime]
+    expires_at: datetime | None
     is_active: bool
 
 @dataclass
@@ -76,9 +70,9 @@ class CipherText:
     algorithm: PostQuantumAlgorithm
     key_id: str
     ciphertext: bytes
-    nonce: Optional[bytes]
-    tag: Optional[bytes]
-    metadata: Dict[str, Any]
+    nonce: bytes | None
+    tag: bytes | None
+    metadata: dict[str, Any]
     encrypted_at: datetime
 
 @dataclass
@@ -90,7 +84,7 @@ class DigitalSignature:
     message_hash: bytes
     signature: bytes
     public_key: bytes
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     signed_at: datetime
     verified: bool = False
 
@@ -127,7 +121,7 @@ class LatticeBasedCrypto:
         """Get error bound parameter"""
         return self.n // 4
     
-    def generate_keypair(self) -> Tuple[bytes, bytes]:
+    def generate_keypair(self) -> tuple[bytes, bytes]:
         """Generate lattice-based keypair"""
         try:
             # Generate random matrix A (n x m)
@@ -361,7 +355,7 @@ class HashBasedCrypto:
         }
         return params[self.security_level]
     
-    def generate_keypair(self) -> Tuple[bytes, bytes]:
+    def generate_keypair(self) -> tuple[bytes, bytes]:
         """Generate SPHINCS+ keypair"""
         try:
             # Generate secret key (simplified)
@@ -492,7 +486,7 @@ class CodeBasedCrypto:
         }
         return params[self.security_level]
     
-    def generate_keypair(self) -> Tuple[bytes, bytes]:
+    def generate_keypair(self) -> tuple[bytes, bytes]:
         """Generate McEliece keypair"""
         try:
             # Generate random generator matrix G (simplified)
@@ -611,9 +605,9 @@ class QuantumResistantCryptoManager:
             PostQuantumAlgorithm.CODE_BASED: CodeBasedCrypto
         }
         
-        self.keys: Dict[str, QuantumResistantKey] = {}
-        self.ciphertexts: Dict[str, CipherText] = {}
-        self.signatures: Dict[str, DigitalSignature] = {}
+        self.keys: dict[str, QuantumResistantKey] = {}
+        self.ciphertexts: dict[str, CipherText] = {}
+        self.signatures: dict[str, DigitalSignature] = {}
         
         # Start background tasks
         asyncio.create_task(self._key_rotation_loop())
@@ -687,9 +681,7 @@ class QuantumResistantCryptoManager:
             crypto_class = self.algorithms[key.algorithm](key.security_level)
             
             # Encrypt data
-            if key.algorithm == PostQuantumAlgorithm.LATTICE_BASED:
-                ciphertext = crypto_class.encrypt(data, key.public_key)
-            elif key.algorithm == PostQuantumAlgorithm.CODE_BASED:
+            if key.algorithm == PostQuantumAlgorithm.LATTICE_BASED or key.algorithm == PostQuantumAlgorithm.CODE_BASED:
                 ciphertext = crypto_class.encrypt(data, key.public_key)
             else:
                 # For hash-based, use symmetric encryption
@@ -741,9 +733,7 @@ class QuantumResistantCryptoManager:
             crypto_class = self.algorithms[key.algorithm](key.security_level)
             
             # Decrypt data
-            if key.algorithm == PostQuantumAlgorithm.LATTICE_BASED:
-                plaintext = crypto_class.decrypt(cipher_obj.ciphertext, key.private_key)
-            elif key.algorithm == PostQuantumAlgorithm.CODE_BASED:
+            if key.algorithm == PostQuantumAlgorithm.LATTICE_BASED or key.algorithm == PostQuantumAlgorithm.CODE_BASED:
                 plaintext = crypto_class.decrypt(cipher_obj.ciphertext, key.private_key)
             else:
                 # For hash-based, use symmetric decryption
@@ -884,7 +874,7 @@ class QuantumResistantCryptoManager:
                 logger.error(f"Error in security audit loop: {e}")
                 await asyncio.sleep(86400)
     
-    async def _perform_security_audit(self) -> Dict[str, Any]:
+    async def _perform_security_audit(self) -> dict[str, Any]:
         """Perform security audit"""
         try:
             audit_results = {
@@ -918,7 +908,7 @@ class QuantumResistantCryptoManager:
             logger.error(f"Error performing security audit: {e}")
             return {}
     
-    def get_key_info(self, key_id: str) -> Dict[str, Any]:
+    def get_key_info(self, key_id: str) -> dict[str, Any]:
         """Get key information"""
         try:
             key = self.keys.get(key_id)
@@ -940,9 +930,9 @@ class QuantumResistantCryptoManager:
             logger.error(f"Error getting key info: {e}")
             return {"error": str(e)}
     
-    def list_keys(self, algorithm: Optional[PostQuantumAlgorithm] = None,
-                  security_level: Optional[SecurityLevel] = None,
-                  key_type: Optional[KeyType] = None) -> List[Dict[str, Any]]:
+    def list_keys(self, algorithm: PostQuantumAlgorithm | None = None,
+                  security_level: SecurityLevel | None = None,
+                  key_type: KeyType | None = None) -> list[dict[str, Any]]:
         """List keys with optional filters"""
         try:
             keys = []
@@ -1093,9 +1083,9 @@ async def get_key_info(key_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/keys")
-async def list_keys(algorithm: Optional[str] = None,
-                   security_level: Optional[str] = None,
-                   key_type: Optional[str] = None):
+async def list_keys(algorithm: str | None = None,
+                   security_level: str | None = None,
+                   key_type: str | None = None):
     """List quantum-resistant keys"""
     try:
         algo = PostQuantumAlgorithm(algorithm) if algorithm else None

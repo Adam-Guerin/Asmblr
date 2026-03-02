@@ -5,16 +5,12 @@ Automated model training, evaluation, deployment, and monitoring
 
 import json
 import time
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
 from pathlib import Path
-import yaml
-import subprocess
 import hashlib
-import boto3
 from kubernetes import client, config
 import mlflow
 import mlflow.sklearn
@@ -34,19 +30,19 @@ class ModelMetadata:
     model_type: str
     framework: str
     created_at: datetime
-    performance_metrics: Dict[str, float]
-    hyperparameters: Dict[str, Any]
+    performance_metrics: dict[str, float]
+    hyperparameters: dict[str, Any]
     training_data_hash: str
     model_size_mb: float
     deployment_status: str
-    endpoint_url: Optional[str] = None
+    endpoint_url: str | None = None
 
 @dataclass
 class TrainingConfig:
     """Training configuration"""
     model_name: str
     framework: str
-    hyperparameters: Dict[str, Any]
+    hyperparameters: dict[str, Any]
     training_data_path: str
     validation_split: float = 0.2
     test_split: float = 0.1
@@ -61,13 +57,13 @@ class ModelRegistry:
     
     def __init__(self, registry_path: str = "ml_ops/model_registry.json"):
         self.registry_path = registry_path
-        self.models: Dict[str, List[ModelMetadata]] = {}
+        self.models: dict[str, list[ModelMetadata]] = {}
         self._load_registry()
     
     def _load_registry(self):
         """Load model registry from file"""
         if Path(self.registry_path).exists():
-            with open(self.registry_path, 'r') as f:
+            with open(self.registry_path) as f:
                 data = json.load(f)
                 for name, models in data.items():
                     self.models[name] = [
@@ -101,14 +97,14 @@ class ModelRegistry:
         self._save_registry()
         logger.info(f"Registered model {metadata.name} version {metadata.version}")
     
-    def get_latest_model(self, name: str) -> Optional[ModelMetadata]:
+    def get_latest_model(self, name: str) -> ModelMetadata | None:
         """Get latest version of a model"""
         if name not in self.models or not self.models[name]:
             return None
         
         return max(self.models[name], key=lambda m: m.created_at)
     
-    def get_model(self, name: str, version: str) -> Optional[ModelMetadata]:
+    def get_model(self, name: str, version: str) -> ModelMetadata | None:
         """Get specific version of a model"""
         if name not in self.models:
             return None
@@ -118,7 +114,7 @@ class ModelRegistry:
                 return model
         return None
     
-    def list_models(self) -> Dict[str, List[str]]:
+    def list_models(self) -> dict[str, list[str]]:
         """List all models and their versions"""
         return {
             name: [m.version for m in models]
@@ -147,7 +143,7 @@ class ModelTrainer:
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
     
-    def prepare_data(self) -> Tuple[Any, Any, Any, Any]:
+    def prepare_data(self) -> tuple[Any, Any, Any, Any]:
         """Prepare training, validation, and test data"""
         logger.info(f"Loading data from {self.config.training_data_path}")
         
@@ -224,7 +220,7 @@ class ModelTrainer:
             logger.info(f"Training completed for {self.config.model_name}")
             return metadata
     
-    def _train_sklearn(self, X_train, X_val, y_train, y_val) -> Tuple[Any, Dict[str, float]]:
+    def _train_sklearn(self, X_train, X_val, y_train, y_val) -> tuple[Any, dict[str, float]]:
         """Train sklearn model"""
         from sklearn.ensemble import RandomForestClassifier
         from sklearn.linear_model import LogisticRegression
@@ -266,7 +262,7 @@ class ModelTrainer:
         
         return model, metrics
     
-    def _train_pytorch(self, X_train, X_val, y_train, y_val) -> Tuple[Any, Dict[str, float]]:
+    def _train_pytorch(self, X_train, X_val, y_train, y_val) -> tuple[Any, dict[str, float]]:
         """Train PyTorch model"""
         import torch
         import torch.nn as nn
@@ -293,7 +289,7 @@ class ModelTrainer:
         
         class SimpleNN(nn.Module):
             def __init__(self, input_size, hidden_size, num_classes):
-                super(SimpleNN, self).__init__()
+                super().__init__()
                 self.fc1 = nn.Linear(input_size, hidden_size)
                 self.fc2 = nn.Linear(hidden_size, hidden_size)
                 self.fc3 = nn.Linear(hidden_size, num_classes)
@@ -384,7 +380,7 @@ class ModelTrainer:
         
         return model, metrics
     
-    def _evaluate_model(self, model, X_test, y_test) -> Dict[str, float]:
+    def _evaluate_model(self, model, X_test, y_test) -> dict[str, float]:
         """Evaluate model on test set"""
         if self.config.framework == "sklearn":
             y_pred = model.predict(X_test)
@@ -550,7 +546,7 @@ class ModelMonitor:
             "error_rate": 0.01
         }
     
-    def monitor_model_performance(self, model_name: str, version: str) -> Dict[str, Any]:
+    def monitor_model_performance(self, model_name: str, version: str) -> dict[str, Any]:
         """Monitor model performance"""
         metadata = self.registry.get_model(model_name, version)
         if not metadata:
@@ -578,7 +574,7 @@ class ModelMonitor:
             "timestamp": datetime.now().isoformat()
         }
     
-    def _get_deployment_metrics(self, model_name: str, version: str) -> Dict[str, float]:
+    def _get_deployment_metrics(self, model_name: str, version: str) -> dict[str, float]:
         """Get metrics from deployed model"""
         # This would typically query Prometheus or other monitoring system
         # For now, return simulated metrics
@@ -589,8 +585,8 @@ class ModelMonitor:
             "throughput": 1000
         }
     
-    def _calculate_performance_drift(self, training_metrics: Dict[str, float], 
-                                   current_metrics: Dict[str, float]) -> Dict[str, float]:
+    def _calculate_performance_drift(self, training_metrics: dict[str, float], 
+                                   current_metrics: dict[str, float]) -> dict[str, float]:
         """Calculate performance drift"""
         drift = {}
         for metric in training_metrics:
@@ -598,7 +594,7 @@ class ModelMonitor:
                 drift[metric] = current_metrics[metric] - training_metrics[metric]
         return drift
     
-    def _check_alerts(self, performance_drift: Dict[str, float]) -> List[str]:
+    def _check_alerts(self, performance_drift: dict[str, float]) -> list[str]:
         """Check for performance alerts"""
         alerts = []
         
@@ -641,7 +637,7 @@ class MLOpsPipeline:
         
         return metadata
     
-    def run_monitoring_pipeline(self, model_name: str, version: str) -> Dict[str, Any]:
+    def run_monitoring_pipeline(self, model_name: str, version: str) -> dict[str, Any]:
         """Run monitoring pipeline"""
         return self.monitor.monitor_model_performance(model_name, version)
     
@@ -687,7 +683,7 @@ router = APIRouter(prefix="/ml-ops", tags=["ml-ops"])
 class TrainingRequest(BaseModel):
     model_name: str
     framework: str
-    hyperparameters: Dict[str, Any]
+    hyperparameters: dict[str, Any]
     training_data_path: str
 
 class MonitoringRequest(BaseModel):
@@ -741,7 +737,7 @@ async def list_models():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/models/{model_name}")
-async def get_model(model_name: str, version: Optional[str] = None):
+async def get_model(model_name: str, version: str | None = None):
     """Get model details"""
     try:
         if version:

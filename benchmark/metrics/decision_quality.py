@@ -2,7 +2,7 @@
 Decision Quality metric - accuracy of ABORT/KILL/PASS vs ground truth with cost weighting.
 """
 
-from typing import Dict, List, Any, Set
+from typing import Any
 import re
 
 from .base import BaseMetric, MetricResult
@@ -27,7 +27,7 @@ class DecisionQuality(BaseMetric):
             "true_abort": 0.0      # Correct ABORT
         }
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute decision quality metrics."""
         # Extract system decision and confidence
         system_decision, system_confidence = self._extract_system_decision(run_result)
@@ -80,7 +80,7 @@ class DecisionQuality(BaseMetric):
             }
         )
     
-    def _extract_system_decision(self, run_result: Dict[str, Any]) -> tuple[str, float]:
+    def _extract_system_decision(self, run_result: dict[str, Any]) -> tuple[str, float]:
         """Extract decision and confidence from system output."""
         decision = None
         confidence = 0.5  # Default
@@ -144,7 +144,7 @@ class DecisionQuality(BaseMetric):
         
         return decision, confidence
     
-    def _extract_ground_truth_decisions(self, dataset: List[Dict]) -> List[Dict]:
+    def _extract_ground_truth_decisions(self, dataset: list[dict]) -> list[dict]:
         """Extract ground truth decisions from dataset."""
         decisions = []
         
@@ -162,7 +162,7 @@ class DecisionQuality(BaseMetric):
         return decisions
     
     def _calculate_decision_accuracy(self, system_decision: str, 
-                                 ground_truth_decisions: List[Dict]) -> tuple[float, str]:
+                                 ground_truth_decisions: list[dict]) -> tuple[float, str]:
         """Calculate decision accuracy and error type."""
         if not ground_truth_decisions:
             return 0.0, "no_ground_truth"
@@ -193,7 +193,7 @@ class DecisionQuality(BaseMetric):
     
     def _calculate_confidence_calibration(self, system_confidence: float,
                                     system_decision: str,
-                                    ground_truth_decisions: List[Dict]) -> float:
+                                    ground_truth_decisions: list[dict]) -> float:
         """Calculate confidence calibration score."""
         if not ground_truth_decisions:
             return None
@@ -210,10 +210,10 @@ class DecisionQuality(BaseMetric):
             # Low confidence for incorrect decision = good calibration
             return 1.0 - system_confidence
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["decision", "confidence", "data_source"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return ["decision", "confidence"]

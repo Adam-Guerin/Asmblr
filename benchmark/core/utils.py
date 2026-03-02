@@ -6,7 +6,7 @@ import json
 import random
 import numpy as np
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ def set_seed(seed: int):
     logger.info(f"Set random seed to {seed}")
 
 
-def load_json(file_path: Union[str, Path]) -> Optional[Dict[str, Any]]:
+def load_json(file_path: str | Path) -> dict[str, Any] | None:
     """Load JSON file safely."""
     try:
         path = Path(file_path)
@@ -27,14 +27,14 @@ def load_json(file_path: Union[str, Path]) -> Optional[Dict[str, Any]]:
             logger.warning(f"File not found: {path}")
             return None
         
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
         logger.error(f"Error loading JSON from {file_path}: {e}")
         return None
 
 
-def save_json(data: Any, file_path: Union[str, Path], indent: int = 2):
+def save_json(data: Any, file_path: str | Path, indent: int = 2):
     """Save data to JSON file."""
     try:
         path = Path(file_path)
@@ -48,7 +48,7 @@ def save_json(data: Any, file_path: Union[str, Path], indent: int = 2):
         logger.error(f"Error saving JSON to {file_path}: {e}")
 
 
-def load_jsonl(file_path: Union[str, Path]) -> List[Dict[str, Any]]:
+def load_jsonl(file_path: str | Path) -> list[dict[str, Any]]:
     """Load JSONL file."""
     try:
         path = Path(file_path)
@@ -57,7 +57,7 @@ def load_jsonl(file_path: Union[str, Path]) -> List[Dict[str, Any]]:
             return []
         
         data = []
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -70,7 +70,7 @@ def load_jsonl(file_path: Union[str, Path]) -> List[Dict[str, Any]]:
         return []
 
 
-def save_jsonl(data: List[Dict[str, Any]], file_path: Union[str, Path]):
+def save_jsonl(data: list[dict[str, Any]], file_path: str | Path):
     """Save data to JSONL file."""
     try:
         path = Path(file_path)
@@ -105,7 +105,7 @@ def fuzzy_match(str1: str, str2: str, threshold: float = 0.8) -> bool:
     return similarity >= threshold
 
 
-def extract_text_content(file_path: Union[str, Path]) -> Optional[str]:
+def extract_text_content(file_path: str | Path) -> str | None:
     """Extract text content from various file types."""
     path = Path(file_path)
     
@@ -114,10 +114,10 @@ def extract_text_content(file_path: Union[str, Path]) -> Optional[str]:
     
     try:
         if path.suffix.lower() in ['.txt', '.md']:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding='utf-8') as f:
                 return f.read()
         elif path.suffix.lower() == '.json':
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding='utf-8') as f:
                 data = json.load(f)
                 # Extract text from common JSON structures
                 if isinstance(data, dict):
@@ -135,7 +135,7 @@ def extract_text_content(file_path: Union[str, Path]) -> Optional[str]:
 
 
 def calculate_bootstrap_confidence_interval(
-    values: List[float], 
+    values: list[float], 
     confidence_level: float = 0.95,
     n_samples: int = 1000
 ) -> tuple:
@@ -181,7 +181,7 @@ def normalize_score(score: float, min_val: float = 0.0, max_val: float = 1.0) ->
     return max(0.0, min(1.0, normalized))
 
 
-def create_directory_structure(base_path: Union[str, Path], subdirs: List[str]):
+def create_directory_structure(base_path: str | Path, subdirs: list[str]):
     """Create directory structure."""
     base_path = Path(base_path)
     base_path.mkdir(parents=True, exist_ok=True)
@@ -190,7 +190,7 @@ def create_directory_structure(base_path: Union[str, Path], subdirs: List[str]):
         (base_path / subdir).mkdir(parents=True, exist_ok=True)
 
 
-def get_file_size(file_path: Union[str, Path]) -> int:
+def get_file_size(file_path: str | Path) -> int:
     """Get file size in bytes."""
     try:
         return Path(file_path).stat().st_size
@@ -198,7 +198,7 @@ def get_file_size(file_path: Union[str, Path]) -> int:
         return 0
 
 
-def copy_file_with_metadata(src: Union[str, Path], dst: Union[str, Path]):
+def copy_file_with_metadata(src: str | Path, dst: str | Path):
     """Copy file while preserving metadata."""
     import shutil
     try:
@@ -208,7 +208,7 @@ def copy_file_with_metadata(src: Union[str, Path], dst: Union[str, Path]):
         logger.error(f"Error copying file {src} to {dst}: {e}")
 
 
-def merge_dicts(*dicts: Dict[str, Any]) -> Dict[str, Any]:
+def merge_dicts(*dicts: dict[str, Any]) -> dict[str, Any]:
     """Merge multiple dictionaries."""
     result = {}
     for d in dicts:
@@ -217,7 +217,7 @@ def merge_dicts(*dicts: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dict[str, Any]:
+def flatten_dict(d: dict[str, Any], parent_key: str = '', sep: str = '.') -> dict[str, Any]:
     """Flatten nested dictionary."""
     items = []
     for k, v in d.items():
@@ -229,7 +229,7 @@ def flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dic
     return dict(items)
 
 
-def unflatten_dict(d: Dict[str, Any], sep: str = '.') -> Dict[str, Any]:
+def unflatten_dict(d: dict[str, Any], sep: str = '.') -> dict[str, Any]:
     """Unflatten dictionary."""
     result = {}
     for key, value in d.items():

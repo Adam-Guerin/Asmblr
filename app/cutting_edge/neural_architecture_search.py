@@ -3,14 +3,12 @@ Neural Architecture Search (NAS) for Asmblr
 Automated neural network design and optimization
 """
 
-import json
 import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
@@ -21,9 +19,6 @@ from torch.utils.data import DataLoader, TensorDataset
 import optuna
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
-import networkx as nx
-from collections import defaultdict
-import pickle
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +57,8 @@ class NASConfig:
     """NAS configuration"""
     search_strategy: SearchStrategy
     task_type: TaskType
-    input_shape: Tuple[int, ...]
-    num_classes: Optional[int]
+    input_shape: tuple[int, ...]
+    num_classes: int | None
     max_layers: int
     max_trials: int
     search_time_limit: int  # seconds
@@ -75,9 +70,9 @@ class NASConfig:
 class Architecture:
     """Neural network architecture"""
     id: str
-    operations: List[OperationType]
-    connections: List[Tuple[int, int]]
-    parameters: Dict[str, Any]
+    operations: list[OperationType]
+    connections: list[tuple[int, int]]
+    parameters: dict[str, Any]
     complexity: int  # FLOPs
     accuracy: float
     loss: float
@@ -92,11 +87,11 @@ class SearchTrial:
     architecture: Architecture
     trial_number: int
     objective_value: float
-    intermediate_results: List[float]
+    intermediate_results: list[float]
     status: str  # running, completed, failed, pruned
     start_time: datetime
-    end_time: Optional[datetime]
-    metadata: Dict[str, Any]
+    end_time: datetime | None
+    metadata: dict[str, Any]
 
 class NeuralArchitectureSearch:
     """Neural Architecture Search engine"""
@@ -104,9 +99,9 @@ class NeuralArchitectureSearch:
     def __init__(self, config: NASConfig):
         self.config = config
         self.search_space = self._initialize_search_space()
-        self.trials: List[SearchTrial] = []
-        self.best_architecture: Optional[Architecture] = None
-        self.search_history: List[Dict[str, Any]] = []
+        self.trials: list[SearchTrial] = []
+        self.best_architecture: Architecture | None = None
+        self.search_history: list[dict[str, Any]] = []
         
         # Initialize search strategy
         self.search_strategy = self._initialize_search_strategy()
@@ -114,7 +109,7 @@ class NeuralArchitectureSearch:
         # Initialize operation implementations
         self.operation_implementations = self._initialize_operations()
     
-    def _initialize_search_space(self) -> Dict[str, Any]:
+    def _initialize_search_space(self) -> dict[str, Any]:
         """Initialize NAS search space"""
         return {
             "operations": list(OperationType),
@@ -142,7 +137,7 @@ class NeuralArchitectureSearch:
         else:
             return RandomSearchStrategy(self.config, self.search_space)
     
-    def _initialize_operations(self) -> Dict[OperationType, callable]:
+    def _initialize_operations(self) -> dict[OperationType, callable]:
         """Initialize operation implementations"""
         return {
             OperationType.CONV3X3: self._conv3x3_operation,
@@ -465,9 +460,7 @@ class NeuralArchitectureSearch:
                             weight = weights[i, j, k]
                             if weight > 0.1:  # Prune small weights
                                 op = self.ops[op_name]
-                                if op_name in ['conv3x3', 'conv5x5']:
-                                    node_output += weight * op(x)
-                                elif op_name in ['max_pool', 'avg_pool']:
+                                if op_name in ['conv3x3', 'conv5x5'] or op_name in ['max_pool', 'avg_pool']:
                                     node_output += weight * op(x)
                                 else:
                                     node_output += weight * x
@@ -765,7 +758,7 @@ class NeuralArchitectureSearch:
     
     async def _train_and_evaluate(self, architecture: Architecture, 
                                  train_loader: DataLoader, val_loader: DataLoader,
-                                 max_epochs: int = 50) -> Tuple[float, float, float]:
+                                 max_epochs: int = 50) -> tuple[float, float, float]:
         """Train and evaluate architecture"""
         try:
             # Create model from architecture
@@ -836,7 +829,7 @@ class NeuralArchitectureSearch:
     def _create_model_from_architecture(self, architecture: Architecture) -> nn.Module:
         """Create PyTorch model from architecture"""
         class DynamicModel(nn.Module):
-            def __init__(self, arch: Architecture, input_shape: Tuple[int, ...], num_classes: Optional[int]):
+            def __init__(self, arch: Architecture, input_shape: tuple[int, ...], num_classes: int | None):
                 super().__init__()
                 self.arch = arch
                 self.input_shape = input_shape
@@ -918,7 +911,7 @@ class NeuralArchitectureSearch:
         else:
             return nn.MSELoss()
     
-    def _get_optimizer(self, model: nn.Module, params: Dict[str, Any]) -> optim.Optimizer:
+    def _get_optimizer(self, model: nn.Module, params: dict[str, Any]) -> optim.Optimizer:
         """Get optimizer"""
         optimizer_name = params.get("optimizer", "adam")
         learning_rate = params.get("learning_rate", 1e-3)
@@ -965,7 +958,7 @@ class NeuralArchitectureSearch:
     def _zero_operation(self, x, **kwargs):
         return torch.zeros_like(x)
     
-    def get_search_results(self) -> Dict[str, Any]:
+    def get_search_results(self) -> dict[str, Any]:
         """Get NAS search results"""
         if not self.trials:
             return {"error": "No trials completed"}
@@ -992,31 +985,31 @@ class NeuralArchitectureSearch:
 # Search strategy classes
 class BayesianOptimizationStrategy:
     """Bayesian optimization search strategy"""
-    def __init__(self, config: NASConfig, search_space: Dict[str, Any]):
+    def __init__(self, config: NASConfig, search_space: dict[str, Any]):
         self.config = config
         self.search_space = search_space
 
 class EvolutionaryAlgorithmStrategy:
     """Evolutionary algorithm search strategy"""
-    def __init__(self, config: NASConfig, search_space: Dict[str, Any]):
+    def __init__(self, config: NASConfig, search_space: dict[str, Any]):
         self.config = config
         self.search_space = search_space
 
 class ReinforcementLearningStrategy:
     """Reinforcement learning search strategy"""
-    def __init__(self, config: NASConfig, search_space: Dict[str, Any]):
+    def __init__(self, config: NASConfig, search_space: dict[str, Any]):
         self.config = config
         self.search_space = search_space
 
 class DARTSStrategy:
     """DARTS search strategy"""
-    def __init__(self, config: NASConfig, search_space: Dict[str, Any]):
+    def __init__(self, config: NASConfig, search_space: dict[str, Any]):
         self.config = config
         self.search_space = search_space
 
 class RandomSearchStrategy:
     """Random search strategy"""
-    def __init__(self, config: NASConfig, search_space: Dict[str, Any]):
+    def __init__(self, config: NASConfig, search_space: dict[str, Any]):
         self.config = config
         self.search_space = search_space
 
@@ -1054,14 +1047,14 @@ router = APIRouter(prefix="/nas", tags=["nas"])
 class NASRequest(BaseModel):
     search_strategy: str = "bayesian_optimization"
     task_type: str = "classification"
-    input_shape: List[int] = [3, 32, 32]
+    input_shape: list[int] = [3, 32, 32]
     num_classes: int = 10
     max_trials: int = 100
     max_layers: int = 10
 
 class TrainRequest(BaseModel):
-    X: List[List[float]]
-    y: List[float]
+    X: list[list[float]]
+    y: list[float]
 
 @router.post("/initialize")
 async def initialize_nas_endpoint(request: NASRequest):

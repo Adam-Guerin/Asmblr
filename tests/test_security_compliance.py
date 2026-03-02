@@ -9,7 +9,7 @@ import json
 import tempfile
 import os
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import redis.asyncio as redis
 
 # Mock SecurityManager to avoid Fernet key issues during test collection

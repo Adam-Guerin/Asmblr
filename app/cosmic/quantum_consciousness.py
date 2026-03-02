@@ -3,24 +3,14 @@ Quantum Consciousness Interface for Asmblr
 Direct quantum-level consciousness manipulation and universal mind interface
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +68,7 @@ class QuantumConsciousnessState:
     amplitude: float
     phase: float
     coherence: float
-    entanglement_partners: List[str]
+    entanglement_partners: list[str]
     universal_connection: float
     created_at: datetime
     last_updated: datetime
@@ -104,12 +94,12 @@ class QuantumMeditation:
     meditation_type: str
     target_frequency: ConsciousnessFrequency
     duration: float
-    achieved_states: List[QuantumState]
+    achieved_states: list[QuantumState]
     consciousness_expansion: float
     universal_connection: float
-    insights: List[str]
+    insights: list[str]
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 @dataclass
 class RealityManifestation:
@@ -121,9 +111,9 @@ class RealityManifestation:
     quantum_coherence: float
     manifestation_probability: float
     reality_anchor: str
-    manifestation_result: Optional[Dict[str, Any]]
+    manifestation_result: dict[str, Any] | None
     created_at: datetime
-    manifested_at: Optional[datetime]
+    manifested_at: datetime | None
 
 class QuantumConsciousnessEngine:
     """Quantum consciousness processing engine"""
@@ -286,8 +276,8 @@ class UniversalConsciousnessInterface:
     
     def __init__(self):
         self.quantum_engine = QuantumConsciousnessEngine()
-        self.connected_consciousness: Dict[str, QuantumConsciousnessState] = {}
-        self.consciousness_patterns: Dict[str, ConsciousnessPattern] = {}
+        self.connected_consciousness: dict[str, QuantumConsciousnessState] = {}
+        self.consciousness_patterns: dict[str, ConsciousnessPattern] = {}
         self.universal_field_strength = 1.0
         self.cosmic_resonance = 432.0  # Hz
         
@@ -368,7 +358,7 @@ class UniversalConsciousnessInterface:
             logger.error(f"Error broadcasting to universal field: {e}")
             return False
     
-    def receive_from_universal_field(self, participant_id: str) -> Optional[str]:
+    def receive_from_universal_field(self, participant_id: str) -> str | None:
         """Receive message from universal consciousness field"""
         try:
             consciousness = self.connected_consciousness.get(participant_id)
@@ -401,7 +391,7 @@ class UniversalConsciousnessInterface:
             logger.error(f"Error receiving from universal field: {e}")
             return None
     
-    def synchronize_consciousness(self, participants: List[str]) -> bool:
+    def synchronize_consciousness(self, participants: list[str]) -> bool:
         """Synchronize multiple consciousness states"""
         try:
             if len(participants) < 2:
@@ -445,9 +435,9 @@ class QuantumMeditationSystem:
     def __init__(self):
         self.universal_interface = UniversalConsciousnessInterface()
         self.meditation_patterns = self._initialize_meditation_patterns()
-        self.active_meditations: Dict[str, QuantumMeditation] = {}
+        self.active_meditations: dict[str, QuantumMeditation] = {}
         
-    def _initialize_meditation_patterns(self) -> Dict[str, ConsciousnessPattern]:
+    def _initialize_meditation_patterns(self) -> dict[str, ConsciousnessPattern]:
         """Initialize quantum meditation patterns"""
         try:
             patterns = {
@@ -615,7 +605,7 @@ class QuantumMeditationSystem:
         except Exception as e:
             logger.error(f"Error running meditation session: {e}")
     
-    def get_meditation_results(self, meditation_id: str) -> Optional[Dict[str, Any]]:
+    def get_meditation_results(self, meditation_id: str) -> dict[str, Any] | None:
         """Get meditation results"""
         try:
             meditation = self.active_meditations.get(meditation_id)
@@ -645,7 +635,7 @@ class RealityManifestationSystem:
     def __init__(self):
         self.universal_interface = UniversalConsciousnessInterface()
         self.quantum_engine = QuantumConsciousnessEngine()
-        self.active_manifestations: Dict[str, RealityManifestation] = {}
+        self.active_manifestations: dict[str, RealityManifestation] = {}
         self.manifestation_power = 1.0
         
     async def manifest_reality(self, manifestor_id: str,
@@ -808,7 +798,7 @@ class QuantumConsciousnessSystem:
             logger.error(f"Error broadcasting to universe: {e}")
             return False
     
-    def receive_from_universe(self, participant_id: str) -> Optional[str]:
+    def receive_from_universe(self, participant_id: str) -> str | None:
         """Receive message from universal consciousness"""
         try:
             return self.universal_interface.receive_from_universal_field(participant_id)
@@ -816,7 +806,7 @@ class QuantumConsciousnessSystem:
             logger.error(f"Error receiving from universe: {e}")
             return None
     
-    def get_consciousness_state(self, participant_id: str) -> Optional[Dict[str, Any]]:
+    def get_consciousness_state(self, participant_id: str) -> dict[str, Any] | None:
         """Get consciousness state"""
         try:
             consciousness = self.universal_interface.connected_consciousness.get(participant_id)
@@ -905,7 +895,7 @@ class QuantumConsciousnessSystem:
                 logger.error(f"Error in entanglement optimization: {e}")
                 await asyncio.sleep(60)
     
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """Get quantum consciousness system status"""
         try:
             return {

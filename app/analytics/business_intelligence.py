@@ -4,23 +4,16 @@ Real-time insights, predictive analytics, and business KPIs
 """
 
 import json
-import time
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from pathlib import Path
+from typing import Any
+from dataclasses import dataclass
 from enum import Enum
 import uuid
-import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor, IsolationForest
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.utils import PlotlyJSONEncoder
 import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
@@ -60,8 +53,8 @@ class BusinessMetric:
     timestamp: datetime
     period: str  # daily, weekly, monthly
     category: MetricType
-    dimensions: Dict[str, str]
-    metadata: Dict[str, Any]
+    dimensions: dict[str, str]
+    metadata: dict[str, Any]
 
 @dataclass
 class Insight:
@@ -73,10 +66,10 @@ class Insight:
     confidence: float
     impact: str  # low, medium, high
     urgency: str  # low, medium, high
-    data: Dict[str, Any]
-    recommendations: List[str]
+    data: dict[str, Any]
+    recommendations: list[str]
     created_at: datetime
-    expires_at: Optional[datetime]
+    expires_at: datetime | None
 
 @dataclass
 class Alert:
@@ -91,8 +84,8 @@ class Alert:
     trend: str  # up, down, stable
     created_at: datetime
     acknowledged: bool = False
-    acknowledged_by: Optional[str] = None
-    acknowledged_at: Optional[datetime] = None
+    acknowledged_by: str | None = None
+    acknowledged_at: datetime | None = None
 
 @dataclass
 class Prediction:
@@ -101,10 +94,10 @@ class Prediction:
     metric_name: str
     prediction_type: str  # revenue, users, churn, etc.
     predicted_value: float
-    confidence_interval: Tuple[float, float]
+    confidence_interval: tuple[float, float]
     confidence_score: float
     time_horizon: str  # 7d, 30d, 90d
-    factors: List[Dict[str, Any]]
+    factors: list[dict[str, Any]]
     created_at: datetime
 
 class BusinessIntelligenceEngine:
@@ -113,10 +106,10 @@ class BusinessIntelligenceEngine:
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         self.redis_url = redis_url
         self.redis_client = None
-        self.metrics_cache: Dict[str, List[BusinessMetric]] = {}
-        self.insights: List[Insight] = []
-        self.alerts: List[Alert] = []
-        self.predictions: List[Prediction] = []
+        self.metrics_cache: dict[str, list[BusinessMetric]] = {}
+        self.insights: list[Insight] = []
+        self.alerts: list[Alert] = []
+        self.predictions: list[Prediction] = []
         
         # ML models
         self.revenue_model = None
@@ -146,7 +139,7 @@ class BusinessIntelligenceEngine:
         
         logger.info("Business Intelligence Engine initialized")
     
-    def _initialize_kpi_definitions(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_kpi_definitions(self) -> dict[str, dict[str, Any]]:
         """Initialize KPI definitions"""
         return {
             "revenue": {
@@ -207,7 +200,7 @@ class BusinessIntelligenceEngine:
             }
         }
     
-    def _initialize_alert_thresholds(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_alert_thresholds(self) -> dict[str, dict[str, Any]]:
         """Initialize alert thresholds"""
         return {
             "revenue_decline": {
@@ -308,12 +301,12 @@ class BusinessIntelligenceEngine:
         except Exception as e:
             logger.error(f"Error training models: {e}")
     
-    def _prepare_training_data(self, metric_name: str) -> List[BusinessMetric]:
+    def _prepare_training_data(self, metric_name: str) -> list[BusinessMetric]:
         """Prepare training data for a metric"""
         metrics = self.metrics_cache.get(metric_name, [])
         return sorted(metrics, key=lambda m: m.timestamp)
     
-    def _create_features(self, metrics: List[BusinessMetric]) -> Tuple[np.ndarray, np.ndarray]:
+    def _create_features(self, metrics: list[BusinessMetric]) -> tuple[np.ndarray, np.ndarray]:
         """Create features for ML models"""
         if len(metrics) < 2:
             return np.array([]), np.array([])
@@ -402,10 +395,7 @@ class BusinessIntelligenceEngine:
                 if alert_config["condition"] == "decline" and trend < -alert_config["threshold"]:
                     triggered = True
                     trigger_value = abs(trend) * 100
-                elif alert_config["condition"] == "exceed" and current_value > alert_config["threshold"]:
-                    triggered = True
-                    trigger_value = current_value
-                elif alert_config["condition"] == "below" and current_value < alert_config["threshold"]:
+                elif alert_config["condition"] == "exceed" and current_value > alert_config["threshold"] or alert_config["condition"] == "below" and current_value < alert_config["threshold"]:
                     triggered = True
                     trigger_value = current_value
                 
@@ -509,7 +499,7 @@ class BusinessIntelligenceEngine:
         except Exception as e:
             logger.error(f"Error analyzing trends: {e}")
     
-    def _get_trend_recommendations(self, metric_name: str, trend_direction: str, slope: float) -> List[str]:
+    def _get_trend_recommendations(self, metric_name: str, trend_direction: str, slope: float) -> list[str]:
         """Get recommendations based on trend analysis"""
         recommendations = []
         
@@ -957,7 +947,7 @@ class BusinessIntelligenceEngine:
         except Exception as e:
             logger.error(f"Error cleaning up old data: {e}")
     
-    async def get_dashboard_data(self) -> Dict[str, Any]:
+    async def get_dashboard_data(self) -> dict[str, Any]:
         """Get dashboard data"""
         try:
             # Get current KPIs
@@ -1040,7 +1030,7 @@ class BusinessIntelligenceEngine:
             logger.error(f"Error getting dashboard data: {e}")
             return {"error": str(e)}
     
-    def _calculate_trend(self, metrics: List[BusinessMetric]) -> str:
+    def _calculate_trend(self, metrics: list[BusinessMetric]) -> str:
         """Calculate trend direction"""
         if len(metrics) < 2:
             return "stable"
@@ -1054,7 +1044,7 @@ class BusinessIntelligenceEngine:
         else:
             return "down"
     
-    def _get_kpi_status(self, metric_name: str, current_value: float, kpi_def: Dict[str, Any]) -> str:
+    def _get_kpi_status(self, metric_name: str, current_value: float, kpi_def: dict[str, Any]) -> str:
         """Get KPI status"""
         if "target_value" in kpi_def:
             target = kpi_def["target_value"]
@@ -1128,8 +1118,8 @@ class MetricRequest(BaseModel):
     value: float
     unit: str
     period: str = "daily"
-    dimensions: Dict[str, str] = {}
-    metadata: Dict[str, Any] = {}
+    dimensions: dict[str, str] = {}
+    metadata: dict[str, Any] = {}
 
 @router.get("/dashboard")
 async def get_dashboard():

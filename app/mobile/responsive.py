@@ -4,17 +4,11 @@ Progressive Web App with mobile-first design and offline capabilities
 """
 
 import json
-import time
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
-import uuid
 from fastapi import Request, Response
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 logger = logging.getLogger(__name__)
@@ -54,11 +48,11 @@ class DeviceInfo:
 @dataclass
 class ResponsiveConfig:
     """Responsive configuration"""
-    breakpoints: Dict[str, int]
-    grid_columns: Dict[str, int]
-    font_sizes: Dict[str, Dict[str, str]]
-    spacing: Dict[str, Dict[str, str]]
-    components: Dict[str, Dict[str, Any]]
+    breakpoints: dict[str, int]
+    grid_columns: dict[str, int]
+    font_sizes: dict[str, dict[str, str]]
+    spacing: dict[str, dict[str, str]]
+    components: dict[str, dict[str, Any]]
 
 class ResponsiveDesignManager:
     """Mobile responsive design manager"""
@@ -129,7 +123,7 @@ class ResponsiveDesignManager:
             }
         )
     
-    def _initialize_pwa_config(self) -> Dict[str, Any]:
+    def _initialize_pwa_config(self) -> dict[str, Any]:
         """Initialize PWA configuration"""
         return {
             "name": "Asmblr - AI MVP Generator",
@@ -342,7 +336,7 @@ class ResponsiveDesignManager:
         
         return False
     
-    def get_responsive_classes(self, device_info: DeviceInfo) -> Dict[str, str]:
+    def get_responsive_classes(self, device_info: DeviceInfo) -> dict[str, str]:
         """Get responsive CSS classes for device"""
         classes = {}
         
@@ -378,7 +372,7 @@ class ResponsiveDesignManager:
         
         return classes
     
-    def get_component_config(self, component_name: str, device_info: DeviceInfo) -> Dict[str, Any]:
+    def get_component_config(self, component_name: str, device_info: DeviceInfo) -> dict[str, Any]:
         """Get component configuration for device"""
         component_configs = self.responsive_config.components.get(component_name, {})
         screen_size = device_info.screen_size.value
@@ -558,7 +552,7 @@ class MobileOptimizer:
     def __init__(self):
         self.optimization_config = self._initialize_optimization_config()
     
-    def _initialize_optimization_config(self) -> Dict[str, Any]:
+    def _initialize_optimization_config(self) -> dict[str, Any]:
         """Initialize optimization configuration"""
         return {
             "image_optimization": {
@@ -716,7 +710,6 @@ mobile_optimizer = MobileOptimizer()
 
 # API endpoints
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/mobile", tags=["mobile"])
 

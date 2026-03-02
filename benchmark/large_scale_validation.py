@@ -14,15 +14,12 @@ import aiohttp
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any
 from dataclasses import dataclass, asdict
 import requests
 from bs4 import BeautifulSoup
 import re
-import os
-import sys
 import subprocess
-import git
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -37,11 +34,11 @@ class StartupContext:
     timestamp: str
     source_url: str
     industry_tag: str
-    extracted_pains: List[str]
-    extracted_competitors: List[str]
+    extracted_pains: list[str]
+    extracted_competitors: list[str]
     estimated_stage: str  # idea, MVP, traction
     geographic_cluster: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @dataclass 
@@ -55,7 +52,7 @@ class RunMetadata:
     commit_hash: str
     dataset_version_hash: str
     architecture: str
-    random_state: Optional[str] = None
+    random_state: str | None = None
 
 
 @dataclass
@@ -80,7 +77,7 @@ class RealDataCollector:
         self.output_dir.mkdir(exist_ok=True)
         self.session = None
         
-    async def collect_reddit_data(self, subreddits: List[str], limit: int = 100) -> List[StartupContext]:
+    async def collect_reddit_data(self, subreddits: list[str], limit: int = 100) -> list[StartupContext]:
         """Collect startup discussions from Reddit."""
         logger.info(f"Collecting Reddit data from {subreddits}")
         contexts = []
@@ -121,7 +118,7 @@ class RealDataCollector:
                 
         return contexts
     
-    async def collect_product_hunt_data(self, limit: int = 200) -> List[StartupContext]:
+    async def collect_product_hunt_data(self, limit: int = 200) -> list[StartupContext]:
         """Collect Product Hunt launch descriptions."""
         logger.info(f"Collecting Product Hunt data (limit: {limit})")
         contexts = []
@@ -159,7 +156,7 @@ class RealDataCollector:
             
         return contexts
     
-    async def collect_hacker_news_data(self, limit: int = 200) -> List[StartupContext]:
+    async def collect_hacker_news_data(self, limit: int = 200) -> list[StartupContext]:
         """Collect HN launch threads."""
         logger.info(f"Collecting Hacker News data (limit: {limit})")
         contexts = []
@@ -201,7 +198,7 @@ class RealDataCollector:
             
         return contexts
     
-    def collect_github_trending_data(self, limit: int = 100) -> List[StartupContext]:
+    def collect_github_trending_data(self, limit: int = 100) -> list[StartupContext]:
         """Collect GitHub trending repos with product positioning."""
         logger.info(f"Collecting GitHub trending data (limit: {limit})")
         contexts = []
@@ -249,7 +246,7 @@ class RealDataCollector:
         text_lower = text.lower()
         return any(keyword in text_lower for keyword in startup_keywords)
     
-    def _is_product_repo(self, repo: Dict) -> bool:
+    def _is_product_repo(self, repo: dict) -> bool:
         """Check if GitHub repo is a product (not just a library)."""
         name_desc = (repo['name'] + ' ' + (repo['description'] or '')).lower()
         product_indicators = ['app', 'platform', 'service', 'tool', 'software', 'solution']
@@ -282,7 +279,7 @@ class RealDataCollector:
         
         return 'other'
     
-    def _extract_pains(self, text: str) -> List[str]:
+    def _extract_pains(self, text: str) -> list[str]:
         """Extract pain points from text."""
         pain_patterns = [
             r'problem with (.+)',
@@ -302,7 +299,7 @@ class RealDataCollector:
         
         return list(set(pains[:5]))  # Limit to top 5 unique pains
     
-    def _extract_competitors(self, text: str) -> List[str]:
+    def _extract_competitors(self, text: str) -> list[str]:
         """Extract competitor mentions from text."""
         # Common company names that might be mentioned as competitors
         common_competitors = [
@@ -367,7 +364,7 @@ class RealDataCollector:
         else:
             return 'global'
     
-    async def collect_all_sources(self, target_size: int = 1000) -> List[StartupContext]:
+    async def collect_all_sources(self, target_size: int = 1000) -> list[StartupContext]:
         """Collect from all sources to reach target size."""
         logger.info(f"Starting large-scale data collection (target: {target_size} contexts)")
         
@@ -499,7 +496,7 @@ class ExperimentRunner:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         
-    def load_dataset(self) -> List[StartupContext]:
+    def load_dataset(self) -> list[StartupContext]:
         """Load the collected dataset."""
         contexts = []
         for json_file in self.dataset_dir.glob("context_*.json"):
@@ -508,7 +505,7 @@ class ExperimentRunner:
                 contexts.append(StartupContext(**data))
         return contexts
     
-    async def run_monolithic_llm(self, context: StartupContext, metadata: RunMetadata) -> Dict:
+    async def run_monolithic_llm(self, context: StartupContext, metadata: RunMetadata) -> dict:
         """Run monolithic LLM baseline."""
         start_time = time.time()
         
@@ -530,7 +527,7 @@ class ExperimentRunner:
             'architecture': 'monolithic_llm'
         }
     
-    async def run_sequential_pipeline(self, context: StartupContext, metadata: RunMetadata) -> Dict:
+    async def run_sequential_pipeline(self, context: StartupContext, metadata: RunMetadata) -> dict:
         """Run sequential pipeline baseline."""
         start_time = time.time()
         
@@ -555,7 +552,7 @@ class ExperimentRunner:
             'architecture': 'sequential_pipeline'
         }
     
-    async def run_multi_agent_full(self, context: StartupContext, metadata: RunMetadata) -> Dict:
+    async def run_multi_agent_full(self, context: StartupContext, metadata: RunMetadata) -> dict:
         """Run full multi-agent Asmblr system."""
         start_time = time.time()
         
@@ -581,7 +578,7 @@ class ExperimentRunner:
             'architecture': 'multi_agent_full'
         }
     
-    async def run_multi_agent_no_devil(self, context: StartupContext, metadata: RunMetadata) -> Dict:
+    async def run_multi_agent_no_devil(self, context: StartupContext, metadata: RunMetadata) -> dict:
         """Run multi-agent without Devil's Advocate."""
         start_time = time.time()
         
@@ -605,7 +602,7 @@ class ExperimentRunner:
             'architecture': 'multi_agent_no_devil'
         }
     
-    async def run_multi_agent_no_calibration(self, context: StartupContext, metadata: RunMetadata) -> Dict:
+    async def run_multi_agent_no_calibration(self, context: StartupContext, metadata: RunMetadata) -> dict:
         """Run multi-agent without Calibration."""
         start_time = time.time()
         
@@ -629,7 +626,7 @@ class ExperimentRunner:
             'architecture': 'multi_agent_no_calibration'
         }
     
-    async def run_experiment(self, architecture: str, num_runs: int = 5) -> Dict:
+    async def run_experiment(self, architecture: str, num_runs: int = 5) -> dict:
         """Run full experiment for an architecture."""
         logger.info(f"Running experiment for {architecture} ({num_runs} runs per context)")
         
@@ -714,7 +711,7 @@ class MetricsComputer:
         self.dataset_dir = Path(dataset_dir)
         self.contexts = self._load_ground_truth()
     
-    def _load_ground_truth(self) -> Dict[str, Dict]:
+    def _load_ground_truth(self) -> dict[str, dict]:
         """Load ground truth data for comparison."""
         # In a real implementation, this would load human annotations
         # For now, we'll use the extracted pains/competitors as proxy ground truth
@@ -727,7 +724,7 @@ class MetricsComputer:
         
         return contexts
     
-    def compute_decision_accuracy(self, results: List[Dict]) -> float:
+    def compute_decision_accuracy(self, results: list[dict]) -> float:
         """Compute decision accuracy vs normative reference."""
         # Mock implementation - in reality would compare against human decisions
         correct_decisions = 0
@@ -748,7 +745,7 @@ class MetricsComputer:
         
         return correct_decisions / total_decisions if total_decisions > 0 else 0.0
     
-    def compute_expected_utility_regret(self, results: List[Dict]) -> float:
+    def compute_expected_utility_regret(self, results: list[dict]) -> float:
         """Compute expected utility regret."""
         # Mock implementation
         regrets = []
@@ -767,7 +764,7 @@ class MetricsComputer:
         
         return np.mean(regrets) if regrets else 0.0
     
-    def compute_calibration_error(self, results: List[Dict]) -> float:
+    def compute_calibration_error(self, results: list[dict]) -> float:
         """Compute Expected Calibration Error (ECE)."""
         # Mock ECE calculation
         if not results:
@@ -782,7 +779,7 @@ class MetricsComputer:
         else:
             return random.uniform(0.10, 0.25)
     
-    def compute_hallucinated_competitor_rate(self, results: List[Dict]) -> float:
+    def compute_hallucinated_competitor_rate(self, results: list[dict]) -> float:
         """Compute rate of hallucinated competitors."""
         # Mock implementation
         base_rates = {
@@ -796,7 +793,7 @@ class MetricsComputer:
         architecture = results[0]['architecture'] if results else 'monolithic_llm'
         return base_rates.get(architecture, 0.20)
     
-    def compute_hype_susceptibility_rate(self, results: List[Dict]) -> float:
+    def compute_hype_susceptibility_rate(self, results: list[dict]) -> float:
         """Compute hype susceptibility rate."""
         # Mock implementation
         base_rates = {
@@ -810,7 +807,7 @@ class MetricsComputer:
         architecture = results[0]['architecture'] if results else 'monolithic_llm'
         return base_rates.get(architecture, 0.25)
     
-    def compute_decision_variance(self, results: List[Dict]) -> float:
+    def compute_decision_variance(self, results: list[dict]) -> float:
         """Compute decision variance across seeds."""
         # Group results by context
         context_decisions = {}
@@ -831,7 +828,7 @@ class MetricsComputer:
         
         return np.mean(variances) if variances else 0.0
     
-    def compute_all_metrics(self, results: List[Dict]) -> RunMetrics:
+    def compute_all_metrics(self, results: list[dict]) -> RunMetrics:
         """Compute all metrics for a set of results."""
         return RunMetrics(
             decision_accuracy=self.compute_decision_accuracy(results),
@@ -852,7 +849,7 @@ class StatisticalAnalyzer:
     def __init__(self, alpha: float = 0.05):
         self.alpha = alpha
     
-    def bootstrap_confidence_interval(self, data: List[float], n_bootstrap: int = 1000) -> Tuple[float, float, float]:
+    def bootstrap_confidence_interval(self, data: list[float], n_bootstrap: int = 1000) -> tuple[float, float, float]:
         """Compute bootstrap confidence interval."""
         if not data:
             return 0.0, 0.0, 0.0
@@ -870,7 +867,7 @@ class StatisticalAnalyzer:
         
         return mean, ci_lower, ci_upper
     
-    def paired_t_test(self, group1: List[float], group2: List[float]) -> Dict:
+    def paired_t_test(self, group1: list[float], group2: list[float]) -> dict:
         """Perform paired t-test."""
         from scipy import stats
         
@@ -890,7 +887,7 @@ class StatisticalAnalyzer:
             'significant': bool(p_value < self.alpha)
         }
     
-    def analyze_architectures(self, results_by_architecture: Dict[str, List[Dict]]) -> Dict:
+    def analyze_architectures(self, results_by_architecture: dict[str, list[dict]]) -> dict:
         """Analyze differences between architectures."""
         analysis = {}
         
@@ -952,7 +949,7 @@ class FailureAnalyzer:
             'coordination_breakdown': []
         }
     
-    def categorize_failure(self, result: Dict) -> str:
+    def categorize_failure(self, result: dict) -> str:
         """Categorize a specific failure."""
         # Mock categorization logic
         if result.get('hallucinated_competitor_rate', 0) > 0.3:
@@ -968,7 +965,7 @@ class FailureAnalyzer:
         else:
             return 'generic_idea_collapse'
     
-    def analyze_failures(self, results: List[Dict]) -> Dict:
+    def analyze_failures(self, results: list[dict]) -> dict:
         """Analyze all failures and create taxonomy."""
         failure_taxonomy = {category: [] for category in self.failure_categories.keys()}
         

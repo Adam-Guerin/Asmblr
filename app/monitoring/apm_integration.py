@@ -7,26 +7,25 @@ import os
 import time
 import json
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Any
 from functools import wraps
 from contextlib import contextmanager
 import psutil
-import asyncio
 
 logger = logging.getLogger(__name__)
 
 class APMProvider:
     """Base class for APM providers"""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.enabled = config.get('enabled', False)
         
-    def record_metric(self, name: str, value: float, tags: Dict[str, str] = None):
+    def record_metric(self, name: str, value: float, tags: dict[str, str] = None):
         """Record a custom metric"""
         raise NotImplementedError
         
-    def record_event(self, event_name: str, attributes: Dict[str, Any] = None):
+    def record_event(self, event_name: str, attributes: dict[str, Any] = None):
         """Record a custom event"""
         raise NotImplementedError
         
@@ -38,14 +37,14 @@ class APMProvider:
         """End a transaction"""
         raise NotImplementedError
         
-    def notice_error(self, error: Exception, attributes: Dict[str, Any] = None):
+    def notice_error(self, error: Exception, attributes: dict[str, Any] = None):
         """Record an error"""
         raise NotImplementedError
 
 class NewRelicProvider(APMProvider):
     """New Relic APM integration"""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         if self.enabled:
             try:
@@ -60,7 +59,7 @@ class NewRelicProvider(APMProvider):
                 logger.error(f"Failed to initialize New Relic: {e}")
                 self.enabled = False
     
-    def record_metric(self, name: str, value: float, tags: Dict[str, str] = None):
+    def record_metric(self, name: str, value: float, tags: dict[str, str] = None):
         if not self.enabled:
             return
             
@@ -71,7 +70,7 @@ class NewRelicProvider(APMProvider):
         except Exception as e:
             logger.error(f"Failed to record New Relic metric: {e}")
     
-    def record_event(self, event_name: str, attributes: Dict[str, Any] = None):
+    def record_event(self, event_name: str, attributes: dict[str, Any] = None):
         if not self.enabled:
             return
             
@@ -100,7 +99,7 @@ class NewRelicProvider(APMProvider):
         except Exception as e:
             logger.error(f"Failed to end New Relic transaction: {e}")
     
-    def notice_error(self, error: Exception, attributes: Dict[str, Any] = None):
+    def notice_error(self, error: Exception, attributes: dict[str, Any] = None):
         if not self.enabled:
             return
             
@@ -114,7 +113,7 @@ class NewRelicProvider(APMProvider):
 class DataDogProvider(APMProvider):
     """DataDog APM integration"""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         if self.enabled:
             try:
@@ -142,7 +141,7 @@ class DataDogProvider(APMProvider):
                 logger.error(f"Failed to initialize DataDog: {e}")
                 self.enabled = False
     
-    def record_metric(self, name: str, value: float, tags: Dict[str, str] = None):
+    def record_metric(self, name: str, value: float, tags: dict[str, str] = None):
         if not self.enabled:
             return
             
@@ -151,7 +150,7 @@ class DataDogProvider(APMProvider):
         except Exception as e:
             logger.error(f"Failed to record DataDog metric: {e}")
     
-    def record_event(self, event_name: str, attributes: Dict[str, Any] = None):
+    def record_event(self, event_name: str, attributes: dict[str, Any] = None):
         if not self.enabled:
             return
             
@@ -185,7 +184,7 @@ class DataDogProvider(APMProvider):
         except Exception as e:
             logger.error(f"Failed to end DataDog span: {e}")
     
-    def notice_error(self, error: Exception, attributes: Dict[str, Any] = None):
+    def notice_error(self, error: Exception, attributes: dict[str, Any] = None):
         if not self.enabled:
             return
             
@@ -205,7 +204,7 @@ class APMManager:
     """Manages APM integrations and provides unified interface"""
     
     def __init__(self):
-        self.providers: List[APMProvider] = []
+        self.providers: list[APMProvider] = []
         self._initialize_providers()
     
     def _initialize_providers(self):
@@ -234,12 +233,12 @@ class APMManager:
             }
             self.providers.append(DataDogProvider(datadog_config))
     
-    def record_metric(self, name: str, value: float, tags: Dict[str, str] = None):
+    def record_metric(self, name: str, value: float, tags: dict[str, str] = None):
         """Record metric across all providers"""
         for provider in self.providers:
             provider.record_metric(name, value, tags)
     
-    def record_event(self, event_name: str, attributes: Dict[str, Any] = None):
+    def record_event(self, event_name: str, attributes: dict[str, Any] = None):
         """Record event across all providers"""
         for provider in self.providers:
             provider.record_event(event_name, attributes)
@@ -252,13 +251,13 @@ class APMManager:
             transactions.append(tx)
         return transactions
     
-    def end_transaction(self, transactions: List, status: str = "success"):
+    def end_transaction(self, transactions: list, status: str = "success"):
         """End transactions across all providers"""
         for i, provider in enumerate(self.providers):
             if i < len(transactions) and transactions[i]:
                 provider.end_transaction(status)
     
-    def notice_error(self, error: Exception, attributes: Dict[str, Any] = None):
+    def notice_error(self, error: Exception, attributes: dict[str, Any] = None):
         """Record error across all providers"""
         for provider in self.providers:
             provider.notice_error(error, attributes)

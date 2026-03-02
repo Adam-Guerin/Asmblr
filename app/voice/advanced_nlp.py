@@ -3,25 +3,19 @@ Advanced Voice Interface and NLP for Asmblr
 Voice commands, speech recognition, and natural language understanding
 """
 
-import json
 import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
-import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 import speech_recognition as sr
 import pyttsx3
-import wave
-import audioop
 from io import BytesIO
 
 logger = logging.getLogger(__name__)
@@ -64,9 +58,9 @@ class VoiceCommand:
     transcript: str
     confidence: float
     intent: str
-    entities: Dict[str, Any]
+    entities: dict[str, Any]
     action: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     timestamp: datetime
     language: Language
     processing_time: float
@@ -76,10 +70,10 @@ class NLPIntent:
     """NLP intent classification"""
     intent: str
     confidence: float
-    entities: Dict[str, Any]
+    entities: dict[str, Any]
     action_mapping: str
-    required_parameters: List[str]
-    optional_parameters: List[str]
+    required_parameters: list[str]
+    optional_parameters: list[str]
 
 @dataclass
 class VoiceProfile:
@@ -90,7 +84,7 @@ class VoiceProfile:
     voice_speed: float
     voice_pitch: float
     preferred_engine: SpeechEngine
-    custom_commands: Dict[str, str]
+    custom_commands: dict[str, str]
     accuracy_score: float
     created_at: datetime
     last_used: datetime
@@ -186,7 +180,7 @@ class SpeechRecognizer:
         except Exception as e:
             logger.error(f"Error stopping listening: {e}")
     
-    async def recognize_speech(self, audio_data: bytes = None, language: str = "en-US") -> Dict[str, Any]:
+    async def recognize_speech(self, audio_data: bytes = None, language: str = "en-US") -> dict[str, Any]:
         """Recognize speech from audio data"""
         try:
             if audio_data:
@@ -296,7 +290,7 @@ class NLPProcessor:
         # Train intent classifier
         self._train_intent_classifier()
     
-    def _initialize_command_patterns(self) -> Dict[str, List[str]]:
+    def _initialize_command_patterns(self) -> dict[str, list[str]]:
         """Initialize voice command patterns"""
         return {
             "create_mvp": [
@@ -381,7 +375,7 @@ class NLPProcessor:
             ]
         }
     
-    def _initialize_intent_mappings(self) -> Dict[str, str]:
+    def _initialize_intent_mappings(self) -> dict[str, str]:
         """Initialize intent to action mappings"""
         return {
             "create_mvp": "create_new_mvp",
@@ -466,7 +460,7 @@ class NLPProcessor:
                 optional_parameters=[]
             )
     
-    def _pattern_match_intent(self, text: str) -> Tuple[str, float]:
+    def _pattern_match_intent(self, text: str) -> tuple[str, float]:
         """Pattern matching fallback for intent classification"""
         text_lower = text.lower()
         best_match = "unknown"
@@ -492,7 +486,7 @@ class NLPProcessor:
         
         return best_match, best_score
     
-    def _extract_entities(self, text: str, intent: str) -> Dict[str, Any]:
+    def _extract_entities(self, text: str, intent: str) -> dict[str, Any]:
         """Extract entities from text"""
         entities = {}
         
@@ -542,7 +536,7 @@ class NLPProcessor:
         
         return entities
     
-    def _get_required_parameters(self, intent: str) -> List[str]:
+    def _get_required_parameters(self, intent: str) -> list[str]:
         """Get required parameters for intent"""
         required_params = {
             "create_mvp": ["project_type"],
@@ -552,7 +546,7 @@ class NLPProcessor:
         
         return required_params.get(intent, [])
     
-    def _get_optional_parameters(self, intent: str) -> List[str]:
+    def _get_optional_parameters(self, intent: str) -> list[str]:
         """Get optional parameters for intent"""
         optional_params = {
             "create_mvp": ["project_name", "features"],
@@ -570,8 +564,8 @@ class VoiceInterface:
     def __init__(self):
         self.speech_recognizer = SpeechRecognizer()
         self.nlp_processor = NLPProcessor()
-        self.voice_profiles: Dict[str, VoiceProfile] = {}
-        self.command_history: List[VoiceCommand] = []
+        self.voice_profiles: dict[str, VoiceProfile] = {}
+        self.command_history: list[VoiceCommand] = []
         self.is_active = False
         
         # Start background tasks
@@ -704,7 +698,7 @@ class VoiceInterface:
         
         return mapping.get(intent, VoiceCommandType.HELP)
     
-    async def execute_command(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def execute_command(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute voice command"""
         try:
             if command.command_type == VoiceCommandType.CREATE_MVP:
@@ -732,7 +726,7 @@ class VoiceInterface:
             logger.error(f"Error executing command: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_create_mvp(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_create_mvp(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute create MVP command"""
         try:
             project_type = command.entities.get("project_type", "general")
@@ -757,7 +751,7 @@ class VoiceInterface:
             logger.error(f"Error creating MVP: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_edit_project(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_edit_project(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute edit project command"""
         try:
             feature = command.entities.get("feature", "general")
@@ -777,7 +771,7 @@ class VoiceInterface:
             logger.error(f"Error editing project: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_analyze_metrics(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_analyze_metrics(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute analyze metrics command"""
         try:
             timeframe = command.entities.get("timeframe", "last_30_days")
@@ -806,7 +800,7 @@ class VoiceInterface:
             logger.error(f"Error analyzing metrics: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_collaborate(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_collaborate(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute collaboration command"""
         try:
             emails = command.entities.get("emails", [])
@@ -829,7 +823,7 @@ class VoiceInterface:
             logger.error(f"Error collaborating: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_search(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_search(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute search command"""
         try:
             query = command.entities.get("query", "")
@@ -857,7 +851,7 @@ class VoiceInterface:
             logger.error(f"Error searching: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_navigate(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_navigate(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute navigation command"""
         try:
             page = command.entities.get("page", "dashboard")
@@ -878,7 +872,7 @@ class VoiceInterface:
             logger.error(f"Error navigating: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_help(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_help(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute help command"""
         try:
             help_text = """
@@ -908,7 +902,7 @@ class VoiceInterface:
             logger.error(f"Error providing help: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_settings(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_settings(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute settings command"""
         try:
             setting = command.entities.get("setting", "")
@@ -930,7 +924,7 @@ class VoiceInterface:
             logger.error(f"Error updating settings: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _execute_exit(self, command: VoiceCommand) -> Dict[str, Any]:
+    async def _execute_exit(self, command: VoiceCommand) -> dict[str, Any]:
         """Execute exit command"""
         try:
             result = {
@@ -1032,12 +1026,12 @@ class VoiceInterface:
             logger.error(f"Error stopping voice session: {e}")
             return False
     
-    def get_voice_commands_history(self, user_id: str, limit: int = 50) -> List[VoiceCommand]:
+    def get_voice_commands_history(self, user_id: str, limit: int = 50) -> list[VoiceCommand]:
         """Get voice command history for user"""
         user_commands = [cmd for cmd in self.command_history if cmd.parameters.get("user_id") == user_id]
         return user_commands[-limit:]
     
-    def get_voice_profile(self, user_id: str) -> Optional[VoiceProfile]:
+    def get_voice_profile(self, user_id: str) -> VoiceProfile | None:
         """Get voice profile for user"""
         return self.voice_profiles.get(user_id)
 
@@ -1059,7 +1053,7 @@ class VoiceProfileRequest(BaseModel):
 
 class VoiceCommandRequest(BaseModel):
     user_id: str
-    audio_data: Optional[str] = None  # Base64 encoded
+    audio_data: str | None = None  # Base64 encoded
 
 @router.post("/profile/create")
 async def create_voice_profile(request: VoiceProfileRequest):

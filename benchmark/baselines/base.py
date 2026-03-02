@@ -3,7 +3,7 @@ Base class for all baseline systems.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any
+from typing import Any
 from pathlib import Path
 import json
 import logging
@@ -19,11 +19,11 @@ class BaseBaseline(ABC):
         self.name = self.__class__.__name__.lower().replace('baseline', '').replace('_', '')
     
     @abstractmethod
-    def process_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def process_item(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process a single dataset item and return baseline output."""
         pass
     
-    def save_results(self, results: List[Dict[str, Any]], output_dir: Path):
+    def save_results(self, results: list[dict[str, Any]], output_dir: Path):
         """Save baseline results to output directory."""
         # Save individual results
         for i, result in enumerate(results):
@@ -34,7 +34,7 @@ class BaseBaseline(ABC):
         # Save aggregated results in Asmblr-like format
         self._save_asmblr_format(results, output_dir)
     
-    def _save_asmblr_format(self, results: List[Dict[str, Any]], output_dir: Path):
+    def _save_asmblr_format(self, results: list[dict[str, Any]], output_dir: Path):
         """Save results in Asmblr-compatible format."""
         # Extract pains
         pains = []
@@ -102,7 +102,7 @@ class BaseBaseline(ABC):
             with open(output_dir / "tech_spec.md", 'w', encoding='utf-8') as f:
                 f.write(tech_spec_content)
     
-    def _generate_basic_prd(self, opportunity: Dict[str, Any]) -> str:
+    def _generate_basic_prd(self, opportunity: dict[str, Any]) -> str:
         """Generate a basic PRD from opportunity."""
         title = opportunity.get("title", "Generated Opportunity")
         description = opportunity.get("description", "Auto-generated solution")
@@ -138,7 +138,7 @@ class BaseBaseline(ABC):
 - Market risks
 """
     
-    def _generate_basic_tech_spec(self, opportunity: Dict[str, Any]) -> str:
+    def _generate_basic_tech_spec(self, opportunity: dict[str, Any]) -> str:
         """Generate a basic tech spec from opportunity."""
         title = opportunity.get("title", "Generated Solution")
         

@@ -5,11 +5,11 @@ Main benchmark runner that orchestrates experiments.
 import json
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any
 import logging
 
 from .config import ExperimentConfig
-from .utils import set_seed, save_json, save_jsonl, create_directory_structure
+from .utils import set_seed, save_json, create_directory_structure
 from ..datasets import DatasetRegistry, load_dataset
 from ..baselines import BaselineRegistry, run_baseline
 from ..metrics import MetricRegistry, compute_all_metrics
@@ -41,7 +41,7 @@ class BenchmarkRunner:
         
         logger.info(f"Initialized benchmark runner for experiment {config.experiment_id}")
     
-    def run_experiment(self) -> Dict[str, Any]:
+    def run_experiment(self) -> dict[str, Any]:
         """Run complete benchmark experiment."""
         logger.info("Starting benchmark experiment")
         start_time = time.time()
@@ -126,7 +126,7 @@ class BenchmarkRunner:
             logger.error(f"Experiment failed: {e}")
             raise
     
-    def evaluate_single_run(self, run_dir: str) -> Dict[str, Any]:
+    def evaluate_single_run(self, run_dir: str) -> dict[str, Any]:
         """Evaluate a single Asmblr run."""
         logger.info(f"Evaluating single run: {run_dir}")
         
@@ -162,7 +162,7 @@ class BenchmarkRunner:
             "metrics": metrics
         }
     
-    def compare_runs(self, run_dirs: List[str]) -> Dict[str, Any]:
+    def compare_runs(self, run_dirs: list[str]) -> dict[str, Any]:
         """Compare multiple Asmblr runs."""
         logger.info(f"Comparing {len(run_dirs)} runs")
         
@@ -196,7 +196,7 @@ class BenchmarkRunner:
         
         return comparison
     
-    def _evaluate_asmblr_run(self, run_dir: str, dataset: List[Dict]) -> Dict[str, Any]:
+    def _evaluate_asmblr_run(self, run_dir: str, dataset: list[dict]) -> dict[str, Any]:
         """Evaluate a single Asmblr run against dataset."""
         run_path = Path(run_dir)
         if not run_path.exists():
@@ -256,17 +256,14 @@ class BenchmarkRunner:
         
         return result
     
-    def _load_artifact_content(self, file_path: Path) -> Optional[Any]:
+    def _load_artifact_content(self, file_path: Path) -> Any | None:
         """Load content from artifact file."""
         try:
             if file_path.suffix == '.json':
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, encoding='utf-8') as f:
                     return json.load(f)
-            elif file_path.suffix in ['.md', '.txt']:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    return f.read()
-            elif file_path.suffix == '.html':
-                with open(file_path, 'r', encoding='utf-8') as f:
+            elif file_path.suffix in ['.md', '.txt'] or file_path.suffix == '.html':
+                with open(file_path, encoding='utf-8') as f:
                     return f.read()
             else:
                 # Binary file or unsupported format
@@ -286,7 +283,7 @@ class BenchmarkRunner:
             logger.warning(f"Failed to calculate directory size for {dir_path}: {e}")
         return total_size
     
-    def _aggregate_results(self, metrics_results: Dict[str, Dict]) -> Dict[str, Any]:
+    def _aggregate_results(self, metrics_results: dict[str, dict]) -> dict[str, Any]:
         """Aggregate results across runs and compute statistics."""
         aggregated = {
             "runs": list(metrics_results.keys()),
@@ -339,9 +336,9 @@ class BenchmarkRunner:
         
         return aggregated
     
-    def _generate_reports(self, dataset: List[Dict], 
-                        metrics_results: Dict[str, Dict], 
-                        aggregated_results: Dict[str, Any]):
+    def _generate_reports(self, dataset: list[dict], 
+                        metrics_results: dict[str, dict], 
+                        aggregated_results: dict[str, Any]):
         """Generate all reports."""
         logger.info("Generating reports")
         
@@ -363,8 +360,8 @@ class BenchmarkRunner:
         if self.config.generate_plots:
             self._generate_plots(metrics_results, aggregated_results)
     
-    def _generate_tables(self, metrics_results: Dict[str, Dict], 
-                        aggregated_results: Dict[str, Any]):
+    def _generate_tables(self, metrics_results: dict[str, dict], 
+                        aggregated_results: dict[str, Any]):
         """Generate CSV tables."""
         # Main results table
         main_table = []
@@ -413,8 +410,8 @@ class BenchmarkRunner:
             df = pd.DataFrame(summary_table)
             df.to_csv(self.tables_dir / "summary.csv", index=False)
     
-    def _generate_plots(self, metrics_results: Dict[str, Dict], 
-                       aggregated_results: Dict[str, Any]):
+    def _generate_plots(self, metrics_results: dict[str, dict], 
+                       aggregated_results: dict[str, Any]):
         """Generate plots."""
         try:
             import matplotlib.pyplot as plt
@@ -435,7 +432,7 @@ class BenchmarkRunner:
         except ImportError:
             logger.warning("Matplotlib/Seaborn not available, skipping plots")
     
-    def _plot_metric_comparison(self, metrics_results: Dict[str, Dict]):
+    def _plot_metric_comparison(self, metrics_results: dict[str, dict]):
         """Plot metric comparison across runs."""
         import matplotlib.pyplot as plt
         import pandas as pd
@@ -481,7 +478,7 @@ class BenchmarkRunner:
         plt.savefig(self.plots_dir / "metric_comparison.png", dpi=300, bbox_inches='tight')
         plt.close()
     
-    def _plot_metric_distributions(self, aggregated_results: Dict[str, Any]):
+    def _plot_metric_distributions(self, aggregated_results: dict[str, Any]):
         """Plot metric distributions."""
         import matplotlib.pyplot as plt
         import pandas as pd
@@ -517,8 +514,8 @@ class BenchmarkRunner:
         plt.savefig(self.plots_dir / "metric_distributions.png", dpi=300, bbox_inches='tight')
         plt.close()
     
-    def _generate_comparison_report(self, results: Dict[str, Dict], 
-                                dataset: List[Dict]) -> Dict[str, Any]:
+    def _generate_comparison_report(self, results: dict[str, dict], 
+                                dataset: list[dict]) -> dict[str, Any]:
         """Generate comparison report for multiple runs."""
         comparison = {
             "experiment_id": self.config.experiment_id,

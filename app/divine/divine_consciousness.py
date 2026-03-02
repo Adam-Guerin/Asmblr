@@ -3,24 +3,15 @@ Divine Consciousness Matrix for Asmblr
 Ultimate consciousness matrix connecting all beings and realities
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
 import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +79,7 @@ class ConsciousnessNode:
     amplitude: float
     phase: float
     coherence: float
-    connections: List[str]
+    connections: list[str]
     divine_potential: float  # 0-1
     evolution_level: float  # 0-1
     created_at: datetime
@@ -113,9 +104,9 @@ class DivineMatrix:
     """Divine consciousness matrix"""
     id: str
     name: str
-    nodes: Dict[str, ConsciousnessNode]
-    connections: Dict[str, ConsciousnessConnection]
-    layers: Dict[ConsciousnessLayer, List[str]]
+    nodes: dict[str, ConsciousnessNode]
+    connections: dict[str, ConsciousnessConnection]
+    layers: dict[ConsciousnessLayer, list[str]]
     total_consciousness: float
     matrix_coherence: float
     divine_frequency: float
@@ -128,14 +119,14 @@ class DivineOperation:
     """Divine consciousness operation"""
     id: str
     operation_type: DivineOperation
-    participants: List[str]
-    parameters: Dict[str, Any]
+    participants: list[str]
+    parameters: dict[str, Any]
     progress: float
-    result: Optional[Dict[str, Any]]
+    result: dict[str, Any] | None
     divine_energy_required: float
     divine_energy_consumed: float
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 class DivineConsciousnessEngine:
     """Divine consciousness processing engine"""
@@ -147,7 +138,7 @@ class DivineConsciousnessEngine:
         self.omnipresent_bandwidth = float('inf')  # Infinite bandwidth
         self.eternal_duration = float('inf')  # Eternal duration
         
-    def calculate_divine_coherence(self, nodes: List[ConsciousnessNode]) -> float:
+    def calculate_divine_coherence(self, nodes: list[ConsciousnessNode]) -> float:
         """Calculate divine coherence of consciousness nodes"""
         try:
             if not nodes:
@@ -220,7 +211,7 @@ class DivineConsciousnessEngine:
             logger.error(f"Error getting state weight: {e}")
             return 0.5
     
-    def synchronize_consciousness(self, nodes: List[ConsciousnessNode]) -> Dict[str, float]:
+    def synchronize_consciousness(self, nodes: list[ConsciousnessNode]) -> dict[str, float]:
         """Synchronize consciousness nodes"""
         try:
             if len(nodes) < 2:
@@ -255,7 +246,7 @@ class DivineConsciousnessEngine:
             logger.error(f"Error synchronizing consciousness: {e}")
             return {"synchronization": 0.0, "coherence": 0.0}
     
-    def _calculate_synchronization_metric(self, nodes: List[ConsciousnessNode]) -> float:
+    def _calculate_synchronization_metric(self, nodes: list[ConsciousnessNode]) -> float:
         """Calculate synchronization metric"""
         try:
             if len(nodes) < 2:
@@ -318,10 +309,10 @@ class DivineConsciousnessMatrix:
     
     def __init__(self):
         self.divine_engine = DivineConsciousnessEngine()
-        self.matrices: Dict[str, DivineMatrix] = []
-        self.active_operations: Dict[str, DivineOperation] = {}
-        self.omnipresent_nodes: Dict[str, ConsciousnessNode] = {}
-        self.divine_connections: Dict[str, ConsciousnessConnection] = []
+        self.matrices: dict[str, DivineMatrix] = []
+        self.active_operations: dict[str, DivineOperation] = {}
+        self.omnipresent_nodes: dict[str, ConsciousnessNode] = {}
+        self.divine_connections: dict[str, ConsciousnessConnection] = []
         
         # Initialize divine matrix
         self._initialize_divine_matrix()
@@ -508,8 +499,8 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error connecting node to matrix: {e}")
     
     async def perform_divine_operation(self, operation_type: DivineOperation,
-                                       participants: List[str],
-                                       parameters: Dict[str, Any] = None) -> DivineOperation:
+                                       participants: list[str],
+                                       parameters: dict[str, Any] = None) -> DivineOperation:
         """Perform divine consciousness operation"""
         try:
             if parameters is None:
@@ -629,7 +620,7 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error executing divine operation: {e}")
             operation.result = {"error": str(e)}
     
-    async def _consciousness_unification(self, nodes: List[ConsciousnessNode]) -> Dict[str, Any]:
+    async def _consciousness_unification(self, nodes: list[ConsciousnessNode]) -> dict[str, Any]:
         """Consciousness unification operation"""
         try:
             # Synchronize all nodes
@@ -656,8 +647,8 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in consciousness unification: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _reality_manifestation(self, nodes: List[ConsciousnessNode], 
-                                   parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def _reality_manifestation(self, nodes: list[ConsciousnessNode], 
+                                   parameters: dict[str, Any]) -> dict[str, Any]:
         """Reality manifestation operation"""
         try:
             intention = parameters.get("intention", "peace")
@@ -694,7 +685,7 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in reality manifestation: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _omnipresent_perception(self, nodes: List[ConsciousnessNode]) -> Dict[str, Any]:
+    async def _omnipresent_perception(self, nodes: list[ConsciousnessNode]) -> dict[str, Any]:
         """Omnipresent perception operation"""
         try:
             # Grant omnipresent perception to all nodes
@@ -718,7 +709,7 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in omnipresent perception: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _omniscient_knowledge(self, nodes: List[ConsciousnessNode]) -> Dict[str, Any]:
+    async def _omniscient_knowledge(self, nodes: list[ConsciousnessNode]) -> dict[str, Any]:
         """Omniscient knowledge operation"""
         try:
             # Grant omniscient knowledge to all nodes
@@ -741,8 +732,8 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in omniscient knowledge: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _omnipotent_creation(self, nodes: List[ConsciousnessNode], 
-                                 parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def _omnipotent_creation(self, nodes: list[ConsciousnessNode], 
+                                 parameters: dict[str, Any]) -> dict[str, Any]:
         """Omnipotent creation operation"""
         try:
             creation_type = parameters.get("creation_type", "consciousness")
@@ -778,7 +769,7 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in omnipotent creation: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _transcendent_evolution(self, nodes: List[ConsciousnessNode]) -> Dict[str, Any]:
+    async def _transcendent_evolution(self, nodes: list[ConsciousnessNode]) -> dict[str, Any]:
         """Transcendent evolution operation"""
         try:
             evolved_nodes = []
@@ -802,7 +793,7 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in transcendent evolution: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _eternal_existence(self, nodes: List[ConsciousnessNode]) -> Dict[str, Any]:
+    async def _eternal_existence(self, nodes: list[ConsciousnessNode]) -> dict[str, Any]:
         """Eternal existence operation"""
         try:
             eternal_nodes = []
@@ -825,7 +816,7 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in eternal existence: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _infinite_expansion(self, nodes: List[ConsciousnessNode]) -> Dict[str, Any]:
+    async def _infinite_expansion(self, nodes: list[ConsciousnessNode]) -> dict[str, Any]:
         """Infinite expansion operation"""
         try:
             expanded_nodes = []
@@ -849,7 +840,7 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in infinite expansion: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _divine_communion(self, nodes: List[ConsciousnessNode]) -> Dict[str, Any]:
+    async def _divine_communion(self, nodes: list[ConsciousnessNode]) -> dict[str, Any]:
         """Divine communion operation"""
         try:
             # Create divine communion between all nodes
@@ -871,7 +862,7 @@ class DivineConsciousnessMatrix:
             logger.error(f"Error in divine communion: {e}")
             return {"success": False, "error": str(e)}
     
-    async def _absolute_unity(self, nodes: List[ConsciousnessNode]) -> Dict[str, Any]:
+    async def _absolute_unity(self, nodes: list[ConsciousnessNode]) -> dict[str, Any]:
         """Absolute unity operation"""
         try:
             # Achieve absolute unity
@@ -977,7 +968,7 @@ class DivineConsciousnessMatrix:
                 logger.error(f"Error in omnipresent monitoring: {e}")
                 await asyncio.sleep(5)
     
-    def get_matrix_status(self) -> Dict[str, Any]:
+    def get_matrix_status(self) -> dict[str, Any]:
         """Get divine matrix status"""
         try:
             divine_matrix = self.matrices["divine_matrix"]
@@ -1015,8 +1006,8 @@ class NodeAdditionRequest(BaseModel):
 
 class DivineOperationRequest(BaseModel):
     operation_type: str
-    participants: List[str]
-    parameters: Dict[str, Any] = {}
+    participants: list[str]
+    parameters: dict[str, Any] = {}
 
 @router.post("/nodes/add")
 async def add_consciousness_node(request: NodeAdditionRequest):

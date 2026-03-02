@@ -3,21 +3,18 @@ Advanced Distributed Tracing for Asmblr
 OpenTelemetry integration with Jaeger and comprehensive observability
 """
 
-import json
 import time
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from contextlib import asynccontextmanager
-from opentelemetry import trace, baggage, context
+from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
@@ -25,7 +22,6 @@ from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.b3 import B3MultiFormat
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
-import jaeger_client
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +30,14 @@ class TraceSpan:
     """Trace span data structure"""
     trace_id: str
     span_id: str
-    parent_span_id: Optional[str]
+    parent_span_id: str | None
     operation_name: str
     start_time: datetime
     end_time: datetime
     duration_ms: float
     status: str
-    tags: Dict[str, Any]
-    logs: List[Dict[str, Any]]
+    tags: dict[str, Any]
+    logs: list[dict[str, Any]]
     service_name: str
     component: str
 
@@ -53,8 +49,8 @@ class TraceMetrics:
     average_duration_ms: float
     p95_duration_ms: float
     p99_duration_ms: float
-    services: Dict[str, int]
-    operations: Dict[str, int]
+    services: dict[str, int]
+    operations: dict[str, int]
     error_rate: float
 
 class AdvancedTracer:
@@ -64,7 +60,7 @@ class AdvancedTracer:
         self.service_name = service_name
         self.jaeger_endpoint = jaeger_endpoint
         self.tracer_provider = None
-        self.span_storage: List[TraceSpan] = []
+        self.span_storage: list[TraceSpan] = []
         self._initialize_tracing()
     
     def _initialize_tracing(self):
@@ -274,7 +270,7 @@ class TraceAnalyzer:
         self.tracer = tracer
         self.jaeger_query = "http://localhost:16686"
     
-    def analyze_service_dependencies(self) -> Dict[str, List[str]]:
+    def analyze_service_dependencies(self) -> dict[str, list[str]]:
         """Analyze service dependencies from traces"""
         dependencies = {}
         
@@ -293,7 +289,7 @@ class TraceAnalyzer:
         
         return dependencies
     
-    def _extract_service_from_url(self, url: str) -> Optional[str]:
+    def _extract_service_from_url(self, url: str) -> str | None:
         """Extract service name from URL"""
         # Simplified service extraction
         if "api.openai.com" in url:
@@ -306,7 +302,7 @@ class TraceAnalyzer:
             return "postgres"
         return None
     
-    def find_performance_bottlenecks(self, threshold_ms: float = 1000.0) -> List[Dict[str, Any]]:
+    def find_performance_bottlenecks(self, threshold_ms: float = 1000.0) -> list[dict[str, Any]]:
         """Find performance bottlenecks"""
         bottlenecks = []
         
@@ -323,7 +319,7 @@ class TraceAnalyzer:
         
         return sorted(bottlenecks, key=lambda x: x["duration_ms"], reverse=True)
     
-    def analyze_error_patterns(self) -> Dict[str, Any]:
+    def analyze_error_patterns(self) -> dict[str, Any]:
         """Analyze error patterns"""
         error_spans = [s for s in self.tracer.span_storage if s.status == "ERROR"]
         
@@ -352,7 +348,7 @@ class TraceAnalyzer:
             "most_common_error": max(error_types.items(), key=lambda x: x[1])[0] if error_types else None
         }
     
-    def generate_trace_report(self) -> Dict[str, Any]:
+    def generate_trace_report(self) -> dict[str, Any]:
         """Generate comprehensive trace report"""
         metrics = self.tracer.get_trace_metrics()
         dependencies = self.analyze_service_dependencies()
@@ -369,8 +365,8 @@ class TraceAnalyzer:
         }
     
     def _generate_recommendations(self, metrics: TraceMetrics, 
-                               bottlenecks: List[Dict[str, Any]], 
-                               error_patterns: Dict[str, Any]) -> List[str]:
+                               bottlenecks: list[dict[str, Any]], 
+                               error_patterns: dict[str, Any]) -> list[str]:
         """Generate performance recommendations"""
         recommendations = []
         
@@ -407,7 +403,7 @@ class TraceDashboard:
         self.tracer = tracer
         self.analyzer = analyzer
     
-    def get_dashboard_data(self, time_range: timedelta = timedelta(hours=1)) -> Dict[str, Any]:
+    def get_dashboard_data(self, time_range: timedelta = timedelta(hours=1)) -> dict[str, Any]:
         """Get dashboard data"""
         metrics = self.tracer.get_trace_metrics(time_range)
         report = self.analyzer.generate_trace_report()
@@ -422,7 +418,7 @@ class TraceDashboard:
             "error_trends": self._get_error_trends()
         }
     
-    def _get_top_operations(self) -> List[Dict[str, Any]]:
+    def _get_top_operations(self) -> list[dict[str, Any]]:
         """Get top operations by duration"""
         operations = {}
         
@@ -458,7 +454,7 @@ class TraceDashboard:
             for op, data in sorted_ops[:10]
         ]
     
-    def _get_service_health(self) -> Dict[str, Any]:
+    def _get_service_health(self) -> dict[str, Any]:
         """Get service health metrics"""
         services = {}
         
@@ -488,7 +484,7 @@ class TraceDashboard:
         
         return health
     
-    def _get_recent_traces(self) -> List[Dict[str, Any]]:
+    def _get_recent_traces(self) -> list[dict[str, Any]]:
         """Get recent traces"""
         recent_spans = sorted(self.tracer.span_storage, key=lambda x: x.start_time, reverse=True)[:50]
         
@@ -504,7 +500,7 @@ class TraceDashboard:
             for span in recent_spans
         ]
     
-    def _get_performance_trends(self) -> Dict[str, List[float]]:
+    def _get_performance_trends(self) -> dict[str, list[float]]:
         """Get performance trends over time"""
         # Group spans by hour
         hourly_data = {}
@@ -522,7 +518,7 @@ class TraceDashboard:
         
         return trends
     
-    def _get_error_trends(self) -> Dict[str, List[float]]:
+    def _get_error_trends(self) -> dict[str, list[float]]:
         """Get error trends over time"""
         # Group errors by hour
         hourly_errors = {}
@@ -606,7 +602,6 @@ async def get_error_patterns():
         raise HTTPException(status_code=500, detail=str(e))
 
 # Integration with existing monitoring
-from app.monitoring.apm_integration import record_business_event
 
 def trace_pipeline_stage(stage_name: str, run_id: str):
     """Trace pipeline stage execution"""

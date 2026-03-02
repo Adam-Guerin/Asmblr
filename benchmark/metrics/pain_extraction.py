@@ -2,9 +2,8 @@
 Pain Extraction Quality metric - precision/recall/F1 vs ground truth pains.
 """
 
-from typing import Dict, List, Any, Set, Tuple
+from typing import Any
 import re
-from collections import defaultdict
 
 from .base import BaseMetric, MetricResult
 
@@ -15,7 +14,7 @@ class PainExtractionQuality(BaseMetric):
     requires_ground_truth = True
     output_type = "score"
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute pain extraction quality metrics."""
         # Extract system pains
         system_pains = self._extract_system_pains(run_result)
@@ -65,7 +64,7 @@ class PainExtractionQuality(BaseMetric):
             }
         )
     
-    def _extract_system_pains(self, run_result: Dict[str, Any]) -> List[Dict]:
+    def _extract_system_pains(self, run_result: dict[str, Any]) -> list[dict]:
         """Extract pains from system output."""
         pains = []
         
@@ -94,7 +93,7 @@ class PainExtractionQuality(BaseMetric):
         
         return normalized_pains
     
-    def _normalize_pain(self, pain: Any) -> Optional[Dict]:
+    def _normalize_pain(self, pain: Any) -> Optional[dict]:
         """Normalize pain to standard format."""
         if isinstance(pain, dict):
             return {
@@ -113,7 +112,7 @@ class PainExtractionQuality(BaseMetric):
             }
         return None
     
-    def _extract_ground_truth_pains(self, dataset: List[Dict]) -> List[Dict]:
+    def _extract_ground_truth_pains(self, dataset: list[dict]) -> list[dict]:
         """Extract ground truth pains from dataset."""
         all_pains = []
         
@@ -126,9 +125,9 @@ class PainExtractionQuality(BaseMetric):
         
         return all_pains
     
-    def _find_pain_matches(self, system_pains: List[Dict], 
-                           ground_truth_pains: List[Dict],
-                           similarity_threshold: float = 0.7) -> List[Tuple[int, int, float]]:
+    def _find_pain_matches(self, system_pains: list[dict], 
+                           ground_truth_pains: list[dict],
+                           similarity_threshold: float = 0.7) -> list[tuple[int, int, float]]:
         """Find matches between system and ground truth pains using fuzzy matching."""
         matches = []
         
@@ -149,7 +148,7 @@ class PainExtractionQuality(BaseMetric):
         
         return matches
     
-    def _calculate_pain_similarity(self, pain1: Dict, pain2: Dict) -> float:
+    def _calculate_pain_similarity(self, pain1: dict, pain2: dict) -> float:
         """Calculate similarity between two pains."""
         # Extract text fields
         actor1 = pain1.get("actor", "").lower()
@@ -194,10 +193,10 @@ class PainExtractionQuality(BaseMetric):
         
         return len(intersection) / len(union)
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["pains_structured", "pains_validated"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return ["pains"]

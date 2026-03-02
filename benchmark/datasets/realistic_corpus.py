@@ -3,8 +3,6 @@ Realistic corpus dataset - curated text samples packaged locally.
 """
 
 import json
-from pathlib import Path
-from typing import List, Dict, Optional
 
 
 class RealisticCorpusDataset:
@@ -13,18 +11,18 @@ class RealisticCorpusDataset:
     has_ground_truth = True
     size = 25
     
-    def __init__(self, custom_path: Optional[str] = None):
+    def __init__(self, custom_path: str | None = None):
         self.custom_path = custom_path
         self.data = None
     
-    def load(self) -> List[Dict]:
+    def load(self) -> list[dict]:
         """Load the realistic corpus dataset."""
         if self.data is not None:
             return self.data
         
         if self.custom_path:
             # Load from custom path
-            with open(self.custom_path, 'r', encoding='utf-8') as f:
+            with open(self.custom_path, encoding='utf-8') as f:
                 self.data = json.load(f)
         else:
             # Use built-in dataset
@@ -32,7 +30,7 @@ class RealisticCorpusDataset:
         
         return self.data
     
-    def _get_builtin_data(self) -> List[Dict]:
+    def _get_builtin_data(self) -> list[dict]:
         """Get built-in realistic corpus dataset."""
         return [
             {
@@ -392,7 +390,7 @@ class RealisticCorpusDataset:
             }
         ]
     
-    def get_schema(self) -> Dict:
+    def get_schema(self) -> dict:
         """Get dataset schema."""
         return {
             "type": "object",

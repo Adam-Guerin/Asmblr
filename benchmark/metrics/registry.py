@@ -2,7 +2,7 @@
 Metric registry and computation utilities.
 """
 
-from typing import Dict, List, Any, Optional, Type
+from typing import Any
 import logging
 
 from .pain_extraction import PainExtractionQuality
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class MetricRegistry:
     """Registry for benchmark metrics."""
     
-    _metrics: Dict[str, Type] = {
+    _metrics: dict[str, type] = {
         "pain_extraction_quality": PainExtractionQuality,
         "pain_specificity_score": PainSpecificityScore,
         "clustering_quality": ClusteringQuality,
@@ -38,23 +38,23 @@ class MetricRegistry:
     }
     
     @classmethod
-    def register(cls, name: str, metric_class: Type):
+    def register(cls, name: str, metric_class: type):
         """Register a new metric."""
         cls._metrics[name] = metric_class
         logger.info(f"Registered metric: {name}")
     
     @classmethod
-    def get_metric_class(cls, name: str) -> Optional[Type]:
+    def get_metric_class(cls, name: str) -> type | None:
         """Get metric class by name."""
         return cls._metrics.get(name)
     
     @classmethod
-    def list_metrics(cls) -> List[str]:
+    def list_metrics(cls) -> list[str]:
         """List all registered metrics."""
         return list(cls._metrics.keys())
     
     @classmethod
-    def metric_info(cls, name: str) -> Optional[Dict]:
+    def metric_info(cls, name: str) -> dict | None:
         """Get information about a metric."""
         metric_class = cls.get_metric_class(name)
         if metric_class is None:
@@ -69,10 +69,10 @@ class MetricRegistry:
         }
 
 
-def compute_all_metrics(run_result: Dict[str, Any], 
-                      dataset: List[Dict], 
-                      metric_names: List[str],
-                      config: Any) -> Dict[str, Any]:
+def compute_all_metrics(run_result: dict[str, Any], 
+                      dataset: list[dict], 
+                      metric_names: list[str],
+                      config: Any) -> dict[str, Any]:
     """Compute all specified metrics for a run."""
     results = {}
     
@@ -104,9 +104,9 @@ def compute_all_metrics(run_result: Dict[str, Any],
 
 
 def compute_single_metric(metric_name: str, 
-                       run_result: Dict[str, Any], 
-                       dataset: List[Dict],
-                       config: Any) -> Dict[str, Any]:
+                       run_result: dict[str, Any], 
+                       dataset: list[dict],
+                       config: Any) -> dict[str, Any]:
     """Compute a single metric."""
     metric_class = MetricRegistry.get_metric_class(metric_name)
     if metric_class is None:

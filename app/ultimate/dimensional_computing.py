@@ -3,24 +3,15 @@ Dimensional Computing System for Asmblr
 Multi-dimensional computation and hyperdimensional data processing
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
 import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +70,9 @@ class Dimension:
     name: str
     dimension_type: DimensionType
     size: int
-    properties: Dict[str, Any]
+    properties: dict[str, Any]
     coordinate_system: str
-    metric: Dict[str, float]
+    metric: dict[str, float]
     created_at: datetime
 
 @dataclass
@@ -89,11 +80,11 @@ class HyperdimensionalData:
     """Hyperdimensional data structure"""
     id: str
     name: str
-    dimensions: List[str]
+    dimensions: list[str]
     data_type: DataType
-    shape: Tuple[int, ...]
+    shape: tuple[int, ...]
     data: np.ndarray
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     created_at: datetime
     last_modified: datetime
 
@@ -102,9 +93,9 @@ class DimensionalOperation:
     """Dimensional operation"""
     id: str
     operation_type: DimensionOperation
-    input_data_ids: List[str]
+    input_data_ids: list[str]
     output_data_id: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     computational_cost: float
     execution_time: float
     created_at: datetime
@@ -115,7 +106,7 @@ class DimensionalProcessor:
     id: str
     name: str
     computing_model: ComputingModel
-    supported_dimensions: List[DimensionType]
+    supported_dimensions: list[DimensionType]
     max_dimensions: int
     processing_power: float  # GFLOPS
     memory_capacity: float  # GB
@@ -207,7 +198,7 @@ class HyperdimensionalMath:
             return np.zeros(hyperplane_data.shape[1])
     
     def dimensional_reduction(self, data: np.ndarray, target_dim: int,
-                           method: str = "pca") -> Tuple[np.ndarray, np.ndarray]:
+                           method: str = "pca") -> tuple[np.ndarray, np.ndarray]:
         """Reduce dimensionality of data"""
         try:
             if target_dim >= data.shape[-1]:
@@ -268,11 +259,11 @@ class DimensionalProcessor:
     
     def __init__(self, processor_config: DimensionalProcessor):
         self.config = processor_config
-        self.active_operations: Dict[str, DimensionalOperation] = {}
+        self.active_operations: dict[str, DimensionalOperation] = {}
         self.math_engine = HyperdimensionalMath()
         
-    def create_hyperdimensional_data(self, name: str, dimensions: List[Dimension],
-                                    data_type: DataType, shape: Tuple[int, ...]) -> HyperdimensionalData:
+    def create_hyperdimensional_data(self, name: str, dimensions: list[Dimension],
+                                    data_type: DataType, shape: tuple[int, ...]) -> HyperdimensionalData:
         """Create hyperdimensional data structure"""
         try:
             # Validate dimensions
@@ -323,8 +314,8 @@ class DimensionalProcessor:
             raise
     
     def perform_operation(self, operation_type: DimensionOperation,
-                         input_data: List[HyperdimensionalData],
-                         parameters: Dict[str, Any] = None) -> HyperdimensionalData:
+                         input_data: list[HyperdimensionalData],
+                         parameters: dict[str, Any] = None) -> HyperdimensionalData:
         """Perform dimensional operation"""
         try:
             if parameters is None:
@@ -374,8 +365,8 @@ class DimensionalProcessor:
             logger.error(f"Error performing dimensional operation: {e}")
             raise
     
-    def _projection_operation(self, input_data: List[HyperdimensionalData],
-                             parameters: Dict[str, Any]) -> HyperdimensionalData:
+    def _projection_operation(self, input_data: list[HyperdimensionalData],
+                             parameters: dict[str, Any]) -> HyperdimensionalData:
         """Perform projection operation"""
         try:
             if len(input_data) != 1:
@@ -415,8 +406,8 @@ class DimensionalProcessor:
             logger.error(f"Error in projection operation: {e}")
             raise
     
-    def _rotation_operation(self, input_data: List[HyperdimensionalData],
-                            parameters: Dict[str, Any]) -> HyperdimensionalData:
+    def _rotation_operation(self, input_data: list[HyperdimensionalData],
+                            parameters: dict[str, Any]) -> HyperdimensionalData:
         """Perform rotation operation"""
         try:
             if len(input_data) != 1:
@@ -468,8 +459,8 @@ class DimensionalProcessor:
             logger.error(f"Error in rotation operation: {e}")
             raise
     
-    def _transformation_operation(self, input_data: List[HyperdimensionalData],
-                                parameters: Dict[str, Any]) -> HyperdimensionalData:
+    def _transformation_operation(self, input_data: list[HyperdimensionalData],
+                                parameters: dict[str, Any]) -> HyperdimensionalData:
         """Perform transformation operation"""
         try:
             if len(input_data) != 1:
@@ -523,8 +514,8 @@ class DimensionalProcessor:
             logger.error(f"Error in transformation operation: {e}")
             raise
     
-    def _intersection_operation(self, input_data: List[HyperdimensionalData],
-                               parameters: Dict[str, Any]) -> HyperdimensionalData:
+    def _intersection_operation(self, input_data: list[HyperdimensionalData],
+                               parameters: dict[str, Any]) -> HyperdimensionalData:
         """Perform intersection operation"""
         try:
             if len(input_data) != 2:
@@ -562,8 +553,8 @@ class DimensionalProcessor:
             logger.error(f"Error in intersection operation: {e}")
             raise
     
-    def _union_operation(self, input_data: List[HyperdimensionalData],
-                         parameters: Dict[str, Any]) -> HyperdimensionalData:
+    def _union_operation(self, input_data: list[HyperdimensionalData],
+                         parameters: dict[str, Any]) -> HyperdimensionalData:
         """Perform union operation"""
         try:
             if len(input_data) != 2:
@@ -601,8 +592,8 @@ class DimensionalProcessor:
             logger.error(f"Error in union operation: {e}")
             raise
     
-    def _embedding_operation(self, input_data: List[HyperdimensionalData],
-                            parameters: Dict[str, Any]) -> HyperdimensionalData:
+    def _embedding_operation(self, input_data: list[HyperdimensionalData],
+                            parameters: dict[str, Any]) -> HyperdimensionalData:
         """Perform embedding operation"""
         try:
             if len(input_data) != 1:
@@ -642,8 +633,8 @@ class DimensionalProcessor:
             logger.error(f"Error in embedding operation: {e}")
             raise
     
-    def _folding_operation(self, input_data: List[HyperdimensionalData],
-                          parameters: Dict[str, Any]) -> HyperdimensionalData:
+    def _folding_operation(self, input_data: list[HyperdimensionalData],
+                          parameters: dict[str, Any]) -> HyperdimensionalData:
         """Perform folding operation"""
         try:
             if len(input_data) != 1:
@@ -691,7 +682,7 @@ class DimensionalProcessor:
             raise
     
     def _calculate_cost(self, operation_type: DimensionOperation,
-                        input_data: List[HyperdimensionalData]) -> float:
+                        input_data: list[HyperdimensionalData]) -> float:
         """Calculate computational cost"""
         try:
             # Base cost per operation
@@ -727,9 +718,9 @@ class DimensionalComputingSystem:
     """Main dimensional computing system"""
     
     def __init__(self):
-        self.dimensions: Dict[str, Dimension] = []
-        self.processors: Dict[str, DimensionalProcessor] = {}
-        self.data_structures: Dict[str, HyperdimensionalData] = {}
+        self.dimensions: dict[str, Dimension] = []
+        self.processors: dict[str, DimensionalProcessor] = {}
+        self.data_structures: dict[str, HyperdimensionalData] = {}
         self.math_engine = HyperdimensionalMath()
         
         # Initialize default dimensions
@@ -864,8 +855,8 @@ class DimensionalComputingSystem:
         except Exception as e:
             logger.error(f"Error initializing processors: {e}")
     
-    async def create_hyperdimensional_data(self, name: str, dimension_ids: List[str],
-                                        data_type: DataType, shape: Tuple[int, ...]) -> HyperdimensionalData:
+    async def create_hyperdimensional_data(self, name: str, dimension_ids: list[str],
+                                        data_type: DataType, shape: tuple[int, ...]) -> HyperdimensionalData:
         """Create hyperdimensional data structure"""
         try:
             # Get dimensions
@@ -892,7 +883,7 @@ class DimensionalComputingSystem:
             logger.error(f"Error creating hyperdimensional data: {e}")
             raise
     
-    def _find_suitable_processor(self, dimensions: List[Dimension]) -> Optional[DimensionalProcessor]:
+    def _find_suitable_processor(self, dimensions: list[Dimension]) -> DimensionalProcessor | None:
         """Find suitable processor for dimensions"""
         try:
             for processor in self.processors.values():
@@ -915,9 +906,9 @@ class DimensionalComputingSystem:
             logger.error(f"Error finding suitable processor: {e}")
             return None
     
-    async def perform_dimensional_operation(self, data_ids: List[str],
+    async def perform_dimensional_operation(self, data_ids: list[str],
                                            operation_type: DimensionOperation,
-                                           parameters: Dict[str, Any] = None) -> HyperdimensionalData:
+                                           parameters: dict[str, Any] = None) -> HyperdimensionalData:
         """Perform dimensional operation"""
         try:
             # Get data structures
@@ -953,7 +944,7 @@ class DimensionalComputingSystem:
             logger.error(f"Error performing dimensional operation: {e}")
             raise
     
-    def get_dimension_info(self, dimension_id: str) -> Dict[str, Any]:
+    def get_dimension_info(self, dimension_id: str) -> dict[str, Any]:
         """Get dimension information"""
         try:
             dimension = next((d for d in self.dimensions if d.id == dimension_id), None)
@@ -975,7 +966,7 @@ class DimensionalComputingSystem:
             logger.error(f"Error getting dimension info: {e}")
             return {"error": str(e)}
     
-    def get_data_info(self, data_id: str) -> Dict[str, Any]:
+    def get_data_info(self, data_id: str) -> dict[str, Any]:
         """Get data structure information"""
         try:
             data = self.data_structures.get(data_id)
@@ -997,7 +988,7 @@ class DimensionalComputingSystem:
             logger.error(f"Error getting data info: {e}")
             return {"error": str(e)}
     
-    def list_dimensions(self) -> List[Dict[str, Any]]:
+    def list_dimensions(self) -> list[dict[str, Any]]:
         """List all dimensions"""
         try:
             dimensions = []
@@ -1016,7 +1007,7 @@ class DimensionalComputingSystem:
             logger.error(f"Error listing dimensions: {e}")
             return []
     
-    def list_data_structures(self) -> List[Dict[str, Any]]:
+    def list_data_structures(self) -> list[dict[str, Any]]:
         """List all data structures"""
         try:
             structures = []
@@ -1082,7 +1073,7 @@ class DimensionalComputingSystem:
                 logger.error(f"Error in processor optimization: {e}")
                 await asyncio.sleep(300)
     
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """Get dimensional computing system status"""
         try:
             return {
@@ -1110,14 +1101,14 @@ router = APIRouter(prefix="/dimensional", tags=["dimensional_computing"])
 
 class DataCreationRequest(BaseModel):
     name: str
-    dimension_ids: List[str]
+    dimension_ids: list[str]
     data_type: str
-    shape: List[int]
+    shape: list[int]
 
 class OperationRequest(BaseModel):
-    data_ids: List[str]
+    data_ids: list[str]
     operation_type: str
-    parameters: Dict[str, Any] = {}
+    parameters: dict[str, Any] = {}
 
 @router.post("/data/create")
 async def create_hyperdimensional_data(request: DataCreationRequest):

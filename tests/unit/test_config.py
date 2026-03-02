@@ -1,259 +1,190 @@
-"""
-Tests unitaires pour le module core.config
-Couvre la configuration, la validation des paramètres et la gestion des environnements
-"""
+from __future__ import annotations
+
+from datetime import UTC, datetime, timedelta
 
 import pytest
-import tempfile
-import json
-from pathlib import Path
-from unittest.mock import patch, mock_open
-import os
 
-from app.core.config import Settings
+from app.core import config as config_module
+from app.core.config import (
+    Settings,
+    _mask_secret,
+    _parse_iso_datetime,
+    get_settings,
+    previous_secret_allowed,
+    redact_value,
+    validate_prod_mode,
+    validate_secrets,
+)
 
 
-class TestSettings:
-    """Tests complets pour la classe Settings"""
+@pytest.fixture(autouse=True)
+def _disable_lightweight_side_effects(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        config_module.lightweight_config,
+        "apply_ai_optimizations",
+        lambda *_args, **_kwargs: None,
+    )
 
-    def test_default_settings_initialization(self):
-        """Test l'initialisation avec les valeurs par défaut"""
-        settings = Settings()
-        
-        assert settings.runs_dir == Path("runs")
-        assert settings.data_dir == Path("data")
-        assert settings.config_dir == Path("configs")
-        assert settings.knowledge_dir == Path("knowledge")
-        assert isinstance(settings.env_vars, dict)
 
-    def test_custom_settings_initialization(self):
-        """Test l'initialisation avec des chemins personnalisés"""
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            runs_dir = Path(tmp_dir) / "runs"
-            data_dir = Path(tmp_dir) / "data"
-            
-            settings = Settings(runs_dir=runs_dir, data_dir=data_dir)
-            
-            assert settings.runs_dir == runs_dir
-            assert settings.data_dir == data_dir
+def test_parse_iso_datetime_accepts_valid_values() -> None:
+    parsed = _parse_iso_datetime("2026-03-01T10:00:00")
+    assert parsed is not None
+    assert parsed.tzinfo == UTC
 
-    def test_load_env_file_existing(self):
-        """Test le chargement d'un fichier .env existant"""
-        env_content = """
-TEST_VAR=test_value
-ANOTHER_VAR=another_value
-"""
-        with patch("builtins.open", mock_open(read_data=env_content)):
-            with patch.object(Path, "exists", return_value=True):
-                settings = Settings()
-                settings._load_env_file()
-                
-                assert settings.env_vars.get("TEST_VAR") == "test_value"
-                assert settings.env_vars.get("ANOTHER_VAR") == "another_value"
+    parsed_z = _parse_iso_datetime("2026-03-01T10:00:00Z")
+    assert parsed_z is not None
 
-    def test_load_env_file_missing(self):
-        """Test le comportement quand le fichier .env n'existe pas"""
-        with patch.object(Path, "exists", return_value=False):
-            settings = Settings()
-            settings._load_env_file()
-            
-            assert settings.env_vars == {}
+    parsed_compact = _parse_iso_datetime("20260301T100000")
+    assert parsed_compact is not None
 
-    def test_get_env_var_existing(self):
-        """Test la récupération d'une variable d'environnement existante"""
-        settings = Settings()
-        settings.env_vars = {"EXISTING_VAR": "existing_value"}
-        
-        assert settings.get_env_var("EXISTING_VAR") == "existing_value"
-        assert settings.get_env_var("EXISTING_VAR", default="default") == "existing_value"
 
-    def test_get_env_var_missing_with_default(self):
-        """Test la récupération d'une variable manquante avec valeur par défaut"""
-        settings = Settings()
-        settings.env_vars = {}
-        
-        assert settings.get_env_var("MISSING_VAR", default="default_value") == "default_value"
-        assert settings.get_env_var("MISSING_VAR") is None
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        "",
+        "not-a-date",
+        "2026-13-99T77:00:00",
+        "1900-01-01T00:00:00",
+        "9999-01-01T00:00:00",
+    ],
+)
+def test_parse_iso_datetime_rejects_invalid_values(value: str | None) -> None:
+    assert _parse_iso_datetime(value) is None
 
-    def test_get_env_var_type_conversion(self):
-        """Test la conversion de type des variables d'environnement"""
-        settings = Settings()
-        settings.env_vars = {
-            "STRING_VAR": "test",
-            "INT_VAR": "42",
-            "BOOL_VAR_TRUE": "true",
-            "BOOL_VAR_FALSE": "false",
-            "FLOAT_VAR": "3.14"
-        }
-        
-        assert settings.get_env_var("STRING_VAR") == "test"
-        assert settings.get_env_var("INT_VAR", var_type=int) == 42
-        assert settings.get_env_var("BOOL_VAR_TRUE", var_type=bool) is True
-        assert settings.get_env_var("BOOL_VAR_FALSE", var_type=bool) is False
-        assert settings.get_env_var("FLOAT_VAR", var_type=float) == 3.14
 
-    def test_ollama_settings(self):
-        """Test la configuration Ollama"""
-        settings = Settings()
-        settings.env_vars = {
-            "OLLAMA_BASE_URL": "http://localhost:11434",
-            "GENERAL_MODEL": "llama3.1:8b",
-            "CODE_MODEL": "qwen2.5-coder:7b"
-        }
-        
-        assert settings.ollama_base_url == "http://localhost:11434"
-        assert settings.general_model == "llama3.1:8b"
-        assert settings.code_model == "qwen2.5-coder:7b"
+def test_previous_secret_allowed_paths() -> None:
+    allowed, reason = previous_secret_allowed(
+        previous_value="",
+        current_value="new",
+        expires_at="2026-12-01T00:00:00",
+        enforce_rotation=True,
+    )
+    assert (allowed, reason) == (False, "not_configured")
 
-    def test_pipeline_settings(self):
-        """Test la configuration de la pipeline"""
-        settings = Settings()
-        settings.env_vars = {
-            "DEFAULT_N_IDEAS": "10",
-            "FAST_MODE": "true",
-            "MAX_SOURCES": "12",
-            "REQUEST_TIMEOUT": "45"
-        }
-        
-        assert settings.default_n_ideas == 10
-        assert settings.fast_mode is True
-        assert settings.max_sources == 12
-        assert settings.request_timeout == 45
+    allowed, reason = previous_secret_allowed(
+        previous_value="same",
+        current_value="same",
+        expires_at="2026-12-01T00:00:00",
+        enforce_rotation=True,
+    )
+    assert (allowed, reason) == (False, "same_as_current")
 
-    def test_mvp_settings(self):
-        """Test la configuration MVP"""
-        settings = Settings()
-        settings.env_vars = {
-            "MVP_BUILD_COMMAND": "npm run build",
-            "MVP_TEST_COMMAND": "npm run test",
-            "MVP_INSTALL_COMMAND": "npm install",
-            "MVP_DEV_COMMAND": "npm run dev"
-        }
-        
-        assert settings.mvp_build_command == "npm run build"
-        assert settings.mvp_test_command == "npm run test"
-        assert settings.mvp_install_command == "npm install"
-        assert settings.mvp_dev_command == "npm run dev"
+    allowed, reason = previous_secret_allowed(
+        previous_value="legacy",
+        current_value="current",
+        expires_at="bad-expiry",
+        enforce_rotation=False,
+    )
+    assert (allowed, reason) == (True, "allowed_legacy")
 
-    def test_threshold_settings(self):
-        """Test la configuration des seuils"""
-        settings = Settings()
-        settings.env_vars = {
-            "SIGNAL_SOURCES_TARGET": "6",
-            "SIGNAL_PAINS_TARGET": "8",
-            "MARKET_SIGNAL_THRESHOLD": "45",
-            "SIGNAL_QUALITY_THRESHOLD": "50"
-        }
-        
-        assert settings.signal_sources_target == 6
-        assert settings.signal_pains_target == 8
-        assert settings.market_signal_threshold == 45
-        assert settings.signal_quality_threshold == 50
 
-    def test_create_directories(self, tmp_path):
-        """Test la création des répertoires"""
-        runs_dir = tmp_path / "runs"
-        data_dir = tmp_path / "data"
-        
-        settings = Settings(runs_dir=runs_dir, data_dir=data_dir)
-        settings.create_directories()
-        
-        assert runs_dir.exists()
-        assert data_dir.exists()
+def test_previous_secret_allowed_expiry_paths() -> None:
+    expired = (datetime.now(UTC) - timedelta(days=1)).replace(microsecond=0).isoformat()
+    future = (datetime.now(UTC) + timedelta(days=1)).replace(microsecond=0).isoformat()
 
-    def test_validate_settings_valid(self):
-        """Test la validation de configuration valide"""
-        settings = Settings()
-        settings.env_vars = {
-            "OLLAMA_BASE_URL": "http://localhost:11434",
-            "GENERAL_MODEL": "llama3.1:8b",
-            "DEFAULT_N_IDEAS": "10",
-            "MAX_SOURCES": "12"
-        }
-        
-        # Ne devrait pas lever d'exception
-        settings.validate_settings()
+    allowed, reason = previous_secret_allowed(
+        previous_value="prev",
+        current_value="cur",
+        expires_at=expired,
+        enforce_rotation=True,
+    )
+    assert (allowed, reason) == (False, "expired")
 
-    def test_validate_settings_missing_required(self):
-        """Test la validation avec des paramètres requis manquants"""
-        settings = Settings()
-        settings.env_vars = {}
-        
-        with pytest.raises(ValueError, match="OLLAMA_BASE_URL.*required"):
-            settings.validate_settings()
+    allowed, reason = previous_secret_allowed(
+        previous_value="prev",
+        current_value="cur",
+        expires_at=future,
+        enforce_rotation=True,
+    )
+    assert (allowed, reason) == (True, "within_grace_period")
 
-    def test_validate_settings_invalid_values(self):
-        """Test la validation avec des valeurs invalides"""
-        settings = Settings()
-        settings.env_vars = {
-            "OLLAMA_BASE_URL": "http://localhost:11434",
-            "GENERAL_MODEL": "llama3.1:8b",
-            "DEFAULT_N_IDEAS": "-1",  # Invalide
-            "MAX_SOURCES": "0"  # Invalide
-        }
-        
-        with pytest.raises(ValueError, match="DEFAULT_N_IDEAS.*positive"):
-            settings.validate_settings()
 
-    def test_to_dict(self):
-        """Test la conversion en dictionnaire"""
-        settings = Settings()
-        settings.env_vars = {"TEST_VAR": "test_value"}
-        
-        result = settings.to_dict()
-        
-        assert isinstance(result, dict)
-        assert "env_vars" in result
-        assert result["env_vars"]["TEST_VAR"] == "test_value"
+def test_mask_secret_and_redact_nested_structures() -> None:
+    assert _mask_secret("") == "***"
+    assert _mask_secret("abcde") == "***"
+    assert _mask_secret("abcdefgh") == "ab***gh"
 
-    def test_from_dict(self):
-        """Test la création depuis un dictionnaire"""
-        data = {
-            "runs_dir": "custom_runs",
-            "data_dir": "custom_data",
-            "env_vars": {"TEST_VAR": "test_value"}
-        }
-        
-        settings = Settings.from_dict(data)
-        
-        assert settings.runs_dir == Path("custom_runs")
-        assert settings.data_dir == Path("custom_data")
-        assert settings.env_vars["TEST_VAR"] == "test_value"
+    payload = {
+        "api_key": "abcdefgh1234",
+        "nested": [{"token": "secrettoken"}, ("keep", {"password": "passcode"})],
+    }
+    redacted = redact_value(payload)
+    assert redacted["api_key"].startswith("ab***")
+    assert redacted["nested"][0]["token"] == "se***en"
+    assert redacted["nested"][1][1]["password"] == "pa***de"
 
-    def test_environment_override(self):
-        """Test la priorité des variables d'environnement système"""
-        with patch.dict(os.environ, {"SYSTEM_VAR": "system_value"}):
-            settings = Settings()
-            settings.env_vars = {"SYSTEM_VAR": "local_value"}
-            
-            # La valeur système devrait avoir la priorité
-            assert settings.get_env_var("SYSTEM_VAR") == "system_value"
 
-    def test_nested_config_access(self):
-        """Test l'accès à la configuration imbriquée"""
-        settings = Settings()
-        settings.env_vars = {
-            "NESTED_CONFIG": json.dumps({"key1": "value1", "key2": {"subkey": "subvalue"}})
-        }
-        
-        nested = settings.get_env_var("NESTED_CONFIG", var_type=dict)
-        assert nested["key1"] == "value1"
-        assert nested["key2"]["subkey"] == "subvalue"
+def test_redact_value_on_strings() -> None:
+    text = "api_key=abcdef123456 and bearer abcdef123456"
+    redacted = redact_value(text)
+    assert "abcdef123456" not in redacted
+    assert "api_key=ab***56" in redacted.lower()
 
-    def test_config_file_loading(self, tmp_path):
-        """Test le chargement depuis un fichier de configuration"""
-        config_data = {
-            "ollama_base_url": "http://custom:11434",
-            "general_model": "custom_model",
-            "default_n_ideas": 15
-        }
-        
-        config_file = tmp_path / "config.json"
-        config_file.write_text(json.dumps(config_data))
-        
-        settings = Settings()
-        settings.load_from_file(config_file)
-        
-        assert settings.ollama_base_url == "http://custom:11434"
-        assert settings.general_model == "custom_model"
-        assert settings.default_n_ideas == 15
+
+def test_get_settings_validates_numeric_constraints(monkeypatch: pytest.MonkeyPatch) -> None:
+    class _BadSettings:
+        run_max_count = 0
+        run_retention_days = 30
+        kill_threshold = 55
+        mvp_build_timeout = 300
+        mvp_test_timeout = 300
+        mvp_install_timeout = 600
+        run_rate_limit_per_min = 6
+        run_rate_limit_burst = 3
+
+    monkeypatch.setattr(config_module, "Settings", _BadSettings)
+    with pytest.raises(ValueError, match="RUN_MAX_COUNT"):
+        get_settings()
+
+
+def test_validate_secrets_with_enabled_services(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LIGHTWEIGHT_MODE", "false")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "")
+    monkeypatch.setenv("AWS_REGION", "")
+
+    settings = Settings(
+        enable_publishing=True,
+        publish_dry_run=False,
+        enable_ads=True,
+        ads_dry_run=False,
+        enable_hosting=True,
+        hosting_provider="aws_apprunner",
+    )
+    result = validate_secrets(settings)
+    assert result["ok"] is False
+    enabled_checks = [c for c in result["checks"] if c["enabled"]]
+    assert enabled_checks
+    assert any(c["missing"] for c in enabled_checks)
+
+
+def test_validate_prod_mode_when_not_prod() -> None:
+    settings = Settings(prod_mode=False)
+    result = validate_prod_mode(settings)
+    assert result["ok"] is True
+    assert result["checks"][0]["name"] == "prod_mode"
+
+
+def test_validate_prod_mode_flags_missing_requirements(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LIGHTWEIGHT_MODE", "false")
+    settings = Settings(
+        prod_mode=True,
+        api_key="",
+        ui_password="",
+        enable_publishing=True,
+        publish_dry_run=True,
+        enable_ads=True,
+        ads_dry_run=True,
+        enable_deploy=True,
+        deploy_dry_run=True,
+        enable_hosting=False,
+    )
+    result = validate_prod_mode(settings)
+    assert result["ok"] is False
+    names = {c["name"] for c in result["checks"]}
+    assert "api_key_present" in names
+    assert "ui_password_present" in names
+    assert "publish_dry_run_disabled" in names
+    assert "ads_dry_run_disabled" in names
+    assert "deploy_dry_run_disabled" in names

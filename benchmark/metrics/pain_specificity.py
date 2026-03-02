@@ -2,7 +2,7 @@
 Pain Specificity Score - penalize generic pains using rule-based scoring.
 """
 
-from typing import Dict, List, Any, Set
+from typing import Any
 import re
 
 from .base import BaseMetric, MetricResult
@@ -51,7 +51,7 @@ class PainSpecificityScore(BaseMetric):
             "compliance", "security", "performance", "scalability"
         }
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute pain specificity score."""
         # Extract system pains
         system_pains = self._extract_system_pains(run_result)
@@ -106,7 +106,7 @@ class PainSpecificityScore(BaseMetric):
             }
         )
     
-    def _extract_system_pains(self, run_result: Dict[str, Any]) -> List[Dict]:
+    def _extract_system_pains(self, run_result: dict[str, Any]) -> list[dict]:
         """Extract pains from system output."""
         pains = []
         
@@ -128,7 +128,7 @@ class PainSpecificityScore(BaseMetric):
         
         return pains
     
-    def _calculate_pain_specificity(self, pain: Dict) -> tuple[float, int, int]:
+    def _calculate_pain_specificity(self, pain: dict) -> tuple[float, int, int]:
         """Calculate specificity score for a single pain."""
         problem_text = pain.get("problem", "").lower()
         actor_text = pain.get("actor", "").lower()
@@ -192,7 +192,7 @@ class PainSpecificityScore(BaseMetric):
         else:
             return 0.15
     
-    def _calculate_detail_bonus(self, pain: Dict) -> float:
+    def _calculate_detail_bonus(self, pain: dict) -> float:
         """Calculate bonus for detailed pain information."""
         bonus = 0.0
         
@@ -212,7 +212,7 @@ class PainSpecificityScore(BaseMetric):
         
         return min(0.15, bonus)
     
-    def _analyze_penalties(self, pains: List[Dict]) -> Dict[str, Any]:
+    def _analyze_penalties(self, pains: list[dict]) -> dict[str, Any]:
         """Analyze penalty patterns across all pains."""
         analysis = {
             "generic_verbs_usage": [],
@@ -256,10 +256,10 @@ class PainSpecificityScore(BaseMetric):
         
         return analysis
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["pains_structured", "pains_validated"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return []

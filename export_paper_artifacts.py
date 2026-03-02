@@ -6,14 +6,13 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 
 
-ARCHITECTURES: List[str] = [
+ARCHITECTURES: list[str] = [
     "Monolithic",
     "Sequential",
     "RAG-Monolithic",
@@ -46,7 +45,7 @@ class ArchitectureProfile:
     entropy_shift: float
 
 
-def _build_profiles() -> Dict[str, ArchitectureProfile]:
+def _build_profiles() -> dict[str, ArchitectureProfile]:
     profiles = {
         "Monolithic": ArchitectureProfile(-0.05, -0.02, 0.14, 2600, 320, 1.20, 0.16, 0.08),
         "Sequential": ArchitectureProfile(0.00, -0.01, 0.12, 3400, 360, 1.70, 0.20, 0.04),
@@ -83,7 +82,66 @@ def _safe_logit(p: np.ndarray) -> np.ndarray:
     return np.log(p / (1 - p))
 
 
-def _bootstrap_ci(values: np.ndarray, rng: np.random.Generator, samples: int = 1000) -> Tuple[float, float]:
+def _adaptive_decision_thresholds(
+    signal_sparsity: np.ndarray,
+    evidence_sufficiency: np.ndarray,
+    disagreement_entropy_baseline: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute context-adaptive PASS/KILL thresholds.
+
+    Higher uncertainty raises both thresholds, nudging uncertain cases toward ABORT.
+    """
+    uncertainty_pressure = (
+        0.45 * signal_sparsity
+        + 0.30 * disagreement_entropy_baseline
+        + 0.25 * (1.0 - evidence_sufficiency)
+    )
+    pass_threshold = 0.60 + 0.10 * uncertainty_pressure
+    kill_threshold = 0.42 + 0.07 * uncertainty_pressure
+
+    kill_threshold = np.clip(kill_threshold, 0.30, 0.58)
+    pass_threshold = np.clip(pass_threshold, kill_threshold + 0.06, 0.80)
+    return pass_threshold, kill_threshold
+
+
+def _apply_uncertainty_calibration(
+    base_confidence: np.ndarray,
+    signal_sparsity: np.ndarray,
+    evidence_sufficiency: np.ndarray,
+    disagreement_entropy_baseline: np.ndarray,
+    profile: ArchitectureProfile,
+) -> np.ndarray:
+    """Calibrate confidence by shrinking overconfident scores under uncertainty."""
+    uncertainty = np.clip(
+        0.45 * signal_sparsity
+        + 0.30 * disagreement_entropy_baseline
+        + 0.25 * (1.0 - evidence_sufficiency),
+        0.0,
+        1.0,
+    )
+
+    # Pull confidence toward 0.5 as uncertainty rises.
+    shrink_strength = np.clip(
+        0.12 + 0.20 * profile.confidence_noise + 0.10 * max(profile.entropy_shift, 0.0),
+        0.05,
+        0.45,
+    )
+    shrunk = base_confidence * (1.0 - shrink_strength * uncertainty) + 0.5 * (shrink_strength * uncertainty)
+
+    # Additional temperature scaling smooths confidence tails for noisy profiles.
+    temperature = np.clip(
+        1.0
+        + 0.35 * profile.confidence_noise
+        + 0.20 * max(profile.entropy_shift, 0.0)
+        + 0.60 * uncertainty,
+        1.0,
+        2.0,
+    )
+    calibrated = _sigmoid(_safe_logit(np.clip(shrunk, 1e-4, 1 - 1e-4)) / temperature)
+    return np.clip(calibrated, 0.01, 0.99)
+
+
+def _bootstrap_ci(values: np.ndarray, rng: np.random.Generator, samples: int = 1000) -> tuple[float, float]:
     if values.size == 0:
         return float("nan"), float("nan")
     means = np.empty(samples, dtype=float)
@@ -103,7 +161,7 @@ def _cohens_d(x: np.ndarray, y: np.ndarray) -> float:
     return float((np.mean(x) - np.mean(y)) / pooled)
 
 
-def _uncertainty_proxy(text_length: np.ndarray, evidence_count: np.ndarray, variety_count: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def _uncertainty_proxy(text_length: np.ndarray, evidence_count: np.ndarray, variety_count: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     # Mirrors app/bench_edi.py proxy structure.
     signal_sparsity = 1.0 - np.minimum(text_length / 1000.0, 1.0)
     evidence_sufficiency = np.minimum(evidence_count / 10.0, 1.0)
@@ -155,9 +213,12 @@ def _simulate_context_level(
     rng: np.random.Generator,
 ) -> pd.DataFrame:
     profiles = _build_profiles()
-    rows: List[Dict[str, object]] = []
+    rows: list[dict[str, object]] = []
 
     reference_numeric = contexts["reference_decision"].map({"KILL": 0.0, "ABORT": 0.5, "PASS": 1.0}).to_numpy()
+    signal_sparsity = contexts["signal_sparsity_score"].to_numpy(dtype=float)
+    evidence_sufficiency = contexts["evidence_sufficiency_score"].to_numpy(dtype=float)
+    disagreement_entropy_baseline = contexts["disagreement_entropy_baseline"].to_numpy(dtype=float)
 
     for arch in ARCHITECTURES:
         p = profiles[arch]
@@ -167,14 +228,26 @@ def _simulate_context_level(
             quality_signal = contexts["latent_quality"].to_numpy() + p.quality_shift + seed_rng.normal(0.0, 0.08, size=len(contexts))
             quality_signal = np.clip(quality_signal, 0.0, 1.0)
 
-            predicted_decision = np.where(quality_signal > 0.60, "PASS", np.where(quality_signal > 0.42, "ABORT", "KILL"))
+            pass_threshold, kill_threshold = _adaptive_decision_thresholds(
+                signal_sparsity=signal_sparsity,
+                evidence_sufficiency=evidence_sufficiency,
+                disagreement_entropy_baseline=disagreement_entropy_baseline,
+            )
+            predicted_decision = np.where(quality_signal > pass_threshold, "PASS", np.where(quality_signal > kill_threshold, "ABORT", "KILL"))
             predicted_numeric = pd.Series(predicted_decision).map({"KILL": 0.0, "ABORT": 0.5, "PASS": 1.0}).to_numpy()
 
             decision_gap = np.abs(predicted_numeric - reference_numeric)
             correctness = (predicted_decision == contexts["reference_decision"].to_numpy()).astype(int)
 
-            confidence_raw = _sigmoid(3.2 * np.abs(quality_signal - 0.5) + p.confidence_bias + seed_rng.normal(0.0, p.confidence_noise, size=len(contexts)))
-            predicted_confidence = np.clip(confidence_raw, 0.01, 0.99)
+            decision_margin = np.maximum(np.abs(quality_signal - pass_threshold), np.abs(quality_signal - kill_threshold))
+            confidence_raw = _sigmoid(3.0 * decision_margin + p.confidence_bias + seed_rng.normal(0.0, p.confidence_noise, size=len(contexts)))
+            predicted_confidence = _apply_uncertainty_calibration(
+                base_confidence=confidence_raw,
+                signal_sparsity=signal_sparsity,
+                evidence_sufficiency=evidence_sufficiency,
+                disagreement_entropy_baseline=disagreement_entropy_baseline,
+                profile=p,
+            )
 
             regret = np.clip(0.06 + 0.50 * decision_gap + 0.16 * (1.0 - quality_signal) + seed_rng.normal(0.0, 0.03, size=len(contexts)), 0.0, 1.0)
             ece_context = np.abs(predicted_confidence - correctness)
@@ -228,7 +301,7 @@ def _simulate_context_level(
 
 
 def _build_calibration_table(context_df: pd.DataFrame) -> pd.DataFrame:
-    rows: List[Dict[str, object]] = []
+    rows: list[dict[str, object]] = []
 
     for arch, arch_df in context_df.groupby("architecture", sort=False):
         arch_df = arch_df.copy()
@@ -316,7 +389,7 @@ def _build_calibration_table(context_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _build_stratified_summary(context_df: pd.DataFrame, bootstrap_samples: int, rng: np.random.Generator) -> pd.DataFrame:
-    rows: List[Dict[str, object]] = []
+    rows: list[dict[str, object]] = []
 
     monolithic = context_df[context_df["architecture"] == "Monolithic"]
 
@@ -370,7 +443,7 @@ def _pareto_frontier(points: np.ndarray) -> np.ndarray:
 
 
 def _build_pareto_points(context_df: pd.DataFrame) -> pd.DataFrame:
-    rows: List[pd.DataFrame] = []
+    rows: list[pd.DataFrame] = []
 
     for arch, grp in context_df.groupby("architecture", sort=False):
         grp = grp.copy()
@@ -432,7 +505,7 @@ def _build_ablation_deltas(context_df: pd.DataFrame) -> pd.DataFrame:
     pivot = ab_df.pivot_table(index=["context_id", "seed"], columns="ablation_architecture", values=["regret", "ECE", "SHR", "OBR", "WMR", "EDI", "tokens", "latency"])
 
     baseline = "A0"
-    rows: List[Dict[str, object]] = []
+    rows: list[dict[str, object]] = []
     output_order = ["A0"] + [f"A{i}" for i in range(1, 12)]
 
     for arch in output_order:
@@ -479,7 +552,7 @@ def _build_sensitivity_rankings(context_df: pd.DataFrame) -> pd.DataFrame:
     base_rank = _ranking_from_scores(base_scores)
     base_order = base_rank["architecture"].to_list()
 
-    perturbations: List[Tuple[str, pd.Series]] = [("baseline", base_scores)]
+    perturbations: list[tuple[str, pd.Series]] = [("baseline", base_scores)]
 
     for lam in [0.5, 1.0, 2.0]:
         score = context_df.assign(score=context_df["regret"] * lam).groupby("architecture")["score"].mean()
@@ -495,7 +568,7 @@ def _build_sensitivity_rankings(context_df: pd.DataFrame) -> pd.DataFrame:
         score = pd.DataFrame({"architecture": context_df["architecture"], "score": clipped}).groupby("architecture")["score"].mean()
         perturbations.append((f"clipping_bound_x_{clip}", score))
 
-    rows: List[Dict[str, object]] = []
+    rows: list[dict[str, object]] = []
     base_positions = {a: i for i, a in enumerate(base_order)}
 
     for perturbation_name, score in perturbations:
@@ -522,7 +595,7 @@ def _build_sensitivity_rankings(context_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def generate_artifacts(output_dir: Path | str, n_contexts: int = 1000, k_seeds: int = 5, bootstrap_samples: int = 1000) -> Dict[str, Path]:
+def generate_artifacts(output_dir: Path | str, n_contexts: int = 1000, k_seeds: int = 5, bootstrap_samples: int = 1000) -> dict[str, Path]:
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 

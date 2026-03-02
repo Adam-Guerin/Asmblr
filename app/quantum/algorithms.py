@@ -3,22 +3,14 @@ Quantum Computing Algorithms for Asmblr
 Advanced optimization, cryptography, and machine learning using quantum computing
 """
 
-import json
 import time
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-from scipy.optimize import minimize
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-import networkx as nx
 
 # Quantum computing imports (simulated for now)
 try:
@@ -59,12 +51,12 @@ class QuantumCircuit:
     name: str
     num_qubits: int
     depth: int
-    gates: List[Dict[str, Any]]
-    parameters: List[float]
+    gates: list[dict[str, Any]]
+    parameters: list[float]
     algorithm_type: QuantumAlgorithmType
     created_at: datetime
-    execution_time: Optional[float] = None
-    result: Optional[Dict[str, Any]] = None
+    execution_time: float | None = None
+    result: dict[str, Any] | None = None
 
 @dataclass
 class QuantumResult:
@@ -72,12 +64,12 @@ class QuantumResult:
     algorithm_id: str
     success: bool
     execution_time: float
-    measurements: Dict[str, Any]
-    probabilities: Dict[str, float]
-    classical_bits: List[int]
-    quantum_state: Optional[List[complex]] = None
-    fidelity: Optional[float] = None
-    error_rate: Optional[float] = None
+    measurements: dict[str, Any]
+    probabilities: dict[str, float]
+    classical_bits: list[int]
+    quantum_state: list[complex] | None = None
+    fidelity: float | None = None
+    error_rate: float | None = None
 
 @dataclass
 class OptimizationProblem:
@@ -85,9 +77,9 @@ class OptimizationProblem:
     id: str
     name: str
     objective_function: str
-    variables: List[str]
-    constraints: List[str]
-    bounds: List[Tuple[float, float]]
+    variables: list[str]
+    constraints: list[str]
+    bounds: list[tuple[float, float]]
     algorithm_type: QuantumAlgorithmType
     created_at: datetime
 
@@ -96,8 +88,8 @@ class QuantumOptimizer:
     
     def __init__(self, backend: QuantumBackend = QuantumBackend.SIMULATOR):
         self.backend = backend
-        self.circuits: Dict[str, QuantumCircuit] = {}
-        self.results: Dict[str, QuantumResult] = {}
+        self.circuits: dict[str, QuantumCircuit] = {}
+        self.results: dict[str, QuantumResult] = {}
         
         if QISKIT_AVAILABLE and backend == QuantumBackend.SIMULATOR:
             self.simulator = Aer.get_backend('qasm_simulator')
@@ -233,7 +225,7 @@ class QuantumOptimizer:
             logger.error(f"Error executing circuit: {e}")
             raise
     
-    def _execute_circuit_qiskit(self, circuit: QuantumCircuit, shots: int) -> Dict[str, Any]:
+    def _execute_circuit_qiskit(self, circuit: QuantumCircuit, shots: int) -> dict[str, Any]:
         """Execute circuit using Qiskit"""
         # Reconstruct Qiskit circuit
         qc = QuantumCircuit(circuit.num_qubits, circuit.num_qubits)
@@ -270,7 +262,7 @@ class QuantumOptimizer:
             "error_rate": 0.05
         }
     
-    def _execute_circuit_simulated(self, circuit: QuantumCircuit, shots: int) -> Dict[str, Any]:
+    def _execute_circuit_simulated(self, circuit: QuantumCircuit, shots: int) -> dict[str, Any]:
         """Execute circuit with simulation"""
         # Simulated quantum computation
         num_qubits = circuit.num_qubits
@@ -301,7 +293,7 @@ class QuantumOptimizer:
             "error_rate": 0.10
         }
     
-    def _extract_gates_from_circuit(self, qc) -> List[Dict[str, Any]]:
+    def _extract_gates_from_circuit(self, qc) -> list[dict[str, Any]]:
         """Extract gates from Qiskit circuit"""
         gates = []
         for instruction in qc.data:
@@ -317,8 +309,8 @@ class QuantumOptimizer:
         
         return gates
     
-    def solve_portfolio_optimization(self, assets: List[str], returns: np.ndarray, 
-                                   risk_matrix: np.ndarray, budget: int) -> Dict[str, Any]:
+    def solve_portfolio_optimization(self, assets: list[str], returns: np.ndarray, 
+                                   risk_matrix: np.ndarray, budget: int) -> dict[str, Any]:
         """Solve portfolio optimization using QAOA"""
         try:
             # Create optimization problem
@@ -370,11 +362,11 @@ class QuantumSearch:
     
     def __init__(self, backend: QuantumBackend = QuantumBackend.SIMULATOR):
         self.backend = backend
-        self.circuits: Dict[str, QuantumCircuit] = {}
-        self.results: Dict[str, QuantumResult] = {}
+        self.circuits: dict[str, QuantumCircuit] = {}
+        self.results: dict[str, QuantumResult] = {}
     
     def create_grover_circuit(self, search_space_size: int, 
-                            target_state: Optional[str] = None) -> QuantumCircuit:
+                            target_state: str | None = None) -> QuantumCircuit:
         """Create Grover's search circuit"""
         try:
             num_qubits = int(np.ceil(np.log2(search_space_size)))
@@ -388,7 +380,7 @@ class QuantumSearch:
             raise
     
     def _create_grover_circuit_qiskit(self, num_qubits: int, 
-                                    target_state: Optional[str]) -> QuantumCircuit:
+                                    target_state: str | None) -> QuantumCircuit:
         """Create Grover circuit using Qiskit"""
         # Create oracle (simplified)
         def oracle(circuit):
@@ -455,7 +447,7 @@ class QuantumSearch:
         return circuit
     
     def _create_grover_circuit_simulated(self, num_qubits: int, 
-                                        target_state: Optional[str]) -> QuantumCircuit:
+                                        target_state: str | None) -> QuantumCircuit:
         """Create simulated Grover circuit"""
         gates = []
         
@@ -524,8 +516,8 @@ class QuantumSearch:
         self.circuits[circuit.id] = circuit
         return circuit
     
-    def search_database(self, database: List[Dict[str, Any]], 
-                       search_criteria: Dict[str, Any]) -> Dict[str, Any]:
+    def search_database(self, database: list[dict[str, Any]], 
+                       search_criteria: dict[str, Any]) -> dict[str, Any]:
         """Search database using Grover's algorithm"""
         try:
             # Simulate quantum search
@@ -608,10 +600,10 @@ class QuantumMachineLearning:
     
     def __init__(self, backend: QuantumBackend = QuantumBackend.SIMULATOR):
         self.backend = backend
-        self.models: Dict[str, Any] = {}
-        self.kernels: Dict[str, Any] = {}
+        self.models: dict[str, Any] = {}
+        self.kernels: dict[str, Any] = {}
     
-    def create_quantum_kernel(self, num_qubits: int = 4) -> Dict[str, Any]:
+    def create_quantum_kernel(self, num_qubits: int = 4) -> dict[str, Any]:
         """Create quantum kernel for ML"""
         try:
             if QISKIT_AVAILABLE:
@@ -622,7 +614,7 @@ class QuantumMachineLearning:
             logger.error(f"Error creating quantum kernel: {e}")
             raise
     
-    def _create_quantum_kernel_qiskit(self, num_qubits: int) -> Dict[str, Any]:
+    def _create_quantum_kernel_qiskit(self, num_qubits: int) -> dict[str, Any]:
         """Create quantum kernel using Qiskit"""
         feature_map = TwoLocal(num_qubits, ['ry', 'rz'], 'cz', reps=2)
         quantum_kernel = QuantumKernel(feature_map=feature_map)
@@ -637,7 +629,7 @@ class QuantumMachineLearning:
             "backend": "qiskit"
         }
     
-    def _create_quantum_kernel_simulated(self, num_qubits: int) -> Dict[str, Any]:
+    def _create_quantum_kernel_simulated(self, num_qubits: int) -> dict[str, Any]:
         """Create simulated quantum kernel"""
         kernel_id = str(uuid.uuid4())
         
@@ -659,7 +651,7 @@ class QuantumMachineLearning:
         }
     
     def train_quantum_classifier(self, X: np.ndarray, y: np.ndarray, 
-                               num_qubits: int = 4) -> Dict[str, Any]:
+                               num_qubits: int = 4) -> dict[str, Any]:
         """Train quantum classifier"""
         try:
             # Create quantum kernel
@@ -732,7 +724,7 @@ class QuantumMachineLearning:
             logger.error(f"Error training quantum classifier: {e}")
             raise
     
-    def predict_quantum_classifier(self, model_id: str, X_test: np.ndarray) -> Dict[str, Any]:
+    def predict_quantum_classifier(self, model_id: str, X_test: np.ndarray) -> dict[str, Any]:
         """Make predictions with quantum classifier"""
         try:
             model = self.models.get(model_id)
@@ -773,7 +765,7 @@ class QuantumMachineLearning:
             logger.error(f"Error making predictions: {e}")
             raise
     
-    def optimize_hyperparameters(self, X: np.ndarray, y: np.ndarray) -> Dict[str, Any]:
+    def optimize_hyperparameters(self, X: np.ndarray, y: np.ndarray) -> dict[str, Any]:
         """Optimize hyperparameters using quantum algorithms"""
         try:
             # Create quantum circuit for optimization
@@ -793,7 +785,7 @@ class QuantumMachineLearning:
                 objective_function="minimize_validation_loss",
                 variables=list(param_space.keys()),
                 constraints=[],
-                bounds=[param_space[var] for var in param_space.keys()],
+                bounds=[param_space[var] for var in param_space],
                 algorithm_type=QuantumAlgorithmType.OPTIMIZATION,
                 created_at=datetime.now()
             )
@@ -821,7 +813,7 @@ class QuantumMachineLearning:
             logger.error(f"Error optimizing hyperparameters: {e}")
             raise
     
-    def _map_bitstring_to_params(self, bitstring: str, param_space: Dict[str, Tuple[float, float]]) -> Dict[str, float]:
+    def _map_bitstring_to_params(self, bitstring: str, param_space: dict[str, tuple[float, float]]) -> dict[str, float]:
         """Map bitstring to parameter values"""
         params = {}
         bits_per_param = len(bitstring) // len(param_space)
@@ -841,10 +833,10 @@ class QuantumCryptography:
     """Quantum cryptography algorithms"""
     
     def __init__(self):
-        self.keys: Dict[str, Dict[str, Any]] = {}
-        self.protocols: Dict[str, Any] = {}
+        self.keys: dict[str, dict[str, Any]] = {}
+        self.protocols: dict[str, Any] = {}
     
-    def generate_quantum_key(self, key_length: int = 256) -> Dict[str, Any]:
+    def generate_quantum_key(self, key_length: int = 256) -> dict[str, Any]:
         """Generate quantum key using quantum randomness"""
         try:
             # Generate quantum random numbers
@@ -905,7 +897,7 @@ class QuantumCryptography:
         
         return ''.join(random_bits)
     
-    def quantum_key_distribution(self, alice_id: str, bob_id: str) -> Dict[str, Any]:
+    def quantum_key_distribution(self, alice_id: str, bob_id: str) -> dict[str, Any]:
         """Simulate quantum key distribution (BB84 protocol)"""
         try:
             # Generate random basis and bits
@@ -980,23 +972,23 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/quantum", tags=["quantum"])
 
 class PortfolioOptimizationRequest(BaseModel):
-    assets: List[str]
-    returns: List[float]
-    risk_matrix: List[List[float]]
+    assets: list[str]
+    returns: list[float]
+    risk_matrix: list[list[float]]
     budget: int
 
 class SearchRequest(BaseModel):
-    database: List[Dict[str, Any]]
-    search_criteria: Dict[str, Any]
+    database: list[dict[str, Any]]
+    search_criteria: dict[str, Any]
 
 class QuantumMLRequest(BaseModel):
-    X: List[List[float]]
-    y: List[int]
+    X: list[list[float]]
+    y: list[int]
     num_qubits: int = 4
 
 class HyperparameterOptimizationRequest(BaseModel):
-    X: List[List[float]]
-    y: List[int]
+    X: list[list[float]]
+    y: list[int]
 
 @router.post("/optimize/portfolio")
 async def optimize_portfolio(request: PortfolioOptimizationRequest):
@@ -1041,7 +1033,7 @@ async def train_quantum_classifier(request: QuantumMLRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/ml/predict")
-async def predict_quantum_classifier(model_id: str, X_test: List[List[float]]):
+async def predict_quantum_classifier(model_id: str, X_test: list[list[float]]):
     """Make predictions with quantum classifier"""
     try:
         X_test_array = np.array(X_test)

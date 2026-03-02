@@ -2,7 +2,7 @@
 Confidence Calibration metric - ECE and Brier score for confidence vs correctness.
 """
 
-from typing import Dict, List, Any, Tuple
+from typing import Any
 import numpy as np
 
 from .base import BaseMetric, MetricResult
@@ -18,7 +18,7 @@ class ConfidenceCalibration(BaseMetric):
         super().__init__(config)
         self.n_bins = 10  # Number of bins for reliability diagram
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute confidence calibration metrics."""
         # Extract system confidence and decision
         system_confidence, system_decision = self._extract_system_confidence_and_decision(run_result)
@@ -77,7 +77,7 @@ class ConfidenceCalibration(BaseMetric):
             }
         )
     
-    def _extract_system_confidence_and_decision(self, run_result: Dict[str, Any]) -> Tuple[float, str]:
+    def _extract_system_confidence_and_decision(self, run_result: dict[str, Any]) -> tuple[float, str]:
         """Extract confidence and decision from system output."""
         confidence = None
         decision = None
@@ -106,7 +106,7 @@ class ConfidenceCalibration(BaseMetric):
         
         return confidence, decision
     
-    def _parse_decision_text(self, text: str) -> Tuple[str, float]:
+    def _parse_decision_text(self, text: str) -> tuple[str, float]:
         """Parse decision and confidence from markdown text."""
         text_lower = text.lower()
         
@@ -124,7 +124,7 @@ class ConfidenceCalibration(BaseMetric):
         
         return decision, confidence
     
-    def _extract_ground_truth_data(self, dataset: List[Dict]) -> List[Dict]:
+    def _extract_ground_truth_data(self, dataset: list[dict]) -> list[dict]:
         """Extract ground truth decisions and confidences from dataset."""
         data = []
         
@@ -142,7 +142,7 @@ class ConfidenceCalibration(BaseMetric):
         return data
     
     def _calculate_brier_score(self, system_confidence: float, system_decision: str,
-                             ground_truth_data: List[Dict]) -> float:
+                             ground_truth_data: list[dict]) -> float:
         """Calculate Brier score for probability calibration."""
         if not ground_truth_data:
             return 1.0  # Worst possible score
@@ -171,7 +171,7 @@ class ConfidenceCalibration(BaseMetric):
     
     def _calculate_expected_calibration_error(self, system_confidence: float, 
                                           system_decision: str,
-                                          ground_truth_data: List[Dict]) -> float:
+                                          ground_truth_data: list[dict]) -> float:
         """Calculate Expected Calibration Error (ECE)."""
         if not ground_truth_data:
             return 1.0
@@ -207,7 +207,7 @@ class ConfidenceCalibration(BaseMetric):
     
     def _create_reliability_diagram(self, system_confidence: float,
                                    system_decision: str,
-                                   ground_truth_data: List[Dict]) -> List[Dict]:
+                                   ground_truth_data: list[dict]) -> list[dict]:
         """Create reliability diagram data."""
         # For single decision case, create simplified diagram
         diagram = []
@@ -223,10 +223,10 @@ class ConfidenceCalibration(BaseMetric):
         
         return diagram
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["confidence", "decision", "data_source"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return ["decision", "confidence"]

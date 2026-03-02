@@ -3,24 +3,14 @@ Universal Creation Engine for Asmblr
 Create anything from nothing with divine creation capabilities
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -87,8 +77,8 @@ class CreationBlueprint:
     domain: CreationDomain
     complexity: CreationComplexity
     description: str
-    properties: Dict[str, Any]
-    structure: Dict[str, Any]
+    properties: dict[str, Any]
+    structure: dict[str, Any]
     energy_signature: float
     consciousness_pattern: str
     creation_method: CreationMethod
@@ -104,7 +94,7 @@ class CreationInstance:
     name: str
     domain: CreationDomain
     state: CreationState
-    properties: Dict[str, Any]
+    properties: dict[str, Any]
     energy_level: float
     consciousness_level: float
     stability: float
@@ -119,13 +109,13 @@ class CreationOperation:
     blueprint_id: str
     creator_id: str
     creation_method: CreationMethod
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     energy_invested: float
     time_invested: float
     progress: float
-    result: Optional[CreationInstance]
+    result: CreationInstance | None
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 class DivineCreationEngine:
     """Divine creation processing engine"""
@@ -316,9 +306,9 @@ class UniversalCreationSystem:
     
     def __init__(self):
         self.creation_engine = DivineCreationEngine()
-        self.blueprints: Dict[str, CreationBlueprint] = []
-        self.instances: Dict[str, CreationInstance] = {}
-        self.operations: Dict[str, CreationOperation] = []
+        self.blueprints: dict[str, CreationBlueprint] = []
+        self.instances: dict[str, CreationInstance] = {}
+        self.operations: dict[str, CreationOperation] = []
         self.creation_domains = list(CreationDomain)
         self.total_energy_available = float('inf')
         
@@ -419,8 +409,8 @@ class UniversalCreationSystem:
     async def create_blueprint(self, name: str, domain: CreationDomain,
                              complexity: CreationComplexity,
                              description: str,
-                             properties: Dict[str, Any],
-                             structure: Dict[str, Any],
+                             properties: dict[str, Any],
+                             structure: dict[str, Any],
                              creation_method: CreationMethod) -> CreationBlueprint:
         """Create new creation blueprint"""
         try:
@@ -459,7 +449,7 @@ class UniversalCreationSystem:
             raise
     
     async def execute_creation(self, blueprint_id: str, creator_id: str,
-                             parameters: Dict[str, Any] = None) -> CreationOperation:
+                             parameters: dict[str, Any] = None) -> CreationOperation:
         """Execute creation operation"""
         try:
             if parameters is None:
@@ -636,7 +626,7 @@ class UniversalCreationSystem:
                 logger.error(f"Error in infinite creation: {e}")
                 await asyncio.sleep(120)
     
-    def get_creation_status(self) -> Dict[str, Any]:
+    def get_creation_status(self) -> dict[str, Any]:
         """Get creation system status"""
         try:
             return {
@@ -668,14 +658,14 @@ class BlueprintCreationRequest(BaseModel):
     domain: str
     complexity: str
     description: str
-    properties: Dict[str, Any]
-    structure: Dict[str, Any]
+    properties: dict[str, Any]
+    structure: dict[str, Any]
     creation_method: str
 
 class CreationExecutionRequest(BaseModel):
     blueprint_id: str
     creator_id: str
-    parameters: Dict[str, Any] = {}
+    parameters: dict[str, Any] = {}
 
 class InstanceEvolutionRequest(BaseModel):
     instance_id: str

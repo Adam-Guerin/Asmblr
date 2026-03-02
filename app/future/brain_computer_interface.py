@@ -3,25 +3,15 @@ Brain-Computer Interface for Asmblr
 Direct brain-to-computer communication and neural control systems
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
 import scipy.signal as signal
-import scipy.fft as fft
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +72,7 @@ class BrainSignal:
     timestamp: datetime
     duration: float
     quality_score: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 @dataclass
 class BCICommand:
@@ -91,7 +81,7 @@ class BCICommand:
     command_type: CommandType
     intent: IntentType
     confidence: float
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     timestamp: datetime
     user_id: str
     device_id: str
@@ -101,7 +91,7 @@ class Electrode:
     """Electrode configuration"""
     id: str
     name: str
-    position: Tuple[float, float, float]  # 3D position
+    position: tuple[float, float, float]  # 3D position
     impedance: float
     signal_quality: float
     is_active: bool
@@ -114,10 +104,10 @@ class BCIUser:
     name: str
     age: int
     gender: str
-    medical_history: Dict[str, Any]
-    calibration_data: Dict[str, Any]
-    performance_metrics: Dict[str, float]
-    preferences: Dict[str, Any]
+    medical_history: dict[str, Any]
+    calibration_data: dict[str, Any]
+    performance_metrics: dict[str, float]
+    preferences: dict[str, Any]
     created_at: datetime
     last_session: datetime
 
@@ -127,9 +117,9 @@ class BCIDevice:
     id: str
     name: str
     bci_type: BCIType
-    electrodes: List[Electrode]
+    electrodes: list[Electrode]
     sampling_rate: float
-    bandwidth: Tuple[float, float]
+    bandwidth: tuple[float, float]
     noise_level: float
     is_connected: bool
     calibration_status: str
@@ -178,7 +168,7 @@ class EEGProcessor:
             logger.error(f"Error preprocessing EEG signal: {e}")
             return raw_signal
     
-    def extract_features(self, signal: np.ndarray, signal_type: SignalType) -> Dict[str, float]:
+    def extract_features(self, signal: np.ndarray, signal_type: SignalType) -> dict[str, float]:
         """Extract features from EEG signal"""
         try:
             features = {}
@@ -237,7 +227,7 @@ class EEGProcessor:
         except:
             return 0.0
     
-    def _calculate_psd(self, signal: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _calculate_psd(self, signal: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Calculate power spectral density"""
         try:
             freqs, psd = signal.welch(signal, fs=self.sampling_rate, nperseg=1024)
@@ -271,7 +261,7 @@ class MotorImageryClassifier:
         self.classifier = None
         self.reference_patterns = {}
         
-    def train_csp(self, training_data: Dict[str, np.ndarray]) -> bool:
+    def train_csp(self, training_data: dict[str, np.ndarray]) -> bool:
         """Train Common Spatial Pattern filters"""
         try:
             # Calculate covariance matrices for each class
@@ -319,7 +309,7 @@ class MotorImageryClassifier:
             logger.error(f"Error calculating covariance: {e}")
             return np.eye(self.num_channels)
     
-    def _solve_gevp(self, cov1: np.ndarray, cov2: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _solve_gevp(self, cov1: np.ndarray, cov2: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Solve generalized eigenvalue problem"""
         try:
             # Simplified eigenvalue decomposition
@@ -333,7 +323,7 @@ class MotorImageryClassifier:
             logger.error(f"Error solving GEVP: {e}")
             return np.ones(self.num_channels), np.eye(self.num_channels)
     
-    def classify_motor_imagery(self, eeg_data: np.ndarray) -> Dict[str, float]:
+    def classify_motor_imagery(self, eeg_data: np.ndarray) -> dict[str, float]:
         """Classify motor imagery from EEG data"""
         try:
             if self.csp_filters is None:
@@ -378,7 +368,7 @@ class SSVEPDetecter:
         self.target_frequencies = [6.0, 7.0, 8.0, 9.0, 10.0]  # Hz
         self.harmonics = [1, 2, 3]  # First 3 harmonics
         
-    def detect_ssvep(self, eeg_data: np.ndarray, duration: float) -> Dict[str, float]:
+    def detect_ssvep(self, eeg_data: np.ndarray, duration: float) -> dict[str, float]:
         """Detect SSVEP responses"""
         try:
             # Calculate PSD
@@ -429,7 +419,7 @@ class SSVEPDetecter:
             logger.error(f"Error detecting SSVEP: {e}")
             return {}
     
-    def classify_ssvep_command(self, snr_values: Dict[str, float], threshold: float = 3.0) -> Optional[str]:
+    def classify_ssvep_command(self, snr_values: dict[str, float], threshold: float = 3.0) -> str | None:
         """Classify SSVEP command"""
         try:
             # Find frequency with highest SNR above threshold
@@ -466,7 +456,7 @@ class P300Detector:
         self.p300_window = (0.3, 0.8)  # P300 window in seconds
         self.baseline_window = (0.0, 0.1)  # Baseline window
         
-    def detect_p300(self, eeg_data: np.ndarray, event_times: List[float]) -> Dict[str, float]:
+    def detect_p300(self, eeg_data: np.ndarray, event_times: list[float]) -> dict[str, float]:
         """Detect P300 responses"""
         try:
             p300_amplitudes = []
@@ -505,7 +495,7 @@ class P300Detector:
             logger.error(f"Error detecting P300: {e}")
             return {"mean_amplitude": 0.0, "std_amplitude": 0.0, "max_amplitude": 0.0, "num_responses": 0}
     
-    def classify_p300_target(self, p300_data: Dict[str, float], threshold: float = 2.0) -> bool:
+    def classify_p300_target(self, p300_data: dict[str, float], threshold: float = 2.0) -> bool:
         """Classify if P300 response indicates target"""
         try:
             mean_amp = p300_data.get("mean_amplitude", 0.0)
@@ -526,10 +516,10 @@ class BrainComputerInterface:
     """Main Brain-Computer Interface system"""
     
     def __init__(self):
-        self.devices: Dict[str, BCIDevice] = {}
-        self.users: Dict[str, BCIUser] = {}
-        self.signals: Dict[str, BrainSignal] = []
-        self.commands: List[BCICommand] = []
+        self.devices: dict[str, BCIDevice] = {}
+        self.users: dict[str, BCIUser] = {}
+        self.signals: dict[str, BrainSignal] = []
+        self.commands: list[BCICommand] = []
         
         # Initialize processors
         self.eeg_processor = EEGProcessor()
@@ -582,7 +572,7 @@ class BrainComputerInterface:
         except Exception as e:
             logger.error(f"Error initializing default device: {e}")
     
-    def _get_electrode_position(self, index: int) -> Tuple[float, float, float]:
+    def _get_electrode_position(self, index: int) -> tuple[float, float, float]:
         """Get 3D position for electrode (simplified 10-20 system)"""
         # Simplified electrode positioning
         # In practice, would use actual 10-20 system coordinates
@@ -593,7 +583,7 @@ class BrainComputerInterface:
         
         return (x, y, z)
     
-    async def register_user(self, user_data: Dict[str, Any]) -> BCIUser:
+    async def register_user(self, user_data: dict[str, Any]) -> BCIUser:
         """Register new BCI user"""
         try:
             user = BCIUser(
@@ -662,7 +652,7 @@ class BrainComputerInterface:
             logger.error(f"Error calibrating user: {e}")
             return False
     
-    def _generate_motor_imagery_training_data(self) -> Dict[str, np.ndarray]:
+    def _generate_motor_imagery_training_data(self) -> dict[str, np.ndarray]:
         """Generate simulated motor imagery training data"""
         try:
             # Simulate training data for left and right motor imagery
@@ -786,7 +776,7 @@ class BrainComputerInterface:
             return 0.5
     
     async def generate_command(self, user_id: str, signal: BrainSignal, 
-                              command_type: CommandType) -> Optional[BCICommand]:
+                              command_type: CommandType) -> BCICommand | None:
         """Generate BCI command from brain signal"""
         try:
             user = self.users.get(user_id)
@@ -968,7 +958,7 @@ class BrainComputerInterface:
                 logger.error(f"Error in performance monitoring: {e}")
                 await asyncio.sleep(10)
     
-    def get_user_info(self, user_id: str) -> Dict[str, Any]:
+    def get_user_info(self, user_id: str) -> dict[str, Any]:
         """Get user information"""
         try:
             user = self.users.get(user_id)
@@ -990,7 +980,7 @@ class BrainComputerInterface:
             logger.error(f"Error getting user info: {e}")
             return {"error": str(e)}
     
-    def get_device_info(self, device_id: str) -> Dict[str, Any]:
+    def get_device_info(self, device_id: str) -> dict[str, Any]:
         """Get device information"""
         try:
             device = self.devices.get(device_id)
@@ -1013,7 +1003,7 @@ class BrainComputerInterface:
             logger.error(f"Error getting device info: {e}")
             return {"error": str(e)}
     
-    def get_recent_commands(self, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_recent_commands(self, user_id: str, limit: int = 10) -> list[dict[str, Any]]:
         """Get recent commands for user"""
         try:
             user_commands = [cmd for cmd in self.commands if cmd.user_id == user_id]
@@ -1049,8 +1039,8 @@ class UserRegistrationRequest(BaseModel):
     name: str
     age: int = 25
     gender: str = "other"
-    medical_history: Dict[str, Any] = {}
-    preferences: Dict[str, Any] = {}
+    medical_history: dict[str, Any] = {}
+    preferences: dict[str, Any] = {}
 
 class CalibrationRequest(BaseModel):
     user_id: str

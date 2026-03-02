@@ -3,7 +3,6 @@ Dataset registry and loading utilities.
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional, Type
 import logging
 
 from .toy_pains import ToyPainsDataset
@@ -16,30 +15,30 @@ logger = logging.getLogger(__name__)
 class DatasetRegistry:
     """Registry for benchmark datasets."""
     
-    _datasets: Dict[str, Type] = {
+    _datasets: dict[str, type] = {
         "toy_pains_v1": ToyPainsDataset,
         "synthetic_market_v1": SyntheticMarketDataset,
         "realistic_corpus_v1": RealisticCorpusDataset
     }
     
     @classmethod
-    def register(cls, name: str, dataset_class: Type):
+    def register(cls, name: str, dataset_class: type):
         """Register a new dataset."""
         cls._datasets[name] = dataset_class
         logger.info(f"Registered dataset: {name}")
     
     @classmethod
-    def get_dataset_class(cls, name: str) -> Optional[Type]:
+    def get_dataset_class(cls, name: str) -> type | None:
         """Get dataset class by name."""
         return cls._datasets.get(name)
     
     @classmethod
-    def list_datasets(cls) -> List[str]:
+    def list_datasets(cls) -> list[str]:
         """List all registered datasets."""
         return list(cls._datasets.keys())
     
     @classmethod
-    def dataset_info(cls, name: str) -> Optional[Dict]:
+    def dataset_info(cls, name: str) -> dict | None:
         """Get information about a dataset."""
         dataset_class = cls.get_dataset_class(name)
         if dataset_class is None:
@@ -54,7 +53,7 @@ class DatasetRegistry:
         }
 
 
-def load_dataset(name: str, custom_path: Optional[str] = None) -> Optional[List[Dict]]:
+def load_dataset(name: str, custom_path: str | None = None) -> list[dict] | None:
     """Load a dataset by name."""
     dataset_class = DatasetRegistry.get_dataset_class(name)
     if dataset_class is None:
@@ -71,7 +70,6 @@ def load_dataset(name: str, custom_path: Optional[str] = None) -> Optional[List[
 
 def create_sample_dataset(output_path: str, size: int = 10):
     """Create a small sample dataset for testing."""
-    from datetime import datetime
     import json
     
     sample_data = []

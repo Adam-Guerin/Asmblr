@@ -3,24 +3,16 @@ Multiverse Navigation System for Asmblr
 Navigation between parallel universes and alternate realities
 """
 
-import json
 import time
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
 import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -67,13 +59,13 @@ class Universe:
     id: str
     name: str
     universe_type: UniverseType
-    parameters: Dict[UniverseParameter, float]
+    parameters: dict[UniverseParameter, float]
     dimensions: int
     age: float  # billions of years
     size: float  # billions of light years
     is_accessible: bool
     is_stable: bool
-    connection_points: List[str]
+    connection_points: list[str]
     created_at: datetime
     discovered_at: datetime
 
@@ -90,7 +82,7 @@ class Wormhole:
     energy_cost: float  # joules
     is_active: bool
     created_at: datetime
-    expires_at: Optional[datetime]
+    expires_at: datetime | None
 
 @dataclass
 class NavigationRoute:
@@ -98,7 +90,7 @@ class NavigationRoute:
     id: str
     start_universe: str
     end_universe: str
-    path: List[str]  # Universe IDs
+    path: list[str]  # Universe IDs
     total_distance: float  # light years
     traversal_time: float  # seconds
     energy_cost: float  # joules
@@ -112,8 +104,8 @@ class MultiverseTraveler:
     name: str
     current_universe: str
     home_universe: str
-    visited_universes: List[str]
-    travel_history: List[Dict[str, Any]]
+    visited_universes: list[str]
+    travel_history: list[dict[str, Any]]
     energy_reserves: float  # joules
     navigation_skill: float  # 0-1
     consciousness_level: float  # 0-1
@@ -125,8 +117,8 @@ class MultiverseTopology:
     
     def __init__(self):
         self.universe_graph = nx.Graph()
-        self.wormholes: Dict[str, Wormhole] = {}
-        self.universe_distances: Dict[Tuple[str, str], float] = {}
+        self.wormholes: dict[str, Wormhole] = {}
+        self.universe_distances: dict[tuple[str, str], float] = {}
         
     def add_universe(self, universe: Universe):
         """Add universe to topology"""
@@ -228,7 +220,7 @@ class MultiverseTopology:
             logger.error(f"Error creating wormhole: {e}")
             raise
     
-    def find_shortest_path(self, start_universe: str, end_universe: str) -> Optional[List[str]]:
+    def find_shortest_path(self, start_universe: str, end_universe: str) -> list[str] | None:
         """Find shortest path between universes"""
         try:
             if start_universe not in self.universe_graph or end_universe not in self.universe_graph:
@@ -243,7 +235,7 @@ class MultiverseTopology:
             logger.error(f"Error finding shortest path: {e}")
             return None
     
-    def calculate_route_metrics(self, path: List[str]) -> Dict[str, float]:
+    def calculate_route_metrics(self, path: list[str]) -> dict[str, float]:
         """Calculate route metrics"""
         try:
             if len(path) < 2:
@@ -294,9 +286,9 @@ class MultiverseNavigator:
     
     def __init__(self):
         self.topology = MultiverseTopology()
-        self.travelers: Dict[str, MultiverseTraveler] = {}
-        self.navigation_routes: Dict[str, NavigationRoute] = {}
-        self.active_travels: Dict[str, Dict[str, Any]] = {}
+        self.travelers: dict[str, MultiverseTraveler] = {}
+        self.navigation_routes: dict[str, NavigationRoute] = {}
+        self.active_travels: dict[str, dict[str, Any]] = {}
         
         # Initialize with prime universe
         self._initialize_prime_universe()
@@ -343,7 +335,7 @@ class MultiverseNavigator:
             logger.error(f"Error initializing prime universe: {e}")
     
     async def discover_universe(self, name: str, universe_type: UniverseType,
-                                parameter_variations: Dict[UniverseParameter, float]) -> Universe:
+                                parameter_variations: dict[UniverseParameter, float]) -> Universe:
         """Discover new universe"""
         try:
             # Get prime universe parameters as base
@@ -682,7 +674,7 @@ class MultiverseNavigator:
                 logger.error(f"Error in topology evolution: {e}")
                 await asyncio.sleep(60)
     
-    def get_universe_info(self, universe_id: str) -> Dict[str, Any]:
+    def get_universe_info(self, universe_id: str) -> dict[str, Any]:
         """Get universe information"""
         try:
             if universe_id not in self.topology.universe_graph.nodes:
@@ -709,7 +701,7 @@ class MultiverseNavigator:
             logger.error(f"Error getting universe info: {e}")
             return {"error": str(e)}
     
-    def list_universes(self) -> List[Dict[str, Any]]:
+    def list_universes(self) -> list[dict[str, Any]]:
         """List all universes"""
         try:
             universes = []
@@ -731,7 +723,7 @@ class MultiverseNavigator:
             logger.error(f"Error listing universes: {e}")
             return []
     
-    def get_traveler_info(self, traveler_id: str) -> Dict[str, Any]:
+    def get_traveler_info(self, traveler_id: str) -> dict[str, Any]:
         """Get traveler information"""
         try:
             traveler = self.travelers.get(traveler_id)
@@ -756,7 +748,7 @@ class MultiverseNavigator:
             logger.error(f"Error getting traveler info: {e}")
             return {"error": str(e)}
     
-    def list_travelers(self) -> List[Dict[str, Any]]:
+    def list_travelers(self) -> list[dict[str, Any]]:
         """List all travelers"""
         try:
             travelers = []
@@ -780,7 +772,7 @@ class MultiverseNavigator:
             logger.error(f"Error listing travelers: {e}")
             return []
     
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """Get multiverse navigation system status"""
         try:
             return {
@@ -817,7 +809,7 @@ router = APIRouter(prefix="/multiverse", tags=["multiverse_navigation"])
 class UniverseDiscoveryRequest(BaseModel):
     name: str
     universe_type: str
-    parameter_variations: Dict[str, float]
+    parameter_variations: dict[str, float]
 
 class WormholeCreationRequest(BaseModel):
     entrance_universe: str

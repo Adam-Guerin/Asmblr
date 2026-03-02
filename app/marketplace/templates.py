@@ -4,18 +4,14 @@ Pre-configured MVP templates with instant deployment
 """
 
 import json
-import time
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from enum import Enum
 import uuid
 import shutil
-import zipfile
-from fastapi import UploadFile, File
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -56,11 +52,11 @@ class TemplateFeature:
 @dataclass
 class TemplateTech:
     """Template technology stack"""
-    frontend: List[str]
-    backend: List[str]
-    database: List[str]
-    deployment: List[str]
-    integrations: List[str]
+    frontend: list[str]
+    backend: list[str]
+    database: list[str]
+    deployment: list[str]
+    integrations: list[str]
 
 @dataclass
 class TemplateMetrics:
@@ -83,14 +79,14 @@ class Template:
     author: str
     author_id: str
     version: str
-    tags: List[str]
-    features: List[TemplateFeature]
+    tags: list[str]
+    features: list[TemplateFeature]
     tech_stack: TemplateTech
-    screenshots: List[str]
-    demo_url: Optional[str]
-    documentation_url: Optional[str]
-    support_url: Optional[str]
-    github_url: Optional[str]
+    screenshots: list[str]
+    demo_url: str | None
+    documentation_url: str | None
+    support_url: str | None
+    github_url: str | None
     metrics: TemplateMetrics
     created_at: datetime
     updated_at: datetime
@@ -103,8 +99,8 @@ class TemplateManager:
     def __init__(self, templates_dir: str = "templates"):
         self.templates_dir = Path(templates_dir)
         self.templates_dir.mkdir(exist_ok=True)
-        self.templates: Dict[str, Template] = {}
-        self.featured_templates: List[str] = []
+        self.templates: dict[str, Template] = {}
+        self.featured_templates: list[str] = []
         
         # Load existing templates
         self._load_templates()
@@ -119,7 +115,7 @@ class TemplateManager:
                 if template_dir.is_dir():
                     metadata_file = template_dir / "template.yaml"
                     if metadata_file.exists():
-                        with open(metadata_file, 'r') as f:
+                        with open(metadata_file) as f:
                             metadata = yaml.safe_load(f)
                         
                         template = self._create_template_from_metadata(metadata)
@@ -133,7 +129,7 @@ class TemplateManager:
         except Exception as e:
             logger.error(f"Error loading templates: {e}")
     
-    def _create_template_from_metadata(self, metadata: Dict[str, Any]) -> Template:
+    def _create_template_from_metadata(self, metadata: dict[str, Any]) -> Template:
         """Create template from metadata"""
         # Convert features
         features = []
@@ -524,11 +520,11 @@ class TemplateManager:
         with open(template_dir / "template.yaml", 'w') as f:
             yaml.dump(metadata, f, default_flow_style=False)
     
-    async def get_templates(self, category: Optional[str] = None, 
-                          difficulty: Optional[str] = None,
-                          pricing: Optional[str] = None,
+    async def get_templates(self, category: str | None = None, 
+                          difficulty: str | None = None,
+                          pricing: str | None = None,
                           featured: bool = False,
-                          search: Optional[str] = None) -> List[Template]:
+                          search: str | None = None) -> list[Template]:
         """Get templates with filters"""
         templates = list(self.templates.values())
         
@@ -571,12 +567,12 @@ class TemplateManager:
         
         return templates
     
-    async def get_template(self, template_id: str) -> Optional[Template]:
+    async def get_template(self, template_id: str) -> Template | None:
         """Get specific template"""
         return self.templates.get(template_id)
     
     async def install_template(self, template_id: str, project_name: str, 
-                            user_id: str, customizations: Dict[str, Any] = None) -> Dict[str, Any]:
+                            user_id: str, customizations: dict[str, Any] = None) -> dict[str, Any]:
         """Install template for user"""
         template = await self.get_template(template_id)
         if not template:
@@ -631,7 +627,7 @@ class TemplateManager:
         self._save_template_to_disk(template)
     
     async def _generate_deployment_files(self, project_dir: Path, template: Template, 
-                                      customizations: Dict[str, Any]):
+                                      customizations: dict[str, Any]):
         """Generate deployment files"""
         # Generate Dockerfile
         dockerfile_content = self._generate_dockerfile(template)
@@ -708,7 +704,7 @@ COPY . .
 
 CMD ["./start.sh"]"""
     
-    def _generate_docker_compose(self, template: Template, customizations: Dict[str, Any]) -> str:
+    def _generate_docker_compose(self, template: Template, customizations: dict[str, Any]) -> str:
         """Generate docker-compose.yml"""
         services = {
             "app": {
@@ -738,7 +734,7 @@ volumes:
   postgres_data:
   redis_data:"""
     
-    def _generate_k8s_deployment(self, template: Template, customizations: Dict[str, Any]) -> str:
+    def _generate_k8s_deployment(self, template: Template, customizations: dict[str, Any]) -> str:
         """Generate Kubernetes deployment"""
         return f"""apiVersion: apps/v1
 kind: Deployment
@@ -785,7 +781,7 @@ spec:
     targetPort: 3000
   type: LoadBalancer"""
     
-    def _generate_readme(self, template: Template, customizations: Dict[str, Any]) -> str:
+    def _generate_readme(self, template: Template, customizations: dict[str, Any]) -> str:
         """Generate README.md"""
         return f"""# {template.name}
 
@@ -868,12 +864,12 @@ MIT License - see LICENSE file for details.
         await self._update_template_metrics(template)
         return True
     
-    async def get_featured_templates(self, limit: int = 6) -> List[Template]:
+    async def get_featured_templates(self, limit: int = 6) -> list[Template]:
         """Get featured templates"""
         featured_ids = self.featured_templates[:limit]
         return [self.templates[tid] for tid in featured_ids if tid in self.templates]
     
-    async def search_templates(self, query: str, limit: int = 20) -> List[Template]:
+    async def search_templates(self, query: str, limit: int = 20) -> list[Template]:
         """Search templates"""
         return await self.get_templates(search=query)
 
@@ -881,7 +877,7 @@ MIT License - see LICENSE file for details.
 template_manager = TemplateManager()
 
 # API endpoints
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/templates", tags=["templates"])
@@ -895,14 +891,14 @@ class TemplateResponse(BaseModel):
     pricing: str
     author: str
     version: str
-    tags: List[str]
-    features: List[Dict[str, Any]]
-    tech_stack: Dict[str, List[str]]
-    screenshots: List[str]
-    demo_url: Optional[str]
-    documentation_url: Optional[str]
-    github_url: Optional[str]
-    metrics: Dict[str, Any]
+    tags: list[str]
+    features: list[dict[str, Any]]
+    tech_stack: dict[str, list[str]]
+    screenshots: list[str]
+    demo_url: str | None
+    documentation_url: str | None
+    github_url: str | None
+    metrics: dict[str, Any]
     is_featured: bool
     is_verified: bool
 
@@ -910,19 +906,19 @@ class InstallTemplateRequest(BaseModel):
     template_id: str
     project_name: str
     user_id: str
-    customizations: Dict[str, Any] = {}
+    customizations: dict[str, Any] = {}
 
 class RateTemplateRequest(BaseModel):
     rating: int
     review: str = ""
 
-@router.get("/", response_model=List[TemplateResponse])
+@router.get("/", response_model=list[TemplateResponse])
 async def get_templates(
-    category: Optional[str] = None,
-    difficulty: Optional[str] = None,
-    pricing: Optional[str] = None,
+    category: str | None = None,
+    difficulty: str | None = None,
+    pricing: str | None = None,
     featured: bool = False,
-    search: Optional[str] = None,
+    search: str | None = None,
     limit: int = 50
 ):
     """Get templates with optional filters"""
@@ -940,7 +936,7 @@ async def get_templates(
         logger.error(f"Error getting templates: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/featured", response_model=List[TemplateResponse])
+@router.get("/featured", response_model=list[TemplateResponse])
 async def get_featured_templates(limit: int = 6):
     """Get featured templates"""
     try:

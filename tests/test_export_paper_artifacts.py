@@ -1,7 +1,14 @@
 import pandas as pd
 from pathlib import Path
 
-from export_paper_artifacts import generate_artifacts
+import numpy as np
+
+from export_paper_artifacts import (
+    ArchitectureProfile,
+    _adaptive_decision_thresholds,
+    _apply_uncertainty_calibration,
+    generate_artifacts,
+)
 
 
 EXPECTED_FILES = [
@@ -138,3 +145,51 @@ def test_architecture_coverage_and_expected_row_count(tmp_path: Path):
 
     assert set(context_metrics["architecture"].unique()) == expected_architectures
     assert len(context_metrics) == len(expected_architectures) * n_contexts * k_seeds
+
+
+def test_uncertainty_calibration_reduces_overconfidence():
+    profile = ArchitectureProfile(
+        quality_shift=0.0,
+        confidence_bias=0.0,
+        confidence_noise=0.1,
+        token_mean=1000.0,
+        token_std=100.0,
+        latency_mean=1.0,
+        latency_std=0.1,
+        entropy_shift=0.0,
+    )
+    base_conf = np.array([0.85, 0.85], dtype=float)
+    sparsity = np.array([0.10, 0.90], dtype=float)
+    evidence = np.array([0.95, 0.20], dtype=float)
+    disagreement = np.array([0.10, 0.90], dtype=float)
+
+    calibrated = _apply_uncertainty_calibration(
+        base_confidence=base_conf,
+        signal_sparsity=sparsity,
+        evidence_sufficiency=evidence,
+        disagreement_entropy_baseline=disagreement,
+        profile=profile,
+    )
+
+    # High-uncertainty sample should be less confident.
+    assert calibrated[1] < calibrated[0]
+    # Calibration should pull uncertain confidence closer to 0.5.
+    assert abs(calibrated[1] - 0.5) < abs(base_conf[1] - 0.5)
+
+
+def test_adaptive_thresholds_become_more_conservative_with_uncertainty():
+    low_pass, low_kill = _adaptive_decision_thresholds(
+        signal_sparsity=np.array([0.10], dtype=float),
+        evidence_sufficiency=np.array([0.95], dtype=float),
+        disagreement_entropy_baseline=np.array([0.10], dtype=float),
+    )
+    high_pass, high_kill = _adaptive_decision_thresholds(
+        signal_sparsity=np.array([0.90], dtype=float),
+        evidence_sufficiency=np.array([0.20], dtype=float),
+        disagreement_entropy_baseline=np.array([0.90], dtype=float),
+    )
+
+    assert float(high_pass[0]) > float(low_pass[0])
+    assert float(high_kill[0]) > float(low_kill[0])
+    assert float(low_pass[0]) > float(low_kill[0])
+    assert float(high_pass[0]) > float(high_kill[0])

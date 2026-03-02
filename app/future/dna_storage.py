@@ -3,25 +3,16 @@ DNA-based Storage Systems for Asmblr
 Biological data storage using synthetic DNA sequences
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
 import hashlib
-import base64
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio import SeqIO
-from Bio.Alphabet import generic_dna
 import zlib
-import pickle
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +62,9 @@ class DNASequence:
     melting_temperature: float
     secondary_structure: str
     error_correction: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     created_at: datetime
-    expires_at: Optional[datetime]
+    expires_at: datetime | None
 
 @dataclass
 class StorageBlock:
@@ -84,7 +75,7 @@ class StorageBlock:
     encoding_scheme: EncodingScheme
     compression_type: CompressionType
     error_correction: ErrorCorrection
-    dna_sequences: List[DNASequence]
+    dna_sequences: list[DNASequence]
     redundancy_factor: int
     checksum: str
     created_at: datetime
@@ -110,13 +101,9 @@ class DNAEncoder:
         self.encoding_scheme = encoding_scheme
         self.dna_map = self._initialize_dna_map()
         
-    def _initialize_dna_map(self) -> Dict[str, str]:
+    def _initialize_dna_map(self) -> dict[str, str]:
         """Initialize DNA mapping based on encoding scheme"""
-        if self.encoding_scheme == EncodingScheme.DNA_BASE64:
-            return {
-                'A': '00', 'C': '01', 'G': '10', 'T': '11'
-            }
-        elif self.encoding_scheme == EncodingScheme.QUATERNARY:
+        if self.encoding_scheme == EncodingScheme.DNA_BASE64 or self.encoding_scheme == EncodingScheme.QUATERNARY:
             return {
                 'A': '00', 'C': '01', 'G': '10', 'T': '11'
             }
@@ -418,8 +405,8 @@ class DNAStorageManager:
     """DNA-based storage management system"""
     
     def __init__(self):
-        self.storage_blocks: Dict[str, StorageBlock] = {}
-        self.dna_sequences: Dict[str, DNASequence] = {}
+        self.storage_blocks: dict[str, StorageBlock] = {}
+        self.dna_sequences: dict[str, DNASequence] = {}
         self.encoding_schemes = {
             EncodingScheme.DNA_BASE64: DNAEncoder(EncodingScheme.DNA_BASE64),
             EncodingScheme.QUATERNARY: DNAEncoder(EncodingScheme.QUATERNARY),
@@ -453,9 +440,7 @@ class DNAStorageManager:
             # Compress data if requested
             if compression_type == CompressionType.ZLIB:
                 compressed_data = zlib.compress(data)
-            elif compression_type == CompressionType.GZIP:
-                compressed_data = zlib.compress(data)  # Simplified
-            elif compression_type == CompressionType.LZMA:
+            elif compression_type == CompressionType.GZIP or compression_type == CompressionType.LZMA:
                 compressed_data = zlib.compress(data)  # Simplified
             else:
                 compressed_data = data
@@ -570,11 +555,7 @@ class DNAStorageManager:
                 raise ValueError("Failed to decode any DNA sequences")
             
             # Decompress if needed
-            if block.compression_type == CompressionType.ZLIB:
-                retrieved_data = zlib.decompress(decoded_data)
-            elif block.compression_type == CompressionType.GZIP:
-                retrieved_data = zlib.decompress(decoded_data)
-            elif block.compression_type == CompressionType.LZMA:
+            if block.compression_type == CompressionType.ZLIB or block.compression_type == CompressionType.GZIP or block.compression_type == CompressionType.LZMA:
                 retrieved_data = zlib.decompress(decoded_data)
             else:
                 retrieved_data = decoded_data
@@ -707,7 +688,7 @@ class DNAStorageManager:
                 logger.error(f"Error in error correction monitoring: {e}")
                 await asyncio.sleep(300)
     
-    def get_storage_info(self, block_id: str) -> Dict[str, Any]:
+    def get_storage_info(self, block_id: str) -> dict[str, Any]:
         """Get storage block information"""
         try:
             block = self.storage_blocks.get(block_id)
@@ -733,7 +714,7 @@ class DNAStorageManager:
             logger.error(f"Error getting storage info: {e}")
             return {"error": str(e)}
     
-    def list_storage_blocks(self) -> List[Dict[str, Any]]:
+    def list_storage_blocks(self) -> list[dict[str, Any]]:
         """List all storage blocks"""
         try:
             blocks = []
@@ -755,7 +736,7 @@ class DNAStorageManager:
             logger.error(f"Error listing storage blocks: {e}")
             return []
     
-    def get_dna_sequence_info(self, sequence_id: str) -> Dict[str, Any]:
+    def get_dna_sequence_info(self, sequence_id: str) -> dict[str, Any]:
         """Get DNA sequence information"""
         try:
             dna_seq = self.dna_sequences.get(sequence_id)
@@ -780,16 +761,14 @@ class DNAStorageManager:
             return {"error": str(e)}
     
     def calculate_storage_cost(self, data_size: int, encoding_scheme: EncodingScheme,
-                              redundancy_factor: int = 3) -> Dict[str, Any]:
+                              redundancy_factor: int = 3) -> dict[str, Any]:
         """Calculate storage cost"""
         try:
             # Estimate DNA synthesis cost
             cost_per_nucleotide = 0.10  # $0.10 per nucleotide
             
             # Estimate sequence length based on encoding scheme
-            if encoding_scheme == EncodingScheme.DNA_BASE64:
-                nucleotides_per_byte = 4
-            elif encoding_scheme == EncodingScheme.QUATERNARY:
+            if encoding_scheme == EncodingScheme.DNA_BASE64 or encoding_scheme == EncodingScheme.QUATERNARY:
                 nucleotides_per_byte = 4
             elif encoding_scheme == EncodingScheme.HEDGES:
                 nucleotides_per_byte = 2

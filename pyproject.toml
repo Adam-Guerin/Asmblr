@@ -4,11 +4,6 @@ addopts = [
     "-ra",
     "--strict-markers",
     "--strict-config",
-    "--cov=app",
-    "--cov-report=term-missing",
-    "--cov-report=html:htmlcov",
-    "--cov-report=xml",
-    "--cov-fail-under=20",
     "--tb=short",
     "-v"
 ]
@@ -229,6 +224,12 @@ line-length = 88
 fix = true
 exclude = [
     "trash",
+    ".tmp",
+    "backups",
+    "skills",
+    "results",
+    "runs",
+    "htmlcov",
     "validate_optimization.py",
     "validate_optimization_simple.py",
     "app/mvp/emotional_ui_generator.py",

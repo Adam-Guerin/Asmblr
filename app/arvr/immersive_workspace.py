@@ -3,19 +3,14 @@ AR/VR Immersive Workspace for Asmblr
 Virtual reality collaboration, 3D visualization, and spatial computing
 """
 
-import json
-import time
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
 from scipy.spatial.transform import Rotation
-import websockets
 from fastapi import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
@@ -85,7 +80,7 @@ class Quaternion:
     z: float
     w: float
     
-    def to_euler(self) -> Tuple[float, float, float]:
+    def to_euler(self) -> tuple[float, float, float]:
         """Convert to Euler angles"""
         rotation = Rotation([self.x, self.y, self.z, self.w])
         return rotation.as_euler('xyz')
@@ -142,9 +137,9 @@ class VRUser:
     is_active: bool
     joined_at: datetime
     last_seen: datetime
-    hand_positions: Dict[str, Vector3]  # left, right
+    hand_positions: dict[str, Vector3]  # left, right
     gaze_direction: Vector3
-    voice_channel: Optional[str] = None
+    voice_channel: str | None = None
 
 @dataclass
 class VirtualObject:
@@ -153,7 +148,7 @@ class VirtualObject:
     name: str
     object_type: str
     transform: Transform
-    properties: Dict[str, Any]
+    properties: dict[str, Any]
     interactive: bool
     physics_enabled: bool
     created_by: str
@@ -168,21 +163,21 @@ class ARWorkspace:
     workspace_type: WorkspaceType
     description: str
     max_users: int
-    current_users: List[VRUser]
-    objects: List[VirtualObject]
-    environment: Dict[str, Any]
+    current_users: list[VRUser]
+    objects: list[VirtualObject]
+    environment: dict[str, Any]
     is_public: bool
     created_by: str
     created_at: datetime
-    settings: Dict[str, Any]
+    settings: dict[str, Any]
 
 class ARVRManager:
     """AR/VR workspace manager"""
     
     def __init__(self):
-        self.workspaces: Dict[str, ARWorkspace] = {}
-        self.active_connections: Dict[str, WebSocket] = {}
-        self.user_workspaces: Dict[str, Set[str]] = {}
+        self.workspaces: dict[str, ARWorkspace] = {}
+        self.active_connections: dict[str, WebSocket] = {}
+        self.user_workspaces: dict[str, Set[str]] = {}
         self.spatial_audio_manager = SpatialAudioManager()
         self.physics_engine = PhysicsEngine()
         self.gesture_recognizer = GestureRecognizer()
@@ -446,7 +441,7 @@ class ARVRManager:
             logger.error(f"Error adding default objects: {e}")
     
     async def join_workspace(self, user_id: str, workspace_id: str, 
-                          websocket: WebSocket, user_info: Dict[str, Any]) -> bool:
+                          websocket: WebSocket, user_info: dict[str, Any]) -> bool:
         """Join AR/VR workspace"""
         try:
             workspace = self.workspaces.get(workspace_id)
@@ -534,7 +529,7 @@ class ARVRManager:
             logger.error(f"Error leaving workspace: {e}")
     
     async def update_user_transform(self, user_id: str, workspace_id: str, 
-                                  transform_data: Dict[str, Any]) -> bool:
+                                  transform_data: dict[str, Any]) -> bool:
         """Update user transform in workspace"""
         try:
             workspace = self.workspaces.get(workspace_id)
@@ -610,7 +605,7 @@ class ARVRManager:
     
     async def interact_with_object(self, user_id: str, workspace_id: str,
                                  object_id: str, interaction_type: str,
-                                 interaction_data: Dict[str, Any]) -> bool:
+                                 interaction_data: dict[str, Any]) -> bool:
         """Handle object interaction"""
         try:
             workspace = self.workspaces.get(workspace_id)
@@ -642,7 +637,7 @@ class ARVRManager:
             return False
     
     async def _process_object_interaction(self, obj: VirtualObject, user_id: str,
-                                         interaction_type: str, interaction_data: Dict[str, Any]) -> Dict[str, Any]:
+                                         interaction_type: str, interaction_data: dict[str, Any]) -> dict[str, Any]:
         """Process specific object interaction"""
         try:
             result = {"success": True, "message": "Interaction processed"}
@@ -680,7 +675,7 @@ class ARVRManager:
                 result.update({
                     "action": "control_pressed",
                     "button": button,
-                    "value": interaction_data.get("value", None)
+                    "value": interaction_data.get("value")
                 })
             
             # Update object last modified
@@ -693,7 +688,7 @@ class ARVRManager:
             return {"success": False, "error": str(e)}
     
     async def add_virtual_object(self, user_id: str, workspace_id: str,
-                               object_data: Dict[str, Any]) -> Optional[str]:
+                               object_data: dict[str, Any]) -> str | None:
         """Add virtual object to workspace"""
         try:
             workspace = self.workspaces.get(workspace_id)
@@ -775,7 +770,7 @@ class ARVRManager:
             logger.error(f"Error sending workspace state: {e}")
     
     async def _broadcast_user_event(self, workspace_id: str, event_type: str,
-                                  data: Dict[str, Any], exclude_user: str = None):
+                                  data: dict[str, Any], exclude_user: str = None):
         """Broadcast user event to workspace"""
         try:
             workspace = self.workspaces.get(workspace_id)
@@ -803,7 +798,7 @@ class ARVRManager:
             logger.error(f"Error broadcasting user event: {e}")
     
     async def _broadcast_object_event(self, workspace_id: str, event_type: str,
-                                   data: Dict[str, Any]):
+                                   data: dict[str, Any]):
         """Broadcast object event to workspace"""
         try:
             workspace = self.workspaces.get(workspace_id)
@@ -833,8 +828,8 @@ class SpatialAudioManager:
     """Spatial audio management for VR"""
     
     def __init__(self):
-        self.rooms: Dict[str, Dict[str, Any]] = {}
-        self.user_positions: Dict[str, Vector3] = {}
+        self.rooms: dict[str, dict[str, Any]] = {}
+        self.user_positions: dict[str, Vector3] = {}
     
     async def add_user_to_room(self, user_id: str, room_id: str, position: Vector3):
         """Add user to spatial audio room"""
@@ -856,7 +851,7 @@ class SpatialAudioManager:
         """Update user position for spatial audio"""
         self.user_positions[user_id] = position
     
-    async def calculate_audio_mix(self, room_id: str, user_id: str) -> Dict[str, float]:
+    async def calculate_audio_mix(self, room_id: str, user_id: str) -> dict[str, float]:
         """Calculate spatial audio mix for user"""
         if room_id not in self.rooms or user_id not in self.user_positions:
             return {}
@@ -894,7 +889,7 @@ class PhysicsEngine:
     
     def __init__(self):
         self.gravity = Vector3(0, -9.81, 0)
-        self.objects: Dict[str, Dict[str, Any]] = {}
+        self.objects: dict[str, dict[str, Any]] = {}
     
     async def add_object(self, object_id: str, transform: Transform, 
                         physics_enabled: bool = True):
@@ -931,7 +926,7 @@ class PhysicsEngine:
                 obj["transform"].position.y = 0
                 obj["velocity"].y = -obj["velocity"].y * 0.5  # Bounce with damping
     
-    async def check_collisions(self) -> List[Tuple[str, str]]:
+    async def check_collisions(self) -> list[tuple[str, str]]:
         """Check for collisions between objects"""
         collisions = []
         object_ids = list(self.objects.keys())
@@ -946,7 +941,7 @@ class PhysicsEngine:
         
         return collisions
     
-    def _check_collision(self, obj1: Dict[str, Any], obj2: Dict[str, Any]) -> bool:
+    def _check_collision(self, obj1: dict[str, Any], obj2: dict[str, Any]) -> bool:
         """Check collision between two objects"""
         # Simple AABB collision detection
         pos1 = obj1["transform"].position
@@ -970,8 +965,8 @@ class GestureRecognizer:
             "pinch": self._recognize_pinch
         }
     
-    async def recognize_gesture(self, hand_positions: Dict[str, Vector3],
-                              hand_rotations: Dict[str, Quaternion]) -> Optional[str]:
+    async def recognize_gesture(self, hand_positions: dict[str, Vector3],
+                              hand_rotations: dict[str, Quaternion]) -> str | None:
         """Recognize hand gesture"""
         try:
             for gesture_name, recognizer in self.gestures.items():
@@ -984,31 +979,31 @@ class GestureRecognizer:
             logger.error(f"Error recognizing gesture: {e}")
             return None
     
-    async def _recognize_point(self, hand_positions: Dict[str, Vector3],
-                            hand_rotations: Dict[str, Quaternion]) -> bool:
+    async def _recognize_point(self, hand_positions: dict[str, Vector3],
+                            hand_rotations: dict[str, Quaternion]) -> bool:
         """Recognize pointing gesture"""
         # Simplified: check if index finger is extended
         # In real implementation, would use detailed hand tracking data
         return True
     
-    async def _recognize_grab(self, hand_positions: Dict[str, Vector3],
-                            hand_rotations: Dict[str, Quaternion]) -> bool:
+    async def _recognize_grab(self, hand_positions: dict[str, Vector3],
+                            hand_rotations: dict[str, Quaternion]) -> bool:
         """Recognize grab gesture"""
         # Simplified: check if hand is closed
         return False
     
-    async def _recognize_thumbs_up(self, hand_positions: Dict[str, Vector3],
-                                 hand_rotations: Dict[str, Quaternion]) -> bool:
+    async def _recognize_thumbs_up(self, hand_positions: dict[str, Vector3],
+                                 hand_rotations: dict[str, Quaternion]) -> bool:
         """Recognize thumbs up gesture"""
         return False
     
-    async def _recognize_wave(self, hand_positions: Dict[str, Vector3],
-                            hand_rotations: Dict[str, Quaternion]) -> bool:
+    async def _recognize_wave(self, hand_positions: dict[str, Vector3],
+                            hand_rotations: dict[str, Quaternion]) -> bool:
         """Recognize wave gesture"""
         return False
     
-    async def _recognize_pinch(self, hand_positions: Dict[str, Vector3],
-                             hand_rotations: Dict[str, Quaternion]) -> bool:
+    async def _recognize_pinch(self, hand_positions: dict[str, Vector3],
+                             hand_rotations: dict[str, Quaternion]) -> bool:
         """Recognize pinch gesture"""
         return False
 
@@ -1032,24 +1027,24 @@ class WorkspaceRequest(BaseModel):
 class JoinWorkspaceRequest(BaseModel):
     user_id: str
     workspace_id: str
-    user_info: Dict[str, Any]
+    user_info: dict[str, Any]
 
 class TransformUpdateRequest(BaseModel):
     user_id: str
     workspace_id: str
-    transform: Dict[str, Any]
+    transform: dict[str, Any]
 
 class ObjectInteractionRequest(BaseModel):
     user_id: str
     workspace_id: str
     object_id: str
     interaction_type: str
-    interaction_data: Dict[str, Any]
+    interaction_data: dict[str, Any]
 
 class AddObjectRequest(BaseModel):
     user_id: str
     workspace_id: str
-    object_data: Dict[str, Any]
+    object_data: dict[str, Any]
 
 @router.post("/workspaces")
 async def create_workspace(request: WorkspaceRequest):

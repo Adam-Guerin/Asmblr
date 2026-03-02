@@ -3,7 +3,7 @@ Random baseline - generates random decisions and dummy outputs.
 """
 
 import random
-from typing import Dict, List, Any
+from typing import Any
 
 from .base import BaseBaseline
 
@@ -13,7 +13,7 @@ class RandomBaseline(BaseBaseline):
     
     deterministic = False
     
-    def process_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def process_item(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process a single dataset item with random outputs."""
         topic = item.get("topic", "Unknown Topic")
         documents = item.get("documents", [])
@@ -42,7 +42,7 @@ class RandomBaseline(BaseBaseline):
             "success": True  # Always succeeds in processing
         }
     
-    def _generate_random_pains(self, topic: str, documents: List[Dict]) -> List[Dict]:
+    def _generate_random_pains(self, topic: str, documents: list[dict]) -> list[dict]:
         """Generate random pain points."""
         num_pains = random.randint(1, 3)
         pains = []
@@ -68,7 +68,7 @@ class RandomBaseline(BaseBaseline):
         
         return pains
     
-    def _generate_random_opportunities(self, topic: str, pains: List[Dict]) -> List[Dict]:
+    def _generate_random_opportunities(self, topic: str, pains: list[dict]) -> list[dict]:
         """Generate random opportunities."""
         num_opportunities = random.randint(1, 2)
         opportunities = []
@@ -95,7 +95,7 @@ class RandomBaseline(BaseBaseline):
         
         return opportunities
     
-    def _generate_random_competitors(self, topic: str) -> List[Dict]:
+    def _generate_random_competitors(self, topic: str) -> list[dict]:
         """Generate random competitors."""
         num_competitors = random.randint(2, 4)
         competitors = []

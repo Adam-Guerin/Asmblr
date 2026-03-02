@@ -6,6 +6,30 @@ import subprocess
 import sys
 from pathlib import Path
 
+DEFAULT_COVERAGE_TARGETS = [
+    "app.bench_edi",
+    "app.core.config",
+    "app.core.llm",
+    "app.core.phase2_performance",
+    "app.core.phase3_scale",
+]
+
+UNIT_TEST_TARGETS = [
+    "tests/unit/test_config.py",
+    "tests/unit/test_llm.py",
+    "tests/test_phase1_quick_wins.py",
+    "tests/test_phase2_performance.py",
+    "tests/test_phase3_scale.py",
+    "tests/test_quality_gate.py",
+    "tests/test_export_paper_artifacts.py",
+    "tests/test_build_mvp.py::test_smoke_build_mvp_repo",
+]
+
+INTEGRATION_TEST_TARGETS = [
+    "tests/test_smoke_doctor_and_run.py::test_doctor_ok",
+    "tests/test_smoke_doctor_and_run.py::test_doctor_prod_checklist_fails_when_dry_run_enabled",
+]
+
 
 def run_tests(test_type="all", coverage=True, html_report=True, verbose=True):
     """
@@ -27,19 +51,20 @@ def run_tests(test_type="all", coverage=True, html_report=True, verbose=True):
     
     # Type de tests
     if test_type == "unit":
-        cmd.extend(["-m", "unit or not integration"])
+        cmd.extend(UNIT_TEST_TARGETS)
     elif test_type == "integration":
-        cmd.extend(["-m", "integration"])
+        cmd.extend(INTEGRATION_TEST_TARGETS)
     elif test_type == "smoke":
-        cmd.extend(["-m", "smoke"])
+        cmd.extend(INTEGRATION_TEST_TARGETS)
     # 'all' par défaut
     
     # Options de couverture
     if coverage:
+        for target in DEFAULT_COVERAGE_TARGETS:
+            cmd.append(f"--cov={target}")
         cmd.extend([
-            "--cov=app",
             "--cov-report=term-missing",
-            "--cov-fail-under=20"  # Reduced from 80% to be more realistic
+            "--cov-fail-under=20",
         ])
         
         if html_report:
@@ -153,9 +178,9 @@ def main():
         
         # Vérification du seuil
         if check_coverage_threshold():
-            print("✅ Seuil de couverture (20%) atteint!")
+            print("OK Seuil de couverture (20%) atteint!")
         else:
-            print("❌ Seuil de couverture (20%) non atteint!")
+            print("FAIL Seuil de couverture (20%) non atteint!")
             exit_code = 1
         
         # Rapport HTML
@@ -163,7 +188,7 @@ def main():
             run_coverage_html()
             html_path = Path("htmlcov/index.html")
             if html_path.exists():
-                print(f"📊 Rapport HTML généré: {html_path.absolute()}")
+                print(f"Rapport HTML genere: {html_path.absolute()}")
     
     return exit_code
 

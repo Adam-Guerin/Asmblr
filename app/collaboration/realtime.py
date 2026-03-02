@@ -4,22 +4,17 @@ Multi-user workspaces with live editing, chat, and project management
 """
 
 import json
-import time
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Set
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 from collections import defaultdict
-import websockets
 from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 import redis.asyncio as redis
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +45,10 @@ class User:
     id: str
     name: str
     email: str
-    avatar_url: Optional[str]
+    avatar_url: str | None
     role: UserRole
-    cursor_position: Optional[Dict[str, Any]] = None
-    selection: Optional[Dict[str, Any]] = None
+    cursor_position: dict[str, Any] | None = None
+    selection: dict[str, Any] | None = None
     last_seen: datetime = datetime.now()
     is_online: bool = True
 
@@ -67,8 +62,8 @@ class Workspace:
     project_id: str
     created_at: datetime
     updated_at: datetime
-    settings: Dict[str, Any]
-    members: List[User]
+    settings: dict[str, Any]
+    members: list[User]
     is_active: bool = True
 
 @dataclass
@@ -79,8 +74,8 @@ class CollaborationEvent:
     user_id: str
     workspace_id: str
     timestamp: datetime
-    data: Dict[str, Any]
-    metadata: Dict[str, Any]
+    data: dict[str, Any]
+    metadata: dict[str, Any]
 
 class RealtimeCollaborationManager:
     """Real-time collaboration manager"""
@@ -88,10 +83,10 @@ class RealtimeCollaborationManager:
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         self.redis_url = redis_url
         self.redis_client = None
-        self.workspaces: Dict[str, Workspace] = {}
-        self.active_connections: Dict[str, WebSocket] = {}
-        self.user_workspaces: Dict[str, Set[str]] = defaultdict(set)
-        self.event_handlers: Dict[CollaborationEventType, callable] = {}
+        self.workspaces: dict[str, Workspace] = {}
+        self.active_connections: dict[str, WebSocket] = {}
+        self.user_workspaces: dict[str, set[str]] = defaultdict(set)
+        self.event_handlers: dict[CollaborationEventType, callable] = {}
         
         # Initialize event handlers
         self._initialize_event_handlers()
@@ -118,7 +113,7 @@ class RealtimeCollaborationManager:
         }
     
     async def create_workspace(self, name: str, description: str, owner_id: str, 
-                            project_id: str, settings: Dict[str, Any] = None) -> Workspace:
+                            project_id: str, settings: dict[str, Any] = None) -> Workspace:
         """Create a new collaboration workspace"""
         workspace_id = str(uuid.uuid4())
         
@@ -153,7 +148,7 @@ class RealtimeCollaborationManager:
         return workspace
     
     async def join_workspace(self, user_id: str, workspace_id: str, 
-                          websocket: WebSocket, user_info: Dict[str, Any]) -> bool:
+                          websocket: WebSocket, user_info: dict[str, Any]) -> bool:
         """Join a workspace"""
         try:
             # Get workspace
@@ -239,7 +234,7 @@ class RealtimeCollaborationManager:
         except Exception as e:
             logger.error(f"Error leaving workspace: {e}")
     
-    async def handle_websocket_message(self, user_id: str, message: Dict[str, Any]):
+    async def handle_websocket_message(self, user_id: str, message: dict[str, Any]):
         """Handle WebSocket message"""
         try:
             event_type = CollaborationEventType(message.get("type"))
@@ -430,13 +425,13 @@ class RealtimeCollaborationManager:
             await self._store_workspace(workspace)
     
     async def _broadcast_event(self, event_type: CollaborationEventType, user_id: str, 
-                              workspace_id: str, data: Dict[str, Any]):
+                              workspace_id: str, data: dict[str, Any]):
         """Broadcast event to all users in workspace"""
         await self._broadcast_event_to_workspace(event_type, user_id, workspace_id, data)
     
     async def _broadcast_event_to_workspace(self, event_type: CollaborationEventType, 
                                           user_id: str, workspace_id: str, 
-                                          data: Dict[str, Any], exclude_user: str = None):
+                                          data: dict[str, Any], exclude_user: str = None):
         """Broadcast event to workspace users"""
         workspace = await self._get_workspace(workspace_id)
         if not workspace:
@@ -490,7 +485,7 @@ class RealtimeCollaborationManager:
         except Exception as e:
             logger.error(f"Error sending workspace state: {e}")
     
-    async def _get_workspace(self, workspace_id: str) -> Optional[Workspace]:
+    async def _get_workspace(self, workspace_id: str) -> Workspace | None:
         """Get workspace from cache or Redis"""
         if workspace_id in self.workspaces:
             return self.workspaces[workspace_id]
@@ -518,12 +513,12 @@ class RealtimeCollaborationManager:
             ex=86400  # 24 hours
         )
     
-    async def get_workspace_members(self, workspace_id: str) -> List[User]:
+    async def get_workspace_members(self, workspace_id: str) -> list[User]:
         """Get workspace members"""
         workspace = await self._get_workspace(workspace_id)
         return workspace.members if workspace else []
     
-    async def add_workspace_member(self, workspace_id: str, user_info: Dict[str, Any], 
+    async def add_workspace_member(self, workspace_id: str, user_info: dict[str, Any], 
                                  role: UserRole = UserRole.VIEWER) -> bool:
         """Add member to workspace"""
         workspace = await self._get_workspace(workspace_id)
@@ -589,7 +584,7 @@ class RealtimeCollaborationManager:
         
         return True
     
-    async def get_user_workspaces(self, user_id: str) -> List[Workspace]:
+    async def get_user_workspaces(self, user_id: str) -> list[Workspace]:
         """Get all workspaces for a user"""
         user_workspaces = []
         for workspace_id in self.user_workspaces[user_id]:
@@ -635,8 +630,7 @@ class RealtimeCollaborationManager:
 collaboration_manager = RealtimeCollaborationManager()
 
 # WebSocket endpoint
-from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect
-from app.core.database import get_async_db
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
 router = APIRouter(prefix="/collaboration", tags=["collaboration"])
 
@@ -685,7 +679,7 @@ async def create_workspace(
     description: str,
     owner_id: str,
     project_id: str,
-    settings: Dict[str, Any] = None
+    settings: dict[str, Any] = None
 ):
     """Create a new workspace"""
     try:
@@ -725,7 +719,7 @@ async def get_workspace_members(workspace_id: str):
 @router.post("/workspaces/{workspace_id}/members")
 async def add_workspace_member(
     workspace_id: str,
-    user_info: Dict[str, Any],
+    user_info: dict[str, Any],
     role: str = "viewer"
 ):
     """Add member to workspace"""

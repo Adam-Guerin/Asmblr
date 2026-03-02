@@ -7,7 +7,6 @@ Executes the complete validation pipeline with proper error handling and progres
 import asyncio
 import logging
 import sys
-import os
 from pathlib import Path
 import json
 import time

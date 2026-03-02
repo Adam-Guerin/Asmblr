@@ -2,10 +2,10 @@
 Idea Novelty metric - embedding-based novelty proxy using TF-IDF fallback.
 """
 
-from typing import Dict, List, Any, Set
+from typing import Any
 import math
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 
 from .base import BaseMetric, MetricResult
 
@@ -20,7 +20,7 @@ class IdeaNovelty(BaseMetric):
         super().__init__(config)
         self.corpus = self._load_known_ideas_corpus()
     
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute idea novelty metrics."""
         # Extract system ideas
         system_ideas = self._extract_system_ideas(run_result)
@@ -71,7 +71,7 @@ class IdeaNovelty(BaseMetric):
             }
         )
     
-    def _extract_system_ideas(self, run_result: Dict[str, Any]) -> List[Dict]:
+    def _extract_system_ideas(self, run_result: dict[str, Any]) -> list[dict]:
         """Extract ideas from system output."""
         ideas = []
         
@@ -97,7 +97,7 @@ class IdeaNovelty(BaseMetric):
         
         return normalized_ideas
     
-    def _normalize_idea(self, idea: Any) -> Optional[Dict]:
+    def _normalize_idea(self, idea: Any) -> Optional[dict]:
         """Normalize idea to standard format."""
         if isinstance(idea, dict):
             return {
@@ -117,7 +117,7 @@ class IdeaNovelty(BaseMetric):
             }
         return None
     
-    def _load_known_ideas_corpus(self) -> List[Dict]:
+    def _load_known_ideas_corpus(self) -> list[dict]:
         """Load corpus of known ideas for comparison."""
         # Built-in corpus of common startup ideas
         corpus = [
@@ -195,7 +195,7 @@ class IdeaNovelty(BaseMetric):
         
         return corpus
     
-    def _calculate_idea_novelty(self, idea: Dict) -> tuple[float, float]:
+    def _calculate_idea_novelty(self, idea: dict) -> tuple[float, float]:
         """Calculate novelty score for a single idea."""
         # Combine all text fields for comparison
         idea_text = self._combine_idea_text(idea)
@@ -221,7 +221,7 @@ class IdeaNovelty(BaseMetric):
         
         return novelty_score, max_similarity
     
-    def _combine_idea_text(self, idea: Dict) -> str:
+    def _combine_idea_text(self, idea: dict) -> str:
         """Combine all text fields of an idea."""
         fields = [
             idea.get("title", ""),
@@ -234,7 +234,7 @@ class IdeaNovelty(BaseMetric):
         combined = " ".join(filter(None, fields)).lower()
         return combined
     
-    def _tfidf_vector(self, text: str) -> Dict[str, float]:
+    def _tfidf_vector(self, text: str) -> dict[str, float]:
         """Calculate TF-IDF vector for text."""
         if not text:
             return {}
@@ -266,7 +266,7 @@ class IdeaNovelty(BaseMetric):
         
         return tfidf
     
-    def _tokenize(self, text: str) -> List[str]:
+    def _tokenize(self, text: str) -> list[str]:
         """Tokenize text into words."""
         # Simple tokenization - can be enhanced
         tokens = re.findall(r'\b\w+\b', text.lower())
@@ -280,7 +280,7 @@ class IdeaNovelty(BaseMetric):
         
         return tokens
     
-    def _cosine_similarity(self, vector1: Dict[str, float], vector2: Dict[str, float]) -> float:
+    def _cosine_similarity(self, vector1: dict[str, float], vector2: dict[str, float]) -> float:
         """Calculate cosine similarity between two TF-IDF vectors."""
         # Get common terms
         terms = set(vector1.keys()).union(set(vector2.keys()))
@@ -291,18 +291,18 @@ class IdeaNovelty(BaseMetric):
         # Calculate dot product and magnitudes
         dot_product = sum(vector1.get(term, 0) * vector2.get(term, 0) for term in terms)
         
-        magnitude1 = math.sqrt(sum(vector1.get(term, 0) ** 2 for term in vector1.keys()))
-        magnitude2 = math.sqrt(sum(vector2.get(term, 0) ** 2 for term in vector2.keys()))
+        magnitude1 = math.sqrt(sum(vector1.get(term, 0) ** 2 for term in vector1))
+        magnitude2 = math.sqrt(sum(vector2.get(term, 0) ** 2 for term in vector2))
         
         if magnitude1 == 0 or magnitude2 == 0:
             return 0.0
         
         return dot_product / (magnitude1 * magnitude2)
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get required artifacts for this metric."""
         return ["opportunities_structured", "opportunities"]
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get required ground truth fields."""
         return []

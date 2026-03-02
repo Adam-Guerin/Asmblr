@@ -3,24 +3,15 @@ Bio-inspired Computing Algorithms for Asmblr
 Nature-inspired optimization and computation methods
 """
 
-import json
-import time
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
 import random
-import math
 from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 logger = logging.getLogger(__name__)
 
@@ -63,11 +54,11 @@ class ProblemDomain(Enum):
 class Individual:
     """Individual in population"""
     id: str
-    genes: List[float]
+    genes: list[float]
     fitness: float
     age: int
     generation: int
-    parent_ids: List[str]
+    parent_ids: list[str]
     mutation_rate: float
     crossover_rate: float
 
@@ -75,9 +66,9 @@ class Individual:
 class Particle:
     """Particle in swarm"""
     id: str
-    position: List[float]
-    velocity: List[float]
-    personal_best_position: List[float]
+    position: list[float]
+    velocity: list[float]
+    personal_best_position: list[float]
     personal_best_fitness: float
     global_best_fitness: float
     inertia_weight: float
@@ -88,8 +79,8 @@ class Particle:
 class Ant:
     """Ant in colony"""
     id: str
-    position: List[float]
-    path: List[List[float]]
+    position: list[float]
+    path: list[list[float]]
     pheromone_level: float
     distance_traveled: float
     tour_length: float
@@ -98,7 +89,7 @@ class Ant:
 class Bee:
     """Bee in colony"""
     id: str
-    position: List[float]
+    position: list[float]
     nectar_amount: float
     waggle_dance_duration: float
     exploration_rate: float
@@ -108,7 +99,7 @@ class Bee:
 class Firefly:
     """Firefly in swarm"""
     id: str
-    position: List[float]
+    position: list[float]
     light_intensity: float
     absorption_coefficient: float
     randomization_parameter: float
@@ -117,7 +108,7 @@ class Firefly:
 class Harmony:
     """Harmony in memory"""
     id: str
-    notes: List[float]
+    notes: list[float]
     fitness: float
     pitch_adjustment_rate: float
     bandwidth_adjustment_rate: float
@@ -132,9 +123,9 @@ class OptimizationProblem:
     type: OptimizationType
     objective_function: str
     dimensions: int
-    bounds: List[Tuple[float, float]]
-    constraints: List[str]
-    parameters: Dict[str, Any]
+    bounds: list[tuple[float, float]]
+    constraints: list[str]
+    parameters: dict[str, Any]
     created_at: datetime
 
 class BioInspiredOptimizer(ABC):
@@ -151,12 +142,12 @@ class BioInspiredOptimizer(ABC):
         self.convergence_history = []
     
     @abstractmethod
-    async def optimize(self) -> Dict[str, Any]:
+    async def optimize(self) -> dict[str, Any]:
         """Run optimization"""
         pass
     
     @abstractmethod
-    def evaluate_fitness(self, solution: List[float]) -> float:
+    def evaluate_fitness(self, solution: list[float]) -> float:
         """Evaluate fitness of solution"""
         pass
     
@@ -183,7 +174,7 @@ class GeneticAlgorithm(BioInspiredOptimizer):
         self.population = []
         self.offspring = []
     
-    async def optimize(self) -> Dict[str, Any]:
+    async def optimize(self) -> dict[str, Any]:
         """Run genetic algorithm optimization"""
         try:
             # Initialize population
@@ -271,7 +262,7 @@ class GeneticAlgorithm(BioInspiredOptimizer):
             
             self.population.append(individual)
     
-    def _selection(self) -> List[Individual]:
+    def _selection(self) -> list[Individual]:
         """Tournament selection"""
         selected = []
         
@@ -287,7 +278,7 @@ class GeneticAlgorithm(BioInspiredOptimizer):
         
         return selected
     
-    def _crossover(self, parents: List[Individual]) -> List[Individual]:
+    def _crossover(self, parents: list[Individual]) -> list[Individual]:
         """Crossover operation"""
         offspring = []
         
@@ -330,8 +321,8 @@ class GeneticAlgorithm(BioInspiredOptimizer):
         
         return offspring
     
-    def _uniform_crossover(self, parent1_genes: List[float], 
-                           parent2_genes: List[float]) -> Tuple[List[float], List[float]]:
+    def _uniform_crossover(self, parent1_genes: list[float], 
+                           parent2_genes: list[float]) -> tuple[list[float], list[float]]:
         """Uniform crossover"""
         child1_genes = []
         child2_genes = []
@@ -346,7 +337,7 @@ class GeneticAlgorithm(BioInspiredOptimizer):
         
         return child1_genes, child2_genes
     
-    def _mutation(self, individuals: List[Individual]):
+    def _mutation(self, individuals: list[Individual]):
         """Mutation operation"""
         for individual in individuals:
             for i in range(len(individual.genes)):
@@ -369,7 +360,7 @@ class GeneticAlgorithm(BioInspiredOptimizer):
         self.population = combined[:self.population_size]
         self.offspring = []
     
-    def evaluate_fitness(self, solution: List[float]) -> float:
+    def evaluate_fitness(self, solution: list[float]) -> float:
         """Evaluate fitness (to be implemented based on problem)"""
         # Placeholder - would be problem-specific
         return sum(x**2 for x in solution)  # Sphere function
@@ -388,7 +379,7 @@ class ParticleSwarmOptimization(BioInspiredOptimizer):
         self.global_best_position = None
         self.global_best_fitness = float('-inf')
     
-    async def optimize(self) -> Dict[str, Any]:
+    async def optimize(self) -> dict[str, Any]:
         """Run PSO optimization"""
         try:
             # Initialize swarm
@@ -510,7 +501,7 @@ class ParticleSwarmOptimization(BioInspiredOptimizer):
                 particle.position[i] = upper
                 particle.velocity[i] *= -0.5
     
-    def evaluate_fitness(self, solution: List[float]) -> float:
+    def evaluate_fitness(self, solution: list[float]) -> float:
         """Evaluate fitness"""
         return -sum(x**2 for x in solution)  # Negative for maximization
 
@@ -532,7 +523,7 @@ class AntColonyOptimization(BioInspiredOptimizer):
         self.best_tour = None
         self.best_tour_length = float('inf')
     
-    async def optimize(self) -> Dict[str, Any]:
+    async def optimize(self) -> dict[str, Any]:
         """Run ACO optimization"""
         try:
             # Initialize distance matrix (simplified for continuous optimization)
@@ -635,7 +626,7 @@ class AntColonyOptimization(BioInspiredOptimizer):
         
         ant.tour_length = self._calculate_tour_length(ant.path)
     
-    def _position_from_index(self, index: int) -> List[float]:
+    def _position_from_index(self, index: int) -> list[float]:
         """Convert index to position vector"""
         position = []
         for i, (lower, upper) in enumerate(self.problem.bounds):
@@ -646,7 +637,7 @@ class AntColonyOptimization(BioInspiredOptimizer):
         
         return position
     
-    def _calculate_tour_length(self, path: List[List[float]]) -> float:
+    def _calculate_tour_length(self, path: list[list[float]]) -> float:
         """Calculate tour length"""
         total_length = 0.0
         
@@ -674,7 +665,7 @@ class AntColonyOptimization(BioInspiredOptimizer):
                 self.pheromone_matrix[current_idx, next_idx] += pheromone_deposit
                 self.pheromone_matrix[next_idx, current_idx] += pheromone_deposit
     
-    def _index_from_position(self, position: List[float]) -> int:
+    def _index_from_position(self, position: list[float]) -> int:
         """Convert position to index (simplified)"""
         # Find closest index
         min_distance = float('inf')
@@ -692,7 +683,7 @@ class AntColonyOptimization(BioInspiredOptimizer):
         
         return best_idx
     
-    def evaluate_fitness(self, solution: List[float]) -> float:
+    def evaluate_fitness(self, solution: list[float]) -> float:
         """Evaluate fitness"""
         return -sum(x**2 for x in solution)
 
@@ -711,7 +702,7 @@ class ArtificialBeeColony(BioInspiredOptimizer):
         self.scout_bees = []
         self.food_sources = []
     
-    async def optimize(self) -> Dict[str, Any]:
+    async def optimize(self) -> dict[str, Any]:
         """Run ABC optimization"""
         try:
             # Initialize colony
@@ -885,7 +876,7 @@ class ArtificialBeeColony(BioInspiredOptimizer):
             bee.position = position
             bee.nectar_amount = self.evaluate_fitness(position)
     
-    def evaluate_fitness(self, solution: List[float]) -> float:
+    def evaluate_fitness(self, solution: list[float]) -> float:
         """Evaluate fitness"""
         return sum(x**2 for x in solution)
 
@@ -903,7 +894,7 @@ class FireflyAlgorithm(BioInspiredOptimizer):
         self.global_best_position = None
         self.global_best_intensity = float('-inf')
     
-    async def optimize(self) -> Dict[str, Any]:
+    async def optimize(self) -> dict[str, Any]:
         """Run Firefly Algorithm"""
         try:
             # Initialize fireflies
@@ -997,11 +988,11 @@ class FireflyAlgorithm(BioInspiredOptimizer):
             lower, upper = self.problem.bounds[k]
             firefly_i.position[k] = max(lower, min(upper, firefly_i.position[k]))
     
-    def _calculate_distance(self, pos1: List[float], pos2: List[float]) -> float:
+    def _calculate_distance(self, pos1: list[float], pos2: list[float]) -> float:
         """Calculate distance between positions"""
         return np.sqrt(sum((x - y)**2 for x, y in zip(pos1, pos2)))
     
-    def evaluate_fitness(self, solution: List[float]) -> float:
+    def evaluate_fitness(self, solution: list[float]) -> float:
         """Evaluate fitness (light intensity)"""
         return sum(x**2 for x in solution)
 
@@ -1019,7 +1010,6 @@ class NeuralNetworkOptimizer(BioInspiredOptimizer):
     
     def _initialize_network(self):
         """Initialize neural network"""
-        import torch
         import torch.nn as nn
         import torch.optim as optim
         
@@ -1044,7 +1034,7 @@ class NeuralNetworkOptimizer(BioInspiredOptimizer):
         self.network = SimpleNN(input_size, hidden_size, output_size)
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
     
-    async def optimize(self) -> Dict[str, Any]:
+    async def optimize(self) -> dict[str, Any]:
         """Run neural network optimization"""
         try:
             import torch
@@ -1104,9 +1094,8 @@ class NeuralNetworkOptimizer(BioInspiredOptimizer):
         
         return inputs, targets
     
-    def _get_network_parameters(self) -> List[float]:
+    def _get_network_parameters(self) -> list[float]:
         """Get network parameters as list"""
-        import torch
         
         params = []
         for param in self.network.parameters():
@@ -1114,7 +1103,7 @@ class NeuralNetworkOptimizer(BioInspiredOptimizer):
         
         return params
     
-    def evaluate_fitness(self, solution: List[float]) -> float:
+    def evaluate_fitness(self, solution: list[float]) -> float:
         """Evaluate fitness"""
         return -sum(x**2 for x in solution)
 
@@ -1134,7 +1123,7 @@ class BioInspiredManager:
         self.optimization_history = []
     
     async def optimize(self, problem: OptimizationProblem, 
-                        algorithm: BioAlgorithm = BioAlgorithm.GENETIC_ALGORITHM) -> Dict[str, Any]:
+                        algorithm: BioAlgorithm = BioAlgorithm.GENETIC_ALGORITHM) -> dict[str, Any]:
         """Run optimization with specified algorithm"""
         try:
             if algorithm not in self.algorithms:
@@ -1158,7 +1147,7 @@ class BioInspiredManager:
             logger.error(f"Error in optimization: {e}")
             raise
     
-    def get_algorithm_comparison(self, problem: OptimizationProblem) -> Dict[str, Any]:
+    def get_algorithm_comparison(self, problem: OptimizationProblem) -> dict[str, Any]:
         """Compare all algorithms on the same problem"""
         try:
             results = {}
@@ -1191,8 +1180,8 @@ class ProblemDefinition(BaseModel):
     domain: str
     type: str
     dimensions: int
-    bounds: List[List[float]]
-    parameters: Dict[str, Any] = {}
+    bounds: list[list[float]]
+    parameters: dict[str, Any] = {}
 
 class OptimizationRequest(BaseModel):
     problem_id: str

@@ -3,7 +3,7 @@ Base class for all benchmark metrics.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Optional
+from typing import Any
 from dataclasses import dataclass
 import logging
 
@@ -15,9 +15,9 @@ class MetricResult:
     """Result of metric computation."""
     score: float
     explanation: str
-    evidence: Dict[str, Any]
-    details: Optional[Dict[str, Any]] = None
-    confidence: Optional[float] = None
+    evidence: dict[str, Any]
+    details: dict[str, Any] | None = None
+    confidence: float | None = None
 
 
 class BaseMetric(ABC):
@@ -28,23 +28,23 @@ class BaseMetric(ABC):
         self.name = self.__class__.__name__.lower().replace('metric', '').replace('_', '')
     
     @abstractmethod
-    def compute(self, run_result: Dict[str, Any], dataset: List[Dict]) -> MetricResult:
+    def compute(self, run_result: dict[str, Any], dataset: list[dict]) -> MetricResult:
         """Compute the metric for a given run result and dataset."""
         pass
     
-    def validate_inputs(self, run_result: Dict[str, Any], dataset: List[Dict]) -> bool:
+    def validate_inputs(self, run_result: dict[str, Any], dataset: list[dict]) -> bool:
         """Validate that required inputs are present."""
         return True
     
-    def get_required_artifacts(self) -> List[str]:
+    def get_required_artifacts(self) -> list[str]:
         """Get list of required artifacts for this metric."""
         return []
     
-    def get_required_ground_truth(self) -> List[str]:
+    def get_required_ground_truth(self) -> list[str]:
         """Get list of required ground truth fields."""
         return []
     
-    def _extract_artifact(self, run_result: Dict[str, Any], artifact_name: str) -> Optional[Any]:
+    def _extract_artifact(self, run_result: dict[str, Any], artifact_name: str) -> Any | None:
         """Extract artifact from run result."""
         artifacts = run_result.get("artifacts", {})
         artifact = artifacts.get(artifact_name)
@@ -54,7 +54,7 @@ class BaseMetric(ABC):
         
         return artifact.get("content")
     
-    def _extract_ground_truth(self, dataset_item: Dict, field_path: str) -> Any:
+    def _extract_ground_truth(self, dataset_item: dict, field_path: str) -> Any:
         """Extract ground truth field from dataset item."""
         ground_truth = dataset_item.get("ground_truth", {})
         

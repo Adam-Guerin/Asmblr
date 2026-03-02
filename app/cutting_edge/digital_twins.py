@@ -3,25 +3,17 @@ Digital Twins and Real-time Simulation for Asmblr
 Virtual replicas of physical systems with real-time synchronization
 """
 
-import json
-import time
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import pandas as pd
 from scipy.integrate import odeint
 from scipy.optimize import minimize
-import networkx as nx
 from collections import defaultdict
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +64,9 @@ class SensorReading:
     value: float
     unit: str
     timestamp: datetime
-    location: Tuple[float, float, float]
+    location: tuple[float, float, float]
     quality_score: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 @dataclass
 class DigitalTwin:
@@ -84,11 +76,11 @@ class DigitalTwin:
     twin_type: TwinType
     description: str
     physical_object_id: str
-    geometry: Dict[str, Any]
-    properties: Dict[str, Any]
-    behaviors: Dict[str, Any]
-    sensors: List[str]
-    simulation_models: List[str]
+    geometry: dict[str, Any]
+    properties: dict[str, Any]
+    behaviors: dict[str, Any]
+    sensors: list[str]
+    simulation_models: list[str]
     created_at: datetime
     updated_at: datetime
     is_active: bool
@@ -101,11 +93,11 @@ class SimulationModel:
     name: str
     twin_id: str
     model_type: SimulationType
-    equations: List[str]
-    parameters: Dict[str, Any]
-    initial_conditions: Dict[str, Any]
-    boundary_conditions: Dict[str, Any]
-    validation_metrics: Dict[str, float]
+    equations: list[str]
+    parameters: dict[str, Any]
+    initial_conditions: dict[str, Any]
+    boundary_conditions: dict[str, Any]
+    validation_metrics: dict[str, float]
     created_at: datetime
     updated_at: datetime
 
@@ -114,21 +106,21 @@ class SimulationState:
     """Simulation state"""
     twin_id: str
     timestamp: datetime
-    state_variables: Dict[str, float]
-    sensor_readings: List[SensorReading]
-    predictions: Dict[str, Any]
-    anomalies: List[Dict[str, Any]]
-    performance_metrics: Dict[str, float]
+    state_variables: dict[str, float]
+    sensor_readings: list[SensorReading]
+    predictions: dict[str, Any]
+    anomalies: list[dict[str, Any]]
+    performance_metrics: dict[str, float]
 
 class DigitalTwinManager:
     """Digital twin management system"""
     
     def __init__(self):
-        self.twins: Dict[str, DigitalTwin] = {}
-        self.simulation_models: Dict[str, SimulationModel] = {}
-        self.simulation_states: Dict[str, List[SimulationState]] = {}
-        self.sensor_data: Dict[str, List[SensorReading]] = {}
-        self.anomaly_detectors: Dict[str, Any] = {}
+        self.twins: dict[str, DigitalTwin] = {}
+        self.simulation_models: dict[str, SimulationModel] = {}
+        self.simulation_states: dict[str, list[SimulationState]] = {}
+        self.sensor_data: dict[str, list[SensorReading]] = {}
+        self.anomaly_detectors: dict[str, Any] = {}
         
         # Initialize simulation engines
         self.physics_engine = PhysicsEngine()
@@ -143,7 +135,7 @@ class DigitalTwinManager:
         asyncio.create_task(self._data_ingestion())
         asyncio.create_task(self._anomaly_detection())
     
-    async def create_digital_twin(self, twin_config: Dict[str, Any]) -> DigitalTwin:
+    async def create_digital_twin(self, twin_config: dict[str, Any]) -> DigitalTwin:
         """Create digital twin"""
         try:
             twin_id = str(uuid.uuid4())
@@ -175,7 +167,7 @@ class DigitalTwinManager:
             logger.error(f"Error creating digital twin: {e}")
             raise
     
-    async def create_simulation_model(self, model_config: Dict[str, Any]) -> SimulationModel:
+    async def create_simulation_model(self, model_config: dict[str, Any]) -> SimulationModel:
         """Create simulation model"""
         try:
             model_id = str(uuid.uuid4())
@@ -203,7 +195,7 @@ class DigitalTwinManager:
             logger.error(f"Error creating simulation model: {e}")
             raise
     
-    async def ingest_sensor_data(self, twin_id: str, sensor_readings: List[SensorReading]):
+    async def ingest_sensor_data(self, twin_id: str, sensor_readings: list[SensorReading]):
         """Ingest sensor data for digital twin"""
         try:
             if twin_id not in self.sensor_data:
@@ -281,7 +273,7 @@ class DigitalTwinManager:
             raise
     
     async def predict_future_state(self, twin_id: str, horizon: float, 
-                                 confidence_level: float = 0.95) -> Dict[str, Any]:
+                                 confidence_level: float = 0.95) -> dict[str, Any]:
         """Predict future state of digital twin"""
         try:
             twin = self.twins.get(twin_id)
@@ -304,7 +296,7 @@ class DigitalTwinManager:
             logger.error(f"Error predicting future state: {e}")
             raise
     
-    async def detect_anomalies(self, twin_id: str, threshold: float = 0.95) -> List[Dict[str, Any]]:
+    async def detect_anomalies(self, twin_id: str, threshold: float = 0.95) -> list[dict[str, Any]]:
         """Detect anomalies in digital twin"""
         try:
             twin = self.twins.get(twin_id)
@@ -362,7 +354,7 @@ class DigitalTwinManager:
     
     async def optimize_parameters(self, twin_id: str, model_id: str, 
                                 objective_function: str, 
-                                constraints: Dict[str, Any]) -> Dict[str, Any]:
+                                constraints: dict[str, Any]) -> dict[str, Any]:
         """Optimize digital twin parameters"""
         try:
             twin = self.twins.get(twin_id)
@@ -443,7 +435,7 @@ class DigitalTwinManager:
             logger.error(f"Error optimizing parameters: {e}")
             return {"success": False, "error": str(e)}
     
-    async def sync_with_physical(self, twin_id: str) -> Dict[str, Any]:
+    async def sync_with_physical(self, twin_id: str) -> dict[str, Any]:
         """Synchronize digital twin with physical object"""
         try:
             twin = self.twins.get(twin_id)
@@ -475,7 +467,7 @@ class DigitalTwinManager:
             logger.error(f"Error syncing with physical: {e}")
             return {"status": "error", "error": str(e)}
     
-    async def _update_twin_state(self, twin_id: str, sensor_data: List[SensorReading]):
+    async def _update_twin_state(self, twin_id: str, sensor_data: list[SensorReading]):
         """Update twin state based on sensor data"""
         try:
             twin = self.twins.get(twin_id)
@@ -570,7 +562,7 @@ class DigitalTwinManager:
                 logger.error(f"Error in anomaly detection: {e}")
                 await asyncio.sleep(60)
     
-    def _generate_sensor_data(self, twin_id: str) -> List[SensorReading]:
+    def _generate_sensor_data(self, twin_id: str) -> list[SensorReading]:
         """Generate simulated sensor data"""
         try:
             twin = self.twins.get(twin_id)
@@ -623,7 +615,7 @@ class DigitalTwinManager:
             logger.error(f"Error generating sensor data: {e}")
             return []
     
-    def get_twin_visualization(self, twin_id: str) -> Dict[str, Any]:
+    def get_twin_visualization(self, twin_id: str) -> dict[str, Any]:
         """Get visualization data for digital twin"""
         try:
             twin = self.twins.get(twin_id)
@@ -673,7 +665,7 @@ class PhysicsEngine:
     """Physics-based simulation engine"""
     
     async def simulate(self, twin: DigitalTwin, model: SimulationModel, 
-                      duration: float, time_step: float) -> Dict[str, Any]:
+                      duration: float, time_step: float) -> dict[str, Any]:
         """Run physics-based simulation"""
         try:
             # Initialize state variables
@@ -725,7 +717,7 @@ class PhysicsEngine:
             return {}
     
     def _simple_physics_simulation(self, twin: DigitalTwin, model: SimulationModel, 
-                                t: np.ndarray) -> Dict[str, Any]:
+                                t: np.ndarray) -> dict[str, Any]:
         """Simple physics simulation"""
         state_variables = {}
         
@@ -750,8 +742,8 @@ class PhysicsEngine:
         
         return state_variables
     
-    def _generate_sensor_readings(self, twin: DigitalTwin, state_variables: Dict[str, Any], 
-                                 t: np.ndarray) -> List[SensorReading]:
+    def _generate_sensor_readings(self, twin: DigitalTwin, state_variables: dict[str, Any], 
+                                 t: np.ndarray) -> list[SensorReading]:
         """Generate sensor readings from simulation"""
         sensor_readings = []
         
@@ -816,7 +808,7 @@ class PhysicsEngine:
         
         return units.get(sensor_type, "unit")
     
-    def _calculate_performance_metrics(self, state_variables: Dict[str, Any]) -> Dict[str, float]:
+    def _calculate_performance_metrics(self, state_variables: dict[str, Any]) -> dict[str, float]:
         """Calculate performance metrics"""
         metrics = {}
         
@@ -835,7 +827,7 @@ class DataDrivenEngine:
     """Data-driven simulation engine"""
     
     async def simulate(self, twin: DigitalTwin, model: SimulationModel, 
-                      duration: float, time_step: float) -> Dict[str, Any]:
+                      duration: float, time_step: float) -> dict[str, Any]:
         """Run data-driven simulation"""
         try:
             # Get historical data
@@ -866,7 +858,7 @@ class DataDrivenEngine:
             logger.error(f"Error in data-driven simulation: {e}")
             return {}
     
-    def _get_historical_data(self, twin: DigitalTwin) -> List[Dict[str, Any]]:
+    def _get_historical_data(self, twin: DigitalTwin) -> list[dict[str, Any]]:
         """Get historical data for twin"""
         # In real implementation, would query database
         # For now, return simulated historical data
@@ -886,8 +878,8 @@ class DataDrivenEngine:
         
         return historical_data
     
-    def _time_series_forecast(self, historical_data: List[Dict[str, Any]], 
-                              duration: float, time_step: float) -> Dict[str, Any]:
+    def _time_series_forecast(self, historical_data: list[dict[str, Any]], 
+                              duration: float, time_step: float) -> dict[str, Any]:
         """Time series forecasting"""
         try:
             # Extract time series for each variable
@@ -927,8 +919,8 @@ class DataDrivenEngine:
             return {}
     
     def _generate_sensor_readings_from_predictions(self, twin: DigitalTwin, 
-                                                   predictions: Dict[str, Any], 
-                                                   duration: float, time_step: float) -> List[SensorReading]:
+                                                   predictions: dict[str, Any], 
+                                                   duration: float, time_step: float) -> list[SensorReading]:
         """Generate sensor readings from predictions"""
         sensor_readings = []
         
@@ -984,7 +976,7 @@ class DataDrivenEngine:
         
         return units.get(sensor_type, "unit")
     
-    def _calculate_ml_metrics(self, predictions: Dict[str, Any]) -> Dict[str, float]:
+    def _calculate_ml_metrics(self, predictions: dict[str, Any]) -> dict[str, float]:
         """Calculate ML performance metrics"""
         metrics = {}
         
@@ -998,8 +990,8 @@ class DataDrivenEngine:
         
         return metrics
     
-    def _calculate_model_accuracy(self, historical_data: List[Dict[str, Any]], 
-                                predictions: Dict[str, Any]) -> float:
+    def _calculate_model_accuracy(self, historical_data: list[dict[str, Any]], 
+                                predictions: dict[str, Any]) -> float:
         """Calculate model accuracy"""
         try:
             # Simple accuracy calculation
@@ -1027,7 +1019,7 @@ class DataDrivenEngine:
             return 0.5
     
     def _fallback_simulation(self, twin: DigitalTwin, model: SimulationModel, 
-                            duration: float, time_step: float) -> Dict[str, Any]:
+                            duration: float, time_step: float) -> dict[str, Any]:
         """Fallback simulation"""
         # Simple linear interpolation
         time_points = int(duration / time_step)
@@ -1046,8 +1038,8 @@ class DataDrivenEngine:
             "model_accuracy": 0.5
         }
     
-    async def predict_future_state(self, twin: DigitalTwin, states: List[SimulationState], 
-                                  horizon: float, confidence_level: float) -> Dict[str, Any]:
+    async def predict_future_state(self, twin: DigitalTwin, states: list[SimulationState], 
+                                  horizon: float, confidence_level: float) -> dict[str, Any]:
         """Predict future state using ML"""
         try:
             if len(states) < 10:
@@ -1094,7 +1086,7 @@ class DataDrivenEngine:
             logger.error(f"Error predicting future state: {e}")
             return {"error": str(e)}
     
-    def _predict_arima(self, values: List[float], horizon: int) -> List[float]:
+    def _predict_arima(self, values: list[float], horizon: int) -> list[float]:
         """Simple ARIMA-like prediction"""
         try:
             if len(values) < 2:
@@ -1127,7 +1119,7 @@ class HybridEngine:
     """Hybrid simulation engine combining physics and data-driven approaches"""
     
     async def simulate(self, twin: DigitalTwin, model: SimulationModel, 
-                      duration: float, time_step: float) -> Dict[str, Any]:
+                      duration: float, time_step: float) -> dict[str, Any]:
         """Run hybrid simulation"""
         try:
             # Run physics simulation
@@ -1147,8 +1139,8 @@ class HybridEngine:
             logger.error(f"Error in hybrid simulation: {e}")
             return {}
     
-    def _combine_simulation_results(self, physics_result: Dict[str, Any], 
-                                   data_result: Dict[str, Any]) -> Dict[str, Any]:
+    def _combine_simulation_results(self, physics_result: dict[str, Any], 
+                                   data_result: dict[str, Any]) -> dict[str, Any]:
         """Combine physics and data-driven results"""
         try:
             combined = {
@@ -1218,7 +1210,7 @@ class SynchronizationManager:
         }
     
     async def calculate_sync_quality(self, twin: DigitalTwin, 
-                                    sensor_data: List[SensorReading]) -> float:
+                                    sensor_data: list[SensorReading]) -> float:
         """Calculate synchronization quality"""
         try:
             if not sensor_data:
@@ -1278,21 +1270,21 @@ class TwinCreationRequest(BaseModel):
     twin_type: str
     description: str
     physical_object_id: str
-    geometry: Dict[str, Any] = {}
-    properties: Dict[str, Any] = {}
-    behaviors: Dict[str, Any] = {}
-    sensors: List[str] = []
-    simulation_models: List[str] = []
+    geometry: dict[str, Any] = {}
+    properties: dict[str, Any] = {}
+    behaviors: dict[str, Any] = {}
+    sensors: list[str] = []
+    simulation_models: list[str] = []
     sync_frequency: float = 1.0
 
 class ModelCreationRequest(BaseModel):
     name: str
     twin_id: str
     model_type: str
-    equations: List[str] = []
-    parameters: Dict[str, Any] = {}
-    initial_conditions: Dict[str, Any] = {}
-    boundary_conditions: Dict[str, Any] = {}
+    equations: list[str] = []
+    parameters: dict[str, Any] = {}
+    initial_conditions: dict[str, Any] = {}
+    boundary_conditions: dict[str, Any] = {}
 
 class SimulationRequest(BaseModel):
     twin_id: str
@@ -1413,7 +1405,7 @@ async def detect_anomalies(twin_id: str, threshold: float = 0.95):
 
 @router.post("/twins/{twin_id}/optimize")
 async def optimize_parameters(twin_id: str, model_id: str, objective_function: str, 
-                              constraints: Dict[str, Any]):
+                              constraints: dict[str, Any]):
     """Optimize twin parameters"""
     try:
         result = await dt_manager.optimize_parameters(twin_id, model_id, objective_function, constraints)

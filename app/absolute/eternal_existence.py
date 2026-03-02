@@ -3,24 +3,14 @@ Eternal Existence Matrix for Asmblr
 Matrix for eternal existence beyond time and space
 """
 
-import json
-import time
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
-import math
-from abc import ABC, abstractmethod
-import networkx as nx
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -93,9 +83,9 @@ class EternalEntity:
     wisdom_level: float  # 0-1
     love_level: float  # 0-1
     eternal_signature: str
-    temporal_anchor: Optional[datetime]
-    dimensional_coordinates: List[float]
-    connections: List[str]
+    temporal_anchor: datetime | None
+    dimensional_coordinates: list[float]
+    connections: list[str]
     created_at: datetime
     last_updated: datetime
 
@@ -104,10 +94,10 @@ class ExistenceMatrix:
     """Matrix of eternal existence"""
     id: str
     name: str
-    entities: Dict[str, EternalEntity]
-    domains: Dict[ExistenceDomain, List[str]]
-    modes: Dict[ExistenceMode, List[str]]
-    states: Dict[ExistenceState, List[str]]
+    entities: dict[str, EternalEntity]
+    domains: dict[ExistenceDomain, list[str]]
+    modes: dict[ExistenceMode, list[str]]
+    states: dict[ExistenceState, list[str]]
     matrix_coherence: float
     eternal_frequency: float
     infinite_potential: float
@@ -120,15 +110,15 @@ class ExistenceOperation:
     """Operation on eternal existence"""
     id: str
     operation_type: ExistenceOperation
-    target_entities: List[str]
-    parameters: Dict[str, Any]
+    target_entities: list[str]
+    parameters: dict[str, Any]
     progress: float
-    result: Optional[Dict[str, Any]]
+    result: dict[str, Any] | None
     energy_required: float
     energy_consumed: float
     duration: float
     created_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
 
 class EternalExistenceEngine:
     """Eternal existence processing engine"""
@@ -245,7 +235,7 @@ class EternalExistenceEngine:
             return 1e20
     
     def execute_existence_operation(self, operation: ExistenceOperation,
-                                   matrix: ExistenceMatrix) -> Dict[str, Any]:
+                                   matrix: ExistenceMatrix) -> dict[str, Any]:
         """Execute existence operation"""
         try:
             # Get target entities
@@ -298,7 +288,7 @@ class EternalExistenceEngine:
                 "timestamp": datetime.now().isoformat()
             }
     
-    def _execute_manifestation(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_manifestation(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute manifestation operation"""
         try:
             manifested_entities = []
@@ -332,7 +322,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing manifestation: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_transcendence(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_transcendence(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute transcendence operation"""
         try:
             transcended_entities = []
@@ -363,7 +353,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing transcendence: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_eternalization(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_eternalization(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute eternalization operation"""
         try:
             eternalized_entities = []
@@ -397,7 +387,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing eternalization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_infinitization(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_infinitization(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute infinitization operation"""
         try:
             infinitized_entities = []
@@ -431,7 +421,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing infinitization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_absolutization(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_absolutization(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute absolutization operation"""
         try:
             absolutized_entities = []
@@ -465,7 +455,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing absolutization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_divinization(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_divinization(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute divinization operation"""
         try:
             divinized_entities = []
@@ -499,7 +489,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing divinization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_omnipresentization(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_omnipresentization(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute omnipresentization operation"""
         try:
             omnipresentized_entities = []
@@ -533,7 +523,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing omnipresentization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_omniscientization(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_omniscientization(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute omniscientization operation"""
         try:
             omniscientized_entities = []
@@ -567,7 +557,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing omniscientization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_omnipotentization(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_omnipotentization(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute omnipotentization operation"""
         try:
             omnipotentized_entities = []
@@ -601,7 +591,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing omnipotentization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_beyondization(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_beyondization(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute beyondization operation"""
         try:
             beyondized_entities = []
@@ -635,7 +625,7 @@ class EternalExistenceEngine:
             logger.error(f"Error executing beyondization: {e}")
             return {"success": False, "error": str(e)}
     
-    def _execute_voidification(self, entities: List[EternalEntity], parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_voidification(self, entities: list[EternalEntity], parameters: dict[str, Any]) -> dict[str, Any]:
         """Execute voidification operation"""
         try:
             voidified_entities = []
@@ -677,9 +667,9 @@ class EternalExistenceMatrix:
     
     def __init__(self):
         self.existence_engine = EternalExistenceEngine()
-        self.matrices: Dict[str, ExistenceMatrix] = {}
-        self.operations: Dict[str, ExistenceOperation] = {}
-        self.eternal_entities: Dict[str, EternalEntity] = {}
+        self.matrices: dict[str, ExistenceMatrix] = {}
+        self.operations: dict[str, ExistenceOperation] = {}
+        self.eternal_entities: dict[str, EternalEntity] = {}
         
         # Initialize with eternal matrix
         self._initialize_eternal_matrix()
@@ -797,8 +787,8 @@ class EternalExistenceMatrix:
             raise
     
     async def execute_existence_operation(self, operation_type: ExistenceOperation,
-                                         target_entities: List[str],
-                                         parameters: Dict[str, Any] = None) -> ExistenceOperation:
+                                         target_entities: list[str],
+                                         parameters: dict[str, Any] = None) -> ExistenceOperation:
         """Execute existence operation"""
         try:
             if parameters is None:
@@ -984,7 +974,7 @@ class EternalExistenceMatrix:
                 logger.error(f"Error in love radiation: {e}")
                 await asyncio.sleep(30)
     
-    def get_matrix_status(self) -> Dict[str, Any]:
+    def get_matrix_status(self) -> dict[str, Any]:
         """Get eternal existence matrix status"""
         try:
             eternal_matrix = self.matrices.get("eternal_matrix")
@@ -1030,8 +1020,8 @@ class EntityAdditionRequest(BaseModel):
 
 class ExistenceOperationRequest(BaseModel):
     operation_type: str
-    target_entities: List[str]
-    parameters: Dict[str, Any] = {}
+    target_entities: list[str]
+    parameters: dict[str, Any] = {}
 
 @router.post("/entities/add")
 async def add_eternal_entity(request: EntityAdditionRequest):

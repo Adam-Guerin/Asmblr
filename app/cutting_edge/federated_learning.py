@@ -3,14 +3,10 @@ Federated Learning with Privacy Preservation for Asmblr
 Distributed machine learning without sharing raw data
 """
 
-import json
-import time
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from enum import Enum
 import uuid
 import numpy as np
@@ -18,13 +14,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, mean_squared_error
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-import hashlib
 import pickle
 import base64
 
@@ -74,7 +65,7 @@ class FederatedClient:
     batch_size: int
     learning_rate: float
     is_active: bool
-    public_key: Optional[str] = None
+    public_key: str | None = None
 
 @dataclass
 class FederatedModel:
@@ -83,27 +74,27 @@ class FederatedModel:
     name: str
     task_type: TaskType
     global_model: nn.Module
-    model_parameters: Dict[str, Any]
-    architecture: Dict[str, Any]
+    model_parameters: dict[str, Any]
+    architecture: dict[str, Any]
     current_round: int
     total_rounds: int
     convergence_threshold: float
     created_at: datetime
     updated_at: datetime
-    performance_metrics: Dict[str, float]
+    performance_metrics: dict[str, float]
 
 @dataclass
 class FederatedRound:
     """Federated learning round"""
     round_number: int
     start_time: datetime
-    end_time: Optional[datetime]
-    participating_clients: List[str]
-    client_updates: Dict[str, Dict[str, Any]]
-    aggregated_model: Dict[str, Any]
-    round_metrics: Dict[str, float]
-    privacy_metrics: Dict[str, float]
-    convergence_metrics: Dict[str, float]
+    end_time: datetime | None
+    participating_clients: list[str]
+    client_updates: dict[str, dict[str, Any]]
+    aggregated_model: dict[str, Any]
+    round_metrics: dict[str, float]
+    privacy_metrics: dict[str, float]
+    convergence_metrics: dict[str, float]
     status: str  # running, completed, failed
 
 @dataclass
@@ -116,16 +107,16 @@ class PrivacyBudget:
     epsilon_budget: float
     delta_budget: float
     last_updated: datetime
-    mechanisms_used: List[str]
+    mechanisms_used: list[str]
 
 class FederatedLearningManager:
     """Federated learning manager with privacy preservation"""
     
     def __init__(self):
-        self.clients: Dict[str, FederatedClient] = {}
-        self.models: Dict[str, FederatedModel] = {}
-        self.rounds: Dict[str, List[FederatedRound]] = {}
-        self.privacy_budgets: Dict[str, PrivacyBudget] = {}
+        self.clients: dict[str, FederatedClient] = {}
+        self.models: dict[str, FederatedModel] = {}
+        self.rounds: dict[str, list[FederatedRound]] = {}
+        self.privacy_budgets: dict[str, PrivacyBudget] = {}
         
         # Initialize cryptographic components
         self._initialize_cryptography()
@@ -145,7 +136,7 @@ class FederatedLearningManager:
         )
         self.server_public_key = self.server_private_key.public_key()
     
-    def _initialize_aggregation_strategies(self) -> Dict[AggregationStrategy, callable]:
+    def _initialize_aggregation_strategies(self) -> dict[AggregationStrategy, callable]:
         """Initialize aggregation strategies"""
         return {
             AggregationStrategy.FEDERATED_AVERAGING: self._federated_averaging,
@@ -157,7 +148,7 @@ class FederatedLearningManager:
             AggregationStrategy.BYZANTINE_ROBUST: self._byzantine_robust_aggregation
         }
     
-    def _initialize_privacy_mechanisms(self) -> Dict[PrivacyMechanism, callable]:
+    def _initialize_privacy_mechanisms(self) -> dict[PrivacyMechanism, callable]:
         """Initialize privacy mechanisms"""
         return {
             PrivacyMechanism.DIFFERENTIAL_PRIVACY: self._apply_differential_privacy,
@@ -168,7 +159,7 @@ class FederatedLearningManager:
             PrivacyMechanism.LOCAL_DP: self._apply_local_differential_privacy
         }
     
-    async def register_client(self, client_info: Dict[str, Any]) -> FederatedClient:
+    async def register_client(self, client_info: dict[str, Any]) -> FederatedClient:
         """Register federated learning client"""
         try:
             client = FederatedClient(
@@ -222,7 +213,7 @@ class FederatedLearningManager:
         
         self.privacy_budgets[client_id] = privacy_budget
     
-    async def create_federated_model(self, model_config: Dict[str, Any]) -> FederatedModel:
+    async def create_federated_model(self, model_config: dict[str, Any]) -> FederatedModel:
         """Create federated learning model"""
         try:
             model_id = str(uuid.uuid4())
@@ -255,7 +246,7 @@ class FederatedLearningManager:
             logger.error(f"Error creating federated model: {e}")
             raise
     
-    def _create_model_architecture(self, config: Dict[str, Any]) -> nn.Module:
+    def _create_model_architecture(self, config: dict[str, Any]) -> nn.Module:
         """Create model architecture based on configuration"""
         task_type = TaskType(config["task_type"])
         input_size = config.get("input_size", 784)
@@ -325,9 +316,9 @@ class FederatedLearningManager:
             })
     
     async def run_federated_round(self, model_id: str, 
-                                participating_clients: List[str],
+                                participating_clients: list[str],
                                 aggregation_strategy: AggregationStrategy,
-                                privacy_mechanisms: List[PrivacyMechanism]) -> FederatedRound:
+                                privacy_mechanisms: list[PrivacyMechanism]) -> FederatedRound:
         """Run a federated learning round"""
         try:
             model = self.models.get(model_id)
@@ -420,7 +411,7 @@ class FederatedLearningManager:
             raise
     
     async def _simulate_client_training(self, client_id: str, model_id: str, 
-                                      global_params: Dict[str, Any]) -> Dict[str, Any]:
+                                      global_params: dict[str, Any]) -> dict[str, Any]:
         """Simulate client training (in real implementation, this would be done on client)"""
         try:
             client = self.clients.get(client_id)
@@ -516,9 +507,9 @@ class FederatedLearningManager:
             logger.error(f"Error simulating client training: {e}")
             raise
     
-    async def _apply_privacy_mechanisms(self, client_updates: Dict[str, Any],
-                                      mechanisms: List[PrivacyMechanism],
-                                      model_id: str) -> Dict[str, Any]:
+    async def _apply_privacy_mechanisms(self, client_updates: dict[str, Any],
+                                      mechanisms: list[PrivacyMechanism],
+                                      model_id: str) -> dict[str, Any]:
         """Apply privacy preservation mechanisms"""
         protected_updates = client_updates.copy()
         
@@ -530,8 +521,8 @@ class FederatedLearningManager:
         
         return protected_updates
     
-    async def _apply_differential_privacy(self, updates: Dict[str, Any], 
-                                       model_id: str) -> Dict[str, Any]:
+    async def _apply_differential_privacy(self, updates: dict[str, Any], 
+                                       model_id: str) -> dict[str, Any]:
         """Apply differential privacy"""
         try:
             epsilon = 1.0  # Privacy parameter
@@ -572,8 +563,8 @@ class FederatedLearningManager:
             logger.error(f"Error applying differential privacy: {e}")
             return updates
     
-    async def _secure_aggregation(self, updates: Dict[str, Any], 
-                                model_id: str) -> Dict[str, Any]:
+    async def _secure_aggregation(self, updates: dict[str, Any], 
+                                model_id: str) -> dict[str, Any]:
         """Secure aggregation using cryptographic techniques"""
         try:
             # Simplified secure aggregation
@@ -638,8 +629,8 @@ class FederatedLearningManager:
             logger.error(f"Error decrypting data: {e}")
             return encrypted_data.encode()
     
-    async def _homomorphic_encryption(self, updates: Dict[str, Any], 
-                                     model_id: str) -> Dict[str, Any]:
+    async def _homomorphic_encryption(self, updates: dict[str, Any], 
+                                     model_id: str) -> dict[str, Any]:
         """Apply homomorphic encryption (simplified)"""
         try:
             # Simplified homomorphic encryption
@@ -675,8 +666,8 @@ class FederatedLearningManager:
             logger.error(f"Error in homomorphic encryption: {e}")
             return updates
     
-    async def _encrypted_aggregation(self, updates: Dict[str, Any], 
-                                   model_id: str) -> Dict[str, Any]:
+    async def _encrypted_aggregation(self, updates: dict[str, Any], 
+                                   model_id: str) -> dict[str, Any]:
         """Encrypted aggregation"""
         try:
             # Combine secure aggregation and homomorphic encryption
@@ -687,8 +678,8 @@ class FederatedLearningManager:
             logger.error(f"Error in encrypted aggregation: {e}")
             return updates
     
-    async def _randomized_response(self, updates: Dict[str, Any], 
-                                  model_id: str) -> Dict[str, Any]:
+    async def _randomized_response(self, updates: dict[str, Any], 
+                                  model_id: str) -> dict[str, Any]:
         """Apply randomized response mechanism"""
         try:
             probability = 0.1  # Randomization probability
@@ -719,8 +710,8 @@ class FederatedLearningManager:
             logger.error(f"Error in randomized response: {e}")
             return updates
     
-    async def _apply_local_differential_privacy(self, updates: Dict[str, Any], 
-                                             model_id: str) -> Dict[str, Any]:
+    async def _apply_local_differential_privacy(self, updates: dict[str, Any], 
+                                             model_id: str) -> dict[str, Any]:
         """Apply local differential privacy"""
         try:
             # Similar to differential privacy but applied locally by clients
@@ -729,8 +720,8 @@ class FederatedLearningManager:
             logger.error(f"Error in local differential privacy: {e}")
             return updates
     
-    async def _aggregate_updates(self, updates: Dict[str, Any], 
-                               strategy: AggregationStrategy) -> Dict[str, Any]:
+    async def _aggregate_updates(self, updates: dict[str, Any], 
+                               strategy: AggregationStrategy) -> dict[str, Any]:
         """Aggregate client updates"""
         try:
             if strategy not in self.aggregation_strategies:
@@ -743,7 +734,7 @@ class FederatedLearningManager:
             # Fallback to federated averaging
             return await self._federated_averaging(updates)
     
-    async def _federated_averaging(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def _federated_averaging(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Federated averaging aggregation"""
         try:
             if not updates:
@@ -799,7 +790,7 @@ class FederatedLearningManager:
             logger.error(f"Error in federated averaging: {e}")
             return {}
     
-    async def _weighted_averaging(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def _weighted_averaging(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Weighted averaging based on client trust scores"""
         try:
             if not updates:
@@ -853,7 +844,7 @@ class FederatedLearningManager:
             logger.error(f"Error in weighted averaging: {e}")
             return {}
     
-    async def _median_averaging(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def _median_averaging(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Median-based aggregation"""
         try:
             if not updates:
@@ -896,7 +887,7 @@ class FederatedLearningManager:
             logger.error(f"Error in median averaging: {e}")
             return {}
     
-    async def _trimmed_mean(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def _trimmed_mean(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Trimmed mean aggregation"""
         try:
             if not updates:
@@ -951,7 +942,7 @@ class FederatedLearningManager:
             logger.error(f"Error in trimmed mean: {e}")
             return {}
     
-    async def _krum_aggregation(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def _krum_aggregation(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Krum aggregation for Byzantine robustness"""
         try:
             if not updates:
@@ -1026,7 +1017,7 @@ class FederatedLearningManager:
             logger.error(f"Error in Krum aggregation: {e}")
             return {}
     
-    async def _multi_krum_aggregation(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def _multi_krum_aggregation(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Multi-Krum aggregation"""
         try:
             # Similar to Krum but selects multiple updates
@@ -1035,7 +1026,7 @@ class FederatedLearningManager:
             logger.error(f"Error in multi-Krum aggregation: {e}")
             return {}
     
-    async def _byzantine_robust_aggregation(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def _byzantine_robust_aggregation(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Byzantine robust aggregation"""
         try:
             # Combine multiple robust techniques
@@ -1052,21 +1043,21 @@ class FederatedLearningManager:
             logger.error(f"Error in Byzantine robust aggregation: {e}")
             return {}
     
-    def _get_model_parameters(self, model: nn.Module) -> Dict[str, Any]:
+    def _get_model_parameters(self, model: nn.Module) -> dict[str, Any]:
         """Get model parameters as dictionary"""
         params = {}
         for name, param in model.named_parameters():
             params[name] = param.detach().cpu().numpy()
         return params
     
-    def _set_model_parameters(self, model: nn.Module, params: Dict[str, Any]):
+    def _set_model_parameters(self, model: nn.Module, params: dict[str, Any]):
         """Set model parameters from dictionary"""
         for name, param in model.named_parameters():
             if name in params:
                 param.data = torch.FloatTensor(params[name])
     
     async def _calculate_round_metrics(self, federated_round: FederatedRound, 
-                                     model_id: str) -> Dict[str, float]:
+                                     model_id: str) -> dict[str, float]:
         """Calculate round metrics"""
         try:
             metrics = {}
@@ -1110,7 +1101,7 @@ class FederatedLearningManager:
             return {}
     
     async def _check_convergence(self, federated_round: FederatedRound, 
-                               model_id: str) -> Dict[str, float]:
+                               model_id: str) -> dict[str, float]:
         """Check convergence metrics"""
         try:
             convergence_metrics = {}
@@ -1178,7 +1169,7 @@ class FederatedLearningManager:
         except Exception as e:
             logger.error(f"Error updating privacy budget: {e}")
     
-    def get_federated_learning_status(self) -> Dict[str, Any]:
+    def get_federated_learning_status(self) -> dict[str, Any]:
         """Get federated learning status"""
         try:
             return {
@@ -1220,7 +1211,7 @@ class ModelCreationRequest(BaseModel):
     name: str
     task_type: str
     input_size: int = 784
-    hidden_sizes: List[int] = [128, 64]
+    hidden_sizes: list[int] = [128, 64]
     output_size: int = 10
     dropout_rate: float = 0.2
     total_rounds: int = 100
@@ -1228,9 +1219,9 @@ class ModelCreationRequest(BaseModel):
 
 class FederatedRoundRequest(BaseModel):
     model_id: str
-    participating_clients: List[str]
+    participating_clients: list[str]
     aggregation_strategy: str = "federated_averaging"
-    privacy_mechanisms: List[str] = ["differential_privacy"]
+    privacy_mechanisms: list[str] = ["differential_privacy"]
 
 @router.post("/clients/register")
 async def register_client(request: ClientRegistrationRequest):
