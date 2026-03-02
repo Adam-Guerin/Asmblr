@@ -1,0 +1,27 @@
+# Requirements for Large-Scale Empirical Validation
+# Core dependencies
+aiohttp>=3.8.0
+beautifulsoup4>=4.11.0
+requests>=2.28.0
+numpy>=1.21.0
+torch>=1.12.0
+scipy>=1.9.0
+pandas>=1.5.0
+
+# Async support
+asyncio-throttle>=1.0.2
+
+# Git operations
+GitPython>=3.1.0
+
+# Statistical analysis
+scikit-learn>=1.1.0
+
+# Progress tracking
+tqdm>=4.64.0
+
+# Configuration
+pyyaml>=6.0
+
+# Logging and debugging
+colorlog>=6.7.0

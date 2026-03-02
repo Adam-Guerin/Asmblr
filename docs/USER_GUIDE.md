@@ -1,556 +1,649 @@
-# 📚 Asmblr - Guide Utilisateur Complet
+# 🚀 Asmblr User Guide
 
-## Table des Matières
+**Version 2.0** | *Last Updated: 2026-02-27*
 
-1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Configuration](#configuration)
-4. [Interface Utilisateur](#interface-utilisateur)
-5. [Génération de MVP](#génération-de-mvp)
-6. [Monitoring et Alertes](#monitoring-et-alertes)
-7. [Exports et Rapports](#exports-et-rapports)
-8. [Dépannage](#dépannage)
-9. [Bonnes Pratiques](#bonnes-pratiques)
+## 📖 Table of Contents
 
----
-
-## 🚀 Introduction
-
-Asmblr est un générateur de MVP (Minimum Viable Product) alimenté par l'IA qui utilise des agents multi-agents pour analyser des idées, générer des spécifications et créer des prototypes fonctionnels.
-
-### Fonctionnalités Principales
-
-- **🤖 Agents IA Multi-agents** : Recherche, analyse, génération de produits
-- **📊 Analyse de Marché** : Scraping intelligent et identification de pain points
-- **🎯 Génération d'Idées** : Création et évaluation d'idées innovantes
-- **📋 Spécifications Techniques** : PRD et tech specs automatiques
-- **🏗️ Prototypage Rapide** : Génération de code MVP avec Next.js
-- **📈 Monitoring en Temps Réel** : Suivi des métriques et alertes
-- **🎨 Interface Personnalisable** : Thèmes multiples et responsive design
+1. [Getting Started](#getting-started)
+2. [Quick Start](#quick-start)
+3. [Web Interface](#web-interface)
+4. [Command Line Interface](#command-line-interface)
+5. [Creating Ventures](#creating-ventures)
+6. [Managing Runs](#managing-runs)
+7. [Quality Dashboard](#quality-dashboard)
+8. [Advanced Features](#advanced-features)
+9. [Troubleshooting](#troubleshooting)
+10. [Best Practices](#best-practices)
 
 ---
 
-## 🛠️ Installation
+## 🚀 Getting Started
 
-### Prérequis
+### System Requirements
 
-- Python 3.11 ou supérieur
-- Ollama (pour les modèles LLM locaux)
-- Git (pour le versioning des MVPs)
+- **Operating System**: Windows 10+, macOS 10.15+, or Linux (Ubuntu 18.04+)
+- **Memory**: Minimum 4GB RAM (8GB+ recommended)
+- **CPU**: Minimum 2 cores (4+ recommended)
+- **Storage**: Minimum 10GB free space
+- **Python**: 3.8+ (3.9+ recommended)
+- **Docker**: Optional, for containerized deployment
 
-### Installation Automatisée
+### Installation
+
+#### Option 1: Quick Install (Recommended)
 
 ```bash
-# Cloner le repository
-git clone https://github.com/votre-org/asmblr.git
+# Clone the repository
+git clone https://github.com/asmblr/asmblr.git
 cd asmblr
 
-# Exécuter le script d'installation
-python setup.py
+# Install dependencies
+pip install -r requirements.txt
 
-# Démarrer l'interface
-streamlit run app/ui.py
-```
+# Start Ollama (required for AI functionality)
+ollama serve
 
-### Installation Manuelle
-
-```bash
-# Créer un environnement virtuel
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# ou
-.venv\\Scripts\\activate  # Windows
-
-# Installer les dépendances
-pip install -r requirements_updated.txt
-
-# Configurer Ollama
+# Download required models
 ollama pull llama3.1:8b
 ollama pull qwen2.5-coder:7b
 
-# Démarrer Ollama
-ollama serve
-
-# Lancer l'application
-streamlit run app/ui.py
+# Launch the web interface
+streamlit run app/ui_enhanced.py
 ```
 
----
-
-## ⚙️ Configuration
-
-### Variables d'Environnement
-
-Créez un fichier `.env` à la racine du projet :
+#### Option 2: Docker Installation
 
 ```bash
-# Configuration Ollama
-OLLAMA_BASE_URL=http://localhost:11434
-GENERAL_MODEL=llama3.1:8b
-CODE_MODEL=qwen2.5-coder:7b
+# Clone and build
+git clone https://github.com/asmblr/asmblr.git
+cd asmblr
 
-# Configuration Pipeline
-MAX_SOURCES=8
-MIN_PAGES=3
-MIN_PAINS=5
-MARKET_SIGNAL_THRESHOLD=40
-SIGNAL_QUALITY_THRESHOLD=45
+# Run with Docker Compose
+docker-compose up -d
 
-# ICP (Ideal Customer Profile)
-PRIMARY_ICP="Founders B2B SaaS pre-seed"
-PRIMARY_ICP_KEYWORDS="founder,founders,b2b,saas,pre-seed,startup"
-ICP_ALIGNMENT_BONUS_MAX=8
-
-# Monitoring et Alertes
-ALERT_EMAIL_ENABLED=false
-ALERT_SMTP_SERVER=smtp.gmail.com
-ALERT_SMTP_PORT=587
-ALERT_EMAIL_USERNAME=votre-email@gmail.com
-ALERT_EMAIL_PASSWORD=votre-mot-de-passe
-ALERT_EMAIL_FROM=votre-email@gmail.com
-ALERT_EMAIL_TO=alerte@votre-entreprise.com
-
-# Slack (optionnel)
-ALERT_SLACK_ENABLED=false
-ALERT_SLACK_WEBHOOK_URL=votre-webhook-url
-ALERT_SLACK_CHANNEL=#alerts
-
-# Discord (optionnel)
-ALERT_DISCORD_ENABLED=false
-ALERT_DISCORD_WEBHOOK_URL=votre-webhook-url
+# Access the web interface
+open http://localhost:8501
 ```
 
-### Configuration des Sources
+### First-Time Setup
 
-Éditez `configs/sources.yaml` pour configurer les sources de scraping :
-
-```yaml
-sources:
-  - name: "Product Hunt"
-    url: "https://www.producthunt.com"
-    type: "product_discovery"
-    enabled: true
-  
-  - name: "Hacker News"
-    url: "https://news.ycombinator.com"
-    type: "tech_news"
-    enabled: true
-  
-  - name: "Reddit"
-    url: "https://www.reddit.com/r/startups"
-    type: "community"
-    enabled: true
-```
-
----
-
-## 🖥️ Interface Utilisateur
-
-### Vue d'Ensemble
-
-L'interface Asmblr est composée de trois onglets principaux :
-
-1. **🎯 Generate MVP** : Génération de MVP
-2. **📊 Dashboard** : Monitoring et métriques
-3. **📤 Exports** : Export des résultats
-
-### Personnalisation
-
-#### Thèmes
-
-Choisissez parmi 4 thèmes disponibles dans la sidebar :
-
-- **☀️ Clair** : Thème par défaut, lumineux et professionnel
-- **🌙 Sombre** : Thème sombre pour réduire la fatigue oculaire
-- **💙 Bleu** : Variant bleue pour une ambiance corporate
-- **💚 Vert** : Variant verte pour une touche de fraîcheur
-
-#### Configuration du Pipeline
-
-- **Topic/Domain** : Sujet à analyser (ex: "productivity tools for remote teams")
-- **Number of Ideas** : Nombre d'idées à générer (3-15)
-- **Execution Mode** :
-  - **Standard** : Analyse complète et détaillée
-  - **Fast** : Génération rapide avec moins de détails
-  - **Validation Sprint 7 jours** : Optimisé pour validation rapide
-
-#### Données Avancées (Seed Data)
-
-Dans la section "Advanced Seed Inputs", vous pouvez fournir :
-
-- **Ideal Customer Profile** : Description de votre cible
-- **Context** : Informations supplémentaires sur le marché
-- **Pain Points** : Listes de problèmes à résoudre
-- **Competitors** : Liste de concurrents directs
-
----
-
-## 🚀 Génération de MVP
-
-### Étape 1 : Configuration
-
-1. **Définir le Topic** : Soyez spécifique mais concis
-   - ✅ Bon : "AI-powered compliance automation for fintech"
-   - ❌ Mauvais : "AI stuff"
-
-2. **Choisir le Mode d'Exécution** :
-   - **Fast** : Pour tester rapidement une idée
-   - **Standard** : Pour une analyse complète
-   - **Validation Sprint** : Pour un MVP en 7 jours
-
-3. **Paramétrer les Idées** : 3-15 idées selon vos besoins
-
-### Étape 2 : Surveillance de la Progression
-
-Pendant l'exécution, suivez en temps réel :
-
-- **🔄 Initialisation** : Démarrage du pipeline
-- **🔍 Scraping** : Collecte des données de marché
-- **📊 Analyse** : Traitement des informations
-- **💡 Génération** : Création des idées
-- **🎯 Évaluation** : Scoring des idées
-- **📋 PRD** : Génération des spécifications
-- **🛠️ Tech Spec** : Spécifications techniques
-- **🏗️ MVP** : Construction du prototype
-- **📝 Contenu** : Génération du contenu marketing
-
-### Étape 3 : Analyse des Résultats
-
-#### Résumé
-
-- **💡 Idées Générées** : Nombre et score moyen
-- **🏆 Meilleur Score** : L'idée la plus prometteuse
-- **⏱️ Temps d'Exécution** : Durée totale du pipeline
-
-#### Visualisations
-
-- **📊 Graphique des Scores** : Comparaison visuelle des idées
-- **🎯 Jauge de Confiance** : Score de confiance global
-- **📈 Signaux de Marché** : Forces des signaux collectés
-
-#### Détails Techniques
-
-- **Product Requirements Document** : Spécifications complètes
-- **Technical Specifications** : Architecture et stack technique
-- **Repository** : Lien vers le code généré
-
----
-
-## 📊 Monitoring et Alertes
-
-### Tableau de Bord Qualité
-
-Le dashboard affiche en temps réel :
-
-#### Métriques Globales
-- **🚀 Total Runs** : Nombre total d'exécutions
-- **✅ Taux de Succès** : Pourcentage de pipelines réussis
-- **⚡ Temps Moyen** : Durée moyenne d'exécution
-- **🎯 Score Confiance** : Score de confiance moyen
-
-#### Exécutions Récentes
-- **Run ID** : Identifiant unique
-- **Topic** : Sujet analysé
-- **Status** : ✅ Completed / ❌ Failed
-- **Confidence** : Score de confiance
-- **Time** : Durée d'exécution
-
-### Système d'Alertes
-
-#### Types d'Alertes
-
-1. **🔧 Système**
-   - CPU > 80%
-   - Mémoire > 85%
-   - Disque > 90%
-
-2. **📊 Pipeline**
-   - Taux d'échec > 10%
-   - Temps d'exécution > 5 minutes
-   - Échec de génération
-
-3. **🎯 Qualité**
-   - Score de confiance < 50%
-   - Peu de signaux de marché
-   - Idées de faible qualité
-
-#### Configuration des Alertes
-
-Les alertes peuvent être envoyées via :
-
-- **📧 Email** : Notifications SMTP détaillées
-- **🔗 Webhook** : Appels HTTP personnalisés
-- **💬 Slack** : Messages dans un canal dédié
-- **🎮 Discord** : Notifications sur serveur Discord
-- **🖥️ Console** : Affichage en temps réel
-
-### Métriques Détaillées
-
-#### Métriques de Pipeline
-- **Temps par étape** : Durée de chaque phase
-- **Taux de conversion** : Idées → MVP
-- **Qualité des outputs** : Scores et évaluations
-
-#### Métriques Système
-- **Utilisation CPU** : Pourcentage d'utilisation
-- **Mémoire** : RAM utilisée vs disponible
-- **Disque** : Espace de stockage
-- **Réseau** : Traffic et latence
-
----
-
-## 📤 Exports et Rapports
-
-### Formats Disponibles
-
-#### 📄 JSON
-- **Contenu** : Données brutes complètes
-- **Usage** : Intégration API, traitement automatisé
-- **Structure** : Hiérarchique avec métadonnées
-
-#### 📊 CSV
-- **Contenu** : Données tabulaires (idées, scores)
-- **Usage** : Analyse dans Excel/Google Sheets
-- **Structure** : Tableau plat avec colonnes standardisées
-
-#### 📝 Markdown
-- **Contenu** : Rapport lisible par humains
-- **Usage** : Documentation, partage
-- **Structure** : Formaté avec titres et listes
-
-#### 📋 PDF
-- **Contenu** : Rapport professionnel
-- **Usage** : Présentations, archives
-- **Structure** : Mise en page formattée
-
-#### 📦 ZIP (Complet)
-- **Contenu** : Tous les formats + artefacts
-- **Usage** : Archive complète, sauvegarde
-- **Structure** : Dossiers organisés par type
-
-### Export Automatisé
-
-#### Configuration
-
-```python
-# Exemple d'export programmatique
-from app.ui.export_manager import get_export_manager
-
-export_manager = get_export_manager()
-results = {...}  # Vos résultats
-run_id = "20240207_120000"
-
-# Exporter en JSON
-json_data = export_manager.export_results(results, "json", run_id)
-
-# Exporter en ZIP
-zip_data = export_manager.export_results(results, "zip", run_id)
-```
-
-#### Intégration CI/CD
-
-```yaml
-# GitHub Actions example
-- name: Export Results
-  run: |
-    python -c "
-    from app.ui.export_manager import get_export_manager
-    export_manager = get_export_manager()
-    # Export logic here
-    "
-```
-
----
-
-## 🔧 Dépannage
-
-### Problèmes Courants
-
-#### ❌ Ollama Non Disponible
-
-**Symptôme** : "Ollama not reachable"
-
-**Solutions** :
-1. Vérifiez qu'Ollama est installé : `ollama --version`
-2. Démarrez le service : `ollama serve`
-3. Vérifiez les modèles : `ollama list`
-4. Téléchargez les modèles manquants :
+1. **Environment Configuration**
    ```bash
-   ollama pull llama3.1:8b
-   ollama pull qwen2.5-coder:7b
+   cp .env.example .env
+   # Edit .env with your preferences
    ```
 
-#### ⏱️ Pipeline Lent
+2. **Verify Installation**
+   ```bash
+   python -m app doctor
+   ```
 
-**Symptôme** : Temps d'exécution > 30 minutes
+3. **Test Basic Functionality**
+   ```bash
+   python -m app run --topic "Test venture" --fast
+   ```
 
-**Solutions** :
-1. Passez en mode Fast
-2. Réduisez le nombre d'idées
-3. Limitez les sources de scraping
-4. Vérifiez votre connexion internet
+---
 
-#### 📊 Scores Faibles
+## ⚡ Quick Start
 
-**Symptôme** : Scores d'idées < 50
+### Your First Venture in 5 Minutes
 
-**Solutions** :
-1. Affinez votre topic
-2. Ajoutez des seed data pertinentes
-3. Vérifiez la qualité des sources
-4. Utilisez un ICP spécifique
+1. **Launch the Web Interface**
+   ```bash
+   streamlit run app/ui_enhanced.py
+   ```
 
-#### 🚨 Alertes Non Reçues
+2. **Create Your First Venture**
+   - Navigate to "🚀 New Venture"
+   - Enter a topic: "AI-powered task management for remote teams"
+   - Select "Fast Mode" for quick results
+   - Click "🚀 Launch Venture"
 
-**Symptôme** : Pas de notifications d'alertes
+3. **Monitor Progress**
+   - Watch real-time AI agent activity
+   - View generated ideas and analysis
+   - Download results when complete
 
-**Solutions** :
-1. Vérifiez la configuration `.env`
-2. Testez les notifications : `python -m app test-alerts`
-3. Vérifiez les logs d'erreurs
-4. Confirmez les credentials (email, webhook)
-
-### Logs et Debugging
-
-#### Activer les Logs Détaillés
+### Command Line Quick Start
 
 ```bash
-# Logs JSON structurés
-export LOG_JSON=true
+# Simple venture creation
+python -m app run --topic "Sustainable fashion marketplace" --fast
 
-# Niveau de log détaillé
-export LOG_LEVEL=DEBUG
-
-# Redémarrer l'application
-streamlit run app/ui.py
+# Advanced venture with custom parameters
+python -m app run \
+  --topic "AI compliance for healthcare" \
+  --n_ideas 5 \
+  --profile deep \
+  --seed-icp "Healthcare CTOs" \
+  --seed-pains "Regulatory compliance, data privacy"
 ```
 
-#### Emplacement des Logs
+---
 
-- **Application** : `data/audit.log`
-- **Pipeline** : `runs/<run_id>/progress.log`
-- **Erreurs** : `runs/<run_id>/error.log`
-- **Métriques** : `data/metrics.log`
+## 🌐 Web Interface
 
-#### Commandes de Diagnostic
+### Dashboard Overview
 
+The web interface provides an intuitive dashboard with:
+
+- **📊 Metrics Dashboard**: Real-time statistics and activity monitoring
+- **🚀 Venture Creation**: Form-based venture generation
+- **📈 Quality Dashboard**: Quality metrics and analysis
+- **⚙️ Settings**: Configuration and preferences
+
+### Navigation
+
+- **Sidebar Navigation**: Easy access to all features
+- **Real-time Updates**: Live progress tracking
+- **Responsive Design**: Works on desktop and mobile
+- **Dark/Light Mode**: Automatic theme detection
+
+### Key Features
+
+#### 1. Metrics Dashboard
+- Total ventures created
+- Success rate tracking
+- Recent activity timeline
+- System status indicators
+
+#### 2. Venture Creation Form
+- **Topic Input**: Describe your venture idea
+- **Configuration Options**: 
+  - Number of ideas (1-10)
+  - Execution profile (quick/standard/deep)
+  - Fast mode toggle
+- **Advanced Options**:
+  - Target ICP (Ideal Customer Profile)
+  - Pain points
+  - Competitors
+  - Market context
+
+#### 3. Quality Dashboard
+- Code quality metrics
+- Performance indicators
+- Security analysis
+- Compliance checks
+
+---
+
+## 💻 Command Line Interface
+
+### Basic Commands
+
+#### Doctor Command
 ```bash
-# Vérifier l'environnement
+# Check system health
 python -m app doctor
 
-# Tester les composants
-python -m app test-ollama
-python -m app test-scraping
-python -m app test-alerts
+# Output includes:
+# - Ollama connection status
+# - Memory and CPU usage
+# - Configuration validation
+# - Dependency checks
+```
 
-# Nettoyer les caches
+#### Run Command
+```bash
+# Basic usage
+python -m app run --topic "Your venture topic"
+
+# With options
+python -m app run \
+  --topic "AI-powered education platform" \
+  --n_ideas 3 \
+  --fast \
+  --profile standard
+
+# Advanced options
+python -m app run \
+  --topic "Blockchain supply chain" \
+  --n_ideas 5 \
+  --profile deep \
+  --seed-icp "Supply chain managers" \
+  --seed-pains "Transparency, efficiency, cost" \
+  --seed-competitors "IBM, Oracle, SAP" \
+  --seed-context "Post-pandemic logistics"
+```
+
+#### Ship Command
+```bash
+# Full pipeline with deployment attempt
+python -m app ship --topic "Mobile fitness coaching"
+```
+
+#### Build MVP Command
+```bash
+# Build MVP from existing run
+python -m app build-mvp --run-id 20260227_001208_849003
+
+# Build from brief
+python -m app build-mvp \
+  --brief "AI-powered customer service chatbot" \
+  --output ./my-mvp \
+  --cycles foundation,ux,polish
+```
+
+### Management Commands
+
+#### List and Monitor Runs
+```bash
+# List all runs
+python -m app list-runs
+
+# Show run details
+python -m app show-run --run-id 20260227_001208_849003
+
+# Resume a failed run
+python -m app resume --run-id 20260227_001208_849003
+```
+
+#### Cleanup and Maintenance
+```bash
+# Cleanup old runs
+python -m app cleanup --purge-days 30
+
+# Backup data
+python -m app backup --retention-days 7
+```
+
+---
+
+## 🎯 Creating Ventures
+
+### Venture Topic Guidelines
+
+#### Good Topics
+- **Specific**: "AI-powered expense tracking for freelancers"
+- **Problem-focused**: "Automated compliance checking for startups"
+- **Market-oriented**: "B2B SaaS for inventory management"
+- **Technology-specific**: "Machine learning for fraud detection"
+
+#### Poor Topics
+- **Too vague**: "Something with AI"
+- **Too broad**: "E-commerce platform"
+- **Too narrow**: "Calculator app with one feature"
+- **No market**: "Personal hobby project"
+
+### Execution Profiles
+
+#### Quick Profile
+- **Time**: 5-10 minutes
+- **Depth**: Surface-level analysis
+- **Best for**: Idea validation, rapid prototyping
+- **Resources**: Minimal LLM usage
+
+#### Standard Profile
+- **Time**: 15-30 minutes
+- **Depth**: Comprehensive analysis
+- **Best for**: Most use cases, detailed planning
+- **Resources**: Balanced LLM usage
+
+#### Deep Profile
+- **Time**: 45-60 minutes
+- **Depth**: Exhaustive analysis
+- **Best for**: Complex ventures, enterprise solutions
+- **Resources**: Maximum LLM usage
+
+### Seed Inputs
+
+#### Ideal Customer Profile (ICP)
+```bash
+# Examples
+--seed-icp "B2B SaaS founders, Series A+"
+--seed-icp "Healthcare CIOs at hospitals >500 beds"
+--seed-icp "E-commerce store owners doing $1M+ revenue"
+```
+
+#### Pain Points
+```bash
+# Examples
+--seed-pains "Manual data entry, compliance reporting"
+--seed-pains "Customer churn, high acquisition costs"
+--seed-pains "Inventory management, supply chain visibility"
+```
+
+#### Competitors
+```bash
+# Examples
+--seed-competitors "Salesforce, HubSpot, Pipedrive"
+--seed-competitors "Shopify, BigCommerce, WooCommerce"
+--seed-competitors "Jira, Asana, Monday.com"
+```
+
+---
+
+## 📊 Managing Runs
+
+### Run Lifecycle
+
+1. **Created**: Initial setup and validation
+2. **Running**: AI agents processing
+3. **Completed**: Successfully finished
+4. **Failed**: Error occurred
+5. **Archived**: Old runs moved to storage
+
+### Run Structure
+
+Each run creates a directory structure:
+```
+runs/
+├── 20260227_001208_849003/
+│   ├── run_state.json      # Run metadata and status
+│   ├── progress.log        # Detailed progress log
+│   ├── llm_model_selection.json  # AI model choices
+│   ├── adaptive_thresholds.json   # Dynamic thresholds
+│   ├── run_budget.json     # Resource allocation
+│   ├── seed_context.json   # Input parameters
+│   └── repo_skeleton/      # Generated codebase
+│       ├── README.md
+│       ├── package.json
+│       └── src/
+```
+
+### Monitoring Progress
+
+#### Web Interface
+- Real-time progress updates
+- Agent activity logs
+- Quality metrics
+- Resource usage
+
+#### Command Line
+```bash
+# Follow progress in real-time
+tail -f runs/20260227_001208_849003/progress.log
+
+# Check run status
+python -m app show-run --run-id 20260227_001208_849003
+```
+
+### Troubleshooting Failed Runs
+
+#### Common Issues
+1. **Ollama Connection**: Ensure Ollama is running
+2. **Memory Issues**: Check available RAM
+3. **Network Issues**: Verify internet connection
+4. **Model Availability**: Ensure models are downloaded
+
+#### Recovery Steps
+```bash
+# Check run status
+python -m app show-run --run-id RUN_ID
+
+# Resume if possible
+python -m app resume --run-id RUN_ID
+
+# Check logs for errors
+cat runs/RUN_ID/progress.log | grep ERROR
+```
+
+---
+
+## 📈 Quality Dashboard
+
+### Metrics Overview
+
+The Quality Dashboard provides comprehensive insights into:
+
+#### Code Quality
+- **Code Complexity**: Cyclomatic complexity analysis
+- **Code Coverage**: Test coverage percentage
+- **Code Smells**: Detectable code issues
+- **Technical Debt**: Estimated improvement effort
+
+#### Performance Metrics
+- **Response Time**: API and UI response times
+- **Memory Usage**: Application memory consumption
+- **CPU Usage**: Processor utilization
+- **Database Performance**: Query execution times
+
+#### Security Analysis
+- **Vulnerability Scanning**: Security issue detection
+- **Dependency Check**: Outdated or vulnerable packages
+- **Secret Detection**: Hardcoded secrets identification
+- **Compliance**: Industry standard compliance
+
+#### Quality Gates
+- **Automated Checks**: Pre-defined quality thresholds
+- **Manual Review**: Human validation steps
+- **Continuous Integration**: CI/CD pipeline integration
+- **Quality Trends**: Historical quality metrics
+
+### Using the Dashboard
+
+1. **Access**: Click "📊 Quality" in the sidebar
+2. **Filter**: Filter by date, project, or metric type
+3. **Drill Down**: Click metrics for detailed analysis
+4. **Export**: Download reports in PDF or CSV format
+
+---
+
+## 🔧 Advanced Features
+
+### Autonomous Loop
+
+The Asmblr Loop enables continuous improvement:
+
+```bash
+# Start autonomous loop
+python -m app loop \
+  --goal "Improve user onboarding experience" \
+  --max-iter 5 \
+  --tests "pytest -q" \
+  --approve-mode auto
+
+# Dry run to preview changes
+python -m app loop \
+  --goal "Fix performance bottlenecks" \
+  --dry-run \
+  --max-iter 3
+```
+
+### Golden Runs
+
+Create reproducible golden runs:
+
+```bash
+# Capture golden run
+python -m app golden-run --topic "E-commerce platform"
+
+# Use golden run as template
+python -m app run --topic "Custom e-commerce" --template golden-run-id
+```
+
+### Devil's Advocate
+
+Get critical feedback on your ventures:
+
+```bash
+# Run critique
+python -m app critique --run-id RUN_ID --mode strict
+
+# Standard critique
+python -m app critique --run-id RUN_ID --mode standard
+```
+
+### Custom Templates
+
+Create reusable venture templates:
+
+```bash
+# List available templates
+python -m app templates --list
+
+# Use template
+python -m app run --template saas-template --topic "Custom CRM"
+
+# Create custom template
+python -m app create-template \
+  --name "fintech-template" \
+  --from-run RUN_ID
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Ollama Connection Issues
+```bash
+# Check Ollama status
+ollama list
+
+# Restart Ollama
+ollama serve
+
+# Test connection
+curl http://localhost:11434/api/tags
+```
+
+#### Memory Issues
+```bash
+# Check memory usage
+python -m app doctor
+
+# Enable lightweight mode
+export LIGHTWEIGHT_MODE=true
+
+# Clear cache
 python -m app cleanup --cache
 ```
 
----
+#### Import Errors
+```bash
+# Check dependencies
+pip install -r requirements.txt
 
-## 💡 Bonnes Pratiques
+# Verify Python version
+python --version
 
-### Optimisation des Résultats
-
-#### 1. Topics Efficaces
-
-✅ **Bons exemples** :
-- "AI-powered expense tracking for freelancers"
-- "Automated compliance checking for healthcare"
-- "Smart scheduling tool for distributed teams"
-
-❌ **Mauvais exemples** :
-- "AI startup"
-- "Something with blockchain"
-- "Revolutionary app"
-
-#### 2. Seed Data Qualité
-
-**ICP (Ideal Customer Profile)** :
-```
-Freelance developers aged 25-40, working remotely,
-earning $50k-$150k annually, struggling with
-time tracking and invoicing
+# Reinstall if needed
+pip install --force-reinstall -r requirements.txt
 ```
 
-**Pain Points** :
+#### Performance Issues
+```bash
+# Run performance optimizer
+python performance_optimizer.py
+
+# Apply performance config
+cp .env.performance .env
+
+# Monitor resources
+python -m app monitor --realtime
 ```
-- Manual time tracking is tedious
-- Invoicing takes too much time
-- Difficult to track project profitability
-- Currency conversion headaches
-```
 
-#### 3. Configuration Optimale
+### Error Codes
 
-**Pour le Proof of Concept** :
-- Mode : Fast
-- Idées : 3-5
-- Sources : 3-5
+| Code | Description | Solution |
+|------|-------------|----------|
+| E001 | Ollama not connected | Start Ollama service |
+| E002 | Insufficient memory | Enable lightweight mode |
+| E003 | Model not found | Download required models |
+| E004 | Invalid topic format | Use 3-200 characters |
+| E005 | Rate limit exceeded | Wait and retry |
 
-**Pour l'Analyse Complète** :
-- Mode : Standard
-- Idées : 8-12
-- Sources : 8-10
+### Getting Help
 
-**Pour la Production** :
-- Mode : Validation Sprint
-- Idées : 10-15
-- Sources : 10-12
-
-### Monitoring Proactif
-
-#### Alertes Essentielles
-
-Configurez au minimum :
-- **Email** : Pour les alertes critiques
-- **Console** : Pour le debugging en temps réel
-- **Webhook** : Pour l'intégration avec vos outils
-
-#### KPIs à Surveiller
-
-- **Taux de succès** : > 80%
-- **Temps moyen** : < 15 minutes (mode standard)
-- **Score de confiance** : > 70%
-- **Taux d'alertes** : < 5% par jour
-
-### Sécurité et Conformité
-
-#### Données Sensibles
-
-- **Jamais** de credentials dans le code
-- **Toujours** utiliser les variables d'environnement
-- **Réduire** l'accès aux données personnelles
-- **Auditer** régulièrement les logs
-
-#### Performance
-
-- **Monitorer** l'utilisation CPU/mémoire
-- **Limiter** les exécutions parallèles
-- **Nettoyer** les anciens runs
-- **Optimiser** les tailles de cache
+1. **Documentation**: Check this guide first
+2. **Doctor Command**: Run `python -m app doctor`
+3. **Community**: Join our Discord community
+4. **Issues**: Report bugs on GitHub
+5. **Support**: Contact support@asmblr.ai
 
 ---
 
-## 📞 Support et Communauté
+## 💡 Best Practices
 
-### Obtenir de l'Aide
+### Venture Creation
 
-1. **Documentation** : Consultez ce guide d'abord
-2. **Logs** : Analysez les logs d'erreurs
-3. **Diagnostics** : Utilisez `python -m app doctor`
-4. **Community** : Rejoignez notre Discord/Slack
-5. **Issues** : Signalez les problèmes sur GitHub
+#### Topic Optimization
+- **Be Specific**: "AI-powered expense tracking" vs "Finance app"
+- **Identify Pain Points**: Focus on real problems
+- **Consider Market**: Ensure viable target market
+- **Leverage AI**: Use AI's unique capabilities
 
-### Contribuer
+#### Parameter Selection
+- **Start with Fast Mode**: Quick validation first
+- **Use Standard Profile**: For most production use cases
+- **Deep Profile**: Only for complex, high-value ventures
+- **Seed Inputs**: Provide context for better results
 
-Nous welcome les contributions ! Voir `CONTRIBUTING.md` pour :
-- Report de bugs
-- Demandes de fonctionnalités
-- Pull requests
-- Documentation
+### Performance Optimization
+
+#### System Configuration
+- **Use Lightweight Mode**: For systems with <4GB RAM
+- **Enable Caching**: Improve response times
+- **Monitor Resources**: Track CPU and memory usage
+- **Regular Cleanup**: Remove old runs and cache
+
+#### Development Workflow
+- **Iterative Development**: Start simple, add complexity
+- **Quality Gates**: Ensure quality at each step
+- **Automated Testing**: Run tests automatically
+- **Documentation**: Document decisions and architecture
+
+### Security Best Practices
+
+#### Environment Configuration
+- **Use Environment Variables**: Never hardcode secrets
+- **Secure .env Files**: Add to .gitignore
+- **Regular Updates**: Keep dependencies updated
+- **Access Control**: Limit access to sensitive data
+
+#### Production Deployment
+- **HTTPS Only**: Always use HTTPS in production
+- **Rate Limiting**: Prevent abuse
+- **Monitoring**: Track security events
+- **Backups**: Regular data backups
+
+### Team Collaboration
+
+#### Version Control
+- **Branch Strategy**: Use feature branches
+- **Code Reviews**: Review all changes
+- **Documentation**: Keep docs updated
+- **Testing**: Comprehensive test coverage
+
+#### Knowledge Sharing
+- **Templates**: Create reusable templates
+- **Golden Runs**: Share successful patterns
+- **Best Practices**: Document lessons learned
+- **Training**: Regular team training
 
 ---
 
-*Ce guide est maintenu par l'équipe Asmblr. Dernière mise à jour : Février 2024*
+## 📞 Support & Community
+
+### Getting Help
+
+- **Documentation**: This user guide
+- **API Docs**: [docs.asmblr.ai](https://docs.asmblr.ai)
+- **Community**: [discord.gg/asmblr](https://discord.gg/asmblr)
+- **Issues**: [github.com/asmblr/asmblr/issues](https://github.com/asmblr/asmblr/issues)
+- **Email**: support@asmblr.ai
+
+### Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+### Updates
+
+- **Release Notes**: Check CHANGELOG.md
+- **Roadmap**: View future plans in ROADMAP_FUTURE.md
+- **Blog**: Follow our blog for updates
+
+---
+
+## 📄 License
+
+Asmblr is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+**Happy Venture Building! 🚀**
+
+*Built with ❤️ by the Asmblr Team*

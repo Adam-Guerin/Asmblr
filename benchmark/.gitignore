@@ -1,0 +1,49 @@
+# Benchmark Results and Analysis
+results/
+analysis/
+*.json
+*.csv
+*.xlsx
+*.pkl
+*.model
+
+# Temporary Files
+tmp/
+temp/
+cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs
+logs/
+*.log
+*.out
+
+# Environment
+.env
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large Data Files
+*.zip
+*.tar.gz
+*.rar
+datasets/raw/
+datasets/processed/
+
+# Sensitive Information
+secrets/
+credentials/
+api_keys.txt

@@ -1,0 +1,77 @@
+# Default benchmark configuration
+
+# Dataset configuration
+dataset_name: "toy_pains_v1"
+dataset_path: null
+train_split: 0.7
+val_split: 0.15
+test_split: 0.15
+
+# Run configuration
+seed: 42
+output_dir: "benchmark_outputs"
+experiment_id: null
+
+# Asmblr run directories (for evaluation)
+asmblr_run_dirs: []
+
+# Baselines to run
+baselines:
+  - "random"
+  - "rule_based"
+  - "single_agent"
+
+# Metrics to compute
+metrics:
+  - "pain_extraction_quality"
+  - "pain_specificity_score"
+  - "clustering_quality"
+  - "idea_novelty"
+  - "feasibility_score"
+  - "competitor_coverage"
+  - "decision_quality"
+  - "confidence_calibration"
+  - "prd_completeness"
+  - "tech_spec_actionability"
+  - "artifact_coverage"
+
+# Metric weights (should sum to 1.0)
+metric_weights:
+  pain_extraction_quality: 0.15
+  pain_specificity_score: 0.10
+  clustering_quality: 0.10
+  idea_novelty: 0.15
+  feasibility_score: 0.10
+  competitor_coverage: 0.10
+  decision_quality: 0.15
+  confidence_calibration: 0.10
+  prd_completeness: 0.05
+  tech_spec_actionability: 0.05
+  artifact_coverage: 0.05
+
+# Metric thresholds
+thresholds:
+  pain_extraction_quality: 0.7
+  pain_specificity_score: 0.6
+  clustering_quality: 0.6
+  idea_novelty: 0.5
+  feasibility_score: 0.6
+  competitor_coverage: 0.7
+  decision_quality: 0.8
+  confidence_calibration: 0.8
+  prd_completeness: 0.7
+  tech_spec_actionability: 0.7
+  artifact_coverage: 0.8
+
+# Bootstrap configuration
+bootstrap_samples: 1000
+confidence_level: 0.95
+
+# Reporting configuration
+generate_plots: true
+generate_markdown: true
+include_detailed_errors: false
+
+# Reproducibility
+deterministic: true
+save_intermediate: true
