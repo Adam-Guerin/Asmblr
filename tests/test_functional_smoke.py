@@ -4,10 +4,8 @@ Focus sur les tests de smoke et les composants critiques existants
 """
 
 import pytest
-import tempfile
-import json
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 
 class TestSmokeTests:

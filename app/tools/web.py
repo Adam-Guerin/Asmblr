@@ -2,7 +2,7 @@ import hashlib
 import json
 import time
 import re
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from email.utils import parsedate_to_datetime
 from dataclasses import dataclass
 from pathlib import Path
@@ -332,20 +332,20 @@ class WebSearchAndSummarize:
                 text = text[:-1] + "+00:00"
             dt = datetime.fromisoformat(text)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt.astimezone(timezone.utc).isoformat()
+                dt = dt.replace(tzinfo=UTC)
+            return dt.astimezone(UTC).isoformat()
         except Exception:
             pass
         try:
             dt = parsedate_to_datetime(text)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt.astimezone(timezone.utc).isoformat()
+                dt = dt.replace(tzinfo=UTC)
+            return dt.astimezone(UTC).isoformat()
         except Exception:
             pass
         for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%Y-%m-%d %H:%M:%S"):
             try:
-                dt = datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+                dt = datetime.strptime(text, fmt).replace(tzinfo=UTC)
                 return dt.isoformat()
             except Exception:
                 continue

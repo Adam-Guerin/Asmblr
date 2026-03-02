@@ -6,7 +6,7 @@ Automatically configures optimal settings for resource-constrained environments
 import os
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 from datetime import datetime
 from loguru import logger
 import psutil
@@ -24,7 +24,7 @@ class LightweightConfigManager:
         """Check if lightweight mode is active"""
         return os.getenv("LIGHTWEIGHT_MODE", "").lower() == "true"
     
-    def get_system_resources(self) -> Dict[str, Any]:
+    def get_system_resources(self) -> dict[str, Any]:
         """Get current system resource information"""
         try:
             memory = psutil.virtual_memory()
@@ -43,11 +43,11 @@ class LightweightConfigManager:
             logger.warning(f"Failed to get system resources: {e}")
             return {}
     
-    def load_cached_config(self) -> Optional[Dict[str, Any]]:
+    def load_cached_config(self) -> dict[str, Any] | None:
         """Load cached lightweight configuration"""
         try:
             if self.cache_file.exists():
-                with open(self.cache_file, 'r') as f:
+                with open(self.cache_file) as f:
                     cache_data = json.load(f)
                 
                 # Check if cache is recent (less than 24 hours)
@@ -59,7 +59,7 @@ class LightweightConfigManager:
         
         return None
     
-    def save_cached_config(self, config: Dict[str, Any]):
+    def save_cached_config(self, config: dict[str, Any]):
         """Save lightweight configuration to cache"""
         try:
             cache_data = {
@@ -75,7 +75,7 @@ class LightweightConfigManager:
         except Exception as e:
             logger.warning(f"Failed to save cached config: {e}")
     
-    def generate_ai_optimized_config(self, context: Dict[str, Any]) -> Dict[str, str]:
+    def generate_ai_optimized_config(self, context: dict[str, Any]) -> dict[str, str]:
         """Generate AI-optimized configuration based on context"""
         resources = self.get_system_resources()
         
@@ -185,7 +185,7 @@ class LightweightConfigManager:
         
         return config
     
-    def get_missing_variables(self) -> Dict[str, str]:
+    def get_missing_variables(self) -> dict[str, str]:
         """Get variables that are not set but needed for lightweight mode"""
         essential_vars = {
             "MARKET_SIGNAL_THRESHOLD": "40",
@@ -212,7 +212,7 @@ class LightweightConfigManager:
         
         return missing_vars
     
-    def apply_ai_optimizations(self, context: Optional[Dict[str, Any]] = None):
+    def apply_ai_optimizations(self, context: dict[str, Any] | None = None):
         """Apply AI-driven optimizations to environment"""
         if not self.is_lightweight_mode():
             return

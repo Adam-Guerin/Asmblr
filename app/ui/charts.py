@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
-from typing import Dict, Any, List, Optional
-import json
+from typing import Any
 
 
 class ChartManager:
@@ -19,7 +17,7 @@ class ChartManager:
             "#F39C12", "#E74C3C", "#9B59B6", "#3498DB"
         ]
     
-    def create_idea_scoring_chart(self, ideas_data: List[Dict[str, Any]]) -> go.Figure:
+    def create_idea_scoring_chart(self, ideas_data: list[dict[str, Any]]) -> go.Figure:
         """Create an interactive idea scoring chart."""
         if not ideas_data:
             return self._empty_chart("Aucune idée à afficher")
@@ -84,7 +82,7 @@ class ChartManager:
         
         return fig
     
-    def create_pipeline_timeline(self, stages_data: List[Dict[str, Any]]) -> go.Figure:
+    def create_pipeline_timeline(self, stages_data: list[dict[str, Any]]) -> go.Figure:
         """Create a pipeline execution timeline."""
         if not stages_data:
             return self._empty_chart("Aucune donnée de timeline")
@@ -117,7 +115,7 @@ class ChartManager:
         
         return fig
     
-    def create_market_signals_chart(self, signals_data: Dict[str, Any]) -> go.Figure:
+    def create_market_signals_chart(self, signals_data: dict[str, Any]) -> go.Figure:
         """Create market signals visualization."""
         if not signals_data:
             return self._empty_chart("Aucun signal de marché")
@@ -150,7 +148,7 @@ class ChartManager:
         
         return fig
     
-    def create_risk_assessment_radar(self, risk_data: Dict[str, float]) -> go.Figure:
+    def create_risk_assessment_radar(self, risk_data: dict[str, float]) -> go.Figure:
         """Create a risk assessment radar chart."""
         if not risk_data:
             return self._empty_chart("Aucune donnée de risque")
@@ -183,7 +181,7 @@ class ChartManager:
         
         return fig
     
-    def create_competitor_analysis(self, competitors_data: List[Dict[str, Any]]) -> go.Figure:
+    def create_competitor_analysis(self, competitors_data: list[dict[str, Any]]) -> go.Figure:
         """Create competitor analysis chart."""
         if not competitors_data:
             return self._empty_chart("Aucune donnée concurrentielle")
@@ -235,7 +233,7 @@ class ChartManager:
         
         return fig
     
-    def create_execution_metrics(self, metrics_data: Dict[str, Any]) -> go.Figure:
+    def create_execution_metrics(self, metrics_data: dict[str, Any]) -> go.Figure:
         """Create execution metrics dashboard."""
         if not metrics_data:
             return self._empty_chart("Aucune métrique d'exécution")
@@ -331,7 +329,7 @@ class ChartManager:
         """Render a chart in Streamlit."""
         st.plotly_chart(fig, use_container_width=use_container_width)
     
-    def create_metrics_summary(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+    def create_metrics_summary(self, metrics: dict[str, Any]) -> dict[str, Any]:
         """Create a metrics summary for display."""
         return {
             "total_ideas": metrics.get("total_ideas", 0),

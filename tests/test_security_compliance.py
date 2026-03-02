@@ -4,26 +4,15 @@ Tests security, authentication, authorization, and compliance of all new compone
 """
 
 import asyncio
-import pytest
 import time
 import json
 import tempfile
 import os
-import hashlib
-import secrets
-from pathlib import Path
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock
 import redis.asyncio as redis
 
 # Import all new features for security testing
-from app.core.ai_orchestrator import AIOrchestrator
-from app.core.predictive_monitoring import PredictiveMonitoring
-from app.core.advanced_debugger import AdvancedDebugger
-from app.core.ai_code_generator import AICodeGenerator
-from app.core.advanced_testing import AdvancedTestingFramework
-from app.core.multi_cloud import MultiCloudManager
-from app.core.multi_llm import MultiLLMManager
 from app.core.plugin_system import PluginManager
 from app.core.enterprise_features import EnterpriseManager, UserRole, Permission
 from app.core.security import SecurityManager

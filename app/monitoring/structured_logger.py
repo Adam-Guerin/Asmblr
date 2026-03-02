@@ -5,9 +5,8 @@ Compatible avec le smart logger existant
 
 import json
 import logging
-import sys
 from datetime import datetime
-from typing import Dict, Any, Optional, Union
+from typing import Any
 from pathlib import Path
 from enum import Enum
 import uuid
@@ -47,7 +46,7 @@ class StructuredLogger:
                  environment: str = "development",
                  version: str = "1.0.0",
                  enable_file_output: bool = True,
-                 log_file_path: Optional[str] = None):
+                 log_file_path: str | None = None):
         
         self.service_name = service_name
         self.environment = environment
@@ -87,7 +86,7 @@ class StructuredLogger:
                          level: LogLevel,
                          category: LogCategory,
                          message: str,
-                         **kwargs) -> Dict[str, Any]:
+                         **kwargs) -> dict[str, Any]:
         """Crée une entrée de log structurée"""
         
         # Timestamp
@@ -152,7 +151,7 @@ class StructuredLogger:
         """Génère un span ID unique"""
         return str(uuid.uuid4())[:16]
     
-    def _write_log(self, log_entry: Dict[str, Any]):
+    def _write_log(self, log_entry: dict[str, Any]):
         """Écrire le log avec le logger approprié"""
         level = log_entry["level"]
         message = log_entry["message"]

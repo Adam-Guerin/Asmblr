@@ -7,16 +7,13 @@ import asyncio
 import json
 import hashlib
 import time
-from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
 import redis
-import pickle
 import logging
-from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -77,13 +74,13 @@ class SemanticLLMCache:
         
         # Initialiser FAISS pour la recherche vectorielle
         self.index = faiss.IndexFlatIP(embedding_dim)  # Inner Product
-        self.entries: List[CacheEntry] = []
+        self.entries: list[CacheEntry] = []
         
         # Statistiques
         self.stats = CacheStats()
         
         # Cache des embeddings
-        self.embedding_cache: Dict[str, np.ndarray] = {}
+        self.embedding_cache: dict[str, np.ndarray] = {}
         
         logger.info(f"Cache sémantique initialisé avec modèle {model_name}")
     
@@ -102,7 +99,7 @@ class SemanticLLMCache:
             logger.error(f"Erreur lors de l'initialisation: {e}")
             raise
     
-    async def get(self, prompt: str, model_name: str) -> Optional[str]:
+    async def get(self, prompt: str, model_name: str) -> str | None:
         """
         Récupère une réponse depuis le cache avec recherche sémantique
         
@@ -236,7 +233,7 @@ class SemanticLLMCache:
         
         return embedding
     
-    async def _search_similar(self, query_embedding: np.ndarray, model_name: str, top_k: int = 5) -> List[CacheEntry]:
+    async def _search_similar(self, query_embedding: np.ndarray, model_name: str, top_k: int = 5) -> list[CacheEntry]:
         """Recherche les entrées similaires dans le cache"""
         if len(self.entries) == 0:
             return []
@@ -417,7 +414,7 @@ class SemanticLLMCache:
     async def import_cache(self, filepath: str):
         """Importe le cache depuis un fichier"""
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath) as f:
                 import_data = json.load(f)
             
             # Vider le cache actuel
@@ -453,7 +450,7 @@ class SemanticLLMCache:
 
 
 # Singleton global
-_semantic_cache: Optional[SemanticLLMCache] = None
+_semantic_cache: SemanticLLMCache | None = None
 
 
 async def get_semantic_cache() -> SemanticLLMCache:

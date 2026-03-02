@@ -6,11 +6,10 @@ read multiple times during pipeline execution, reducing I/O overhead and improvi
 
 from __future__ import annotations
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any
 import json
 import threading
 import time
-import hashlib
 import logging
 
 # Import du smart logger pour logging optimisé
@@ -35,8 +34,8 @@ class ArtifactCache:
         """
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._timestamps: Dict[str, float] = {}
+        self._cache: dict[str, dict[str, Any]] = {}
+        self._timestamps: dict[str, float] = {}
         self._lock = threading.RLock()
     
     def _is_expired(self, key: str) -> bool:
@@ -126,7 +125,7 @@ class ArtifactCache:
             self._timestamps.clear()
             logger.debug("Cleared artifact cache")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics for monitoring."""
         return {
             "size": len(self._cache),
@@ -155,7 +154,7 @@ class CachedArtifactLoader:
         
         # Load from disk with caching
         try:
-            with open(self.file_path, 'r', encoding='utf-8') as f:
+            with open(self.file_path, encoding='utf-8') as f:
                 data = json.load(f)
                 self.cache.set(cache_key, data)
                 logger.debug(f"Cached artifact: {artifact_name}")
@@ -175,7 +174,7 @@ class CachedArtifactLoader:
         
         # Load from disk with caching
         try:
-            with open(self.file_path, 'r', encoding='utf-8') as f:
+            with open(self.file_path, encoding='utf-8') as f:
                 data = f.read()
                 self.cache.set(cache_key, data)
                 logger.debug(f"Cached text artifact: {artifact_name}")

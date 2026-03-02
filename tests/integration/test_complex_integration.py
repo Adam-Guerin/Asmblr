@@ -6,14 +6,9 @@ Tests de bout en bout, performance, charge et résilience
 import pytest
 import asyncio
 import time
-import json
 import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, List, Any
+from unittest.mock import Mock, patch
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import requests
-from fastapi.testclient import TestClient
 
 from app.core.config import Settings
 from app.core.pipeline import VenturePipeline
@@ -226,11 +221,11 @@ class TestComplexIntegration:
                         llm_client = LLMClient("http://localhost:11434", "llama3.1:8b")
                         pipeline = VenturePipeline(config)
             
-            # Configurer les composants si nécessaire
-            if hasattr(pipeline, 'cache_manager'):
-                pipeline.cache_manager = cache
-            if hasattr(pipeline, 'llm_client'):
-                pipeline.llm_client = llm_client
+                        # Configurer les composants si nécessaire
+                        if hasattr(pipeline, 'cache_manager'):
+                            pipeline.cache_manager = cache
+                        if hasattr(pipeline, 'llm_client'):
+                            pipeline.llm_client = llm_client
                         
                         run_id = pipeline.create_run()
                         pipeline.add_idea(run_id, {"name": f"Idea {index}", "description": f"Desc {index}"})

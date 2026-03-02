@@ -4,13 +4,9 @@ Performance Optimizer for Asmblr Phase 3
 Optimizes application performance, response times, and resource usage
 """
 
-import os
 import time
-import json
 import psutil
-import asyncio
 from pathlib import Path
-from typing import Dict, List, Tuple
 import subprocess
 import sys
 
@@ -19,7 +15,7 @@ class PerformanceOptimizer:
         self.root_path = root_path
         self.metrics = {}
         
-    def analyze_system_resources(self) -> Dict:
+    def analyze_system_resources(self) -> dict:
         """Analyze current system resource usage"""
         return {
             'cpu_count': psutil.cpu_count(),
@@ -31,7 +27,7 @@ class PerformanceOptimizer:
             'network_connections': len(psutil.net_connections())
         }
     
-    def optimize_python_imports(self) -> Dict:
+    def optimize_python_imports(self) -> dict:
         """Optimize Python imports for faster startup"""
         optimizations = []
         
@@ -40,7 +36,7 @@ class PerformanceOptimizer:
         
         for file_path in app_files:
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, encoding='utf-8') as f:
                     content = f.read()
                     
                 # Check for heavy imports at module level
@@ -62,7 +58,7 @@ class PerformanceOptimizer:
             'optimizations': optimizations[:10]  # Top 10
         }
     
-    def optimize_database_queries(self) -> Dict:
+    def optimize_database_queries(self) -> dict:
         """Analyze and suggest database query optimizations"""
         optimizations = []
         
@@ -71,7 +67,7 @@ class PerformanceOptimizer:
         
         for file_path in app_files:
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, encoding='utf-8') as f:
                     lines = f.readlines()
                 
                 for i, line in enumerate(lines):
@@ -92,7 +88,7 @@ class PerformanceOptimizer:
             'optimizations': optimizations[:5]
         }
     
-    def optimize_caching_strategy(self) -> Dict:
+    def optimize_caching_strategy(self) -> dict:
         """Analyze and suggest caching improvements"""
         cache_opportunities = []
         
@@ -101,7 +97,7 @@ class PerformanceOptimizer:
         
         for file_path in app_files:
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, encoding='utf-8') as f:
                     content = f.read()
                 
                 # Check for API calls without caching
@@ -129,7 +125,7 @@ class PerformanceOptimizer:
             'recommendations': cache_opportunities[:10]
         }
     
-    def create_performance_config(self) -> Dict:
+    def create_performance_config(self) -> dict:
         """Create optimized performance configuration"""
         system_info = self.analyze_system_resources()
         
@@ -188,7 +184,7 @@ HEALTH_CHECK_INTERVAL=30
             'env_content': env_content
         }
     
-    def benchmark_application(self) -> Dict:
+    def benchmark_application(self) -> dict:
         """Run performance benchmarks"""
         benchmarks = {}
         

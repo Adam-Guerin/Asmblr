@@ -7,15 +7,14 @@ import os
 import asyncio
 import json
 import psutil
-import time
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from datetime import datetime
+from typing import Any
 from dataclasses import dataclass
 from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
 from loguru import logger
-from prometheus_client import Gauge, Counter, Histogram
+from prometheus_client import Gauge, Counter
 
 # Configuration
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
@@ -50,8 +49,8 @@ class OptimizationAction:
     description: str
     impact: str
     timestamp: datetime
-    metrics_before: Dict[str, float]
-    metrics_after: Optional[Dict[str, float]] = None
+    metrics_before: dict[str, float]
+    metrics_after: dict[str, float] | None = None
 
 
 class ResourceOptimizer:
@@ -59,8 +58,8 @@ class ResourceOptimizer:
     
     def __init__(self):
         self.redis_client = None
-        self.optimization_history: List[OptimizationAction] = []
-        self.baseline_metrics: Optional[SystemMetrics] = None
+        self.optimization_history: list[OptimizationAction] = []
+        self.baseline_metrics: SystemMetrics | None = None
         
     async def initialize(self):
         """Initialise l'optimiseur"""
@@ -187,7 +186,7 @@ class ResourceOptimizer:
         
         return max(0, min(100, score))
     
-    async def analyze_and_optimize(self, metrics: SystemMetrics) -> List[OptimizationAction]:
+    async def analyze_and_optimize(self, metrics: SystemMetrics) -> list[OptimizationAction]:
         """Analyse les métriques et propose des optimisations"""
         actions = []
         
@@ -416,7 +415,7 @@ class ResourceOptimizer:
         except Exception as e:
             logger.error(f"Failed to store optimization action: {e}")
     
-    async def get_optimization_status(self) -> Dict[str, Any]:
+    async def get_optimization_status(self) -> dict[str, Any]:
         """Récupère le statut d'optimisation"""
         try:
             current_metrics = await self.collect_metrics()
@@ -497,7 +496,7 @@ class AutoOptimizer:
                 logger.error(f"Optimization loop error: {e}")
                 await asyncio.sleep(OPTIMIZATION_INTERVAL)
     
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Récupère le statut de l'optimiseur"""
         return await self.resource_optimizer.get_optimization_status()
 

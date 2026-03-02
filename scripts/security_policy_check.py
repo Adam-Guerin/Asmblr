@@ -6,10 +6,8 @@ Validates security configurations and policies
 
 import os
 import json
-import sys
-import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 from loguru import logger
 
 class SecurityPolicyChecker:
@@ -50,7 +48,7 @@ class SecurityPolicyChecker:
             }
         }
     
-    def check_all_policies(self) -> Dict[str, Any]:
+    def check_all_policies(self) -> dict[str, Any]:
         """Run all security policy checks"""
         logger.info("🔒 Running comprehensive security policy checks")
         
@@ -89,7 +87,7 @@ class SecurityPolicyChecker:
             # Check .env file for default passwords
             env_file = Path('.env')
             if env_file.exists():
-                with open(env_file, 'r') as f:
+                with open(env_file) as f:
                     content = f.read().lower()
                     for pwd in default_passwords:
                         if pwd in content:
@@ -211,7 +209,7 @@ class SecurityPolicyChecker:
             # Check Docker security best practices
             dockerfile_path = Path('Dockerfile')
             if dockerfile_path.exists():
-                with open(dockerfile_path, 'r') as f:
+                with open(dockerfile_path) as f:
                     content = f.read().lower()
                     
                     # Check for root user
@@ -236,7 +234,7 @@ class SecurityPolicyChecker:
             
             for compose_file in compose_files:
                 if Path(compose_file).exists():
-                    with open(compose_file, 'r') as f:
+                    with open(compose_file) as f:
                         content = f.read().lower()
                     
                     # Check for exposed ports
@@ -265,7 +263,7 @@ class SecurityPolicyChecker:
             
             for env_file in env_files:
                 if Path(env_file).exists():
-                    with open(env_file, 'r') as f:
+                    with open(env_file) as f:
                         content = f.read().lower()
                         
                         for pattern in sensitive_patterns:
@@ -282,7 +280,7 @@ class SecurityPolicyChecker:
             python_files = list(Path('.').rglob('**/*.py'))
             for py_file in python_files:
                 try:
-                    with open(py_file, 'r') as f:
+                    with open(py_file) as f:
                         content = f.read()
                         for pattern in code_patterns:
                             if pattern in content:
@@ -295,7 +293,7 @@ class SecurityPolicyChecker:
         except Exception as e:
             logger.error(f"Error checking environment variables: {e}")
     
-    def _generate_report(self) -> Dict[str, Any]:
+    def _generate_report(self) -> dict[str, Any]:
         """Generate comprehensive security report"""
         try:
             report = {
@@ -334,7 +332,7 @@ class SecurityPolicyChecker:
         except Exception:
             return 0
     
-    def _get_recommendations(self) -> List[str]:
+    def _get_recommendations(self) -> list[str]:
         """Get security improvement recommendations"""
         recommendations = []
         

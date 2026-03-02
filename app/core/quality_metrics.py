@@ -5,10 +5,8 @@ and improve the quality of generated ideas, scoring, and analysis.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Any, Optional
+from typing import Any
 from enum import Enum
-import re
-from loguru import logger
 
 
 class QualityLevel(Enum):
@@ -42,8 +40,8 @@ class QualityMetrics:
     quality_level: QualityLevel
     
     # Recommendations
-    improvement_areas: List[str]
-    strengths: List[str]
+    improvement_areas: list[str]
+    strengths: list[str]
 
 
 class QualityMetricsCalculator:
@@ -60,9 +58,9 @@ class QualityMetricsCalculator:
     
     def calculate_idea_quality(
         self, 
-        ideas: List[Dict[str, Any]], 
-        pains: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+        ideas: list[dict[str, Any]], 
+        pains: list[dict[str, Any]]
+    ) -> dict[str, float]:
         """Calculate quality metrics for generated ideas."""
         
         if not ideas:
@@ -102,7 +100,7 @@ class QualityMetricsCalculator:
             'innovation': sum(innovation_scores) / len(innovation_scores)
         }
     
-    def _calculate_specificity(self, idea: Dict[str, Any]) -> float:
+    def _calculate_specificity(self, idea: dict[str, Any]) -> float:
         """Calculate how specific and concrete an idea is."""
         score = 0.0
         max_score = 100.0
@@ -147,7 +145,7 @@ class QualityMetricsCalculator:
         
         return max(0, min(score, max_score))
     
-    def _calculate_feasibility(self, idea: Dict[str, Any]) -> float:
+    def _calculate_feasibility(self, idea: dict[str, Any]) -> float:
         """Assess technical feasibility of the idea."""
         score = 50.0  # Base score
         
@@ -171,7 +169,7 @@ class QualityMetricsCalculator:
         
         return max(0, min(100, score))
     
-    def _calculate_market_validation(self, idea: Dict[str, Any], pains: List[Dict[str, Any]]) -> float:
+    def _calculate_market_validation(self, idea: dict[str, Any], pains: list[dict[str, Any]]) -> float:
         """Assess market validation evidence."""
         score = 0.0
         
@@ -201,7 +199,7 @@ class QualityMetricsCalculator:
         
         return min(100, score)
     
-    def _calculate_innovation(self, idea: Dict[str, Any]) -> float:
+    def _calculate_innovation(self, idea: dict[str, Any]) -> float:
         """Assess innovation and differentiation."""
         score = 50.0  # Base score
         
@@ -228,7 +226,7 @@ class QualityMetricsCalculator:
         
         return max(0, min(100, score))
     
-    def calculate_signal_quality(self, pages: List[Dict[str, Any]]) -> Dict[str, float]:
+    def calculate_signal_quality(self, pages: list[dict[str, Any]]) -> dict[str, float]:
         """Calculate quality metrics for signal data."""
         if not pages:
             return {
@@ -271,8 +269,8 @@ class QualityMetricsCalculator:
     
     def calculate_overall_quality(
         self, 
-        idea_metrics: Dict[str, float],
-        signal_metrics: Dict[str, float]
+        idea_metrics: dict[str, float],
+        signal_metrics: dict[str, float]
     ) -> QualityMetrics:
         """Calculate overall quality score and recommendations."""
         
@@ -337,9 +335,9 @@ class QualityMetricsCalculator:
 
 
 def evaluate_run_quality(
-    ideas: List[Dict[str, Any]],
-    pains: List[Dict[str, Any]], 
-    pages: List[Dict[str, Any]]
+    ideas: list[dict[str, Any]],
+    pains: list[dict[str, Any]], 
+    pages: list[dict[str, Any]]
 ) -> QualityMetrics:
     """Evaluate the quality of an Asmblr run."""
     calculator = QualityMetricsCalculator()

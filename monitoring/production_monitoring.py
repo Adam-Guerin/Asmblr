@@ -10,7 +10,6 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
 import psutil
 import requests
 from dataclasses import dataclass
@@ -31,7 +30,7 @@ class MetricThreshold:
     unit: str = ""
 
 class ProductionMonitor:
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(self, config_path: Path | None = None):
         self.config_path = config_path or Path("monitoring/config.json")
         self.metrics_history = []
         self.alerts_sent = []
@@ -85,7 +84,7 @@ class ProductionMonitor:
         
         return logger
     
-    def collect_system_metrics(self) -> Dict:
+    def collect_system_metrics(self) -> dict:
         """Collect system performance metrics"""
         try:
             # CPU metrics
@@ -138,7 +137,7 @@ class ProductionMonitor:
             self.logger.error(f"Error collecting system metrics: {e}")
             return {}
     
-    def perform_health_checks(self) -> Dict:
+    def perform_health_checks(self) -> dict:
         """Perform health checks on all services"""
         results = {}
         
@@ -198,7 +197,7 @@ class ProductionMonitor:
         
         return results
     
-    def check_application_metrics(self) -> Dict:
+    def check_application_metrics(self) -> dict:
         """Check application-specific metrics"""
         metrics = {}
         
@@ -230,7 +229,7 @@ class ProductionMonitor:
         
         return metrics
     
-    def evaluate_thresholds(self, metrics: Dict) -> List[Dict]:
+    def evaluate_thresholds(self, metrics: dict) -> list[dict]:
         """Evaluate metrics against thresholds and generate alerts"""
         alerts = []
         
@@ -319,7 +318,7 @@ class ProductionMonitor:
         
         return alerts
     
-    def generate_dashboard_data(self) -> Dict:
+    def generate_dashboard_data(self) -> dict:
         """Generate data for monitoring dashboard"""
         current_metrics = {
             "system": self.collect_system_metrics(),
@@ -368,7 +367,7 @@ class ProductionMonitor:
             }
         }
     
-    def save_metrics(self, data: Dict):
+    def save_metrics(self, data: dict):
         """Save metrics to file"""
         metrics_dir = Path("monitoring/metrics")
         metrics_dir.mkdir(parents=True, exist_ok=True)

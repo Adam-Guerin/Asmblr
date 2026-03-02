@@ -6,18 +6,13 @@ Separates read and write operations for optimal performance and scalability
 import asyncio
 import json
 import uuid
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from typing import Any
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from abc import ABC, abstractmethod
 import logging
-from collections import defaultdict
 import redis
-import sqlite3
-from pathlib import Path
-import threading
-from concurrent.futures import ThreadPoolExecutor
 import time
 
 logging.basicConfig(level=logging.INFO)
@@ -38,12 +33,12 @@ class Command:
     command_id: str
     command_type: str
     aggregate_id: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: datetime
-    expected_version: Optional[int] = None
-    metadata: Dict[str, Any] = None
+    expected_version: int | None = None
+    metadata: dict[str, Any] = None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'command_id': self.command_id,
             'command_type': self.command_type,
@@ -60,8 +55,8 @@ class CommandResult:
     """Result of command execution"""
     command_id: str
     status: CommandStatus
-    result: Optional[Any] = None
-    error: Optional[str] = None
+    result: Any | None = None
+    error: str | None = None
     execution_time: float = 0.0
     timestamp: datetime = None
     
@@ -75,7 +70,7 @@ class Query:
     """Base query class"""
     query_id: str
     query_type: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     timestamp: datetime = None
     
     def __post_init__(self):
@@ -438,7 +433,7 @@ class ReadModel:
     def __init__(self, redis_url: str = "redis://localhost:6379/0"):
         self.redis_client = redis.from_url(redis_url)
     
-    async def get_idea(self, idea_id: str) -> Optional[Dict[str, Any]]:
+    async def get_idea(self, idea_id: str) -> dict[str, Any] | None:
         """Get idea from read model"""
         try:
             idea_key = f"idea_read_model:{idea_id}"
@@ -453,8 +448,8 @@ class ReadModel:
             logger.error(f"Error getting idea {idea_id}: {e}")
             return None
     
-    async def list_ideas(self, filters: Dict[str, Any] = None, 
-                        pagination: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def list_ideas(self, filters: dict[str, Any] = None, 
+                        pagination: dict[str, Any] = None) -> dict[str, Any]:
         """List ideas from read model"""
         try:
             filters = filters or {}
@@ -495,7 +490,7 @@ class ReadModel:
             logger.error(f"Error listing ideas: {e}")
             return {'ideas': [], 'total_count': 0}
     
-    async def get_mvp(self, mvp_id: str) -> Optional[Dict[str, Any]]:
+    async def get_mvp(self, mvp_id: str) -> dict[str, Any] | None:
         """Get MVP from read model"""
         try:
             mvp_key = f"mvp_read_model:{mvp_id}"
@@ -510,7 +505,7 @@ class ReadModel:
             logger.error(f"Error getting MVP {mvp_id}: {e}")
             return None
     
-    def _matches_filters(self, idea: Dict[str, Any], filters: Dict[str, Any]) -> bool:
+    def _matches_filters(self, idea: dict[str, Any], filters: dict[str, Any]) -> bool:
         """Check if idea matches filters"""
         for key, value in filters.items():
             if key not in idea:
@@ -529,8 +524,8 @@ class CommandBus:
     """Command bus for handling commands"""
     
     def __init__(self):
-        self.handlers: Dict[str, CommandHandler] = {}
-        self.middleware: List[callable] = []
+        self.handlers: dict[str, CommandHandler] = {}
+        self.middleware: list[callable] = []
     
     def register_handler(self, command_type: str, handler: CommandHandler) -> None:
         """Register a command handler"""
@@ -584,7 +579,7 @@ class QueryBus:
     """Query bus for handling queries"""
     
     def __init__(self):
-        self.handlers: Dict[str, QueryHandler] = {}
+        self.handlers: dict[str, QueryHandler] = {}
         self.cache = {}
         self.cache_ttl = 300  # 5 minutes
     
@@ -689,7 +684,7 @@ class CQRSService:
         self.command_bus.add_middleware(logging_middleware)
     
     async def send_command(self, command_type: str, aggregate_id: str, 
-                          data: Dict[str, Any], expected_version: int = None) -> CommandResult:
+                          data: dict[str, Any], expected_version: int = None) -> CommandResult:
         """Send a command"""
         command = Command(
             command_id=str(uuid.uuid4()),
@@ -702,7 +697,7 @@ class CQRSService:
         
         return await self.command_bus.send(command)
     
-    async def send_query(self, query_type: str, parameters: Dict[str, Any] = None) -> QueryResult:
+    async def send_query(self, query_type: str, parameters: dict[str, Any] = None) -> QueryResult:
         """Send a query"""
         query = Query(
             query_id=str(uuid.uuid4()),

@@ -5,14 +5,12 @@ Tracks MVP generation performance, user behavior, and business KPIs
 
 import time
 import json
-from typing import Dict, Any, List, Optional
+from typing import Any
 from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
-import asyncio
 
-from prometheus_client import Counter, Histogram, Gauge, Info
+from prometheus_client import Counter, Histogram, Gauge
 import redis.asyncio as redis
 from loguru import logger
 
@@ -32,7 +30,7 @@ class BusinessMetric:
     name: str
     description: str
     metric_type: MetricType
-    labels: List[str] = None
+    labels: list[str] = None
     unit: str = ""
     
     def __post_init__(self):
@@ -46,7 +44,7 @@ class BusinessMetricsCollector:
     def __init__(self):
         settings = get_settings()
         self.redis_url = settings.redis_url
-        self._redis_client: Optional[redis.Redis] = None
+        self._redis_client: redis.Redis | None = None
         
         # Prometheus metrics
         self._prometheus_metrics = {}
@@ -273,7 +271,7 @@ class BusinessMetricsCollector:
         model_type: str,
         execution_profile: str,
         duration: float,
-        quality_scores: Dict[str, float]
+        quality_scores: dict[str, float]
     ) -> None:
         """Record MVP generation metrics"""
         try:
@@ -321,7 +319,7 @@ class BusinessMetricsCollector:
         self,
         user_type: str,
         session_duration: float,
-        features_used: List[str]
+        features_used: list[str]
     ) -> None:
         """Record user session metrics"""
         try:
@@ -472,7 +470,7 @@ class BusinessMetricsCollector:
     async def get_mvp_analytics(
         self,
         time_period: str = "24h"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get MVP generation analytics"""
         try:
             redis_client = await self._get_redis_client()
@@ -534,7 +532,7 @@ class BusinessMetricsCollector:
     async def get_user_analytics(
         self,
         time_period: str = "24h"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get user engagement analytics"""
         try:
             redis_client = await self._get_redis_client()
@@ -588,7 +586,7 @@ class BusinessMetricsCollector:
             logger.warning(f"Failed to get user analytics: {e}")
             return {"error": str(e)}
     
-    async def get_performance_summary(self) -> Dict[str, Any]:
+    async def get_performance_summary(self) -> dict[str, Any]:
         """Get performance metrics summary"""
         try:
             redis_client = await self._get_redis_client()

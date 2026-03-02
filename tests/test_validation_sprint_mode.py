@@ -1,6 +1,5 @@
 """Test Validation Sprint 7 jours mode functionality."""
 
-import json
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock

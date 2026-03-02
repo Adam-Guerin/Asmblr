@@ -1,7 +1,6 @@
 """Test datetime validation for API key rotation."""
 
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC
 from app.core.config import _parse_iso_datetime
 
 
@@ -18,13 +17,13 @@ class TestParseISODatetime:
         assert result.hour == 12
         assert result.minute == 34
         assert result.second == 56
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
 
     def test_valid_iso_datetime_with_utc(self):
         """Test parsing ISO datetime with Z suffix."""
         result = _parse_iso_datetime("2024-01-31T12:34:56Z")
         assert result is not None
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
 
     def test_valid_iso_datetime_with_timezone(self):
         """Test parsing ISO datetime with timezone offset."""
@@ -52,7 +51,7 @@ class TestParseISODatetime:
         """Test parsing ISO datetime with milliseconds and Z."""
         result = _parse_iso_datetime("2024-01-31T12:34:56.789Z")
         assert result is not None
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
 
     def test_none_input(self):
         """Test that None input returns None."""
@@ -131,8 +130,8 @@ class TestParseISODatetime:
     def test_edge_case_exactly_10_years_past(self):
         """Test that exactly 10 years in past is accepted."""
         # This should work (exact boundary)
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
+        from datetime import datetime
+        now = datetime.now(UTC)
         past_date = now.replace(year=now.year - 10).strftime("%Y-%m-%dT%H:%M:%S")
         result = _parse_iso_datetime(past_date)
         assert result is not None
@@ -140,8 +139,8 @@ class TestParseISODatetime:
     def test_edge_case_exactly_10_years_future(self):
         """Test that exactly 10 years in future is accepted."""
         # This should work (exact boundary)
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
+        from datetime import datetime
+        now = datetime.now(UTC)
         future_date = now.replace(year=now.year + 10).strftime("%Y-%m-%dT%H:%M:%S")
         result = _parse_iso_datetime(future_date)
         assert result is not None
@@ -214,7 +213,7 @@ class TestParseISODatetime:
         """Test that uppercase Z is accepted."""
         result = _parse_iso_datetime("2024-01-31T12:34:56Z")
         assert result is not None
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
 
     def test_lowercase_z(self):
         """Test that lowercase z is rejected (invalid)."""

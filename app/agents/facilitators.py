@@ -2,23 +2,24 @@
 Facilitator agents for improved cross-agent coordination and synergy.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 from dataclasses import dataclass
 import json
 from pathlib import Path
 from loguru import logger
+from datetime import UTC
 
 
 @dataclass
 class SharedContext:
     """Shared knowledge base for cross-agent collaboration."""
-    insights: List[Dict[str, Any]]
-    conflicts: List[Dict[str, Any]]
-    decisions: List[Dict[str, Any]]
-    learnings: List[Dict[str, Any]]
-    validation_results: List[Dict[str, Any]]
+    insights: list[dict[str, Any]]
+    conflicts: list[dict[str, Any]]
+    decisions: list[dict[str, Any]]
+    learnings: list[dict[str, Any]]
+    validation_results: list[dict[str, Any]]
     
-    def add_insight(self, agent: str, insight: str, data: Dict[str, Any] = None):
+    def add_insight(self, agent: str, insight: str, data: dict[str, Any] = None):
         """Add an insight from an agent."""
         self.insights.append({
             "agent": agent,
@@ -36,7 +37,7 @@ class SharedContext:
             "timestamp": self._get_timestamp()
         })
     
-    def add_decision(self, agents: List[str], decision: str, rationale: str):
+    def add_decision(self, agents: list[str], decision: str, rationale: str):
         """Add a collaborative decision."""
         self.decisions.append({
             "agents": agents,
@@ -54,7 +55,7 @@ class SharedContext:
             "timestamp": self._get_timestamp()
         })
     
-    def add_validation(self, validator: str, validated: str, result: str, issues: List[str] = None):
+    def add_validation(self, validator: str, validated: str, result: str, issues: list[str] = None):
         """Add a validation result."""
         self.validation_results.append({
             "validator": validator,
@@ -66,10 +67,10 @@ class SharedContext:
     
     def _get_timestamp(self) -> str:
         """Get current timestamp."""
-        from datetime import datetime, timezone
-        return datetime.now(timezone.utc).isoformat()
+        from datetime import datetime
+        return datetime.now(UTC).isoformat()
     
-    def get_context_summary(self) -> Dict[str, Any]:
+    def get_context_summary(self) -> dict[str, Any]:
         """Get summary of shared context for agents."""
         return {
             "total_insights": len(self.insights),
@@ -90,7 +91,7 @@ class FacilitatorTools:
         self.run_id = run_id
         self.context_file = Path(f"runs/{run_id}/shared_context.json")
     
-    def sync_context(self) -> Dict[str, Any]:
+    def sync_context(self) -> dict[str, Any]:
         """Synchronize shared context from file."""
         try:
             if self.context_file.exists():
@@ -160,7 +161,7 @@ Your role in this collaboration:
         return prompt
 
 
-def create_facilitator_prompts() -> Dict[str, str]:
+def create_facilitator_prompts() -> dict[str, str]:
     """Create specialized prompts for facilitator agents."""
     
     return {

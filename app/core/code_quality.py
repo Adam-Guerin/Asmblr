@@ -6,7 +6,7 @@ Détecte et corrige automatiquement les problèmes de qualité
 import ast
 import re
 import json
-from typing import Dict, List, Any, Optional, Set, Tuple
+from typing import Any
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from loguru import logger
@@ -30,8 +30,8 @@ class QualityMetrics:
     total_files: int
     total_lines: int
     issues_found: int
-    issues_by_type: Dict[str, int]
-    issues_by_severity: Dict[str, int]
+    issues_by_type: dict[str, int]
+    issues_by_severity: dict[str, int]
     quality_score: float  # 0-100
 
 
@@ -42,7 +42,7 @@ class CodeQualityAnalyzer:
     """
     
     def __init__(self):
-        self.issues: List[QualityIssue] = []
+        self.issues: list[QualityIssue] = []
         self.metrics = QualityMetrics(0, 0, 0, {}, {}, 0.0)
         
         # Patterns de détection
@@ -103,7 +103,7 @@ class CodeQualityAnalyzer:
         
         return self.metrics
     
-    def analyze_file(self, file_path: Path) -> Tuple[List[QualityIssue], int]:
+    def analyze_file(self, file_path: Path) -> tuple[list[QualityIssue], int]:
         """
         Analyse un fichier Python spécifique
         
@@ -118,11 +118,11 @@ class CodeQualityAnalyzer:
         try:
             # Try UTF-8 first, fallback to latin-1 for compatibility
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, encoding='utf-8') as f:
                     content = f.read()
                     lines = content.split('\n')
             except UnicodeDecodeError:
-                with open(file_path, 'r', encoding='latin-1') as f:
+                with open(file_path, encoding='latin-1') as f:
                     content = f.read()
                     lines = content.split('\n')
             
@@ -140,7 +140,7 @@ class CodeQualityAnalyzer:
             logger.error(f"Erreur lecture fichier {file_path}: {e}")
             return [], 0
     
-    def _find_todos(self, file_path: Path, lines: List[str]) -> List[QualityIssue]:
+    def _find_todos(self, file_path: Path, lines: list[str]) -> list[QualityIssue]:
         """Détecte les TODO/FIXME/BUG/HACK"""
         issues = []
         
@@ -160,7 +160,7 @@ class CodeQualityAnalyzer:
         
         return issues
     
-    def _find_exception_issues(self, file_path: Path, lines: List[str]) -> List[QualityIssue]:
+    def _find_exception_issues(self, file_path: Path, lines: list[str]) -> list[QualityIssue]:
         """Détecte les problèmes de gestion d'exceptions"""
         issues = []
         
@@ -214,7 +214,7 @@ class CodeQualityAnalyzer:
         
         return issues
     
-    def _find_logging_issues(self, file_path: Path, lines: List[str]) -> List[QualityIssue]:
+    def _find_logging_issues(self, file_path: Path, lines: list[str]) -> list[QualityIssue]:
         """Détecte les problèmes de logging"""
         issues = []
         
@@ -245,7 +245,7 @@ class CodeQualityAnalyzer:
         
         return issues
     
-    def _find_code_smells(self, file_path: Path, lines: List[str]) -> List[QualityIssue]:
+    def _find_code_smells(self, file_path: Path, lines: list[str]) -> list[QualityIssue]:
         """Détecte les code smells courants"""
         issues = []
         
@@ -264,7 +264,7 @@ class CodeQualityAnalyzer:
         
         return issues
     
-    def _find_complexity_issues(self, file_path: Path, content: str) -> List[QualityIssue]:
+    def _find_complexity_issues(self, file_path: Path, content: str) -> list[QualityIssue]:
         """Détecte les problèmes de complexité"""
         issues = []
         
@@ -315,7 +315,7 @@ class CodeQualityAnalyzer:
         
         return issues
     
-    def _find_security_issues(self, file_path: Path, lines: List[str]) -> List[QualityIssue]:
+    def _find_security_issues(self, file_path: Path, lines: list[str]) -> list[QualityIssue]:
         """Détecte les problèmes de sécurité"""
         issues = []
         
@@ -342,7 +342,7 @@ class CodeQualityAnalyzer:
         
         return issues
     
-    def _calculate_metrics(self, files: List[Path], total_lines: int) -> QualityMetrics:
+    def _calculate_metrics(self, files: list[Path], total_lines: int) -> QualityMetrics:
         """Calcule les métriques de qualité"""
         issues_by_type = {}
         issues_by_severity = {}
@@ -373,15 +373,15 @@ class CodeQualityAnalyzer:
             quality_score=quality_score
         )
     
-    def get_issues_by_file(self, file_path: str) -> List[QualityIssue]:
+    def get_issues_by_file(self, file_path: str) -> list[QualityIssue]:
         """Récupère tous les problèmes pour un fichier spécifique"""
         return [issue for issue in self.issues if issue.file_path == file_path]
     
-    def get_issues_by_severity(self, severity: str) -> List[QualityIssue]:
+    def get_issues_by_severity(self, severity: str) -> list[QualityIssue]:
         """Récupère tous les problèmes par sévérité"""
         return [issue for issue in self.issues if issue.severity == severity]
     
-    def get_top_issues(self, limit: int = 10) -> List[QualityIssue]:
+    def get_top_issues(self, limit: int = 10) -> list[QualityIssue]:
         """Retourne les problèmes les plus critiques"""
         severity_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
         
@@ -409,7 +409,7 @@ class CodeQualityAnalyzer:
         else:
             raise ValueError(f"Format non supporté: {format_type}")
     
-    def _generate_summary(self) -> Dict[str, Any]:
+    def _generate_summary(self) -> dict[str, Any]:
         """Génère un résumé des problèmes"""
         if not self.issues:
             return {"status": "excellent", "message": "Aucun problème de qualité détecté"}
@@ -426,7 +426,7 @@ class CodeQualityAnalyzer:
         else:
             return {"status": "good", "message": "Qualité acceptable"}
     
-    def _generate_markdown_report(self, report_data: Dict[str, Any]) -> str:
+    def _generate_markdown_report(self, report_data: dict[str, Any]) -> str:
         """Génère un rapport au format Markdown"""
         metrics = report_data["metrics"]
         issues = report_data["issues"]
@@ -475,7 +475,7 @@ class CodeQualityFixer:
     def __init__(self):
         self.fixes_applied = 0
     
-    def auto_fix_issues(self, issues: List[QualityIssue], dry_run: bool = True) -> List[str]:
+    def auto_fix_issues(self, issues: list[QualityIssue], dry_run: bool = True) -> list[str]:
         """
         Applique automatiquement des corrections simples
         
@@ -507,13 +507,13 @@ class CodeQualityFixer:
         self.fixes_applied = len(corrections)
         return corrections
     
-    def _fix_print_statement(self, issue: QualityIssue, file_path: Optional[Path] = None, dry_run: bool = False) -> Optional[str]:
+    def _fix_print_statement(self, issue: QualityIssue, file_path: Path | None = None, dry_run: bool = False) -> str | None:
         """Corrige les print statements"""
         try:
             # Use provided file_path or issue.file_path
             actual_path = Path(file_path) if file_path else Path(issue.file_path)
             
-            with open(actual_path, 'r', encoding='utf-8') as f:
+            with open(actual_path, encoding='utf-8') as f:
                 lines = f.readlines()
             
             line_idx = issue.line_number - 1
@@ -537,13 +537,13 @@ class CodeQualityFixer:
             logger.error(f"Erreur correction print statement: {e}")
             return None
     
-    def _fix_broad_exception(self, issue: QualityIssue, file_path: Optional[Path] = None, dry_run: bool = False) -> Optional[str]:
+    def _fix_broad_exception(self, issue: QualityIssue, file_path: Path | None = None, dry_run: bool = False) -> str | None:
         """Corrige les exceptions trop larges"""
         try:
             # Use provided file_path or issue.file_path
             actual_path = Path(file_path) if file_path else Path(issue.file_path)
             
-            with open(actual_path, 'r', encoding='utf-8') as f:
+            with open(actual_path, encoding='utf-8') as f:
                 lines = f.readlines()
             
             line_idx = issue.line_number - 1
@@ -567,13 +567,13 @@ class CodeQualityFixer:
             logger.error(f"Erreur correction exception large: {e}")
             return None
     
-    def _fix_code_smell(self, issue: QualityIssue, file_path: Optional[Path] = None, dry_run: bool = False) -> Optional[str]:
+    def _fix_code_smell(self, issue: QualityIssue, file_path: Path | None = None, dry_run: bool = False) -> str | None:
         """Corrige les code smells simples"""
         try:
             # Use provided file_path or issue.file_path
             actual_path = Path(file_path) if file_path else Path(issue.file_path)
             
-            with open(actual_path, 'r', encoding='utf-8') as f:
+            with open(actual_path, encoding='utf-8') as f:
                 lines = f.readlines()
             
             line_idx = issue.line_number - 1
@@ -605,7 +605,7 @@ class CodeQualityFixer:
 
 
 # Instance globale de l'analyseur
-_quality_analyzer: Optional[CodeQualityAnalyzer] = None
+_quality_analyzer: CodeQualityAnalyzer | None = None
 
 
 def get_quality_analyzer() -> CodeQualityAnalyzer:
@@ -630,7 +630,7 @@ def analyze_code_quality(directory: Path = Path("app")) -> QualityMetrics:
     return analyzer.analyze_directory(directory)
 
 
-def auto_fix_quality_issues(dry_run: bool = True) -> List[str]:
+def auto_fix_quality_issues(dry_run: bool = True) -> list[str]:
     """
     Corrige automatiquement les problèmes de qualité
     

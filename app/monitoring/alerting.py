@@ -4,16 +4,14 @@ Intégration avec Alertmanager, Slack, Email, et Webhooks
 """
 
 import asyncio
-import json
 import time
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import Dict, List, Any, Optional
+from typing import Any
 from dataclasses import dataclass, asdict
 from enum import Enum
 import aiohttp
-import requests
 from loguru import logger
 
 from app.core.config import Settings
@@ -41,12 +39,12 @@ class Alert:
     status: AlertStatus
     message: str
     description: str
-    labels: Dict[str, str]
-    annotations: Dict[str, str]
+    labels: dict[str, str]
+    annotations: dict[str, str]
     timestamp: float
-    resolved_timestamp: Optional[float] = None
+    resolved_timestamp: float | None = None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convertir l'alerte en dictionnaire"""
         data = asdict(self)
         data["severity"] = self.severity.value
@@ -57,7 +55,7 @@ class Alert:
 class NotificationChannel:
     """Classe de base pour les canaux de notification"""
     
-    def __init__(self, name: str, config: Dict[str, Any]):
+    def __init__(self, name: str, config: dict[str, Any]):
         self.name = name
         self.config = config
         self.enabled = config.get("enabled", True)
@@ -240,14 +238,13 @@ class WebhookNotificationChannel(NotificationChannel):
         headers = self.config.get("headers", {})
         headers.setdefault("Content-Type", "application/json")
         
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                webhook_url,
-                json=payload,
-                headers=headers,
-                timeout=aiohttp.ClientTimeout(total=10)
-            ) as response:
-                return response.status < 400
+        async with aiohttp.ClientSession() as session, session.post(
+            webhook_url,
+            json=payload,
+            headers=headers,
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as response:
+            return response.status < 400
 
 
 class AlertManager:
@@ -256,9 +253,9 @@ class AlertManager:
     def __init__(self, settings: Settings, metrics: AsmblrMetrics):
         self.settings = settings
         self.metrics = metrics
-        self.channels: Dict[str, NotificationChannel] = {}
-        self.active_alerts: Dict[str, Alert] = {}
-        self.alert_history: List[Alert] = []
+        self.channels: dict[str, NotificationChannel] = {}
+        self.active_alerts: dict[str, Alert] = {}
+        self.alert_history: list[Alert] = []
         self._running = False
         
         # Charger la configuration
@@ -310,8 +307,8 @@ class AlertManager:
         severity: AlertSeverity,
         message: str,
         description: str,
-        labels: Optional[Dict[str, str]] = None,
-        annotations: Optional[Dict[str, str]] = None
+        labels: dict[str, str] | None = None,
+        annotations: dict[str, str] | None = None
     ) -> Alert:
         """Créer une nouvelle alerte"""
         
@@ -402,15 +399,15 @@ class AlertManager:
             
             logger.info(f"Alert notifications sent: {successful}/{total} successful")
     
-    def get_active_alerts(self) -> List[Alert]:
+    def get_active_alerts(self) -> list[Alert]:
         """Obtenir les alertes actives"""
         return list(self.active_alerts.values())
     
-    def get_alert_history(self, limit: int = 100) -> List[Alert]:
+    def get_alert_history(self, limit: int = 100) -> list[Alert]:
         """Obtenir l'historique des alertes"""
         return self.alert_history[-limit:]
     
-    def get_alert_stats(self) -> Dict[str, Any]:
+    def get_alert_stats(self) -> dict[str, Any]:
         """Obtenir les statistiques des alertes"""
         active_by_severity = {}
         for alert in self.active_alerts.values():

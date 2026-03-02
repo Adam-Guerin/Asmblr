@@ -1,18 +1,12 @@
 import os
 import time
-import json
-import html
-from datetime import datetime, timezone
-from pathlib import Path
 
-from app.core.config import get_settings, previous_secret_allowed
+from app.core.config import get_settings
 from app.core.llm import check_ollama
 from app.core.models import SeedInputs
 from app.core.run_manager import RunManager
 from app.ui_quality import render_quality_dashboard
 from app.core.rate_limit import RateLimiter
-from app.core.audit import write_audit_event
-from app.onboarding_templates import get_onboarding_templates, get_onboarding_template
 
 settings = get_settings()
 if settings.ui_host:

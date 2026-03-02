@@ -1,6 +1,5 @@
 import json
 import time
-from pathlib import Path
 
 # Créer un rapport de démonstration simplifié
 report = {

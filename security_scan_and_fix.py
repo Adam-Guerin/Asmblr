@@ -8,7 +8,6 @@ import os
 import re
 import json
 from pathlib import Path
-from typing import List, Dict, Tuple
 
 class SecurityScanner:
     def __init__(self, root_path: Path):
@@ -26,11 +25,11 @@ class SecurityScanner:
         self.file_extensions = ['.py', '.yml', '.yaml', '.json', '.env', '.env.example', '.md']
         self.exclude_dirs = ['.git', '__pycache__', 'node_modules', '.venv', 'venv']
         
-    def scan_file(self, file_path: Path) -> List[Dict]:
+    def scan_file(self, file_path: Path) -> list[dict]:
         """Scan a single file for security issues"""
         issues = []
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, encoding='utf-8', errors='ignore') as f:
                 content = f.read()
                 lines = content.split('\n')
                 
@@ -87,7 +86,7 @@ class SecurityScanner:
         
         return 'LOW'
     
-    def scan_all(self) -> Dict:
+    def scan_all(self) -> dict:
         """Scan all files and return comprehensive report"""
         all_issues = []
         file_count = 0
@@ -120,7 +119,7 @@ class SecurityScanner:
             'issues': all_issues
         }
     
-    def generate_fixes(self, issues: List[Dict]) -> List[Dict]:
+    def generate_fixes(self, issues: list[dict]) -> list[dict]:
         """Generate suggested fixes for security issues"""
         fixes = []
         
@@ -159,7 +158,7 @@ class SecurityScanner:
         else:
             return 'SECRET_KEY'
     
-    def create_security_report(self, report: Dict) -> str:
+    def create_security_report(self, report: dict) -> str:
         """Create a comprehensive security report"""
         output = []
         output.append("# 🔒 Asmblr Security Scan Report")

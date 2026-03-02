@@ -4,20 +4,18 @@ AI-powered dashboard with real-time predictions and insights
 """
 
 import asyncio
-import json
-from typing import Dict, Any, Optional, List
+from typing import Any
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 from enum import Enum
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 import uvicorn
 from loguru import logger
 import redis.asyncio as redis
 
-from app.core.predictive_monitoring import predictive_monitoring, MetricType, AlertSeverity
+from app.core.predictive_monitoring import predictive_monitoring, MetricType
 from app.core.adaptive_learning import adaptive_learning_engine, ModelType
 
 class DashboardType(Enum):
@@ -56,7 +54,7 @@ class PredictiveDashboard:
         self.templates = Jinja2Templates(directory="templates")
         
         # WebSocket connections
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: list[WebSocket] = []
         
         # Redis for real-time data
         self.redis_client = None
@@ -205,7 +203,7 @@ class PredictiveDashboard:
             logger.error(f"Dashboard rendering error: {e}")
             return f"<h1>Error rendering dashboard: {e}</h1>"
     
-    async def _get_dashboard_data(self, dashboard_type: DashboardType, time_range: TimeRange) -> Dict[str, Any]:
+    async def _get_dashboard_data(self, dashboard_type: DashboardType, time_range: TimeRange) -> dict[str, Any]:
         """Get dashboard data"""
         try:
             cache_key = f"dashboard_{dashboard_type.value}_{time_range.value}"
@@ -244,7 +242,7 @@ class PredictiveDashboard:
             logger.error(f"Dashboard data error for {dashboard_type.value}: {e}")
             return {"error": str(e)}
     
-    async def _get_overview_data(self, time_range: TimeRange) -> Dict[str, Any]:
+    async def _get_overview_data(self, time_range: TimeRange) -> dict[str, Any]:
         """Get overview dashboard data"""
         try:
             # Get metrics summary
@@ -276,7 +274,7 @@ class PredictiveDashboard:
             logger.error(f"Overview data error: {e}")
             return {}
     
-    async def _get_performance_data(self, time_range: TimeRange) -> Dict[str, Any]:
+    async def _get_performance_data(self, time_range: TimeRange) -> dict[str, Any]:
         """Get performance dashboard data"""
         try:
             # Get detailed metrics for each type
@@ -314,7 +312,7 @@ class PredictiveDashboard:
             logger.error(f"Performance data error: {e}")
             return {}
     
-    async def _get_predictions_dashboard_data(self, time_range: TimeRange) -> Dict[str, Any]:
+    async def _get_predictions_dashboard_data(self, time_range: TimeRange) -> dict[str, Any]:
         """Get predictions dashboard data"""
         try:
             predictions_data = {}
@@ -344,7 +342,7 @@ class PredictiveDashboard:
             logger.error(f"Predictions dashboard data error: {e}")
             return {}
     
-    async def _get_alerts_dashboard_data(self) -> Dict[str, Any]:
+    async def _get_alerts_dashboard_data(self) -> dict[str, Any]:
         """Get alerts dashboard data"""
         try:
             alerts_summary = await predictive_monitoring.get_alerts_summary()
@@ -365,7 +363,7 @@ class PredictiveDashboard:
             logger.error(f"Alerts dashboard data error: {e}")
             return {}
     
-    async def _get_learning_dashboard_data(self) -> Dict[str, Any]:
+    async def _get_learning_dashboard_data(self) -> dict[str, Any]:
         """Get learning dashboard data"""
         try:
             learning_insights = await adaptive_learning_engine.get_learning_insights()
@@ -393,7 +391,7 @@ class PredictiveDashboard:
             logger.error(f"Learning dashboard data error: {e}")
             return {}
     
-    async def _get_resources_data(self, time_range: TimeRange) -> Dict[str, Any]:
+    async def _get_resources_data(self, time_range: TimeRange) -> dict[str, Any]:
         """Get resources dashboard data"""
         try:
             # Get resource metrics
@@ -450,7 +448,7 @@ class PredictiveDashboard:
         
         return now - timedelta(hours=24)
     
-    def _calculate_health_score(self, metrics: Dict, alerts: Dict) -> float:
+    def _calculate_health_score(self, metrics: dict, alerts: dict) -> float:
         """Calculate system health score"""
         try:
             health_score = 100.0
@@ -481,7 +479,7 @@ class PredictiveDashboard:
             logger.error(f"Health score calculation error: {e}")
             return 75.0
     
-    def _calculate_trend(self, values: List[float]) -> str:
+    def _calculate_trend(self, values: list[float]) -> str:
         """Calculate trend from values"""
         try:
             if len(values) < 2:
@@ -521,7 +519,7 @@ class PredictiveDashboard:
             logger.error(f"Trend calculation error: {e}")
             return "stable"
     
-    def _calculate_prediction_accuracy(self, predictions: List) -> float:
+    def _calculate_prediction_accuracy(self, predictions: list) -> float:
         """Calculate prediction accuracy"""
         try:
             if len(predictions) < 5:

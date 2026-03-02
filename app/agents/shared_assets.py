@@ -2,12 +2,12 @@
 Shared Asset Management System for collaborative resource creation and reuse.
 """
 
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 from dataclasses import dataclass, field
 from enum import Enum
 import json
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from loguru import logger
 
 
@@ -69,10 +69,10 @@ class AssetMetadata:
     file_path: str
     file_size: int
     created_by: str
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     status: AssetStatus = AssetStatus.DRAFT
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
     category: str = ""
     version: str = "1.0.0"
     license: str = "internal"
@@ -80,36 +80,36 @@ class AssetMetadata:
     download_count: int = 0
     rating: float = 0.0
     rating_count: int = 0
-    dependencies: List[str] = field(default_factory=list)
-    compatible_with: List[str] = field(default_factory=list)
-    technical_specs: Dict[str, Any] = field(default_factory=dict)
-    hosting_info: Dict[str, Any] = field(default_factory=dict)
-    cta_templates: List[Dict[str, Any]] = field(default_factory=list)
-    preview_url: Optional[str] = None
-    download_url: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    compatible_with: list[str] = field(default_factory=list)
+    technical_specs: dict[str, Any] = field(default_factory=dict)
+    hosting_info: dict[str, Any] = field(default_factory=dict)
+    cta_templates: list[dict[str, Any]] = field(default_factory=list)
+    preview_url: str | None = None
+    download_url: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     def add_tag(self, tag: str) -> None:
         """Add a tag to this asset."""
         self.tags.add(tag.lower().strip())
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
     
     def record_usage(self) -> None:
         """Record usage of this asset."""
         self.usage_count += 1
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
     
     def record_download(self) -> None:
         """Record download of this asset."""
         self.download_count += 1
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
     
     def add_rating(self, rating: float) -> None:
         """Add a rating to this asset."""
         total_rating = self.rating * self.rating_count + rating
         self.rating_count += 1
         self.rating = total_rating / self.rating_count
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
 
 
 class SharedAssetManager:
@@ -118,21 +118,21 @@ class SharedAssetManager:
     def __init__(self, assets_dir: Path):
         self.assets_dir = assets_dir
         self.assets_dir.mkdir(parents=True, exist_ok=True)
-        self.assets: Dict[str, AssetMetadata] = {}
-        self.categories: Set[str] = set()
-        self.tags: Set[str] = set()
+        self.assets: dict[str, AssetMetadata] = {}
+        self.categories: set[str] = set()
+        self.tags: set[str] = set()
         self._load_assets()
     
     def create_asset(self, name: str, description: str, asset_type: AssetType,
                    format: AssetFormat, file_path: str, created_by: str,
-                   category: str = "", tags: List[str] = None,
-                   technical_specs: Dict[str, Any] = None,
-                   hosting_info: Dict[str, Any] = None,
-                   cta_templates: List[Dict[str, Any]] = None) -> Optional[str]:
+                   category: str = "", tags: list[str] = None,
+                   technical_specs: dict[str, Any] = None,
+                   hosting_info: dict[str, Any] = None,
+                   cta_templates: list[dict[str, Any]] = None) -> str | None:
         """Create a new shared asset."""
         try:
             # Generate unique asset ID
-            asset_id = f"asset_{asset_type.value}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{len(self.assets)}"
+            asset_id = f"asset_{asset_type.value}_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}_{len(self.assets)}"
             
             # Get file size
             full_path = self.assets_dir / file_path
@@ -169,14 +169,14 @@ class SharedAssetManager:
             logger.error(f"Failed to create asset: {e}")
             return None
     
-    def get_asset(self, asset_id: str) -> Optional[AssetMetadata]:
+    def get_asset(self, asset_id: str) -> AssetMetadata | None:
         """Get a specific asset by ID."""
         return self.assets.get(asset_id)
     
     def search_assets(self, asset_type: AssetType = None, category: str = None,
-                    tags: List[str] = None, created_by: str = None,
+                    tags: list[str] = None, created_by: str = None,
                     status: AssetStatus = None, format: AssetFormat = None,
-                    limit: int = 50, sort_by: str = "created_at") -> List[AssetMetadata]:
+                    limit: int = 50, sort_by: str = "created_at") -> list[AssetMetadata]:
         """Search assets based on criteria."""
         results = []
         
@@ -221,11 +221,11 @@ class SharedAssetManager:
         
         return results[:limit]
     
-    def get_assets_by_type(self, asset_type: AssetType) -> List[AssetMetadata]:
+    def get_assets_by_type(self, asset_type: AssetType) -> list[AssetMetadata]:
         """Get all assets of a specific type."""
         return [asset for asset in self.assets.values() if asset.asset_type == asset_type]
     
-    def get_popular_assets(self, limit: int = 20) -> List[AssetMetadata]:
+    def get_popular_assets(self, limit: int = 20) -> list[AssetMetadata]:
         """Get most popular assets by usage and downloads."""
         return sorted(
             self.assets.values(),
@@ -233,7 +233,7 @@ class SharedAssetManager:
             reverse=True
         )[:limit]
     
-    def get_recent_assets(self, limit: int = 20) -> List[AssetMetadata]:
+    def get_recent_assets(self, limit: int = 20) -> list[AssetMetadata]:
         """Get most recently created assets."""
         return sorted(
             self.assets.values(),
@@ -241,7 +241,7 @@ class SharedAssetManager:
             reverse=True
         )[:limit]
     
-    def update_asset(self, asset_id: str, updates: Dict[str, Any]) -> bool:
+    def update_asset(self, asset_id: str, updates: dict[str, Any]) -> bool:
         """Update an existing asset."""
         if asset_id not in self.assets:
             logger.error(f"Asset {asset_id} not found")
@@ -255,7 +255,7 @@ class SharedAssetManager:
                 if hasattr(asset, key):
                     setattr(asset, key, value)
             
-            asset.updated_at = datetime.now(timezone.utc).isoformat()
+            asset.updated_at = datetime.now(UTC).isoformat()
             self._save_asset(asset)
             
             logger.info(f"Updated asset {asset_id}")
@@ -269,7 +269,7 @@ class SharedAssetManager:
         """Approve an asset for publication."""
         return self.update_asset(asset_id, {
             "status": AssetStatus.APPROVED,
-            "metadata": {"approved_by": approved_by, "approved_at": datetime.now(timezone.utc).isoformat()}
+            "metadata": {"approved_by": approved_by, "approved_at": datetime.now(UTC).isoformat()}
         })
     
     def publish_asset(self, asset_id: str) -> bool:
@@ -281,7 +281,7 @@ class SharedAssetManager:
         
         return self.update_asset(asset_id, {
             "status": AssetStatus.PUBLISHED,
-            "metadata": {"published_at": datetime.now(timezone.utc).isoformat()}
+            "metadata": {"published_at": datetime.now(UTC).isoformat()}
         })
     
     def record_asset_usage(self, asset_id: str, used_by: str) -> bool:
@@ -296,13 +296,13 @@ class SharedAssetManager:
         usage_records = asset.metadata.get("usage_records", [])
         usage_records.append({
             "used_by": used_by,
-            "used_at": datetime.now(timezone.utc).isoformat()
+            "used_at": datetime.now(UTC).isoformat()
         })
         asset.metadata["usage_records"] = usage_records
         
         return self._save_asset(asset)
     
-    def get_asset_statistics(self) -> Dict[str, Any]:
+    def get_asset_statistics(self) -> dict[str, Any]:
         """Get asset management statistics."""
         stats = {
             "total_assets": len(self.assets),
@@ -352,7 +352,7 @@ class SharedAssetManager:
         
         return stats
     
-    def get_hosting_info_for_asset(self, asset_id: str) -> Optional[Dict[str, Any]]:
+    def get_hosting_info_for_asset(self, asset_id: str) -> dict[str, Any] | None:
         """Get hosting information for a specific asset."""
         asset = self.get_asset(asset_id)
         if not asset:
@@ -360,7 +360,7 @@ class SharedAssetManager:
         
         return asset.hosting_info
     
-    def get_cta_templates_for_asset(self, asset_id: str) -> List[Dict[str, Any]]:
+    def get_cta_templates_for_asset(self, asset_id: str) -> list[dict[str, Any]]:
         """Get CTA templates for a specific asset."""
         asset = self.get_asset(asset_id)
         if not asset:

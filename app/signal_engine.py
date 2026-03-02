@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from collections.abc import Callable
 from urllib.parse import quote_plus
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, UTC
 
 from app.core.config import Settings
 from app.tools.web import WebSearchAndSummarize, WebSource
@@ -172,8 +172,8 @@ class SignalEngine:
                 text = text[:-1] + "+00:00"
             dt = datetime.fromisoformat(text)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt.astimezone(timezone.utc).isoformat()
+                dt = dt.replace(tzinfo=UTC)
+            return dt.astimezone(UTC).isoformat()
         except Exception:
             return None
 
@@ -214,10 +214,10 @@ class SignalEngine:
                     text_dt = text_dt[:-1] + "+00:00"
                 dt = datetime.fromisoformat(str(text_dt))
                 if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
+                    dt = dt.replace(tzinfo=UTC)
                 days = int(source.get("recency_days") or self.settings.signal_recency_days)
                 if days > 0:
-                    delta_days = (datetime.now(timezone.utc) - dt).days
+                    delta_days = (datetime.now(UTC) - dt).days
                     half_life = max(1.0, days / 3.0)
                     recency_ratio = math.exp(-max(0.0, delta_days) / half_life)
                     if delta_days > (days * 3):
@@ -313,13 +313,13 @@ class SignalEngine:
                 published_at = published_at[:-1] + "+00:00"
             dt = datetime.fromisoformat(str(published_at))
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+                dt = dt.replace(tzinfo=UTC)
         except Exception:
             return True
         days = int(source.get("recency_days") or self.settings.signal_recency_days)
         if days <= 0:
             return True
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
         return dt >= cutoff
 
     def _fetch_reddit_api(self, source: dict[str, Any], pass_type: str, limit: int, topic: str) -> list[dict[str, Any]]:
@@ -353,7 +353,7 @@ class SignalEngine:
             created_utc = data.get("created_utc")
             published_at = None
             if isinstance(created_utc, (int, float)):
-                published_at = datetime.fromtimestamp(float(created_utc), tz=timezone.utc).isoformat()
+                published_at = datetime.fromtimestamp(float(created_utc), tz=UTC).isoformat()
             results.append(
                 {
                     "url": f"https://www.reddit.com{permalink}" if permalink else source.get("url"),
@@ -378,7 +378,7 @@ class SignalEngine:
             retry_max_wait=self.settings.retry_max_wait,
         )
         recency_days = int(source.get("recency_days") or self.settings.signal_recency_days)
-        since = (datetime.now(timezone.utc) - timedelta(days=max(1, recency_days))).date().isoformat()
+        since = (datetime.now(UTC) - timedelta(days=max(1, recency_days))).date().isoformat()
         api_url = str(source.get("api_url") or "").strip()
         if not api_url:
             api_url = (

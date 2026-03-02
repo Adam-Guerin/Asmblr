@@ -6,7 +6,7 @@ import json
 from email.mime.text import MimeText
 from email.mime.multipart import MimeMultipart
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Any
 from dataclasses import dataclass
 from enum import Enum
 import requests
@@ -30,7 +30,7 @@ class NotificationConfig:
     """Configuration for notification channels."""
     channel: NotificationChannel
     enabled: bool = True
-    config: Dict[str, Any] = None
+    config: dict[str, Any] = None
     
     def __post_init__(self):
         if self.config is None:
@@ -40,7 +40,7 @@ class NotificationConfig:
 class EmailNotifier:
     """Email notification handler."""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.smtp_server = config.get("smtp_server", "localhost")
         self.smtp_port = config.get("smtp_port", 587)
         self.username = config.get("username", "")
@@ -120,7 +120,7 @@ class EmailNotifier:
 class WebhookNotifier:
     """Webhook notification handler."""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.url = config.get("url", "")
         self.headers = config.get("headers", {})
         self.timeout = config.get("timeout", 30)
@@ -168,7 +168,7 @@ class WebhookNotifier:
 class SlackNotifier:
     """Slack notification handler."""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.webhook_url = config.get("webhook_url", "")
         self.channel = config.get("channel", "#alerts")
         self.username = config.get("username", "Asmblr Bot")
@@ -242,7 +242,7 @@ class SlackNotifier:
 class DiscordNotifier:
     """Discord notification handler."""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.webhook_url = config.get("webhook_url", "")
         self.username = config.get("username", "Asmblr Bot")
         self.avatar_url = config.get("avatar_url", "")
@@ -345,9 +345,9 @@ class AlertNotificationManager:
     """Manages alert notifications across multiple channels."""
     
     def __init__(self):
-        self.notifiers: Dict[NotificationChannel, Any] = {}
-        self.notification_configs: Dict[NotificationChannel, NotificationConfig] = {}
-        self.rate_limits: Dict[str, datetime] = {}
+        self.notifiers: dict[NotificationChannel, Any] = {}
+        self.notification_configs: dict[NotificationChannel, NotificationConfig] = {}
+        self.rate_limits: dict[str, datetime] = {}
         self.min_interval = timedelta(minutes=5)  # Minimum time between same alert notifications
     
     def add_notification_channel(self, config: NotificationConfig) -> bool:
@@ -385,7 +385,7 @@ class AlertNotificationManager:
             del self.notification_configs[channel]
         logger.info(f"Removed notification channel: {channel.value}")
     
-    def send_alert(self, alert: Alert) -> Dict[NotificationChannel, bool]:
+    def send_alert(self, alert: Alert) -> dict[NotificationChannel, bool]:
         """Send alert through all enabled channels."""
         results = {}
         
@@ -420,7 +420,7 @@ class AlertNotificationManager:
         
         return results
     
-    def test_notifications(self) -> Dict[NotificationChannel, bool]:
+    def test_notifications(self) -> dict[NotificationChannel, bool]:
         """Test all notification channels."""
         from .metrics import Alert, AlertSeverity
         
@@ -434,7 +434,7 @@ class AlertNotificationManager:
         
         return self.send_alert(test_alert)
     
-    def get_channel_status(self) -> Dict[str, Any]:
+    def get_channel_status(self) -> dict[str, Any]:
         """Get status of all notification channels."""
         status = {}
         

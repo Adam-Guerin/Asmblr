@@ -1,8 +1,5 @@
 """Test ICP integration in the pipeline."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
 
 from app.agents.crew import _validate_icp_settings
 

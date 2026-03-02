@@ -4,17 +4,14 @@ Comprehensive test suite with coverage, integration tests, and performance regre
 """
 
 import asyncio
-import pytest
 import time
 import json
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Generator
-from unittest.mock import Mock, patch, AsyncMock
+from typing import Any
 from dataclasses import dataclass
 from datetime import datetime
-import httpx
 from fastapi.testclient import TestClient
 import redis.asyncio as redis
 
@@ -23,7 +20,6 @@ from app.core.config import Settings
 from app.core.pipeline import VenturePipeline
 from app.core.security_enhanced import EnhancedSecurityManager
 from app.core.performance_optimizer_enhanced import PerformanceOptimizer
-from app.core.technical_debt import TechnicalDebtManager
 from app.main import app
 
 
@@ -33,9 +29,9 @@ class TestResult:
     test_name: str
     passed: bool
     duration: float
-    error_message: Optional[str] = None
-    coverage_percentage: Optional[float] = None
-    performance_metrics: Optional[Dict[str, Any]] = None
+    error_message: str | None = None
+    coverage_percentage: float | None = None
+    performance_metrics: dict[str, Any] | None = None
 
 
 class EnhancedTestSuite:
@@ -43,10 +39,10 @@ class EnhancedTestSuite:
     
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
-        self.test_results: List[TestResult] = []
-        self.temp_dir: Optional[Path] = None
-        self.redis_client: Optional[redis.Redis] = None
-        self.test_client: Optional[TestClient] = None
+        self.test_results: list[TestResult] = []
+        self.temp_dir: Path | None = None
+        self.redis_client: redis.Redis | None = None
+        self.test_client: TestClient | None = None
         
     async def setup(self):
         """Setup test environment"""
@@ -96,7 +92,7 @@ class EnhancedTestSuite:
         # Store test data in Redis
         await self.redis_client.set("test_config", json.dumps(test_config))
     
-    async def run_security_tests(self) -> List[TestResult]:
+    async def run_security_tests(self) -> list[TestResult]:
         """Run comprehensive security tests"""
         print("Running security tests...")
         results = []
@@ -195,7 +191,7 @@ class EnhancedTestSuite:
         
         return results
     
-    async def run_performance_tests(self) -> List[TestResult]:
+    async def run_performance_tests(self) -> list[TestResult]:
         """Run performance regression tests"""
         print("Running performance tests...")
         results = []
@@ -302,7 +298,7 @@ class EnhancedTestSuite:
         
         return results
     
-    async def run_integration_tests(self) -> List[TestResult]:
+    async def run_integration_tests(self) -> list[TestResult]:
         """Run integration tests"""
         print("Running integration tests...")
         results = []
@@ -390,7 +386,7 @@ class EnhancedTestSuite:
         
         return results
     
-    async def run_coverage_analysis(self) -> Dict[str, Any]:
+    async def run_coverage_analysis(self) -> dict[str, Any]:
         """Run code coverage analysis"""
         print("Running coverage analysis...")
         
@@ -425,7 +421,7 @@ class EnhancedTestSuite:
         
         return coverage_data
     
-    async def run_all_tests(self) -> Dict[str, Any]:
+    async def run_all_tests(self) -> dict[str, Any]:
         """Run all test suites"""
         print("Starting comprehensive test suite...")
         
@@ -475,7 +471,7 @@ class EnhancedTestSuite:
         finally:
             await self.teardown()
     
-    def _generate_recommendations(self) -> List[str]:
+    def _generate_recommendations(self) -> list[str]:
         """Generate test recommendations"""
         recommendations = []
         
@@ -497,7 +493,7 @@ class EnhancedTestSuite:
         return recommendations
 
 
-async def run_comprehensive_tests(base_dir: Path) -> Dict[str, Any]:
+async def run_comprehensive_tests(base_dir: Path) -> dict[str, Any]:
     """Run comprehensive test suite"""
     test_suite = EnhancedTestSuite(base_dir)
     return await test_suite.run_all_tests()

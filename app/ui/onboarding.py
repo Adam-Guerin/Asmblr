@@ -5,13 +5,9 @@ Guides new users through setup and first MVP generation
 
 import streamlit as st
 import time
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-import json
 
-from app.core.demo_mode import get_demo_manager, DemoModeManager
-from app.core.public_config import get_public_settings, validate_public_settings, get_demo_examples
+from app.core.demo_mode import get_demo_manager
 
 
 @dataclass
@@ -33,7 +29,7 @@ class OnboardingManager:
         self.demo_manager = get_demo_manager()
         self.steps = self._initialize_steps()
         
-    def _initialize_steps(self) -> List[OnboardingStep]:
+    def _initialize_steps(self) -> list[OnboardingStep]:
         """Initialize onboarding steps"""
         return [
             OnboardingStep(
@@ -80,7 +76,7 @@ class OnboardingManager:
             )
         ]
     
-    def get_current_step(self) -> Optional[OnboardingStep]:
+    def get_current_step(self) -> OnboardingStep | None:
         """Get current onboarding step"""
         if 'onboarding_step' not in st.session_state:
             st.session_state.onboarding_step = 0

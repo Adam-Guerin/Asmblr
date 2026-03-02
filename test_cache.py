@@ -3,7 +3,6 @@
 Test script to verify LLM cache functionality
 """
 
-import asyncio
 import time
 from app.core.llm_cache import LLMCacheManager
 from app.core.config import get_settings

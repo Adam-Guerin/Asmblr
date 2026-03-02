@@ -4,13 +4,12 @@ Handles MVP generation, media processing, and other intensive tasks in backgroun
 """
 
 import asyncio
-import time
 import uuid
-from typing import Dict, Any, Optional, Callable, List
+from typing import Any
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
 import json
 import traceback
 
@@ -45,17 +44,17 @@ class AsyncTask:
     priority: TaskPriority = TaskPriority.NORMAL
     status: TaskStatus = TaskStatus.PENDING
     created_at: datetime = field(default_factory=datetime.now)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     progress: float = 0.0
-    result: Optional[Any] = None
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    timeout: Optional[int] = None  # Timeout in seconds
+    result: Any | None = None
+    error: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    timeout: int | None = None  # Timeout in seconds
     retry_count: int = 0
     max_retries: int = 3
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert task to dictionary for storage"""
         return {
             "id": self.id,
@@ -83,10 +82,10 @@ class AsyncTaskManager:
         self.max_concurrent_tasks = 5
         self.task_timeout = 3600  # 1 hour default
         self.cleanup_interval = 300  # 5 minutes
-        self._running_tasks: Dict[str, asyncio.Task] = {}
+        self._running_tasks: dict[str, asyncio.Task] = {}
         self._task_queue: asyncio.Queue = asyncio.Queue()
-        self._redis_client: Optional[redis.Redis] = None
-        self._worker_tasks: List[asyncio.Task] = []
+        self._redis_client: redis.Redis | None = None
+        self._worker_tasks: list[asyncio.Task] = []
         self._shutdown = False
         
     async def _get_redis_client(self) -> redis.Redis:
@@ -101,9 +100,9 @@ class AsyncTaskManager:
         func: Callable,
         *args,
         priority: TaskPriority = TaskPriority.NORMAL,
-        timeout: Optional[int] = None,
+        timeout: int | None = None,
         max_retries: int = 3,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
         **kwargs
     ) -> str:
         """Submit a new background task"""
@@ -160,7 +159,7 @@ class AsyncTaskManager:
         except Exception as e:
             logger.warning(f"Failed to update task {task_id}: {e}")
     
-    async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    async def get_task_status(self, task_id: str) -> dict[str, Any] | None:
         """Get task status"""
         try:
             redis_client = await self._get_redis_client()
@@ -242,7 +241,7 @@ class AsyncTaskManager:
             
             logger.info(f"Task completed: {task.name} (ID: {task_id})")
             
-        except asyncio.TimeoutError:
+        except TimeoutError:
             error_msg = f"Task timed out after {task.timeout}s"
             task.status = TaskStatus.FAILED
             task.completed_at = datetime.now()
@@ -300,7 +299,7 @@ class AsyncTaskManager:
                 execution_task = asyncio.create_task(self._execute_task(task))
                 self._running_tasks[task.id] = execution_task
                 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as e:
                 logger.error(f"Worker error: {e}")
@@ -372,7 +371,7 @@ class AsyncTaskManager:
             except Exception as e:
                 logger.warning(f"Cleanup error: {e}")
     
-    async def get_queue_stats(self) -> Dict[str, Any]:
+    async def get_queue_stats(self) -> dict[str, Any]:
         """Get queue statistics"""
         try:
             redis_client = await self._get_redis_client()
@@ -415,7 +414,7 @@ task_manager = AsyncTaskManager()
 def background_task(
     name: str,
     priority: TaskPriority = TaskPriority.NORMAL,
-    timeout: Optional[int] = None,
+    timeout: int | None = None,
     max_retries: int = 3
 ):
     """Decorator to run function as background task"""

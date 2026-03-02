@@ -3,14 +3,10 @@ Multi-Cloud Support for Asmblr
 Advanced cloud abstraction layer with intelligent provider management and cost optimization
 """
 
-import asyncio
-import json
-import time
-from typing import Dict, Any, Optional, List, Union, Callable
-from dataclasses import dataclass, asdict
+from typing import Any
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
 import boto3
 import azure.storage.blob
 import google.cloud.storage
@@ -66,13 +62,13 @@ class CloudResource:
     name: str
     provider: CloudProvider
     resource_type: ResourceType
-    instance_type: Optional[InstanceType] = None
-    storage_type: Optional[StorageType] = None
+    instance_type: InstanceType | None = None
+    storage_type: StorageType | None = None
     region: str = "us-east-1"
     size: str = "medium"
     count: int = 1
-    tags: Dict[str, str] = None
-    metadata: Dict[str, Any] = None
+    tags: dict[str, str] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.tags is None:
@@ -89,10 +85,10 @@ class CloudCost:
     monthly_cost: float
     currency: str = "USD"
     region: str = "us-east-1"
-    instance_type: Optional[InstanceType] = None
-    storage_type: Optional[StorageType] = None
+    instance_type: InstanceType | None = None
+    storage_type: StorageType | None = None
     size: str = "medium"
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -112,7 +108,7 @@ class CloudMetrics:
     error_rate: float
     uptime_percentage: float
     timestamp: datetime
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -121,7 +117,7 @@ class CloudMetrics:
 class CloudProviderAdapter:
     """Base adapter for cloud providers"""
     
-    def __init__(self, provider: CloudProvider, config: Dict[str, Any]):
+    def __init__(self, provider: CloudProvider, config: dict[str, Any]):
         self.provider = provider
         self.config = config
         self.client = None
@@ -131,7 +127,7 @@ class CloudProviderAdapter:
         """Initialize provider client"""
         raise NotImplementedError
     
-    async def create_resource(self, resource: CloudResource) -> Dict[str, Any]:
+    async def create_resource(self, resource: CloudResource) -> dict[str, Any]:
         """Create a cloud resource"""
         raise NotImplementedError
     
@@ -139,11 +135,11 @@ class CloudProviderAdapter:
         """Delete a cloud resource"""
         raise NotImplementedError
     
-    async def get_resource(self, resource_id: str) -> Dict[str, Any]:
+    async def get_resource(self, resource_id: str) -> dict[str, Any]:
         """Get resource information"""
         raise NotImplementedError
     
-    async def list_resources(self, resource_type: ResourceType) -> List[Dict[str, Any]]:
+    async def list_resources(self, resource_type: ResourceType) -> list[dict[str, Any]]:
         """List resources of a given type"""
         raise NotImplementedError
     
@@ -168,7 +164,7 @@ class CloudProviderAdapter:
 class AWSAdapter(CloudProviderAdapter):
     """AWS cloud provider adapter"""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(CloudProvider.AWS, config)
         self.session = None
     
@@ -186,7 +182,7 @@ class AWSAdapter(CloudProviderAdapter):
             logger.error(f"Failed to initialize AWS adapter: {e}")
             raise
     
-    async def create_resource(self, resource: CloudResource) -> Dict[str, Any]:
+    async def create_resource(self, resource: CloudResource) -> dict[str, Any]:
         """Create AWS resource"""
         try:
             if resource.resource_type == ResourceType.COMPUTE:
@@ -204,7 +200,7 @@ class AWSAdapter(CloudProviderAdapter):
             logger.error(f"Failed to create AWS resource: {e}")
             raise
     
-    async def _create_ec2_instance(self, resource: CloudResource) -> Dict[str, Any]:
+    async def _create_ec2_instance(self, resource: CloudResource) -> dict[str, Any]:
         """Create EC2 instance"""
         try:
             ec2 = self.session.client('ec2')
@@ -252,7 +248,7 @@ class AWSAdapter(CloudProviderAdapter):
             logger.error(f"Failed to create EC2 instance: {e}")
             raise
     
-    async def _create_s3_bucket(self, resource: CloudResource) -> Dict[str, Any]:
+    async def _create_s3_bucket(self, resource: CloudResource) -> dict[str, Any]:
         """Create S3 bucket"""
         try:
             s3 = self.session.client('s3')
@@ -271,7 +267,7 @@ class AWSAdapter(CloudProviderAdapter):
             logger.error(f"Failed to create S3 bucket: {e}")
             raise
     
-    async def _create_rds_instance(self, resource: CloudResource) -> Dict[str, Any]:
+    async def _create_rds_instance(self, resource: CloudResource) -> dict[str, Any]:
         """Create RDS instance"""
         try:
             rds = self.session.client('rds')
@@ -308,7 +304,7 @@ class AWSAdapter(CloudProviderAdapter):
             logger.error(f"Failed to create RDS instance: {e}")
             raise
     
-    async def _create_vpc(self, resource: CloudResource) -> Dict[str, Any]:
+    async def _create_vpc(self, resource: CloudResource) -> dict[str, Any]:
         """Create VPC"""
         try:
             ec2 = self.session.client('ec2')
@@ -349,7 +345,7 @@ class AWSAdapter(CloudProviderAdapter):
             logger.error(f"Failed to delete AWS resource: {e}")
             return False
     
-    async def get_resource(self, resource_id: str) -> Dict[str, Any]:
+    async def get_resource(self, resource_id: str) -> dict[str, Any]:
         """Get resource information"""
         try:
             # Implementation would depend on resource type
@@ -360,7 +356,7 @@ class AWSAdapter(CloudProviderAdapter):
             logger.error(f"Failed to get AWS resource: {e}")
             return {}
     
-    async def list_resources(self, resource_type: ResourceType) -> List[Dict[str, Any]]:
+    async def list_resources(self, resource_type: ResourceType) -> list[dict[str, Any]]:
         """List resources of a given type"""
         try:
             if resource_type == ResourceType.COMPUTE:
@@ -494,7 +490,7 @@ class AWSAdapter(CloudProviderAdapter):
 class AzureAdapter(CloudProviderAdapter):
     """Azure cloud provider adapter"""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(CloudProvider.AZURE, config)
         self.blob_client = None
     
@@ -513,7 +509,7 @@ class AzureAdapter(CloudProviderAdapter):
 class GCPAdapter(CloudProviderAdapter):
     """GCP cloud provider adapter"""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(CloudProvider.GCP, config)
         self.storage_client = None
     
@@ -608,8 +604,8 @@ class MultiCloudManager:
     async def create_resource(
         self,
         resource: CloudResource,
-        preferred_providers: Optional[List[CloudProvider]] = None
-    ) -> Dict[str, Any]:
+        preferred_providers: list[CloudProvider] | None = None
+    ) -> dict[str, Any]:
         """Create a cloud resource with multi-cloud optimization"""
         try:
             # Select optimal provider
@@ -686,7 +682,7 @@ class MultiCloudManager:
             logger.error(f"Failed to delete resource {resource_id}: {e}")
             return False
     
-    async def get_resource(self, resource_id: str) -> Optional[Dict[str, Any]]:
+    async def get_resource(self, resource_id: str) -> dict[str, Any] | None:
         """Get resource information"""
         try:
             if resource_id not in self.resources:
@@ -705,7 +701,7 @@ class MultiCloudManager:
             logger.error(f"Failed to get resource {resource_id}: {e}")
             return None
     
-    async def list_resources(self, resource_type: ResourceType, provider: Optional[CloudProvider] = None) -> List[Dict[str, Any]]:
+    async def list_resources(self, resource_type: ResourceType, provider: CloudProvider | None = None) -> list[dict[str, Any]]:
         """List resources by type and optionally provider"""
         try:
             results = []
@@ -767,7 +763,7 @@ class MultiCloudManager:
             logger.error(f"Failed to scale resource {resource_id}: {e}")
             return False
     
-    async def get_metrics(self, resource_id: str) -> Optional[CloudMetrics]:
+    async def get_metrics(self, resource_id: str) -> CloudMetrics | None:
         """Get resource metrics"""
         try:
             if resource_id not in self.resources:
@@ -792,7 +788,7 @@ class MultiCloudManager:
     async def _select_optimal_provider(
         self,
         resource: CloudResource,
-        preferred_providers: Optional[List[CloudProvider]]
+        preferred_providers: list[CloudProvider] | None
     ) -> CloudProvider:
         """Select optimal provider for resource"""
         try:
@@ -860,7 +856,7 @@ class MultiCloudManager:
             logger.error(f"Failed to calculate provider score: {e}")
             return 0.5
     
-    async def get_cost_optimization_suggestions(self) -> List[str]:
+    async def get_cost_optimization_suggestions(self) -> list[str]:
         """Get cost optimization suggestions"""
         try:
             suggestions = []
@@ -895,7 +891,7 @@ class MultiCloudManager:
             logger.error(f"Failed to generate cost optimization suggestions: {e}")
             return []
     
-    async def get_disaster_recovery_plan(self) -> Dict[str, Any]:
+    async def get_disaster_recovery_plan(self) -> dict[str, Any]:
         """Get disaster recovery plan"""
         try:
             plan = {
@@ -919,7 +915,7 @@ class MultiCloudManager:
             logger.error(f"Failed to create disaster recovery plan: {e}")
             return {}
     
-    async def get_multi_cloud_summary(self) -> Dict[str, Any]:
+    async def get_multi_cloud_summary(self) -> dict[str, Any]:
         """Get multi-cloud summary"""
         try:
             summary = {

@@ -3,17 +3,15 @@ Advanced Debugging Tools for Asmblr
 AI-powered debugging with intelligent error analysis and suggestions
 """
 
-import asyncio
 import time
 import json
 import traceback
 import sys
-import inspect
-from typing import Dict, Any, Optional, List, Union, Callable
+from typing import Any
+from collections.abc import Callable
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 import psutil
 from loguru import logger
 import redis.asyncio as redis
@@ -43,13 +41,13 @@ class DebugSession:
     """Debug session information"""
     id: str
     start_time: datetime
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
     level: DebugLevel = DebugLevel.BASIC
     component: str = "unknown"
     status: str = "active"
     errors_found: int = 0
     issues_resolved: int = 0
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -64,13 +62,13 @@ class ErrorAnalysis:
     severity: str
     description: str
     stack_trace: str
-    context: Dict[str, Any]
-    suggestions: List[str]
-    related_files: List[str]
-    similar_errors: List[str]
+    context: dict[str, Any]
+    suggestions: list[str]
+    related_files: list[str]
+    similar_errors: list[str]
     fix_confidence: float
     estimated_fix_time: str
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     
     def __post_init__(self):
         if self.metadata is None:
@@ -87,8 +85,8 @@ class PerformanceProfile:
     average_time: float
     max_time: float
     min_time: float
-    bottlenecks: List[str]
-    optimization_suggestions: List[str]
+    bottlenecks: list[str]
+    optimization_suggestions: list[str]
     timestamp: datetime
 
 class AdvancedDebugger:
@@ -189,8 +187,8 @@ class AdvancedDebugger:
     async def analyze_error(
         self,
         error: Exception,
-        session_id: Optional[str] = None,
-        context: Optional[Dict[str, Any]] = None
+        session_id: str | None = None,
+        context: dict[str, Any] | None = None
     ) -> ErrorAnalysis:
         """Analyze an error with AI-powered insights"""
         try:
@@ -362,7 +360,7 @@ class AdvancedDebugger:
             logger.error(f"Description generation failed: {e}")
             return f"Error: {type(error).__name__} - {str(error)}"
     
-    def _extract_context(self, error: Exception, provided_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def _extract_context(self, error: Exception, provided_context: dict[str, Any] | None) -> dict[str, Any]:
         """Extract context information for the error"""
         try:
             context = provided_context or {}
@@ -397,8 +395,8 @@ class AdvancedDebugger:
         self,
         error: Exception,
         category: ErrorCategory,
-        context: Dict[str, Any]
-    ) -> List[str]:
+        context: dict[str, Any]
+    ) -> list[str]:
         """Generate AI-powered fix suggestions"""
         try:
             suggestions = []
@@ -478,7 +476,7 @@ class AdvancedDebugger:
             logger.error(f"Suggestion generation failed: {e}")
             return ["Check error logs and documentation for more information"]
     
-    def _find_related_files(self, stack_trace: str) -> List[str]:
+    def _find_related_files(self, stack_trace: str) -> list[str]:
         """Find files related to the error"""
         try:
             files = set()
@@ -500,7 +498,7 @@ class AdvancedDebugger:
             logger.error(f"Related files detection failed: {e}")
             return []
     
-    def _find_similar_errors(self, error_type: str, error_message: str) -> List[str]:
+    def _find_similar_errors(self, error_type: str, error_message: str) -> list[str]:
         """Find similar errors from history"""
         try:
             similar_errors = []
@@ -515,7 +513,7 @@ class AdvancedDebugger:
             logger.error(f"Similar errors detection failed: {e}")
             return []
     
-    def _calculate_fix_confidence(self, category: ErrorCategory, suggestions: List[str]) -> float:
+    def _calculate_fix_confidence(self, category: ErrorCategory, suggestions: list[str]) -> float:
         """Calculate confidence in fix suggestions"""
         try:
             base_confidence = {
@@ -581,7 +579,7 @@ class AdvancedDebugger:
         self,
         func: Callable,
         *args,
-        session_id: Optional[str] = None,
+        session_id: str | None = None,
         **kwargs
     ) -> Tuple[Any, PerformanceProfile]:
         """Profile function performance"""
@@ -664,7 +662,7 @@ class AdvancedDebugger:
                 timestamp=datetime.now()
             )
     
-    def _find_bottlenecks(self, execution_time: float, memory_usage: float, cpu_usage: float) -> List[str]:
+    def _find_bottlenecks(self, execution_time: float, memory_usage: float, cpu_usage: float) -> list[str]:
         """Find performance bottlenecks"""
         try:
             bottlenecks = []
@@ -688,8 +686,8 @@ class AdvancedDebugger:
         self,
         execution_time: float,
         memory_usage: float,
-        bottlenecks: List[str]
-    ) -> List[str]:
+        bottlenecks: list[str]
+    ) -> list[str]:
         """Generate optimization suggestions"""
         try:
             suggestions = []
@@ -724,7 +722,7 @@ class AdvancedDebugger:
             logger.error(f"Optimization suggestions generation failed: {e}")
             return []
     
-    async def get_session_summary(self, session_id: str) -> Dict[str, Any]:
+    async def get_session_summary(self, session_id: str) -> dict[str, Any]:
         """Get debug session summary"""
         try:
             if session_id not in self.sessions:
@@ -751,7 +749,7 @@ class AdvancedDebugger:
             logger.error(f"Session summary generation failed: {e}")
             return {"error": str(e)}
     
-    async def get_performance_summary(self) -> Dict[str, Any]:
+    async def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary"""
         try:
             summary = {

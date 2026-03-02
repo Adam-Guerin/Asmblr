@@ -6,9 +6,8 @@ captures d'écran du MVP, templates de présentation, et support multi-mode (Oll
 
 import json
 import subprocess
-import base64
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Literal
+from typing import Any
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
@@ -38,12 +37,12 @@ class PitchDeckSlide:
     """Slide de pitch deck"""
     title: str
     summary: str
-    bullets: List[str]
+    bullets: list[str]
     visual: str
-    data: Optional[Dict[str, Any]] = None
-    notes: Optional[str] = None
-    screenshot: Optional[str] = None  # Screenshot du MVP
-    template: Optional[str] = None  # Template utilisé
+    data: dict[str, Any] | None = None
+    notes: str | None = None
+    screenshot: str | None = None  # Screenshot du MVP
+    template: str | None = None  # Template utilisé
 
 
 @dataclass
@@ -52,9 +51,9 @@ class PitchDeck:
     project_name: str
     subtitle: str
     topic: str
-    slides: List[PitchDeckSlide]
-    ask: Dict[str, Any]
-    key_metrics: List[str]
+    slides: list[PitchDeckSlide]
+    ask: dict[str, Any]
+    key_metrics: list[str]
     closing: str
     success_score: float
     success_level: str
@@ -62,7 +61,7 @@ class PitchDeck:
     source: str
     generation_mode: str
     template: str
-    screenshots: List[str] = field(default_factory=list)
+    screenshots: list[str] = field(default_factory=list)
 
 
 class PitchDeckGenerator:
@@ -96,8 +95,8 @@ class PitchDeckGenerator:
     
     async def capture_mvp_screenshots(
         self,
-        mvp_dir: Optional[Path] = None
-    ) -> List[str]:
+        mvp_dir: Path | None = None
+    ) -> list[str]:
         """
         Capture des screenshots du MVP
         
@@ -158,7 +157,7 @@ class PitchDeckGenerator:
         
         return screenshots
     
-    def get_template_config(self) -> Dict[str, Any]:
+    def get_template_config(self) -> dict[str, Any]:
         """Retourne la configuration du template"""
         
         templates = {
@@ -333,13 +332,13 @@ class PitchDeckGenerator:
     async def generate_enhanced_pitch_deck(
         self,
         topic: str,
-        idea: Dict[str, Any],
-        brand_payload: Dict[str, Any],
+        idea: dict[str, Any],
+        brand_payload: dict[str, Any],
         market_report: str,
-        validated_pains: List[Dict[str, Any]],
-        competitors: List[Dict[str, Any]],
-        success_report: Optional[Any] = None,
-        mvp_dir: Optional[Path] = None
+        validated_pains: list[dict[str, Any]],
+        competitors: list[dict[str, Any]],
+        success_report: Any | None = None,
+        mvp_dir: Path | None = None
     ) -> PitchDeck:
         """
         Génère un pitch deck amélioré
@@ -423,13 +422,13 @@ class PitchDeckGenerator:
     async def _generate_slides(
         self,
         topic: str,
-        idea: Dict[str, Any],
-        brand_payload: Dict[str, Any],
+        idea: dict[str, Any],
+        brand_payload: dict[str, Any],
         market_report: str,
-        validated_pains: List[Dict[str, Any]],
-        competitors: List[Dict[str, Any]],
-        success_report: Optional[Any]
-    ) -> List[PitchDeckSlide]:
+        validated_pains: list[dict[str, Any]],
+        competitors: list[dict[str, Any]],
+        success_report: Any | None
+    ) -> list[PitchDeckSlide]:
         """Génère les slides du pitch deck selon le template"""
         
         slides = []
@@ -469,8 +468,8 @@ class PitchDeckGenerator:
     async def _create_title_slide(
         self,
         topic: str,
-        idea: Dict[str, Any],
-        brand_payload: Dict[str, Any]
+        idea: dict[str, Any],
+        brand_payload: dict[str, Any]
     ) -> PitchDeckSlide:
         """Crée la slide titre"""
         
@@ -498,7 +497,7 @@ class PitchDeckGenerator:
     async def _create_problem_slide(
         self,
         topic: str,
-        validated_pains: List[Dict[str, Any]]
+        validated_pains: list[dict[str, Any]]
     ) -> PitchDeckSlide:
         """Crée la slide problème"""
         
@@ -521,9 +520,9 @@ class PitchDeckGenerator:
     async def _create_solution_slide(
         self,
         topic: str,
-        idea: Dict[str, Any],
-        brand_payload: Dict[str, Any],
-        success_report: Optional[Any]
+        idea: dict[str, Any],
+        brand_payload: dict[str, Any],
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide solution"""
         
@@ -553,8 +552,8 @@ class PitchDeckGenerator:
         self,
         topic: str,
         market_report: str,
-        validated_pains: List[Dict[str, Any]],
-        success_report: Optional[Any]
+        validated_pains: list[dict[str, Any]],
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide marché"""
         
@@ -588,8 +587,8 @@ class PitchDeckGenerator:
     async def _create_product_slide(
         self,
         topic: str,
-        idea: Dict[str, Any],
-        brand_payload: Dict[str, Any]
+        idea: dict[str, Any],
+        brand_payload: dict[str, Any]
     ) -> PitchDeckSlide:
         """Crée la slide produit avec screenshots"""
         
@@ -624,7 +623,7 @@ class PitchDeckGenerator:
     async def _create_why_now_slide(
         self,
         topic: str,
-        success_report: Optional[Any]
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide 'Why Now' (spécifique YCombinator)"""
         
@@ -651,8 +650,8 @@ class PitchDeckGenerator:
     async def _create_business_model_slide(
         self,
         topic: str,
-        idea: Dict[str, Any],
-        success_report: Optional[Any]
+        idea: dict[str, Any],
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide business model"""
         
@@ -684,8 +683,8 @@ class PitchDeckGenerator:
     async def _create_competition_slide(
         self,
         topic: str,
-        competitors: List[Dict[str, Any]],
-        success_report: Optional[Any]
+        competitors: list[dict[str, Any]],
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide compétition"""
         
@@ -714,8 +713,8 @@ class PitchDeckGenerator:
     async def _create_gtm_slide(
         self,
         topic: str,
-        idea: Dict[str, Any],
-        success_report: Optional[Any]
+        idea: dict[str, Any],
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide go-to-market"""
         
@@ -736,9 +735,9 @@ class PitchDeckGenerator:
     async def _create_traction_slide(
         self,
         topic: str,
-        validated_pains: List[Dict[str, Any]],
-        competitors: List[Dict[str, Any]],
-        success_report: Optional[Any]
+        validated_pains: list[dict[str, Any]],
+        competitors: list[dict[str, Any]],
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide traction"""
         
@@ -772,7 +771,7 @@ class PitchDeckGenerator:
     async def _create_financial_slide(
         self,
         topic: str,
-        success_report: Optional[Any]
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide projections financières"""
         
@@ -798,7 +797,7 @@ class PitchDeckGenerator:
     async def _create_team_slide(
         self,
         topic: str,
-        idea: Dict[str, Any]
+        idea: dict[str, Any]
     ) -> PitchDeckSlide:
         """Crée la slide équipe"""
         
@@ -819,7 +818,7 @@ class PitchDeckGenerator:
     async def _create_ask_slide(
         self,
         topic: str,
-        success_report: Optional[Any]
+        success_report: Any | None
     ) -> PitchDeckSlide:
         """Crée la slide ask"""
         
@@ -856,10 +855,10 @@ class PitchDeckGenerator:
     
     async def _generate_key_metrics(
         self,
-        validated_pains: List[Dict[str, Any]],
-        competitors: List[Dict[str, Any]],
-        success_report: Optional[Any]
-    ) -> List[str]:
+        validated_pains: list[dict[str, Any]],
+        competitors: list[dict[str, Any]],
+        success_report: Any | None
+    ) -> list[str]:
         """Génère les métriques clés"""
         
         metrics = [
@@ -875,9 +874,9 @@ class PitchDeckGenerator:
     
     async def _generate_ask(
         self,
-        success_report: Optional[Any],
+        success_report: Any | None,
         topic: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Génère l'ask"""
         
         if success_report and success_report.overall_success_score > 70:
@@ -905,7 +904,7 @@ class PitchDeckGenerator:
     
     async def _generate_closing(
         self,
-        success_report: Optional[Any]
+        success_report: Any | None
     ) -> str:
         """Génère le closing"""
         

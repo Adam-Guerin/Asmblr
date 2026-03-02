@@ -4,12 +4,11 @@ Permet une migration transparente vers la configuration pilotée par agents
 """
 
 import os
-from typing import Dict, Any, Optional
+from typing import Any
 from pathlib import Path
 from loguru import logger
 
 from app.core.smart_config import get_smart_config, configure_for_topic
-from app.core.llm import LLMClient
 
 
 class SmartConfigIntegration:
@@ -17,7 +16,7 @@ class SmartConfigIntegration:
     Gère l'intégration de la configuration intelligente dans les systèmes existants
     """
     
-    def __init__(self, enable_smart_config: Optional[bool] = None):
+    def __init__(self, enable_smart_config: bool | None = None):
         # Déterminer si la configuration intelligente est activée
         if enable_smart_config is None:
             enable_smart_config = os.getenv('AGENT_AUTO_CONFIG', 'true').lower() == 'true'
@@ -34,8 +33,8 @@ class SmartConfigIntegration:
                 self.enabled = False
                 logger.info("Utilisation configuration standard")
     
-    def get_config_for_run(self, topic: str, user_profile: Optional[Dict] = None,
-                          performance_data: Optional[Dict] = None) -> Dict[str, str]:
+    def get_config_for_run(self, topic: str, user_profile: dict | None = None,
+                          performance_data: dict | None = None) -> dict[str, str]:
         """
         Récupère la configuration pour une exécution
         
@@ -54,7 +53,7 @@ class SmartConfigIntegration:
         logger.info(f"Génération configuration intelligente pour: {topic}")
         return self.smart_config.configure_for_topic(topic, user_profile, performance_data)
     
-    def apply_config_to_environment(self, config: Dict[str, str]) -> None:
+    def apply_config_to_environment(self, config: dict[str, str]) -> None:
         """
         Applique la configuration à l'environnement
         
@@ -67,7 +66,7 @@ class SmartConfigIntegration:
         
         logger.info(f"Configuration appliquée: {len(config)} variables")
     
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """Retourne un résumé de la configuration actuelle"""
         if not self.enabled:
             return {"smart_config_enabled": False}

@@ -6,20 +6,17 @@ Advanced plugin architecture with sandboxing, security, and marketplace integrat
 import asyncio
 import json
 import time
-import hashlib
 import importlib
 import sys
 import os
-import subprocess
 import tempfile
 import zipfile
 import yaml
-from typing import Dict, Any, Optional, List, Union, Callable, Type
+from typing import Any
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-import uuid
 from loguru import logger
 import redis.asyncio as redis
 from abc import ABC, abstractmethod
@@ -82,16 +79,16 @@ class PluginMetadata:
     license: str
     homepage: str
     repository: str
-    tags: List[str]
+    tags: list[str]
     category: PluginType
-    dependencies: List[str]
-    permissions: List[PluginPermission]
+    dependencies: list[str]
+    permissions: list[PluginPermission]
     security_level: PluginSecurityLevel
     min_asmblr_version: str
-    max_asmblr_version: Optional[str]
+    max_asmblr_version: str | None
     entry_point: str
-    config_schema: Dict[str, Any]
-    resources: Dict[str, Any]
+    config_schema: dict[str, Any]
+    resources: dict[str, Any]
     created_at: datetime
     updated_at: datetime
     
@@ -112,8 +109,8 @@ class PluginConfig:
     """Plugin configuration"""
     plugin_id: str
     enabled: bool
-    config: Dict[str, Any]
-    permissions_granted: List[PluginPermission]
+    config: dict[str, Any]
+    permissions_granted: list[PluginPermission]
     security_level: PluginSecurityLevel
     auto_update: bool
     last_updated: datetime
@@ -179,7 +176,7 @@ class PluginBase(ABC):
         """Get plugin metrics"""
         return self.metrics
     
-    async def update_config(self, new_config: Dict[str, Any]) -> bool:
+    async def update_config(self, new_config: dict[str, Any]) -> bool:
         """Update plugin configuration"""
         try:
             self.config.config.update(new_config)
@@ -444,7 +441,7 @@ class PluginManager:
                 logger.warning(f"No metadata found for plugin in {plugin_dir}")
                 return
             
-            with open(metadata_path, 'r') as f:
+            with open(metadata_path) as f:
                 if metadata_path.suffix == '.yaml':
                     metadata_data = yaml.safe_load(f)
                 else:
@@ -456,7 +453,7 @@ class PluginManager:
             config_path = plugin_dir / "config.json"
             config_data = {}
             if config_path.exists():
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     config_data = json.load(f)
             
             # Create default config if not exists
@@ -524,7 +521,7 @@ class PluginManager:
             # Load from file or remote
             registry_path = Path("plugins/registry.json")
             if registry_path.exists():
-                with open(registry_path, 'r') as f:
+                with open(registry_path) as f:
                     self.registry = json.load(f)
             
             logger.info(f"Loaded plugin registry with {len(self.registry)} plugins")
@@ -635,7 +632,7 @@ class PluginManager:
             if not metadata_path.exists():
                 raise Exception("No plugin metadata found")
             
-            with open(metadata_path, 'r') as f:
+            with open(metadata_path) as f:
                 if metadata_path.suffix == '.yaml':
                     metadata_data = yaml.safe_load(f)
                 else:
@@ -812,7 +809,7 @@ class PluginManager:
             logger.error(f"Plugin execution failed for {plugin_id}: {e}")
             raise
     
-    async def get_plugin_metrics(self, plugin_id: str) -> Optional[PluginMetrics]:
+    async def get_plugin_metrics(self, plugin_id: str) -> PluginMetrics | None:
         """Get plugin metrics"""
         try:
             if plugin_id in self.plugins:
@@ -823,7 +820,7 @@ class PluginManager:
             logger.error(f"Failed to get plugin metrics: {e}")
             return None
     
-    async def get_all_plugins(self) -> Dict[str, Any]:
+    async def get_all_plugins(self) -> dict[str, Any]:
         """Get all plugins information"""
         try:
             plugins_info = {}
@@ -845,7 +842,7 @@ class PluginManager:
             logger.error(f"Failed to get all plugins: {e}")
             return {}
     
-    async def search_plugins(self, query: str, category: Optional[PluginType] = None) -> List[Dict[str, Any]]:
+    async def search_plugins(self, query: str, category: PluginType | None = None) -> list[dict[str, Any]]:
         """Search plugins in registry"""
         try:
             results = []

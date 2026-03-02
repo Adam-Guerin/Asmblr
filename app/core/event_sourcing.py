@@ -6,19 +6,17 @@ Complete event-driven architecture with event store, snapshots, and projections
 import asyncio
 import json
 import uuid
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, asdict
+from typing import Any
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from collections import defaultdict, deque
+from collections import defaultdict
 import redis
 import sqlite3
 from pathlib import Path
-import pickle
-import hashlib
 from dataclasses import field
 
 logging.basicConfig(level=logging.INFO)
@@ -55,12 +53,12 @@ class Event:
     aggregate_id: str
     aggregate_type: str
     event_type: EventType
-    event_data: Dict[str, Any]
+    event_data: dict[str, Any]
     timestamp: datetime
     version: int
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert event to dictionary"""
         return {
             'event_id': self.event_id,
@@ -74,7 +72,7 @@ class Event:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Event':
+    def from_dict(cls, data: dict[str, Any]) -> 'Event':
         """Create event from dictionary"""
         return cls(
             event_id=data['event_id'],
@@ -93,11 +91,11 @@ class Snapshot:
     """Aggregate snapshot for performance optimization"""
     aggregate_id: str
     aggregate_type: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     version: int
     timestamp: datetime
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'aggregate_id': self.aggregate_id,
             'aggregate_type': self.aggregate_type,
@@ -107,7 +105,7 @@ class Snapshot:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Snapshot':
+    def from_dict(cls, data: dict[str, Any]) -> 'Snapshot':
         return cls(
             aggregate_id=data['aggregate_id'],
             aggregate_type=data['aggregate_type'],
@@ -123,14 +121,14 @@ class AggregateRoot(ABC):
     def __init__(self, aggregate_id: str):
         self.aggregate_id = aggregate_id
         self.version = 0
-        self.uncommitted_events: List[Event] = []
+        self.uncommitted_events: list[Event] = []
     
     @abstractmethod
     def apply_event(self, event: Event) -> None:
         """Apply an event to the aggregate"""
         pass
     
-    def add_event(self, event_type: EventType, event_data: Dict[str, Any], metadata: Dict[str, Any] = None) -> Event:
+    def add_event(self, event_type: EventType, event_data: dict[str, Any], metadata: dict[str, Any] = None) -> Event:
         """Add a new event to the aggregate"""
         event = Event(
             event_id=str(uuid.uuid4()),
@@ -383,7 +381,7 @@ class EventStore:
         conn.commit()
         conn.close()
     
-    async def save_events(self, events: List[Event]) -> None:
+    async def save_events(self, events: list[Event]) -> None:
         """Save events to the event store"""
         if not events:
             return
@@ -438,7 +436,7 @@ class EventStore:
         finally:
             conn.close()
     
-    async def get_events(self, aggregate_id: str, from_version: int = 0) -> List[Event]:
+    async def get_events(self, aggregate_id: str, from_version: int = 0) -> list[Event]:
         """Get events for an aggregate from a specific version"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -509,7 +507,7 @@ class EventStore:
         finally:
             conn.close()
     
-    async def get_snapshot(self, aggregate_id: str) -> Optional[Snapshot]:
+    async def get_snapshot(self, aggregate_id: str) -> Snapshot | None:
         """Get latest snapshot for an aggregate"""
         # Try Redis first
         redis_key = f"snapshot:{aggregate_id}"
@@ -552,7 +550,7 @@ class EventStore:
         finally:
             conn.close()
     
-    async def get_events_by_type(self, event_type: EventType, limit: int = 100) -> List[Event]:
+    async def get_events_by_type(self, event_type: EventType, limit: int = 100) -> list[Event]:
         """Get events by type"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -675,7 +673,7 @@ class IdeaProjection(Projection):
         
         elif event.event_type == EventType.IDEA_REJECTED:
             idea_data['status'] = 'rejected'
-            idea_data['updated_at'] event.timestamp.isoformat()
+            idea_data['updated_at'] = event.timestamp.isoformat()
         
         # Save updated state
         self.redis_client.setex(
@@ -791,7 +789,7 @@ class EventSourcingRepository:
         # Mark events as committed
         aggregate.mark_events_as_committed()
     
-    async def load(self, aggregate_class: type, aggregate_id: str) -> Optional[AggregateRoot]:
+    async def load(self, aggregate_class: type, aggregate_id: str) -> AggregateRoot | None:
         """Load aggregate from events and snapshots"""
         # Try to load from snapshot first
         snapshot = await self.event_store.get_snapshot(aggregate_id)
@@ -822,8 +820,8 @@ class EventProcessor:
     
     def __init__(self, event_store: EventStore):
         self.event_store = event_store
-        self.projections: List[Projection] = []
-        self.event_handlers: Dict[EventType, List[callable]] = defaultdict(list)
+        self.projections: list[Projection] = []
+        self.event_handlers: dict[EventType, list[callable]] = defaultdict(list)
         self.processing = False
     
     def add_projection(self, projection: Projection) -> None:

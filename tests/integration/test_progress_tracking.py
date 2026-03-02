@@ -1,6 +1,5 @@
 """Integration tests for progress tracking system."""
 
-import pytest
 import time
 import threading
 from unittest.mock import Mock, patch

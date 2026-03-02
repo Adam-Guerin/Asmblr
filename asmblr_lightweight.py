@@ -8,8 +8,8 @@ import asyncio
 import json
 import sqlite3
 import uuid
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List
+from datetime import datetime
+from typing import Any
 from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
@@ -55,7 +55,7 @@ db_connection = None
 class PipelineCreate(BaseModel):
     topic: str = Field(..., description="Topic for the pipeline")
     mode: str = Field(default="quick", description="Execution mode")
-    config: Optional[Dict[str, Any]] = Field(default={}, description="Pipeline configuration")
+    config: dict[str, Any] | None = Field(default={}, description="Pipeline configuration")
 
 
 class PipelineResponse(BaseModel):
@@ -64,21 +64,21 @@ class PipelineResponse(BaseModel):
     mode: str
     status: str
     created_at: datetime
-    updated_at: Optional[datetime] = None
-    config: Dict[str, Any]
+    updated_at: datetime | None = None
+    config: dict[str, Any]
 
 
 class TaskRequest(BaseModel):
     task_type: str = Field(..., description="Type of task")
-    input_data: Dict[str, Any] = Field(..., description="Input data")
-    config: Optional[Dict[str, Any]] = Field(default={}, description="Task configuration")
+    input_data: dict[str, Any] = Field(..., description="Input data")
+    config: dict[str, Any] | None = Field(default={}, description="Task configuration")
 
 
 class TaskResponse(BaseModel):
     task_id: str
     status: str
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
     execution_time: float
 
 
@@ -90,7 +90,7 @@ class LightweightCache:
         self.max_size = max_size
         self.access_times = {}
     
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         if key in self.cache:
             self.access_times[key] = datetime.utcnow()
             return self.cache[key]
@@ -179,7 +179,7 @@ class LightweightDatabase:
         
         return pipeline_id
     
-    def get_pipeline(self, pipeline_id: str) -> Optional[Dict[str, Any]]:
+    def get_pipeline(self, pipeline_id: str) -> dict[str, Any] | None:
         """Récupère un pipeline"""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -200,7 +200,7 @@ class LightweightDatabase:
                 }
         return None
     
-    def list_pipelines(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+    def list_pipelines(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
         """Liste les pipelines"""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -235,7 +235,7 @@ class LightweightDatabase:
         
         return task_id
     
-    def update_task(self, task_id: str, updates: Dict[str, Any]) -> bool:
+    def update_task(self, task_id: str, updates: dict[str, Any]) -> bool:
         """Met à jour une tâche"""
         set_clauses = []
         params = []
@@ -271,7 +271,7 @@ class LightweightLLMService:
         self.default_model = "llama3.1:8b"
         self.cache = cache
     
-    async def generate_text(self, prompt: str, model: Optional[str] = None) -> Dict[str, Any]:
+    async def generate_text(self, prompt: str, model: str | None = None) -> dict[str, Any]:
         """Génère du texte avec cache"""
         model = model or self.default_model
         cache_key = f"llm:{model}:{hash(prompt)}"
@@ -306,7 +306,7 @@ class LightweightPipelineService:
         self.db = db
         self.cache = cache
     
-    async def execute_pipeline(self, pipeline_id: str) -> Dict[str, Any]:
+    async def execute_pipeline(self, pipeline_id: str) -> dict[str, Any]:
         """Exécute un pipeline en mode lightweight"""
         pipeline = self.db.get_pipeline(pipeline_id)
         if not pipeline:
@@ -508,7 +508,7 @@ async def create_pipeline(pipeline: PipelineCreate):
         raise HTTPException(status_code=500, detail="Failed to create pipeline")
 
 
-@app.get("/api/v1/pipelines", response_model=List[PipelineResponse])
+@app.get("/api/v1/pipelines", response_model=list[PipelineResponse])
 async def list_pipelines(limit: int = 50, offset: int = 0):
     """Liste les pipelines"""
     try:

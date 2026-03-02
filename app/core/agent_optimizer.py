@@ -6,17 +6,15 @@ Improves agent efficiency, reduces LLM calls, and enhances response quality
 import asyncio
 import json
 import time
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from typing import Any
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 import logging
-from collections import defaultdict, deque
+from collections import defaultdict
 import hashlib
 import pickle
 import redis
-from pathlib import Path
-import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
@@ -46,9 +44,9 @@ class AgentMetrics:
     cache_hits: int = 0
     cache_misses: int = 0
     efficiency_score: float = 0.0
-    last_activity: Optional[datetime] = None
+    last_activity: datetime | None = None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'agent_id': self.agent_id,
             'agent_type': self.agent_type,
@@ -100,7 +98,7 @@ class SmartCache:
         self.cache_stats = defaultdict(int)
         self.similarity_threshold = 0.85
     
-    def _generate_cache_key(self, agent_type: str, task: str, context: Dict[str, Any]) -> str:
+    def _generate_cache_key(self, agent_type: str, task: str, context: dict[str, Any]) -> str:
         """Generate cache key for task"""
         cache_data = {
             'agent_type': agent_type,
@@ -123,7 +121,7 @@ class SmartCache:
         
         return len(intersection) / len(union)
     
-    async def get(self, agent_type: str, task: str, context: Dict[str, Any]) -> Optional[Any]:
+    async def get(self, agent_type: str, task: str, context: dict[str, Any]) -> Any | None:
         """Get cached response"""
         
         # Try exact match first
@@ -160,7 +158,7 @@ class SmartCache:
         self.cache_stats['misses'] += 1
         return None
     
-    async def set(self, agent_type: str, task: str, context: Dict[str, Any], result: Any, ttl: int = 3600) -> None:
+    async def set(self, agent_type: str, task: str, context: dict[str, Any], result: Any, ttl: int = 3600) -> None:
         """Cache response"""
         
         # Exact cache
@@ -176,7 +174,7 @@ class SmartCache:
         # Update stats
         self.cache_stats['sets'] += 1
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         total_requests = self.cache_stats['exact_hits'] + self.cache_stats['similarity_hits'] + self.cache_stats['misses']
         hit_rate = (self.cache_stats['exact_hits'] + self.cache_stats['similarity_hits']) / total_requests if total_requests > 0 else 0
@@ -201,7 +199,7 @@ class TaskQueue:
         }
         self.task_stats = defaultdict(int)
     
-    async def put(self, task: Dict[str, Any], priority: str = 'normal') -> None:
+    async def put(self, task: dict[str, Any], priority: str = 'normal') -> None:
         """Add task to queue"""
         if priority not in self.queues:
             priority = 'normal'
@@ -209,7 +207,7 @@ class TaskQueue:
         await self.queues[priority].put(task)
         self.task_stats[f'added_{priority}'] += 1
     
-    async def get(self) -> Tuple[Dict[str, Any], str]:
+    async def get(self) -> tuple[dict[str, Any], str]:
         """Get next task from highest priority queue"""
         
         # Check queues in priority order
@@ -228,7 +226,7 @@ class TaskQueue:
         """Get total queue size"""
         return sum(queue.qsize() for queue in self.queues.values())
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get queue statistics"""
         return {
             'queue_sizes': {priority: queue.qsize() for priority, queue in self.queues.items()},
@@ -243,12 +241,12 @@ class AgentOptimizer:
     def __init__(self, redis_url: str = "redis://localhost:6379/0"):
         self.cache = SmartCache(redis_url)
         self.task_queue = TaskQueue()
-        self.agent_metrics: Dict[str, AgentMetrics] = {}
-        self.performance_history: List[Dict[str, Any]] = []
+        self.agent_metrics: dict[str, AgentMetrics] = {}
+        self.performance_history: list[dict[str, Any]] = []
         self.optimization_rules = self._load_optimization_rules()
         self.executor = ThreadPoolExecutor(max_workers=4)
         
-    def _load_optimization_rules(self) -> Dict[str, Any]:
+    def _load_optimization_rules(self) -> dict[str, Any]:
         """Load optimization rules"""
         return {
             'cache_enabled_agents': ['researcher', 'analyst', 'product'],
@@ -277,7 +275,7 @@ class AgentOptimizer:
         }
     
     async def optimize_agent_task(self, agent_id: str, agent_type: str, task: str, 
-                                context: Dict[str, Any]) -> Dict[str, Any]:
+                                context: dict[str, Any]) -> dict[str, Any]:
         """Optimize and execute agent task"""
         
         # Initialize metrics if needed
@@ -335,7 +333,7 @@ class AgentOptimizer:
             raise
     
     async def _execute_optimized_task(self, agent_id: str, agent_type: str, task: str, 
-                                    context: Dict[str, Any]) -> Dict[str, Any]:
+                                    context: dict[str, Any]) -> dict[str, Any]:
         """Execute task with optimizations"""
         
         # Get timeout for this agent type
@@ -363,7 +361,7 @@ class AgentOptimizer:
                 
                 return result
                 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 if attempt < retry_limit:
                     logger.warning(f"Task timeout for {agent_type}, retrying... ({attempt + 1}/{retry_limit + 1})")
                     await asyncio.sleep(2 ** attempt)  # Exponential backoff
@@ -377,7 +375,7 @@ class AgentOptimizer:
                 else:
                     raise
     
-    async def _execute_agent_task(self, agent_type: str, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_agent_task(self, agent_type: str, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute actual agent task"""
         
         # This would integrate with the existing agent system
@@ -396,7 +394,7 @@ class AgentOptimizer:
         else:
             return await self._execute_default_task(task, context)
     
-    async def _execute_researcher_task(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_researcher_task(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute researcher task with optimizations"""
         
         # Simulate research task
@@ -412,7 +410,7 @@ class AgentOptimizer:
             'tokens_processed': 1500
         }
     
-    async def _execute_analyst_task(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_analyst_task(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute analyst task with optimizations"""
         
         await asyncio.sleep(1.5)
@@ -427,7 +425,7 @@ class AgentOptimizer:
             'tokens_processed': 800
         }
     
-    async def _execute_product_task(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_product_task(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute product task with optimizations"""
         
         await asyncio.sleep(1)
@@ -442,7 +440,7 @@ class AgentOptimizer:
             'tokens_processed': 600
         }
     
-    async def _execute_tech_lead_task(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_tech_lead_task(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute tech lead task with optimizations"""
         
         await asyncio.sleep(3)
@@ -457,7 +455,7 @@ class AgentOptimizer:
             'tokens_processed': 2000
         }
     
-    async def _execute_growth_task(self, str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_growth_task(self, str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute growth task with optimizations"""
         
         await asyncio.sleep(1.5)
@@ -472,7 +470,7 @@ class AgentOptimizer:
             'tokens_processed': 1000
         }
     
-    async def _execute_default_task(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_default_task(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute default task"""
         
         await asyncio.sleep(1)
@@ -485,7 +483,7 @@ class AgentOptimizer:
             'tokens_processed': 500
         }
     
-    async def run_parallel_agents(self, agent_tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def run_parallel_agents(self, agent_tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Run multiple agents in parallel where possible"""
         
         # Group tasks by agent type
@@ -541,7 +539,7 @@ class AgentOptimizer:
         
         return results
     
-    def get_agent_metrics(self, agent_id: str = None) -> Dict[str, Any]:
+    def get_agent_metrics(self, agent_id: str = None) -> dict[str, Any]:
         """Get agent performance metrics"""
         
         if agent_id:
@@ -556,7 +554,7 @@ class AgentOptimizer:
             for agent_id, metrics in self.agent_metrics.items()
         }
     
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get overall performance summary"""
         
         if not self.agent_metrics:
@@ -591,7 +589,7 @@ class AgentOptimizer:
             'queue_stats': self.task_queue.get_stats()
         }
     
-    def optimize_agent_configuration(self, agent_type: str) -> Dict[str, Any]:
+    def optimize_agent_configuration(self, agent_type: str) -> dict[str, Any]:
         """Generate optimization recommendations for agent type"""
         
         if agent_type not in self.agent_metrics:

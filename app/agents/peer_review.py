@@ -2,12 +2,12 @@
 Peer Review System for agent collaboration and quality assurance.
 """
 
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 from dataclasses import dataclass, field
 from enum import Enum
 import json
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from loguru import logger
 
 
@@ -58,7 +58,7 @@ class ReviewScore:
     criterion_id: str
     score: float
     comments: str = ""
-    evidence: Dict[str, Any] = field(default_factory=dict)
+    evidence: dict[str, Any] = field(default_factory=dict)
     confidence: float = 1.0
 
 
@@ -69,25 +69,25 @@ class PeerReview:
     review_type: ReviewType
     reviewer_agent: str
     reviewee_agent: str
-    task_id: Optional[str]
-    artifact_id: Optional[str]
+    task_id: str | None
+    artifact_id: str | None
     artifact_type: str
     title: str
     description: str
-    criteria: List[ReviewCriterion]
-    scores: List[ReviewScore] = field(default_factory=list)
+    criteria: list[ReviewCriterion]
+    scores: list[ReviewScore] = field(default_factory=list)
     overall_score: float = 0.0
     status: ReviewStatus = ReviewStatus.PENDING
     priority: ReviewPriority = ReviewPriority.MEDIUM
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    completed_at: Optional[str] = None
-    review_duration: Optional[int] = None  # in seconds
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    completed_at: str | None = None
+    review_duration: int | None = None  # in seconds
     comments: str = ""
-    recommendations: List[str] = field(default_factory=list)
-    approval_conditions: List[str] = field(default_factory=list)
-    revision_requests: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    recommendations: list[str] = field(default_factory=list)
+    approval_conditions: list[str] = field(default_factory=list)
+    revision_requests: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     def calculate_overall_score(self) -> float:
         """Calculate overall score based on criteria weights."""
@@ -107,7 +107,7 @@ class PeerReview:
         return total_weighted_score / total_weight if total_weight > 0 else 0.0
     
     def add_score(self, criterion_id: str, score: float, comments: str = "", 
-                 evidence: Dict[str, Any] = None, confidence: float = 1.0) -> None:
+                 evidence: dict[str, Any] = None, confidence: float = 1.0) -> None:
         """Add a score for a specific criterion."""
         review_score = ReviewScore(
             criterion_id=criterion_id,
@@ -118,13 +118,13 @@ class PeerReview:
         )
         self.scores.append(review_score)
         self.overall_score = self.calculate_overall_score()
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
     
-    def get_score_for_criterion(self, criterion_id: str) -> Optional[ReviewScore]:
+    def get_score_for_criterion(self, criterion_id: str) -> ReviewScore | None:
         """Get score for a specific criterion."""
         return next((s for s in self.scores if s.criterion_id == criterion_id), None)
     
-    def get_passed_criteria(self) -> List[ReviewCriterion]:
+    def get_passed_criteria(self) -> list[ReviewCriterion]:
         """Get criteria that passed minimum score."""
         passed = []
         for score in self.scores:
@@ -133,7 +133,7 @@ class PeerReview:
                 passed.append(criterion)
         return passed
     
-    def get_failed_criteria(self) -> List[ReviewCriterion]:
+    def get_failed_criteria(self) -> list[ReviewCriterion]:
         """Get criteria that failed minimum score."""
         failed = []
         for score in self.scores:
@@ -150,12 +150,12 @@ class ReviewAssignment:
     review_id: str
     assigned_agent: str
     assigned_by: str
-    assigned_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    due_at: Optional[str] = None
-    accepted_at: Optional[str] = None
+    assigned_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    due_at: str | None = None
+    accepted_at: str | None = None
     status: str = "assigned"  # assigned, accepted, declined, completed
     priority: ReviewPriority = ReviewPriority.MEDIUM
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
 
 
 class PeerReviewManager:
@@ -164,18 +164,18 @@ class PeerReviewManager:
     def __init__(self, reviews_dir: Path):
         self.reviews_dir = reviews_dir
         self.reviews_dir.mkdir(parents=True, exist_ok=True)
-        self.reviews: Dict[str, PeerReview] = {}
-        self.assignments: Dict[str, ReviewAssignment] = {}
-        self.review_criteria_templates: Dict[str, List[ReviewCriterion]] = {}
+        self.reviews: dict[str, PeerReview] = {}
+        self.assignments: dict[str, ReviewAssignment] = {}
+        self.review_criteria_templates: dict[str, list[ReviewCriterion]] = {}
         self._load_reviews()
         self._load_criteria_templates()
     
     def create_review(self, review_type: ReviewType, reviewer_agent: str, reviewee_agent: str,
                     artifact_id: str, artifact_type: str, title: str, description: str,
-                    criteria: List[ReviewCriterion], priority: ReviewPriority = ReviewPriority.MEDIUM,
+                    criteria: list[ReviewCriterion], priority: ReviewPriority = ReviewPriority.MEDIUM,
                     task_id: str = None) -> str:
         """Create a new peer review."""
-        review_id = f"review_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{len(self.reviews)}"
+        review_id = f"review_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}_{len(self.reviews)}"
         
         review = PeerReview(
             id=review_id,
@@ -200,7 +200,7 @@ class PeerReviewManager:
     def assign_review(self, review_id: str, assigned_agent: str, assigned_by: str,
                    due_at: str = None, priority: ReviewPriority = ReviewPriority.MEDIUM) -> str:
         """Assign a peer review to an agent."""
-        assignment_id = f"assign_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{len(self.assignments)}"
+        assignment_id = f"assign_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}_{len(self.assignments)}"
         
         assignment = ReviewAssignment(
             id=assignment_id,
@@ -224,15 +224,15 @@ class PeerReviewManager:
         
         assignment = self.assignments[assignment_id]
         assignment.status = "accepted"
-        assignment.accepted_at = datetime.now(timezone.utc).isoformat()
+        assignment.accepted_at = datetime.now(UTC).isoformat()
         
         self._save_assignment(assignment)
         logger.info(f"Agent {assignment.assigned_agent} accepted review assignment {assignment_id}")
         return True
     
-    def submit_review(self, review_id: str, scores: List[Dict[str, Any]], comments: str = "",
-                   recommendations: List[str] = None, approval_conditions: List[str] = None,
-                   revision_requests: List[str] = None) -> bool:
+    def submit_review(self, review_id: str, scores: list[dict[str, Any]], comments: str = "",
+                   recommendations: list[str] = None, approval_conditions: list[str] = None,
+                   revision_requests: list[str] = None) -> bool:
         """Submit a completed peer review."""
         if review_id not in self.reviews:
             return False
@@ -255,12 +255,12 @@ class PeerReviewManager:
         review.approval_conditions = approval_conditions or []
         review.revision_requests = revision_requests or []
         review.status = ReviewStatus.COMPLETED
-        review.completed_at = datetime.now(timezone.utc).isoformat()
+        review.completed_at = datetime.now(UTC).isoformat()
         
         # Calculate duration
         if review.accepted_at:
             start_time = datetime.fromisoformat(review.accepted_at.replace('Z', '+00:00'))
-            end_time = datetime.now(timezone.utc)
+            end_time = datetime.now(UTC)
             review.review_duration = int((end_time - start_time).total_seconds())
         
         # Determine approval status
@@ -277,11 +277,11 @@ class PeerReviewManager:
         logger.info(f"Submitted review {review_id} with status {review.status.value}")
         return True
     
-    def get_review(self, review_id: str) -> Optional[PeerReview]:
+    def get_review(self, review_id: str) -> PeerReview | None:
         """Get a specific peer review."""
         return self.reviews.get(review_id)
     
-    def get_reviews_for_agent(self, agent_name: str, as_reviewer: bool = True) -> List[PeerReview]:
+    def get_reviews_for_agent(self, agent_name: str, as_reviewer: bool = True) -> list[PeerReview]:
         """Get all reviews for a specific agent."""
         reviews = list(self.reviews.values())
         
@@ -290,7 +290,7 @@ class PeerReviewManager:
         else:
             return [r for r in reviews if r.reviewee_agent == agent_name]
     
-    def get_pending_reviews(self, agent_name: str = None) -> List[PeerReview]:
+    def get_pending_reviews(self, agent_name: str = None) -> list[PeerReview]:
         """Get pending peer reviews."""
         reviews = list(self.reviews.values())
         
@@ -301,7 +301,7 @@ class PeerReviewManager:
         else:
             return [r for r in reviews if r.status == ReviewStatus.PENDING]
     
-    def get_review_statistics(self, agent_name: str = None) -> Dict[str, Any]:
+    def get_review_statistics(self, agent_name: str = None) -> dict[str, Any]:
         """Get peer review statistics."""
         reviews = list(self.reviews.values())
         
@@ -362,7 +362,7 @@ class PeerReviewManager:
         
         return stats
     
-    def get_criteria_template(self, template_name: str) -> List[ReviewCriterion]:
+    def get_criteria_template(self, template_name: str) -> list[ReviewCriterion]:
         """Get a criteria template by name."""
         return self.review_criteria_templates.get(template_name, [])
     

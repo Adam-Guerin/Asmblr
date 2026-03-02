@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 import traceback
-from typing import Dict, Any, Optional, List
+from typing import Any
 from enum import Enum
 from dataclasses import dataclass
 
@@ -34,9 +34,9 @@ class ErrorSolution:
     """Solution suggestion for an error."""
     title: str
     description: str
-    steps: List[str]
+    steps: list[str]
     auto_fixable: bool = False
-    fix_command: Optional[str] = None
+    fix_command: str | None = None
 
 
 @dataclass
@@ -46,9 +46,9 @@ class ErrorInfo:
     severity: ErrorSeverity
     user_message: str
     technical_message: str
-    solutions: List[ErrorSolution]
-    context: Dict[str, Any]
-    traceback: Optional[str] = None
+    solutions: list[ErrorSolution]
+    context: dict[str, Any]
+    traceback: str | None = None
 
 
 class ErrorHandler:
@@ -57,7 +57,7 @@ class ErrorHandler:
     def __init__(self):
         self._error_solutions = self._initialize_error_solutions()
     
-    def _initialize_error_solutions(self) -> Dict[str, List[ErrorSolution]]:
+    def _initialize_error_solutions(self) -> dict[str, list[ErrorSolution]]:
         """Initialize predefined error solutions."""
         return {
             "connection_refused": [
@@ -151,7 +151,7 @@ class ErrorHandler:
             ]
         }
     
-    def handle_error(self, error: Exception, context: Optional[Dict[str, Any]] = None) -> ErrorInfo:
+    def handle_error(self, error: Exception, context: dict[str, Any] | None = None) -> ErrorInfo:
         """Handle an error and return user-friendly information."""
         context = context or {}
         error_message = str(error)
@@ -186,9 +186,7 @@ class ErrorHandler:
         error_type = type(error).__name__
         
         # First check by exception type for more accurate categorization
-        if isinstance(error, (ConnectionError, ConnectionRefusedError)):
-            return ErrorCategory.NETWORK
-        elif isinstance(error, TimeoutError):
+        if isinstance(error, (ConnectionError, ConnectionRefusedError)) or isinstance(error, TimeoutError):
             return ErrorCategory.NETWORK
         elif isinstance(error, PermissionError):
             return ErrorCategory.PERMISSION
@@ -229,8 +227,8 @@ class ErrorHandler:
             return ErrorSeverity.LOW
     
     def _generate_user_message_and_solutions(
-        self, error_message: str, category: ErrorCategory, context: Dict[str, Any]
-    ) -> tuple[str, List[ErrorSolution]]:
+        self, error_message: str, category: ErrorCategory, context: dict[str, Any]
+    ) -> tuple[str, list[ErrorSolution]]:
         """Generate user-friendly message and solutions."""
         error_message_lower = error_message.lower()
         
@@ -294,7 +292,7 @@ class ErrorHandler:
         
         return default_message, []
     
-    def format_for_ui(self, error_info: ErrorInfo) -> Dict[str, Any]:
+    def format_for_ui(self, error_info: ErrorInfo) -> dict[str, Any]:
         """Format error information for UI display."""
         return {
             "severity": error_info.severity.value,
@@ -319,11 +317,11 @@ class ErrorHandler:
 _global_error_handler = ErrorHandler()
 
 
-def handle_error(error: Exception, context: Optional[Dict[str, Any]] = None) -> ErrorInfo:
+def handle_error(error: Exception, context: dict[str, Any] | None = None) -> ErrorInfo:
     """Handle an error using the global error handler."""
     return _global_error_handler.handle_error(error, context)
 
 
-def format_error_for_ui(error_info: ErrorInfo) -> Dict[str, Any]:
+def format_error_for_ui(error_info: ErrorInfo) -> dict[str, Any]:
     """Format error information for UI display."""
     return _global_error_handler.format_for_ui(error_info)

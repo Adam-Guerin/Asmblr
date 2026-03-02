@@ -6,9 +6,7 @@ Simplified setup for public distribution with demo mode support
 
 import subprocess
 import sys
-import os
 from pathlib import Path
-import json
 
 
 def print_banner():
@@ -195,7 +193,7 @@ def setup_environment():
         print("📋 Using example configuration template")
     
     if template_to_use:
-        with open(template_to_use, 'r') as src, open(env_file, 'w') as dst:
+        with open(template_to_use) as src, open(env_file, 'w') as dst:
             dst.write(src.read())
         print(f"✅ Created .env from {template_to_use}")
     else:

@@ -5,15 +5,12 @@ Intelligent pipeline management with adaptive learning and optimization
 
 import asyncio
 import time
-import json
-import hashlib
-import numpy as np
-from typing import Dict, Any, Optional, List, Union, Callable, Tuple
+from typing import Any
+from collections.abc import Callable
 from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from collections import defaultdict, deque
-import pickle
+from collections import deque
 import psutil
 from loguru import logger
 import redis.asyncio as redis
@@ -54,16 +51,16 @@ class PipelineTask:
     priority: TaskPriority
     complexity_score: float = 0.0
     estimated_duration: float = 0.0
-    resource_requirements: Dict[str, float] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    resource_requirements: dict[str, float] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     status: str = "pending"
     result: Any = None
-    error: Optional[str] = None
-    performance_metrics: Dict[str, float] = field(default_factory=dict)
+    error: str | None = None
+    performance_metrics: dict[str, float] = field(default_factory=dict)
     
     @property
     def actual_duration(self) -> float:
@@ -87,7 +84,7 @@ class PipelineMetrics:
     failed_tasks: int = 0
     avg_task_duration: float = 0.0
     throughput: float = 0.0
-    resource_utilization: Dict[str, float] = field(default_factory=dict)
+    resource_utilization: dict[str, float] = field(default_factory=dict)
     quality_score: float = 0.0
     optimization_score: float = 0.0
     learning_accuracy: float = 0.0
@@ -166,8 +163,8 @@ class AIOrchestrator:
         args: tuple = (),
         kwargs: dict = None,
         priority: TaskPriority = TaskPriority.MEDIUM,
-        dependencies: List[str] = None,
-        metadata: Dict[str, Any] = None
+        dependencies: list[str] = None,
+        metadata: dict[str, Any] = None
     ) -> str:
         """Submit a task to the AI-enhanced pipeline"""
         try:
@@ -256,7 +253,7 @@ class AIOrchestrator:
                 logger.error(f"AI scheduler error: {e}")
                 await asyncio.sleep(1)
     
-    async def _get_next_task_ai(self) -> Optional[PipelineTask]:
+    async def _get_next_task_ai(self) -> PipelineTask | None:
         """Get next task using AI scheduling"""
         try:
             # Get all pending tasks
@@ -302,7 +299,7 @@ class AIOrchestrator:
                 return False
         return True
     
-    async def _select_task_adaptive(self, tasks: List[PipelineTask]) -> PipelineTask:
+    async def _select_task_adaptive(self, tasks: list[PipelineTask]) -> PipelineTask:
         """Select task using adaptive AI algorithm"""
         try:
             # Get current system state
@@ -322,7 +319,7 @@ class AIOrchestrator:
             logger.error(f"Adaptive task selection error: {e}")
             return tasks[0]
     
-    async def _calculate_task_score(self, task: PipelineTask, system_state: Dict[str, float]) -> float:
+    async def _calculate_task_score(self, task: PipelineTask, system_state: dict[str, float]) -> float:
         """Calculate AI score for task selection"""
         try:
             # Base score from priority
@@ -359,7 +356,7 @@ class AIOrchestrator:
             logger.error(f"Task scoring error: {e}")
             return 1.0
     
-    async def _get_system_state(self) -> Dict[str, float]:
+    async def _get_system_state(self) -> dict[str, float]:
         """Get current system state"""
         try:
             return {
@@ -449,7 +446,7 @@ class AIOrchestrator:
             task.status = "failed"
             task.error = str(e)
     
-    async def _create_execution_context(self, task: PipelineTask) -> Dict[str, Any]:
+    async def _create_execution_context(self, task: PipelineTask) -> dict[str, Any]:
         """Create optimized execution context"""
         try:
             # Get system resources
@@ -499,7 +496,7 @@ class AIOrchestrator:
         func: Callable,
         args: tuple,
         kwargs: dict,
-        context: Dict[str, Any]
+        context: dict[str, Any]
     ) -> Any:
         """Execute function with AI optimization"""
         try:
@@ -667,7 +664,7 @@ class AIOrchestrator:
                 logger.error(f"AI learning error: {e}")
                 await asyncio.sleep(300)
     
-    async def get_task_result(self, task_id: str, timeout: Optional[float] = None) -> Any:
+    async def get_task_result(self, task_id: str, timeout: float | None = None) -> Any:
         """Get task result with AI-enhanced waiting"""
         try:
             start_time = time.time()
@@ -700,7 +697,7 @@ class AIOrchestrator:
             logger.error(f"Failed to get task result {task_id}: {e}")
             raise
     
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get AI orchestrator metrics"""
         try:
             # Calculate learning accuracy
@@ -832,7 +829,7 @@ class TaskPredictor:
             return sum(self.accuracy_history) / len(self.accuracy_history)
         return 0.0
     
-    async def update_models(self, completed_tasks: Dict[str, PipelineTask]):
+    async def update_models(self, completed_tasks: dict[str, PipelineTask]):
         """Update prediction models"""
         # Placeholder for model training
         pass
@@ -857,7 +854,7 @@ class ResourceOptimizer:
         args: tuple,
         kwargs: dict,
         complexity: float
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Estimate resource requirements"""
         # Simplified resource estimation
         base_cpu = 0.1
@@ -874,7 +871,7 @@ class ResourceOptimizer:
             'network': 0.01
         }
     
-    async def optimize_allocation(self, running_tasks: Dict[str, PipelineTask]):
+    async def optimize_allocation(self, running_tasks: dict[str, PipelineTask]):
         """Optimize resource allocation"""
         # Placeholder for resource optimization
         pass
@@ -911,7 +908,7 @@ class QualityAssessor:
         
         return base_quality
     
-    async def update_models(self, completed_tasks: Dict[str, PipelineTask]):
+    async def update_models(self, completed_tasks: dict[str, PipelineTask]):
         """Update quality models"""
         # Placeholder for model training
         pass
@@ -953,7 +950,7 @@ class LearningEngine:
         
         return base_success * complexity_factor
     
-    async def update_models(self, completed_tasks: Dict[str, PipelineTask]):
+    async def update_models(self, completed_tasks: dict[str, PipelineTask]):
         """Update learning models"""
         # Placeholder for model training
         pass

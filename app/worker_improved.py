@@ -2,22 +2,19 @@
 Worker amélioré d'Asmblr - Version avec ErrorHandlerV2, SmartLogger et RetryManager
 """
 
-import os
 import sys
 import time
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
 
 from fastapi import HTTPException
-from redis import Redis
 from rq import Worker, Connection
 
 # Importer les systèmes améliorés
-from app.core.error_handler_v2 import get_error_handler, handle_errors, NetworkException, LLMException
+from app.core.error_handler_v2 import get_error_handler, handle_errors
 from app.core.smart_logger import get_smart_logger, LogCategory, LogLevel
-from app.core.retry_manager import get_retry_manager, retry_web_request, retry_llm_call
+from app.core.retry_manager import get_retry_manager
 from app.core.config import get_settings
-from app.llm import check_ollama
 
 
 class ImprovedWorker:
@@ -194,7 +191,7 @@ class ImprovedWorker:
             pass
         return []
     
-    def _validate_configuration(self) -> Dict[str, Any]:
+    def _validate_configuration(self) -> dict[str, Any]:
         """Valide la configuration du worker"""
         required_vars = [
             "redis_url",
@@ -215,7 +212,7 @@ class ImprovedWorker:
             "total_required": len(required_vars)
         }
     
-    def _check_performance(self) -> Dict[str, Any]:
+    def _check_performance(self) -> dict[str, Any]:
         """Vérifie les métriques de performance"""
         try:
             import psutil
@@ -260,7 +257,7 @@ class ImprovedWorker:
                 "error": str(e)
             }
     
-    def _get_performance_metrics(self) -> Dict[str, Any]:
+    def _get_performance_metrics(self) -> dict[str, Any]:
         """Récupère les métriques de performance"""
         try:
             import psutil

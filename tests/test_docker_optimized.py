@@ -4,10 +4,6 @@ Validates Docker Compose setup, resource limits, and health checks
 """
 
 import pytest
-import asyncio
-import time
-import json
-from unittest.mock import AsyncMock, patch, MagicMock
 from pathlib import Path
 import subprocess
 import docker

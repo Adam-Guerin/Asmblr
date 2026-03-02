@@ -6,11 +6,11 @@ Analyse et optimise automatiquement les problèmes de performance
 import time
 import psutil
 import threading
-from typing import Dict, Any, List, Optional, Callable
+from typing import Any
+from collections.abc import Callable
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from loguru import logger
-from collections import defaultdict, deque
+from collections import defaultdict
 
 
 @dataclass
@@ -23,7 +23,7 @@ class PerformanceMetrics:
     memory_usage_mb: float
     cpu_usage_percent: float
     success: bool
-    error_message: Optional[str] = None
+    error_message: str | None = None
     retry_count: int = 0
 
 
@@ -35,7 +35,7 @@ class PerformanceIssue:
     operation_name: str
     description: str
     recommendation: str
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
 
 
 class PerformanceOptimizer:
@@ -46,8 +46,8 @@ class PerformanceOptimizer:
     
     def __init__(self, enable_auto_optimization: bool = True):
         self.enable_auto_optimization = enable_auto_optimization
-        self.metrics_history: List[PerformanceMetrics] = []
-        self.issues_detected: List[PerformanceIssue] = []
+        self.metrics_history: list[PerformanceMetrics] = []
+        self.issues_detected: list[PerformanceIssue] = []
         self.optimization_rules = self._load_optimization_rules()
         self.performance_cache = {}
         self.lock = threading.Lock()
@@ -271,7 +271,7 @@ class PerformanceOptimizer:
             "Consulter les logs pour plus de détails"
         ][0]
     
-    def _auto_optimize(self, issues: List[PerformanceIssue]) -> None:
+    def _auto_optimize(self, issues: list[PerformanceIssue]) -> None:
         """Applique automatiquement des optimisations"""
         for issue in issues:
             try:
@@ -302,7 +302,7 @@ class PerformanceOptimizer:
         retry_count = issue.metrics.get("retry_count", 0)
         logger.info(f"Auto-optimisation: ajustement retries pour {issue.operation_name} (count: {retry_count})")
     
-    def _load_optimization_rules(self) -> Dict[str, Any]:
+    def _load_optimization_rules(self) -> dict[str, Any]:
         """Charge les règles d'optimisation"""
         return {
             "web_operations": {
@@ -322,7 +322,7 @@ class PerformanceOptimizer:
             }
         }
     
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Retourne un résumé des performances"""
         if not self.metrics_history:
             return {"message": "Aucune métrique disponible"}
@@ -352,7 +352,7 @@ class PerformanceOptimizer:
             "auto_optimization_enabled": self.enable_auto_optimization
         }
     
-    def get_recommendations(self) -> List[Dict[str, Any]]:
+    def get_recommendations(self) -> list[dict[str, Any]]:
         """Retourne les recommandations d'optimisation"""
         recommendations = []
         
@@ -428,7 +428,7 @@ class PerformanceOptimizer:
 
 
 # Instance globale de l'optimiseur
-_performance_optimizer: Optional[PerformanceOptimizer] = None
+_performance_optimizer: PerformanceOptimizer | None = None
 
 
 def get_performance_optimizer() -> PerformanceOptimizer:

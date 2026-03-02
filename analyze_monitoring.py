@@ -4,7 +4,7 @@ Analyse complète de l'état actuel du monitoring et de l'observabilité pour As
 
 import json
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -16,10 +16,10 @@ class MonitoringComponent:
     type: str  # metrics, logs, tracing, alerting, dashboard
     status: str  # implemented, partial, missing, planned
     description: str
-    files: List[str]
-    features: List[str]
-    gaps: List[str]
-    recommendations: List[str]
+    files: list[str]
+    features: list[str]
+    gaps: list[str]
+    recommendations: list[str]
 
 
 class MonitoringAnalyzer:
@@ -30,7 +30,7 @@ class MonitoringAnalyzer:
         self.components = []
         self.analysis_results = {}
     
-    def analyze_current_state(self) -> Dict[str, Any]:
+    def analyze_current_state(self) -> dict[str, Any]:
         """Analyse l'état actuel du monitoring"""
         print("🔍 Analyse de l'état actuel du monitoring et de l'observabilité...")
         
@@ -358,7 +358,7 @@ class MonitoringAnalyzer:
             "implementation_plan": self._create_implementation_plan()
         }
     
-    def _get_priority_recommendations(self) -> List[Dict[str, Any]]:
+    def _get_priority_recommendations(self) -> list[dict[str, Any]]:
         """Génère les recommandations priorisées"""
         all_recommendations = []
         
@@ -410,7 +410,7 @@ class MonitoringAnalyzer:
         else:
             return "medium"
     
-    def _create_implementation_plan(self) -> Dict[str, Any]:
+    def _create_implementation_plan(self) -> dict[str, Any]:
         """Crée un plan d'implémentation par phases"""
         phases = {
             "phase_1_foundation": {

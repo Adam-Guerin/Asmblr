@@ -5,11 +5,10 @@ et exécute avec une mentalité de fondateur/CEO.
 """
 
 import json
-import asyncio
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Union
+from typing import Any
 from datetime import datetime
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 from loguru import logger
@@ -30,13 +29,11 @@ from app.mvp.ceo_agent_interactions import (
 )
 from app.agents.facilitators import (
     SharedContext,
-    FacilitatorTools,
-    create_facilitator_tools
+    FacilitatorTools
 )
 from app.mvp.startup_success_optimizer import (
     StartupSuccessOptimizer,
-    create_startup_success_optimizer,
-    SuccessScore
+    create_startup_success_optimizer
 )
 
 
@@ -60,9 +57,9 @@ class CEOStrategy:
     scaling_strategy: str
     risk_appetite: str  # LOW, MEDIUM, HIGH, EXTREME
     timeline_aggression: str  # CONSERVATIVE, NORMAL, AGGRESSIVE, INSANE
-    resource_allocation: Dict[str, float]
-    key_decisions: List[CEODecisionType]
-    bold_moves: List[str]
+    resource_allocation: dict[str, float]
+    key_decisions: list[CEODecisionType]
+    bold_moves: list[str]
 
 
 @dataclass 
@@ -70,11 +67,11 @@ class CEOExecutionPlan:
     """Plan d'exécution CEO sans limites"""
     strategy: CEOStrategy
     mvp_plan: MVPOrchestrationPlan
-    expansion_roadmap: List[Dict[str, Any]]
-    competitive_attacks: List[Dict[str, Any]]
-    resource_requirements: Dict[str, Any]
-    success_metrics: Dict[str, Any]
-    risk_mitigation: List[str]
+    expansion_roadmap: list[dict[str, Any]]
+    competitive_attacks: list[dict[str, Any]]
+    resource_requirements: dict[str, Any]
+    success_metrics: dict[str, Any]
+    risk_mitigation: list[str]
 
 
 class CEOOrchestrator:
@@ -105,14 +102,14 @@ class CEOOrchestrator:
         self.run_dir = run_dir
         self.ceo_decisions = []
         self.bold_moves_executed = []
-        self.toolkit: Optional[CEOToolkit] = None
-        self.micromanager: Optional[CEOMicromanager] = None
-        self.interaction_orchestrator: Optional[CEOAgentInteractionOrchestrator] = None
+        self.toolkit: CEOToolkit | None = None
+        self.micromanager: CEOMicromanager | None = None
+        self.interaction_orchestrator: CEOAgentInteractionOrchestrator | None = None
         # Utiliser l'infrastructure de synergie existante
-        self.shared_context: Optional[SharedContext] = None
-        self.facilitator_tools: Optional[FacilitatorTools] = None
+        self.shared_context: SharedContext | None = None
+        self.facilitator_tools: FacilitatorTools | None = None
         # Optimiseur de succès de startup
-        self.success_optimizer: Optional[StartupSuccessOptimizer] = None
+        self.success_optimizer: StartupSuccessOptimizer | None = None
         
     async def _initialize_toolkit(self):
         """Initialise le CEO Toolkit avec accès illimité"""
@@ -203,10 +200,10 @@ class CEOOrchestrator:
     async def execute_ceo_vision(
         self,
         topic: str,
-        seed_inputs: Optional[SeedInputs] = None,
+        seed_inputs: SeedInputs | None = None,
         risk_level: str = "EXTREME",
         timeline_aggression: str = "INSANE"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Exécute la vision CEO sans limites
         
@@ -311,7 +308,7 @@ class CEOOrchestrator:
     async def _develop_ceo_vision(
         self,
         topic: str,
-        seed_inputs: Optional[SeedInputs],
+        seed_inputs: SeedInputs | None,
         risk_level: str,
         timeline_aggression: str
     ) -> CEOStrategy:
@@ -390,7 +387,7 @@ class CEOOrchestrator:
         self,
         strategy: CEOStrategy,
         topic: str
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Prend des décisions audacieuses basées sur la stratégie CEO"""
         
         decisions_prompt = f"""
@@ -440,8 +437,8 @@ class CEOOrchestrator:
         self,
         topic: str,
         strategy: CEOStrategy,
-        decisions: List[Dict[str, Any]],
-        seed_inputs: Optional[SeedInputs]
+        decisions: list[dict[str, Any]],
+        seed_inputs: SeedInputs | None
     ) -> CEOExecutionPlan:
         """Crée un plan d'exécution sans limites"""
         
@@ -487,7 +484,7 @@ class CEOOrchestrator:
         self,
         mvp_plan: MVPOrchestrationPlan,
         strategy: CEOStrategy,
-        decisions: List[Dict[str, Any]]
+        decisions: list[dict[str, Any]]
     ) -> MVPOrchestrationPlan:
         """Enhance le plan MVP avec la mentalité CEO"""
         
@@ -550,7 +547,7 @@ class CEOOrchestrator:
         self,
         topic: str,
         strategy: CEOStrategy
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Crée un roadmap d'expansion agressive"""
         
         roadmap_prompt = f"""
@@ -607,7 +604,7 @@ class CEOOrchestrator:
         self,
         topic: str,
         strategy: CEOStrategy
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Planifie les attaques concurrentielles"""
         
         attacks_prompt = f"""
@@ -657,7 +654,7 @@ class CEOOrchestrator:
         self,
         topic: str,
         strategy: CEOStrategy
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Calcule les ressources nécessaires (sans limites)"""
         
         return {
@@ -689,7 +686,7 @@ class CEOOrchestrator:
         self,
         topic: str,
         strategy: CEOStrategy
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Définit les métriques de succès CEO"""
         
         return {
@@ -718,7 +715,7 @@ class CEOOrchestrator:
     async def _create_ceo_risk_mitigation(
         self,
         strategy: CEOStrategy
-    ) -> List[str]:
+    ) -> list[str]:
         """Crée le plan de mitigation CEO (assume beaucoup de risques)"""
         
         return [
@@ -734,8 +731,8 @@ class CEOOrchestrator:
     async def _execute_like_a_ceo_with_tools(
         self,
         execution_plan: CEOExecutionPlan,
-        seed_inputs: Optional[SeedInputs]
-    ) -> Dict[str, Any]:
+        seed_inputs: SeedInputs | None
+    ) -> dict[str, Any]:
         """Exécute avec une mentalité de CEO et TOUS les outils disponibles"""
         
         logger.info("🔥 CEO EXECUTION MODE: WITH UNLIMITED TOOLS")
@@ -915,7 +912,7 @@ class CEOOrchestrator:
     async def _create_ceo_documentation(
         self,
         execution_plan: CEOExecutionPlan
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """Crée la documentation CEO"""
         
         docs = []
@@ -988,7 +985,7 @@ class CEOOrchestrator:
     async def _create_deployment_script(
         self,
         execution_plan: CEOExecutionPlan
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Crée un script de déploiement CEO"""
         
         script = f"""#!/bin/bash
@@ -1022,7 +1019,7 @@ echo "✅ CEO DEPLOYMENT COMPLETE - Market domination initiated"
     async def _create_ceo_landing_page(
         self,
         execution_plan: CEOExecutionPlan
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """Crée une landing page CEO"""
         
         html = f"""<!DOCTYPE html>
@@ -1089,7 +1086,7 @@ echo "✅ CEO DEPLOYMENT COMPLETE - Market domination initiated"
     async def _create_ceo_readme(
         self,
         execution_plan: CEOExecutionPlan,
-        results: Dict[str, Any]
+        results: dict[str, Any]
     ) -> str:
         """Crée un README CEO spécial"""
         
@@ -1130,8 +1127,8 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
     async def _micromanage_agents(
         self,
         execution_plan: CEOExecutionPlan,
-        results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        results: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Micromane les agents pour contrôle total
         
@@ -1200,7 +1197,7 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
         self,
         agent_type: AgentType,
         execution_plan: CEOExecutionPlan
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Simule un output d'agent pour le micromanagement"""
         
         # Simuler des outputs basés sur le type d'agent
@@ -1252,8 +1249,8 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
     async def _modulate_agent_interactions(
         self,
         execution_plan: CEOExecutionPlan,
-        results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        results: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Module les interactions entre agents
         
@@ -1348,8 +1345,8 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
     async def _manage_assets_and_synergies(
         self,
         execution_plan: CEOExecutionPlan,
-        results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        results: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Gère les assets et synergies via l'infrastructure existante
         
@@ -1444,8 +1441,8 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
     async def _analyze_startup_success(
         self,
         execution_plan: CEOExecutionPlan,
-        results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        results: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Analyse le succès de la startup
         
@@ -1525,8 +1522,8 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
     async def _prepare_market_domination(
         self,
         execution_plan: CEOExecutionPlan,
-        results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Prépare le plan de domination du marché"""
         
         domination_prompt = f"""
@@ -1568,7 +1565,7 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
             "legacy": "Category creator and market leader"
         }
     
-    def _create_ceo_fallback_strategy(self, topic: str) -> Dict[str, Any]:
+    def _create_ceo_fallback_strategy(self, topic: str) -> dict[str, Any]:
         """Fallback stratégie CEO si tout échoue"""
         return {
             "vision": f"Devenir le leader incontesté du marché {topic}",
@@ -1588,7 +1585,7 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
             }
         }
     
-    def _create_ceo_fallback_decisions(self, topic: str) -> Dict[str, Any]:
+    def _create_ceo_fallback_decisions(self, topic: str) -> dict[str, Any]:
         """Fallback décisions CEO si tout échoue"""
         return {
             "decisions": [
@@ -1607,7 +1604,7 @@ UNLIMITED AMBITION. TOTAL DOMINATION. NO LIMITS.
             ]
         }
     
-    def _log_ceo_success(self, topic: str, strategy: CEOStrategy, results: Dict[str, Any]):
+    def _log_ceo_success(self, topic: str, strategy: CEOStrategy, results: dict[str, Any]):
         """Loggue le succès CEO"""
         
         log_entry = {
@@ -1644,10 +1641,10 @@ async def execute_ceo_vision(
     llm_client: LLMClient,
     run_id: str,
     run_dir: Path,
-    seed_inputs: Optional[SeedInputs] = None,
+    seed_inputs: SeedInputs | None = None,
     risk_level: str = "EXTREME",
     timeline_aggression: str = "INSANE"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Point d'entrée principal pour l'exécution CEO sans limites
     

@@ -9,10 +9,7 @@ import sys
 import time
 import json
 import subprocess
-import requests
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
-import traceback
 
 class FinalValidationSuite:
     def __init__(self, root_path: Path):
@@ -219,11 +216,9 @@ class FinalValidationSuite:
         """Test UI functionality"""
         try:
             # Test UI import
-            import app.ui_enhanced
             self.log_test("UI Import", True, "Enhanced UI imported successfully")
             
             # Test basic UI components
-            import streamlit as st
             self.log_test("Streamlit", True, "Streamlit available")
             
             # Test UI configuration
@@ -246,7 +241,6 @@ class FinalValidationSuite:
         try:
             from app.core.run_manager import RunManager
             from app.core.config import get_settings
-            from app.core.models import SeedInputs
             
             settings = get_settings()
             manager = RunManager(settings.runs_dir, settings.data_dir)
@@ -338,7 +332,7 @@ class FinalValidationSuite:
             # Test .gitignore
             gitignore_path = self.root_path / '.gitignore'
             if gitignore_path.exists():
-                with open(gitignore_path, 'r') as f:
+                with open(gitignore_path) as f:
                     gitignore_content = f.read()
                     
                 security_entries = ['.env', '*.key', '*.pem', 'secrets/']
@@ -359,7 +353,7 @@ class FinalValidationSuite:
                     continue  # Skip test files
                     
                 try:
-                    with open(py_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    with open(py_file, encoding='utf-8', errors='ignore') as f:
                         content = f.read()
                         
                     # Check for obvious hardcoded secrets
@@ -390,9 +384,6 @@ class FinalValidationSuite:
             start_time = time.time()
             
             # Import core modules
-            from app.core.config import get_settings
-            from app.core.models import SeedInputs
-            from app.core.run_manager import RunManager
             
             startup_time = time.time() - start_time
             

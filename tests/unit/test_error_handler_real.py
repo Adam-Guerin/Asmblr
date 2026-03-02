@@ -4,7 +4,6 @@ Basés sur la structure réelle du error_handler.py
 """
 
 import pytest
-from unittest.mock import Mock, patch
 
 from app.core.error_handler import (
     ErrorSeverity, ErrorCategory, ErrorSolution, ErrorInfo,

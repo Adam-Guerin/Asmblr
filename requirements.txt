@@ -106,5 +106,5 @@ docker==7.1.0
 boto3==1.34.0
 
 # Additional dependencies for compatibility
-nltk==3.8.2  # Updated for llama-index compatibility
+nltk==3.8.1  # Updated for llama-index compatibility
 pypdf==5.1.0  # Updated for llama-index compatibility

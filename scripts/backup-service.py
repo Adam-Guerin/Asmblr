@@ -4,17 +4,15 @@ Automated Backup Service for Asmblr
 Performs scheduled backups of databases, configurations, and user data
 """
 
-import os
 import sys
 import asyncio
 import json
-import gzip
 import shutil
 import time
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 import argparse
 
 import redis.asyncio as redis
@@ -50,7 +48,7 @@ class BackupService:
         
         logger.info(f"Backup service initialized. Backup dir: {self.backup_dir}")
     
-    async def create_backup(self, backup_type: str = "full") -> Dict[str, Any]:
+    async def create_backup(self, backup_type: str = "full") -> dict[str, Any]:
         """Create a backup of specified type"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_name = f"asmblr_{backup_type}_{timestamp}"
@@ -114,7 +112,7 @@ class BackupService:
             
             raise
     
-    async def _backup_database(self, backup_path: Path, manifest: Dict[str, Any]) -> None:
+    async def _backup_database(self, backup_path: Path, manifest: dict[str, Any]) -> None:
         """Backup database files"""
         logger.info("Backing up database...")
         
@@ -173,7 +171,7 @@ class BackupService:
         except Exception as e:
             logger.warning(f"Redis backup failed: {e}")
     
-    async def _backup_runs(self, backup_path: Path, manifest: Dict[str, Any]) -> None:
+    async def _backup_runs(self, backup_path: Path, manifest: dict[str, Any]) -> None:
         """Backup runs directory"""
         logger.info("Backing up runs...")
         
@@ -216,7 +214,7 @@ class BackupService:
         
         logger.info(f"Backed up {len(backed_up_runs)} runs")
     
-    async def _backup_configurations(self, backup_path: Path, manifest: Dict[str, Any]) -> None:
+    async def _backup_configurations(self, backup_path: Path, manifest: dict[str, Any]) -> None:
         """Backup configuration files"""
         logger.info("Backing up configurations...")
         
@@ -260,7 +258,7 @@ class BackupService:
         
         logger.info(f"Backed up {len(backed_up_configs)} configuration files")
     
-    async def _backup_logs(self, backup_path: Path, manifest: Dict[str, Any]) -> None:
+    async def _backup_logs(self, backup_path: Path, manifest: dict[str, Any]) -> None:
         """Backup log files"""
         logger.info("Backing up logs...")
         
@@ -413,7 +411,7 @@ class BackupService:
         except Exception as e:
             logger.error(f"Backup cleanup failed: {e}")
     
-    async def list_backups(self) -> List[Dict[str, Any]]:
+    async def list_backups(self) -> list[dict[str, Any]]:
         """List all available backups"""
         backups = []
         
@@ -512,7 +510,7 @@ class BackupService:
             logger.error(f"Restore failed: {e}")
             return False
     
-    async def _restore_database(self, backup_path: Path, manifest: Dict[str, Any]) -> None:
+    async def _restore_database(self, backup_path: Path, manifest: dict[str, Any]) -> None:
         """Restore database from backup"""
         logger.info("Restoring database...")
         
@@ -535,7 +533,7 @@ class BackupService:
             shutil.copy2(sqlite_backup, sqlite_db)
             logger.info("SQLite database restored")
     
-    async def _restore_runs(self, backup_path: Path, manifest: Dict[str, Any]) -> None:
+    async def _restore_runs(self, backup_path: Path, manifest: dict[str, Any]) -> None:
         """Restore runs from backup"""
         logger.info("Restoring runs...")
         
@@ -553,7 +551,7 @@ class BackupService:
                 shutil.copytree(run_backup, run_dest)
                 logger.info(f"Restored run: {run_backup.name}")
     
-    async def _restore_configurations(self, backup_path: Path, manifest: Dict[str, Any]) -> None:
+    async def _restore_configurations(self, backup_path: Path, manifest: dict[str, Any]) -> None:
         """Restore configurations from backup"""
         logger.info("Restoring configurations...")
         

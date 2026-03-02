@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 from .mlp_builder import MLPBuilder, MLPBuildResult
 from ..core.llm import LLMClient
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class MLPIntegrator:
     """Integrates MLP systems into existing MVP pipeline."""
     
-    def __init__(self, config: Dict[str, Any], llm_client: LLMClient):
+    def __init__(self, config: dict[str, Any], llm_client: LLMClient):
         self.config = config
         self.llm_client = llm_client
         self.mlp_builder = MLPBuilder(config, llm_client)
@@ -23,7 +23,7 @@ class MLPIntegrator:
         self.emotional_design_enabled = config.get('EMOTIONAL_DESIGN_ENABLED', True)
         self.loveability_enabled = config.get('LOVEABILITY_ENABLED', True)
     
-    def integrate_into_pipeline(self, existing_crew_config: Dict[str, Any]) -> Dict[str, Any]:
+    def integrate_into_pipeline(self, existing_crew_config: dict[str, Any]) -> dict[str, Any]:
         """Integrate MLP agents and tasks into existing CrewAI pipeline."""
         
         if not self.mlp_enabled:
@@ -129,7 +129,7 @@ class MLPIntegrator:
         
         return mlp_tasks
     
-    def enhance_mvp_build(self, tech_spec: Dict[str, Any], prd_data: Dict[str, Any], 
+    def enhance_mvp_build(self, tech_spec: dict[str, Any], prd_data: dict[str, Any], 
                          output_path: Path) -> MLPBuildResult:
         """Enhance existing MVP build with MLP features."""
         
@@ -159,7 +159,7 @@ class MLPIntegrator:
         logger.info("Building MLP with emotional addiction systems")
         return self.mlp_builder.build_mlp(tech_spec, prd_data, output_path)
     
-    def get_mlp_configuration(self) -> Dict[str, Any]:
+    def get_mlp_configuration(self) -> dict[str, Any]:
         """Get current MLP configuration."""
         return {
             'mlp_enabled': self.mlp_enabled,
@@ -176,7 +176,7 @@ class MLPIntegrator:
             'delight_frequency': self.config.get('DELIGHT_INTERACTION_FREQUENCY', 0.3)
         }
     
-    def validate_mlp_setup(self) -> Dict[str, Any]:
+    def validate_mlp_setup(self) -> dict[str, Any]:
         """Validate MLP setup and dependencies."""
         validation_result = {
             'valid': True,

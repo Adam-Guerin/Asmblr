@@ -1,6 +1,6 @@
 """Emotional Design Agent for creating products that evoke powerful feelings."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any
 from crewai import Agent, Task
 from langchain.tools import Tool
 from ..core.llm import LLMClient
@@ -40,7 +40,7 @@ class EmotionalDesignerAgent:
             llm=self.llm_client
         )
     
-    def create_emotional_onboarding_task(self, product_data: Dict[str, Any]) -> Task:
+    def create_emotional_onboarding_task(self, product_data: dict[str, Any]) -> Task:
         """Create task for designing emotionally resonant onboarding."""
         return Task(
             description=f"""
@@ -83,7 +83,7 @@ class EmotionalDesignerAgent:
             expected_output="Emotionally resonant onboarding experience with celebration system and personalization"
         )
     
-    def create_delightful_interactions_task(self, ui_components: Dict[str, Any]) -> Task:
+    def create_delightful_interactions_task(self, ui_components: dict[str, Any]) -> Task:
         """Create task for designing delightful micro-interactions."""
         return Task(
             description=f"""
@@ -134,7 +134,7 @@ class EmotionalDesignerAgent:
             expected_output="Delightful micro-interaction system with emotional animations and celebrations"
         )
     
-    def create_celebration_system_task(self, user_journey: Dict[str, Any]) -> Task:
+    def create_celebration_system_task(self, user_journey: dict[str, Any]) -> Task:
         """Create task for designing achievement celebration system."""
         return Task(
             description=f"""
@@ -189,7 +189,7 @@ class EmotionalDesignerAgent:
             expected_output="Comprehensive celebration system with emotional rewards and social recognition"
         )
     
-    def create_emotional_personalization_task(self, user_data: Dict[str, Any]) -> Task:
+    def create_emotional_personalization_task(self, user_data: dict[str, Any]) -> Task:
         """Create task for emotional personalization."""
         return Task(
             description=f"""
@@ -244,7 +244,7 @@ class EmotionalDesignerAgent:
             expected_output="Emotional personalization system that makes users feel understood and valued"
         )
     
-    def create_community_belonging_task(self, social_features: Dict[str, Any]) -> Task:
+    def create_community_belonging_task(self, social_features: dict[str, Any]) -> Task:
         """Create task for designing community and belonging features."""
         return Task(
             description=f"""
@@ -307,7 +307,7 @@ class EmotionalDesignerAgent:
             expected_output="Community belonging system that creates deep user connection and emotional safety"
         )
     
-    def get_emotional_design_tools(self) -> List[Tool]:
+    def get_emotional_design_tools(self) -> list[Tool]:
         """Get emotional design-specific tools for the agent."""
         return [
             Tool(

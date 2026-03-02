@@ -1,6 +1,6 @@
 """UX Specialist Agent for creating seamless user experiences."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any
 from crewai import Agent, Task
 from langchain.tools import Tool
 from ..core.llm import LLMClient
@@ -38,8 +38,8 @@ class UXSpecialistAgent:
             llm=self.llm_client
         )
     
-    def create_seamless_userflow_task(self, prd_data: Dict[str, Any], 
-                                   tech_spec: Dict[str, Any]) -> Task:
+    def create_seamless_userflow_task(self, prd_data: dict[str, Any], 
+                                   tech_spec: dict[str, Any]) -> Task:
         """Create task for designing seamless user flows."""
         return Task(
             description=f"""
@@ -73,8 +73,8 @@ class UXSpecialistAgent:
             expected_output="Comprehensive UX design package with user flows, wireframes, and conversion optimization strategy"
         )
     
-    def create_ui_components_task(self, userflow_design: Dict[str, Any], 
-                               tech_stack: Dict[str, Any]) -> Task:
+    def create_ui_components_task(self, userflow_design: dict[str, Any], 
+                               tech_stack: dict[str, Any]) -> Task:
         """Create task for implementing UI components."""
         return Task(
             description=f"""
@@ -115,8 +115,8 @@ class UXSpecialistAgent:
             expected_output="Complete UI component library with TypeScript, styling, and documentation"
         )
     
-    def create_conversion_optimization_task(self, ui_components: Dict[str, Any], 
-                                      business_goals: Dict[str, Any]) -> Task:
+    def create_conversion_optimization_task(self, ui_components: dict[str, Any], 
+                                      business_goals: dict[str, Any]) -> Task:
         """Create task for conversion optimization."""
         return Task(
             description=f"""
@@ -161,7 +161,7 @@ class UXSpecialistAgent:
             expected_output="Conversion-optimized UI with analytics implementation and testing framework"
         )
     
-    def create_mobile_optimization_task(self, desktop_ui: Dict[str, Any]) -> Task:
+    def create_mobile_optimization_task(self, desktop_ui: dict[str, Any]) -> Task:
         """Create task for mobile optimization."""
         return Task(
             description=f"""
@@ -206,7 +206,7 @@ class UXSpecialistAgent:
             expected_output="Mobile-optimized UI with exceptional touch experience and performance"
         )
     
-    def create_accessibility_task(self, ui_design: Dict[str, Any]) -> Task:
+    def create_accessibility_task(self, ui_design: dict[str, Any]) -> Task:
         """Create task for accessibility compliance."""
         return Task(
             description=f"""
@@ -250,7 +250,7 @@ class UXSpecialistAgent:
             expected_output="Fully accessible UI compliant with WCAG 2.1 AA+ standards"
         )
     
-    def get_ux_tools(self) -> List[Tool]:
+    def get_ux_tools(self) -> list[Tool]:
         """Get UX-specific tools for the agent."""
         return [
             Tool(

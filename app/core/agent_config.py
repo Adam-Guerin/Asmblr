@@ -5,7 +5,7 @@ Les agents ajustent automatiquement les paramètres selon le contexte
 
 import json
 from dataclasses import dataclass, asdict
-from typing import Dict, Any, Optional
+from typing import Any
 from pathlib import Path
 from loguru import logger
 
@@ -50,9 +50,9 @@ class ConfigurationAgent:
     
     def __init__(self, llm_client: LLMClient):
         self.llm = llm_client
-        self.config_history: list[Dict[str, Any]] = []
+        self.config_history: list[dict[str, Any]] = []
         
-    def analyze_context(self, topic: str, user_profile: Optional[Dict] = None) -> Dict[str, Any]:
+    def analyze_context(self, topic: str, user_profile: dict | None = None) -> dict[str, Any]:
         """
         Analyse le contexte pour déterminer la configuration optimale
         
@@ -109,7 +109,7 @@ class ConfigurationAgent:
             logger.error(f"Erreur génération configuration: {e}")
             return self._get_default_config()
     
-    def _normalize_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _normalize_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """Normalise et valide la configuration"""
         normalized = {}
         
@@ -139,7 +139,7 @@ class ConfigurationAgent:
         
         return normalized
     
-    def _get_default_config(self) -> Dict[str, Any]:
+    def _get_default_config(self) -> dict[str, Any]:
         """Configuration par défaut sécurisée"""
         return {
             "execution_mode": "standard",
@@ -156,8 +156,8 @@ class ConfigurationAgent:
         from datetime import datetime
         return datetime.now().isoformat()
     
-    def optimize_for_performance(self, current_config: Dict[str, Any], 
-                               performance_metrics: Dict[str, float]) -> Dict[str, Any]:
+    def optimize_for_performance(self, current_config: dict[str, Any], 
+                               performance_metrics: dict[str, float]) -> dict[str, Any]:
         """
         Ajuste la configuration en fonction des métriques de performance
         
@@ -244,7 +244,7 @@ class DynamicConfigManager:
         self.config_dir.mkdir(exist_ok=True)
         self.current_config = AgentConfig()
         
-    def get_config_for_topic(self, topic: str, user_profile: Optional[Dict] = None) -> AgentConfig:
+    def get_config_for_topic(self, topic: str, user_profile: dict | None = None) -> AgentConfig:
         """
         Génère et retourne la configuration optimale pour un sujet donné
         
@@ -270,7 +270,7 @@ class DynamicConfigManager:
         
         return self.current_config
     
-    def optimize_performance(self, performance_metrics: Dict[str, float]) -> AgentConfig:
+    def optimize_performance(self, performance_metrics: dict[str, float]) -> AgentConfig:
         """Optimise la configuration basée sur les performances"""
         current_dict = asdict(self.current_config)
         optimized_dict = self.agent.optimize_for_performance(current_dict, performance_metrics)
@@ -295,7 +295,7 @@ class DynamicConfigManager:
         except Exception as e:
             logger.error(f"Erreur sauvegarde configuration: {e}")
     
-    def get_env_vars(self) -> Dict[str, str]:
+    def get_env_vars(self) -> dict[str, str]:
         """
         Génère les variables d'environnement à partir de la configuration actuelle
         Compatible avec le système existant

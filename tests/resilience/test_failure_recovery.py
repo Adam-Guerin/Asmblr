@@ -7,17 +7,12 @@ import pytest
 import asyncio
 import time
 import random
-import threading
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Any
 
-from app.core.config import Settings
 from app.core.pipeline import VenturePipeline
 from app.core.cache import CacheManager
 from app.core.llm import LLMClient
-from app.monitoring.prometheus_metrics import AsmblrMetrics
-from app.monitoring.structured_logger import StructuredLogger
 
 
 class TestResilienceAndRecovery:

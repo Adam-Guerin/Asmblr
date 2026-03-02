@@ -7,19 +7,16 @@ import asyncio
 import time
 import json
 import numpy as np
-import pandas as pd
-from typing import Dict, Any, Optional, List, Union, Callable, Tuple
-from dataclasses import dataclass, asdict, field
+from typing import Any
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from collections import defaultdict, deque
-import statistics
 from loguru import logger
 import redis.asyncio as redis
 import psutil
 from sklearn.ensemble import IsolationForest, RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_absolute_error, mean_squared_error
 import joblib
 
 class MetricType(Enum):
@@ -56,9 +53,9 @@ class MetricData:
     value: float
     timestamp: datetime
     source: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'metric_type': self.metric_type.value,
             'value': self.value,
@@ -76,9 +73,9 @@ class Prediction:
     horizon: PredictionHorizon
     timestamp: datetime
     model_used: str
-    features: Dict[str, float] = field(default_factory=dict)
+    features: dict[str, float] = field(default_factory=dict)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'metric_type': self.metric_type.value,
             'predicted_value': self.predicted_value,
@@ -98,13 +95,13 @@ class Alert:
     message: str
     threshold: float
     actual_value: float
-    predicted_value: Optional[float] = None
+    predicted_value: float | None = None
     timestamp: datetime = field(default_factory=datetime.now)
     acknowledged: bool = False
     resolved: bool = False
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'id': self.id,
             'metric_type': self.metric_type.value,
@@ -228,7 +225,7 @@ class PredictiveMonitoringSystem:
         metric_type: MetricType,
         value: float,
         source: str = "system",
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ):
         """Collect a metric data point"""
         try:
@@ -262,8 +259,8 @@ class PredictiveMonitoringSystem:
         self,
         metric_type: MetricType,
         horizon: PredictionHorizon = PredictionHorizon.SHORT_TERM,
-        features: Optional[Dict[str, float]] = None
-    ) -> Optional[Prediction]:
+        features: dict[str, float] | None = None
+    ) -> Prediction | None:
         """Predict future metric value"""
         try:
             # Get historical data
@@ -337,7 +334,7 @@ class PredictiveMonitoringSystem:
             logger.error(f"Prediction error for {metric_type.value}: {e}")
             return None
     
-    async def _extract_features(self, metric_type: MetricType, data_points: List[MetricData]) -> Dict[str, float]:
+    async def _extract_features(self, metric_type: MetricType, data_points: list[MetricData]) -> dict[str, float]:
         """Extract features from historical data"""
         try:
             if not data_points:
@@ -377,7 +374,7 @@ class PredictiveMonitoringSystem:
             logger.error(f"Feature extraction error for {metric_type.value}: {e}")
             return {}
     
-    async def detect_anomalies(self, metric_type: MetricType) -> List[MetricData]:
+    async def detect_anomalies(self, metric_type: MetricType) -> list[MetricData]:
         """Detect anomalies in metric data"""
         try:
             data_points = list(self.metrics_data[metric_type])
@@ -502,8 +499,8 @@ class PredictiveMonitoringSystem:
         metric_type: MetricType,
         severity: AlertSeverity,
         threshold: float,
-        actual_value: Optional[float],
-        predicted_value: Optional[float] = None,
+        actual_value: float | None,
+        predicted_value: float | None = None,
         message: str = ""
     ):
         """Create an alert"""
@@ -718,7 +715,7 @@ class PredictiveMonitoringSystem:
         except Exception as e:
             logger.error(f"Redis alert storage error: {e}")
     
-    async def get_metrics_summary(self, metric_type: Optional[MetricType] = None) -> Dict[str, Any]:
+    async def get_metrics_summary(self, metric_type: MetricType | None = None) -> dict[str, Any]:
         """Get metrics summary"""
         try:
             summary = {
@@ -761,7 +758,7 @@ class PredictiveMonitoringSystem:
             logger.error(f"Metrics summary error: {e}")
             return {}
     
-    async def get_predictions_summary(self, metric_type: Optional[MetricType] = None) -> Dict[str, Any]:
+    async def get_predictions_summary(self, metric_type: MetricType | None = None) -> dict[str, Any]:
         """Get predictions summary"""
         try:
             summary = {
@@ -793,7 +790,7 @@ class PredictiveMonitoringSystem:
             logger.error(f"Predictions summary error: {e}")
             return {}
     
-    async def get_alerts_summary(self) -> Dict[str, Any]:
+    async def get_alerts_summary(self) -> dict[str, Any]:
         """Get alerts summary"""
         try:
             alerts = list(self.alerts.values())

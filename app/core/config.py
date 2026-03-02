@@ -1,8 +1,7 @@
 import os
 import re
-import secrets
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from dotenv import load_dotenv
 from app.core.lightweight_config import lightweight_config
@@ -351,14 +350,14 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
         parsed = datetime.fromisoformat(value)
         
         # Additional validation: check if the parsed date is reasonable
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         # Don't allow dates more than 10 years in the past
         past_boundary = now.replace(year=now.year - 10)
         # Ensure both datetimes are timezone-aware for comparison
         if parsed.tzinfo is None:
-            parsed_utc = parsed.replace(tzinfo=timezone.utc)
+            parsed_utc = parsed.replace(tzinfo=UTC)
         else:
-            parsed_utc = parsed.astimezone(timezone.utc)
+            parsed_utc = parsed.astimezone(UTC)
             
         if parsed_utc.year < past_boundary.year:
             return None
@@ -368,7 +367,7 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
         
         # Ensure timezone is set, default to UTC if not
         if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
+            parsed = parsed.replace(tzinfo=UTC)
             
         return parsed
     except ValueError as e:
@@ -401,7 +400,7 @@ def previous_secret_allowed(
     expiry = _parse_iso_datetime(expires_at)
     if expiry is None:
         return False, "missing_or_invalid_expiry"
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if now >= expiry:
         return False, "expired"
     return True, "within_grace_period"

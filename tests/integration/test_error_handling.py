@@ -1,10 +1,9 @@
 """Integration tests for error handling system."""
 
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from app.core.error_handler import (
-    ErrorHandler, ErrorInfo, ErrorSolution, ErrorSeverity, ErrorCategory,
+    ErrorHandler, ErrorInfo, ErrorSeverity, ErrorCategory,
     handle_error, format_error_for_ui
 )
 

@@ -2,12 +2,12 @@
 Shared Knowledge Base for collective intelligence and agent learning.
 """
 
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 from dataclasses import dataclass, field
 from enum import Enum
 import json
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from loguru import logger
 
 
@@ -55,31 +55,31 @@ class KnowledgeEntry:
     domain: KnowledgeDomain
     title: str
     description: str
-    content: Dict[str, Any]
+    content: dict[str, Any]
     source_agent: str
-    contributors: List[str] = field(default_factory=list)
-    tags: Set[str] = field(default_factory=set)
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    contributors: list[str] = field(default_factory=list)
+    tags: set[str] = field(default_factory=set)
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     status: KnowledgeStatus = KnowledgeStatus.ACTIVE
     usage_count: int = 0
     success_rate: float = 0.0
     validation_score: float = 0.0
-    related_entries: List[str] = field(default_factory=list)
-    prerequisites: List[str] = field(default_factory=list)
-    context: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    related_entries: list[str] = field(default_factory=list)
+    prerequisites: list[str] = field(default_factory=list)
+    context: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     def add_contributor(self, agent_name: str) -> None:
         """Add a contributor to this knowledge entry."""
         if agent_name not in self.contributors:
             self.contributors.append(agent_name)
-            self.updated_at = datetime.now(timezone.utc).isoformat()
+            self.updated_at = datetime.now(UTC).isoformat()
     
     def add_tag(self, tag: str) -> None:
         """Add a tag to this knowledge entry."""
         self.tags.add(tag.lower().strip())
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
     
     def record_usage(self, success: bool = True) -> None:
         """Record usage of this knowledge entry."""
@@ -88,7 +88,7 @@ class KnowledgeEntry:
             self.success_rate = (self.success_rate * (self.usage_count - 1) + 1.0) / self.usage_count
         else:
             self.success_rate = (self.success_rate * (self.usage_count - 1) + 0.0) / self.usage_count
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
     
     def update_validation_score(self, score: float) -> None:
         """Update validation score."""
@@ -97,20 +97,20 @@ class KnowledgeEntry:
             self.status = KnowledgeStatus.VALIDATED
         elif score < 0.3:
             self.status = KnowledgeStatus.DEPRECATED
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
 
 
 @dataclass
 class KnowledgeQuery:
     """Query for searching the knowledge base."""
-    keywords: List[str] = field(default_factory=list)
-    types: List[KnowledgeType] = field(default_factory=list)
-    domains: List[KnowledgeDomain] = field(default_factory=list)
-    agents: List[str] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
+    types: list[KnowledgeType] = field(default_factory=list)
+    domains: list[KnowledgeDomain] = field(default_factory=list)
+    agents: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     min_success_rate: float = 0.0
     min_validation_score: float = 0.0
-    status: Optional[KnowledgeStatus] = None
+    status: KnowledgeStatus | None = None
     limit: int = 50
     sort_by: str = "relevance"  # relevance, usage, success_rate, validation_score, created_at
 
@@ -121,8 +121,8 @@ class SharedKnowledgeBase:
     def __init__(self, knowledge_dir: Path):
         self.knowledge_dir = knowledge_dir
         self.knowledge_dir.mkdir(parents=True, exist_ok=True)
-        self.entries: Dict[str, KnowledgeEntry] = {}
-        self.index: Dict[str, Set[str]] = {
+        self.entries: dict[str, KnowledgeEntry] = {}
+        self.index: dict[str, set[str]] = {
             "keywords": set(),
             "tags": set(),
             "agents": set(),
@@ -143,7 +143,7 @@ class SharedKnowledgeBase:
             logger.error(f"Failed to add knowledge entry {entry.id}: {e}")
             return False
     
-    def update_entry(self, entry_id: str, updates: Dict[str, Any]) -> bool:
+    def update_entry(self, entry_id: str, updates: dict[str, Any]) -> bool:
         """Update an existing knowledge entry."""
         if entry_id not in self.entries:
             logger.error(f"Knowledge entry {entry_id} not found")
@@ -155,7 +155,7 @@ class SharedKnowledgeBase:
                 if hasattr(entry, key):
                     setattr(entry, key, value)
             
-            entry.updated_at = datetime.now(timezone.utc).isoformat()
+            entry.updated_at = datetime.now(UTC).isoformat()
             self._update_index(entry)
             self._save_entry(entry)
             logger.info(f"Updated knowledge entry: {entry_id}")
@@ -164,11 +164,11 @@ class SharedKnowledgeBase:
             logger.error(f"Failed to update knowledge entry {entry_id}: {e}")
             return False
     
-    def get_entry(self, entry_id: str) -> Optional[KnowledgeEntry]:
+    def get_entry(self, entry_id: str) -> KnowledgeEntry | None:
         """Get a specific knowledge entry."""
         return self.entries.get(entry_id)
     
-    def search(self, query: KnowledgeQuery) -> List[KnowledgeEntry]:
+    def search(self, query: KnowledgeQuery) -> list[KnowledgeEntry]:
         """Search the knowledge base based on query criteria."""
         results = []
         
@@ -190,7 +190,7 @@ class SharedKnowledgeBase:
         
         return results[:query.limit]
     
-    def get_related_entries(self, entry_id: str, limit: int = 10) -> List[KnowledgeEntry]:
+    def get_related_entries(self, entry_id: str, limit: int = 10) -> list[KnowledgeEntry]:
         """Get entries related to a specific entry."""
         if entry_id not in self.entries:
             return []
@@ -215,8 +215,8 @@ class SharedKnowledgeBase:
         related.sort(key=lambda x: x.validation_score, reverse=True)
         return related[:limit]
     
-    def get_top_entries(self, domain: Optional[KnowledgeDomain] = None, 
-                      limit: int = 20) -> List[KnowledgeEntry]:
+    def get_top_entries(self, domain: KnowledgeDomain | None = None, 
+                      limit: int = 20) -> list[KnowledgeEntry]:
         """Get top entries by validation score."""
         entries = list(self.entries.values())
         
@@ -226,7 +226,7 @@ class SharedKnowledgeBase:
         entries.sort(key=lambda x: x.validation_score, reverse=True)
         return entries[:limit]
     
-    def get_agent_contributions(self, agent_name: str) -> List[KnowledgeEntry]:
+    def get_agent_contributions(self, agent_name: str) -> list[KnowledgeEntry]:
         """Get all entries contributed by a specific agent."""
         return [e for e in self.entries.values() 
                 if e.source_agent == agent_name or agent_name in e.contributors]
@@ -396,7 +396,7 @@ class SharedKnowledgeBase:
         except Exception as e:
             logger.error(f"Failed to load knowledge base: {e}")
     
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get knowledge base statistics."""
         stats = {
             "total_entries": len(self.entries),

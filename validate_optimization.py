@@ -483,6 +483,7 @@ pip install -r requirements.core.txt
 # Run individual validation
 python validate_optimization.py --category file_structure
 ```
+"""
         
         else:
             report += """

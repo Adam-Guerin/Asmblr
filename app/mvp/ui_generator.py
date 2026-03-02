@@ -1,9 +1,7 @@
 """Advanced UI generator for creating seamless, conversion-optimized interfaces."""
 
-import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
@@ -14,21 +12,21 @@ class UIComponent:
     """Represents a UI component with its properties."""
     name: str
     component_type: str
-    props: Dict[str, Any]
-    children: List['UIComponent'] = None
-    styling: Dict[str, Any] = None
-    interactions: Dict[str, Any] = None
+    props: dict[str, Any]
+    children: list['UIComponent'] = None
+    styling: dict[str, Any] = None
+    interactions: dict[str, Any] = None
 
 
 class SeamlessUIGenerator:
     """Generates seamless, conversion-optimized UI components."""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.design_tokens = self._initialize_design_tokens()
         self.conversion_patterns = self._initialize_conversion_patterns()
     
-    def _initialize_design_tokens(self) -> Dict[str, Any]:
+    def _initialize_design_tokens(self) -> dict[str, Any]:
         """Initialize consistent design tokens."""
         return {
             'spacing': {
@@ -60,7 +58,7 @@ class SeamlessUIGenerator:
             }
         }
     
-    def _initialize_conversion_patterns(self) -> Dict[str, Any]:
+    def _initialize_conversion_patterns(self) -> dict[str, Any]:
         """Initialize conversion-optimized UI patterns."""
         return {
             'hero_section': {
@@ -92,7 +90,7 @@ class SeamlessUIGenerator:
             }
         }
     
-    def generate_hero_section(self, product_data: Dict[str, Any]) -> UIComponent:
+    def generate_hero_section(self, product_data: dict[str, Any]) -> UIComponent:
         """Generate conversion-optimized hero section."""
         headline = self._optimize_headline(product_data.get('value_proposition', ''))
         subheadline = self._optimize_subheadline(product_data.get('description', ''))
@@ -189,7 +187,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def generate_seamless_form(self, form_config: Dict[str, Any]) -> UIComponent:
+    def generate_seamless_form(self, form_config: dict[str, Any]) -> UIComponent:
         """Generate frictionless form with smart defaults."""
         return UIComponent(
             name="SeamlessForm",
@@ -237,7 +235,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def generate_conversion_dashboard(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def generate_conversion_dashboard(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate conversion-optimized dashboard."""
         return UIComponent(
             name="ConversionDashboard",
@@ -296,7 +294,7 @@ class SeamlessUIGenerator:
         
         return description
     
-    def _generate_social_proof(self, product_data: Dict[str, Any]) -> List[UIComponent]:
+    def _generate_social_proof(self, product_data: dict[str, Any]) -> list[UIComponent]:
         """Generate social proof components."""
         return [
             UIComponent(
@@ -345,7 +343,7 @@ class SeamlessUIGenerator:
             )
         ]
     
-    def _generate_form_fields(self, fields: List[Dict[str, Any]]) -> List[UIComponent]:
+    def _generate_form_fields(self, fields: list[dict[str, Any]]) -> list[UIComponent]:
         """Generate optimized form fields."""
         form_fields = []
         
@@ -366,7 +364,7 @@ class SeamlessUIGenerator:
         
         return form_fields
     
-    def _generate_navigation(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_navigation(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate seamless navigation."""
         return UIComponent(
             name="Navigation",
@@ -389,7 +387,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def _generate_top_bar(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_top_bar(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate top navigation bar."""
         return UIComponent(
             name="TopBar",
@@ -427,7 +425,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def _generate_welcome_section(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_welcome_section(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate personalized welcome section."""
         return UIComponent(
             name="WelcomeSection",
@@ -453,7 +451,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def _generate_quick_actions(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_quick_actions(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate quick action buttons."""
         return UIComponent(
             name="QuickActions",
@@ -478,7 +476,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def _generate_metrics_grid(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_metrics_grid(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate metrics display grid."""
         return UIComponent(
             name="MetricsGrid",
@@ -503,7 +501,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def _generate_activity_feed(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_activity_feed(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate activity feed."""
         return UIComponent(
             name="ActivityFeed",
@@ -528,7 +526,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def _generate_logo_section(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_logo_section(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate logo section."""
         return UIComponent(
             name="LogoSection",
@@ -547,7 +545,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def _generate_nav_menu(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_nav_menu(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate navigation menu."""
         return UIComponent(
             name="NavMenu",
@@ -565,7 +563,7 @@ class SeamlessUIGenerator:
             ]
         )
     
-    def _generate_user_section(self, dashboard_data: Dict[str, Any]) -> UIComponent:
+    def _generate_user_section(self, dashboard_data: dict[str, Any]) -> UIComponent:
         """Generate user profile section."""
         return UIComponent(
             name="UserSection",
@@ -644,15 +642,15 @@ import {{ zodResolver }} from '@hookform/resolvers/zod'
 import {{ z }} from 'zod'
 
 export function {component.name}() {{
-  const form = useForm({
-    resolver: zodResolver(z.object({
+  const form = useForm({{
+    resolver: zodResolver(z.object({{
       /* schema here */
-    })),
-    defaultValues: {{ /* smart defaults */ }}
-  })
+    }})),
+    defaultValues: {{{{ /* smart defaults */ }}}}
+  }})
   
   return (
-    <form onSubmit={form.handleSubmit(/* submit handler */)} className="{component.props.get('className', '')}">
+    <form onSubmit={{form.handleSubmit(/* submit handler */)}} className="{component.props.get('className', '')}">
       {children_code}
     </form>
   )
