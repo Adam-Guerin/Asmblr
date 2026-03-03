@@ -49,3 +49,7 @@ tmp_data/
 data/cache/
 data/backups/
 
+# Trash and experimental code
+trash/
+.tmp/
+
