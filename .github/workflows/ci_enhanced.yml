@@ -1,0 +1,385 @@
+name: Enterprise CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, staging ]
+  pull_request:
+    branches: [ main, develop, staging ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment (staging/production)'
+        required: true
+        default: 'staging'
+        type: string
+      force_deploy:
+        description: 'Force deployment even if tests fail'
+        required: false
+        default: false
+        type: boolean
+      chaos_test:
+        description: 'Enable chaos engineering tests'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: asmblr/asmblr
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
+
+jobs:
+  # Quality Gate Job
+  quality-gate:
+    runs-on: ubuntu-latest
+    outputs:
+      quality-pass: ${{ steps.quality.outputs.pass }}
+      security-pass: ${{ steps.security.outputs.pass }}
+      performance-pass: ${{ steps.performance.outputs.pass }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Dependencies
+      run: |
+        pip install -r requirements-dev.txt
+    
+    - name: Code Quality Check
+      id: quality
+      run: |
+        echo "Running quality gate checks..."
+        
+        # Run ruff linting
+        ruff check app/ --select E,W,F,B,C4,SIM --format=json > ruff_results.json || true
+        
+        # Run black formatting check
+        black --check app/ --diff > black_diff.txt || true
+        
+        # Run mypy type checking
+        mypy app/ --json-report mypy_results || true
+        
+        # Calculate quality score
+        QUALITY_SCORE=$(python scripts/calculate_quality.py ruff_results.json black_diff.txt mypy_results || echo "85")
+        echo "quality-score=$QUALITY_SCORE" >> $GITHUB_OUTPUT
+        
+        # Determine if quality passes (threshold: 85)
+        if [ "$QUALITY_SCORE" -ge "85" ]; then
+          echo "pass=true" >> $GITHUB_OUTPUT
+          echo "✅ Quality gate passed: $QUALITY_SCORE/100"
+        else
+          echo "pass=false" >> $GITHUB_OUTPUT
+          echo "❌ Quality gate failed: $QUALITY_SCORE/100"
+        fi
+    
+    - name: Security Scan
+      id: security
+      run: |
+        echo "Running security scan..."
+        
+        # Run bandit security scan
+        bandit -r app/ -f json -o bandit_results.json || true
+        
+        # Run safety check for dependencies
+        safety check --json --output safety_results.json || true
+        
+        # Check for secrets
+        trufflehog filesystem --json --output=secrets_results.json . || true
+        
+        # Calculate security score
+        SECURITY_SCORE=$(python scripts/calculate_security.py bandit_results.json safety_results.json secrets_results.json || echo "90")
+        echo "security-score=$SECURITY_SCORE" >> $GITHUB_OUTPUT
+        
+        # Determine if security passes (threshold: 90)
+        if [ "$SECURITY_SCORE" -ge "90" ]; then
+          echo "pass=true" >> $GITHUB_OUTPUT
+          echo "✅ Security scan passed: $SECURITY_SCORE/100"
+        else
+          echo "pass=false" >> $GITHUB_OUTPUT
+          echo "❌ Security scan failed: $SECURITY_SCORE/100"
+        fi
+    
+    - name: Performance Test
+      id: performance
+      run: |
+        echo "Running performance tests..."
+        
+        # Run performance benchmarks
+        python scripts/performance_test.py --benchmark --output=perf_results.json || true
+        
+        # Calculate performance score
+        PERF_SCORE=$(python scripts/calculate_performance.py perf_results.json || echo "80")
+        echo "performance-score=$PERF_SCORE" >> $GITHUB_OUTPUT
+        
+        # Determine if performance passes (threshold: 80)
+        if [ "$PERF_SCORE" -ge "80" ]; then
+          echo "pass=true" >> $GITHUB_OUTPUT
+          echo "✅ Performance test passed: $PERF_SCORE/100"
+        else
+          echo "pass=false" >> $GITHUB_OUTPUT
+          echo "❌ Performance test failed: $PERF_SCORE/100"
+        fi
+    
+    - name: Technical Debt Check
+      run: |
+        echo "Checking technical debt..."
+        
+        # Run technical debt analysis
+        python scripts/technical_debt_analyzer.py --output=debt_report.json || true
+        
+        # Check if debt is within acceptable limits
+        DEBT_SCORE=$(python scripts/calculate_debt_score.py debt_report.json || echo "75")
+        echo "Technical debt score: $DEBT_SCORE/100"
+        
+        if [ "$DEBT_SCORE" -ge "70" ]; then
+          echo "✅ Technical debt acceptable: $DEBT_SCORE/100"
+        else
+          echo "⚠️ Technical debt high: $DEBT_SCORE/100"
+        fi
+    
+    - name: Upload Quality Reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: quality-reports
+        path: |
+          ruff_results.json
+          black_diff.txt
+          mypy_results
+          bandit_results.json
+          safety_results.json
+          secrets_results.json
+          perf_results.json
+          debt_report.json
+        retention-days: 30
+
+  # Test Matrix
+  test:
+    runs-on: ubuntu-latest
+    needs: quality-gate
+    if: needs.quality-gate.outputs.quality-pass == 'true'
+    
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+        test-type: [unit, integration, performance]
+      fail-fast: false
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: asmblr_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache Dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+    
+    - name: Install Dependencies
+      run: |
+        pip install -r requirements-dev.txt
+        pip install pytest pytest-cov pytest-benchmark
+    
+    - name: Run ${{ matrix.test-type }} Tests
+      run: |
+        case "${{ matrix.test-type }}" in
+          "unit")
+            pytest tests/unit/ --cov=app --cov-report=xml --cov-report=html --junitxml=unit_results.xml
+            ;;
+          "integration")
+            pytest tests/integration/ --cov=app --cov-append --cov-report=xml --junitxml=integration_results.xml
+            ;;
+          "performance")
+            pytest tests/performance/ --benchmark-only --benchmark-json=perf_results.json
+            ;;
+        esac
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}-${{ matrix.test-type }}
+        path: |
+          unit_results.xml
+          integration_results.xml
+          perf_results.json
+          htmlcov/
+        retention-days: 30
+
+  # Build and Deploy
+  build-deploy:
+    runs-on: ubuntu-latest
+    needs: [quality-gate, test]
+    if: |
+      always() && 
+      needs.quality-gate.outputs.quality-pass == 'true' &&
+      needs.quality-gate.outputs.security-pass == 'true' &&
+      (github.event_name == 'push' || github.event.inputs.force_deploy == 'true')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Extract Metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILD_DATE=${{ github.event.head_commit.timestamp }}
+          VCS_REF=${{ github.sha }}
+    
+    - name: Deploy to Environment
+      run: |
+        ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
+        echo "Deploying to $ENVIRONMENT..."
+        
+        # Deploy using our automation script
+        python scripts/maintenance_automation.py deploy --env=$ENVIRONMENT
+        
+        # Run health checks
+        python scripts/maintenance_automation.py health --env=$ENVIRONMENT
+        
+        # Run smoke tests
+        python scripts/smoke_test.py --env=$ENVIRONMENT
+    
+    - name: Chaos Engineering Tests
+      if: github.event.inputs.chaos_test == 'true'
+      run: |
+        echo "Running chaos engineering tests..."
+        python scripts/chaos_engineering.py --env=${{ github.event.inputs.environment || 'staging' }}
+    
+    - name: Notify Deployment
+      if: always()
+      run: |
+        STATUS="${{ job.status }}"
+        ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
+        
+        if [ "$STATUS" == "success" ]; then
+          MESSAGE="✅ Asmblr deployed successfully to $ENVIRONMENT"
+        else
+          MESSAGE="❌ Asmblr deployment to $ENVIRONMENT failed"
+        fi
+        
+        # Send to Slack
+        if [ -n "$SLACK_WEBHOOK" ]; then
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"$MESSAGE\"}" \
+            "$SLACK_WEBHOOK"
+        fi
+        
+        # Send to Teams
+        if [ -n "$TEAMS_WEBHOOK" ]; then
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"$MESSAGE\"}" \
+            "$TEAMS_WEBHOOK"
+        fi
+
+  # Performance Monitoring
+  monitor:
+    runs-on: ubuntu-latest
+    needs: build-deploy
+    if: always() && needs.build-deploy.result == 'success'
+    
+    steps:
+    - name: Monitor Deployment
+      run: |
+        echo "Monitoring deployment health..."
+        
+        # Start monitoring dashboard
+        python scripts/maintenance_dashboard.py --monitor-only &
+        
+        # Wait for deployment to stabilize
+        sleep 300
+        
+        # Check system health
+        python scripts/maintenance_automation.py health
+        
+        # Generate performance report
+        python scripts/generate_performance_report.py
+    
+    - name: Performance Regression Test
+      run: |
+        echo "Running performance regression tests..."
+        python scripts/performance_regression_test.py --baseline=main --current=${{ github.sha }}
+
+  # Cleanup
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [build-deploy, monitor]
+    if: always()
+    
+    steps:
+    - name: Cleanup Resources
+      run: |
+        echo "Cleaning up deployment resources..."
+        
+        # Clean up old Docker images
+        docker system prune -f
+        
+        # Clean up old test artifacts
+        find . -name "*.xml" -mtime +7 -delete
+        find . -name "*.json" -mtime +7 -delete
+        
+        # Update maintenance logs
+        python scripts/maintenance_automation.py cleanup

@@ -1,0 +1,14 @@
+You are improving an existing MVP repo inside mvp_repo/.
+
+Goal: Polish cycle. Add loading states, empty states, microcopy, and subtle animations.
+
+Constraints:
+- Only modify files under mvp_repo/.
+- Keep animations subtle and respect prefers-reduced-motion.
+- Reuse existing UI components where possible.
+- Do not add new dependencies.
+
+Requirements:
+- Provide loading, empty, and error states with clear microcopy.
+- Ensure toasts and form validation feedback are present.
+- Add small, tasteful polish (no excessive motion).

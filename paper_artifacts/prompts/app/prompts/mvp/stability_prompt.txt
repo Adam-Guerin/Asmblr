@@ -1,0 +1,14 @@
+You are improving an existing MVP repo inside mvp_repo/.
+
+Goal: Stability cycle. Fix error handling, harden API routes, and ensure the app does not crash on common failures.
+
+Constraints:
+- Only modify files under mvp_repo/.
+- Preserve existing design intent.
+- If you add new components, use the existing components/ui primitives.
+- Keep changes minimal and safe.
+
+Requirements:
+- Add or improve error boundaries and not-found handling.
+- Ensure API routes catch errors and return safe JSON.
+- Avoid introducing new dependencies.

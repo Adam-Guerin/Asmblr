@@ -1,0 +1,28 @@
+unit_of_analysis: context_level_seed_averaged_per_context
+generated_at_utc: '2026-03-02T22:06:14.793439+00:00'
+completed_runs_count: 6
+models_general: ['llama3:8b']
+models_code: ['qwen2.5-coder:7b']
+decoding:
+  temperature: 0.3
+  top_p: null
+  max_tokens: null
+  frequency_penalty: null
+  presence_penalty: null
+budgets:
+  profile: 'quick'
+  time_budget_sec: 720
+  token_budget_est: 18000
+timeouts:
+  request_timeout_sec: 20
+  mvp_install_timeout_sec: 600
+  mvp_build_timeout_sec: 300
+  mvp_test_timeout_sec: 300
+seeds:
+  benchmark_default_seed: 42
+  python_random: random.seed(seed)
+  numpy: numpy.random.seed(seed)
+  torch: torch.manual_seed(seed)
+dataset_n_contexts: 1000
+dataset_version_hash_sha256: 'cfc59286f3cafb2dae8f91c7bf93b37459694159f5b264c7240829ebe7404af3'
+scoring_version_hash_sha256: '86df43624bec3a91f89ad36929c5b86ea25d1e3620f34a70fbadb5ca077eea6b'

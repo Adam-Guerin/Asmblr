@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "file": "app/core/pipeline.py",
+    "line": 1,
+    "description": "Break into smaller modules",
+    "severity": "critical",
+    "status": "open",
+    "created_at": 1772491863.5851614,
+    "assigned_to": null,
+    "due_date": null
+  },
+  {
+    "id": 2,
+    "file": "app/mvp_cycles.py",
+    "line": 1,
+    "description": "Break into smaller modules",
+    "severity": "critical",
+    "status": "open",
+    "created_at": 1772491863.671125,
+    "assigned_to": null,
+    "due_date": null
+  }
+]

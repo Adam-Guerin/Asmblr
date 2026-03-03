@@ -1,0 +1,8 @@
+label_family,architecture,agreement_metric,agreement_value,disagreement_mean_entropy_bits,handling_policy,notes
+decision_distribution,Monolithic,fleiss_kappa,0.5963415900302977,0.4454643617457415,kept_as_soft_labels_across_seeds,seed votes used as proxy raters
+decision_distribution,Sequential,fleiss_kappa,0.6020269122302606,0.4543945329294441,kept_as_soft_labels_across_seeds,seed votes used as proxy raters
+decision_distribution,RAG-Monolithic,fleiss_kappa,0.5948671946180424,0.462631838519118,kept_as_soft_labels_across_seeds,seed votes used as proxy raters
+decision_distribution,Reflexion,fleiss_kappa,0.603301497624398,0.456247478526044,kept_as_soft_labels_across_seeds,seed votes used as proxy raters
+decision_distribution,Debate,fleiss_kappa,0.6042056739090322,0.45157121399661776,kept_as_soft_labels_across_seeds,seed votes used as proxy raters
+decision_distribution,Multi-Agent (A0 full),fleiss_kappa,0.6077192437965502,0.43833530579256114,kept_as_soft_labels_across_seeds,seed votes used as proxy raters
+descriptive_labels,all,not_available,,,not_computable_from_current_repo,no multi-annotator files found
