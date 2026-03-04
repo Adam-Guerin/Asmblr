@@ -1,0 +1,11 @@
+{
+  "trace_type": "collapse_vs_stable",
+  "trace_id": "collapse_03",
+  "context_anonymized": "b5fa0488c1b0",
+  "noise_eta": 3,
+  "monolithic_regret": 0.8152663242299598,
+  "binding_critique_regret": 0.47885019788984995,
+  "monolithic_ece": 0.4232512429676075,
+  "binding_critique_ece": 0.3475149402015705,
+  "note": "Monolithic collapses under corruption; binding critique remains stable."
+}

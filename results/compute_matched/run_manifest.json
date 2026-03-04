@@ -1,0 +1,36 @@
+{
+  "generated_at_utc": "2026-03-04T09:51:11.293190+00:00",
+  "decision_model": "llama3:8b",
+  "retrieval_setting": "bundle-only",
+  "decoding_params": {
+    "temperature": 0.3,
+    "top_p": 0.95,
+    "max_tokens": 1024
+  },
+  "budgets_tokens": [
+    1500,
+    2500,
+    3500,
+    4500
+  ],
+  "signature_budget_tokens": 2500,
+  "mechanism_budget_tokens": 3500,
+  "timeouts_sec": {
+    "request_timeout_sec": 20,
+    "experiment_timeout_sec": 1800
+  },
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "dataset": {
+    "n_contexts": 1000,
+    "noise_subset_n_contexts": 150,
+    "split": "fixed"
+  },
+  "bootstrap_samples": 1000,
+  "git_commit_hash": "e91d15c6562eb6ba4e4f8cac7081e10536baa109"
+}

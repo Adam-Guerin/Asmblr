@@ -1,0 +1,11 @@
+{
+  "trace_type": "over_critique_hurt",
+  "trace_id": "hurt_03",
+  "context_anonymized": "881b514203d0",
+  "noise_eta": 3,
+  "monolithic_regret": 0.27086225195095404,
+  "binding_critique_regret": 0.28136728071600514,
+  "monolithic_ece": 0.5184148048809009,
+  "binding_critique_ece": 0.4617440984110073,
+  "note": "Binding critique over-corrected and hurt this context."
+}
