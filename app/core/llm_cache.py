@@ -6,6 +6,7 @@ Reduces API calls and improves response times for similar prompts
 import hashlib
 import json
 import time
+import asyncio
 from typing import Any
 from dataclasses import dataclass, asdict
 import redis.asyncio as redis
@@ -46,6 +47,7 @@ class LLMCacheManager:
         self._redis_client: redis.Redis | None = None
         self._local_cache: dict[str, CacheEntry] = {}
         self._local_cache_size = 1000
+        self._lock = asyncio.Lock()
         
     async def _get_redis_client(self) -> redis.Redis:
         """Get or create Redis client"""
@@ -66,7 +68,7 @@ class LLMCacheManager:
         
         # Sort keys for deterministic hashing
         cache_str = json.dumps(cache_data, sort_keys=True)
-        return hashlib.sha256(cache_str.encode()).hexdigest()[:16]
+        return hashlib.sha256(cache_str.encode()).hexdigest()  # Use full hash to prevent collisions
     
     def _calculate_similarity(self, prompt1: str, prompt2: str) -> float:
         """Calculate semantic similarity between prompts (simplified)"""
@@ -88,16 +90,17 @@ class LLMCacheManager:
             # Try exact match first
             exact_hash = self._generate_prompt_hash(prompt, model, **kwargs)
             
-            # Check local cache first
-            if exact_hash in self._local_cache:
-                entry = self._local_cache[exact_hash]
-                if time.time() - entry.timestamp < entry.ttl:
-                    entry.hit_count += 1
-                    logger.debug(f"Cache hit (local): {exact_hash[:8]}")
-                    return entry.response
-                else:
-                    # Remove expired entry
-                    del self._local_cache[exact_hash]
+            async with self._lock:
+                # Check local cache first (thread-safe)
+                if exact_hash in self._local_cache:
+                    entry = self._local_cache[exact_hash]
+                    if time.time() - entry.timestamp < entry.ttl:
+                        entry.hit_count += 1  # Atomic update
+                        logger.debug(f"Cache hit (local): {exact_hash[:8]}")
+                        return entry.response
+                    else:
+                        # Remove expired entry
+                        del self._local_cache[exact_hash]
             
             # Check Redis cache
             redis_client = await self._get_redis_client()

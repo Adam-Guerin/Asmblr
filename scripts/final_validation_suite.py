@@ -290,10 +290,10 @@ class FinalValidationSuite:
                 'app/cli.py',
                 'app/ui.py',
                 'app/ui_enhanced.py',
-                'requirements.txt',
+                'requirements/requirements.txt',
                 'README.md',
                 'USER_GUIDE.md',
-                '.env.example'
+                'config/.env.example'
             ]
             
             for file_path in essential_files:

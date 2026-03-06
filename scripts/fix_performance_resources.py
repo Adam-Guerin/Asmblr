@@ -63,7 +63,7 @@ class PerformanceResourceFixer:
         ]
         
         issues = []
-        req_file = self.root_path / "requirements.txt"
+        req_file = self.root_path / "requirements/requirements.txt"
         
         if req_file.exists():
             with open(req_file) as f:

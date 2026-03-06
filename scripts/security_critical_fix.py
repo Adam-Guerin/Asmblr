@@ -36,7 +36,7 @@ class CriticalSecurityFixer:
             r'-----BEGIN (RSA |OPENSSH |DSA |EC |PGP )?PRIVATE KEY-----',
         ]
         
-        self.file_extensions = ['.py', '.yml', '.yaml', '.json', '.env', '.env.example']
+        self.file_extensions = ['.py', '.yml', '.yaml', '.json', '.env', 'config/.env.example']
         self.exclude_dirs = ['.git', '__pycache__', 'node_modules', '.venv', 'venv', 'trash', 'tmp_runs', 'runs']
         
     def scan_for_real_secrets(self, file_path: Path) -> list[dict]:

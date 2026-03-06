@@ -5,6 +5,7 @@ Désactive les fonctionnalités lourdes pour améliorer performance et fiabilit�
 
 import os
 import sys
+import threading
 from typing import Any
 from loguru import logger
 
@@ -16,9 +17,15 @@ class LightweightMode:
     """
     
     def __init__(self):
-        self.enabled = os.getenv('ASMblr_LIGHTWEIGHT', 'false').lower() == 'true'
+        # Check both standardized variable names
+        self.enabled = (
+            os.getenv('LIGHTWEIGHT_MODE', 'false').lower() == 'true' or
+            os.getenv('ASMblr_LIGHTWEIGHT', 'false').lower() == 'true'
+        )
         self.disabled_features: set[str] = set()
         self.optimization_settings = self._load_optimization_settings()
+        self._original_modules = {}  # Store for potential restoration
+        self._lock = threading.Lock()  # Thread safety
         
         if self.enabled:
             self._enable_lightweight_mode()
@@ -39,7 +46,7 @@ class LightweightMode:
         logger.info("✅ Mode Lightweight activé - Performance optimisée")
     
     def _disable_heavy_imports(self) -> None:
-        """Désactive les imports de bibliothèques lourdes"""
+        """Désactive les imports de bibliothèques lourdes de manière sécurisée"""
         heavy_modules = {
             'torch': 'PyTorch (AI/ML)',
             'torchvision': 'PyTorch Vision',
@@ -52,21 +59,61 @@ class LightweightMode:
             'vtracer': 'VTracer (vectorisation)'
         }
         
+        # Store original modules for potential restoration
+        self._original_modules = {}
+        
         for module, description in heavy_modules.items():
             try:
-                # Remplacer l'import par un module vide
-                sys.modules[module] = _DisabledModule(description)
-                self.disabled_features.add(description)
-                logger.debug(f"Désactivé: {description}")
-            except Exception:
+                if module in sys.modules:
+                    # Module already imported - store reference and cleanup properly
+                    original_module = sys.modules[module]
+                    self._original_modules[module] = original_module
+                    
+                    # Replace with disabled module to prevent new imports
+                    sys.modules[module] = _DisabledModule(description)
+                    self.disabled_features.add(f"{description} (remplacé)")
+                    logger.warning(f"Module {module} déjà importé - remplacé par module désactivé")
+                    
+                    # Force cleanup of module references
+                    self._cleanup_module_references(module, original_module)
+                else:
+                    # Module not yet imported - safe to disable
+                    sys.modules[module] = _DisabledModule(description)
+                    self.disabled_features.add(description)
+                    logger.debug(f"Désactivé: {description}")
+            except Exception as e:
+                logger.warning(f"Impossible de désactiver {module}: {e}")
                 pass
+    
+    def _cleanup_module_references(self, module_name: str, module_obj: Any) -> None:
+        """Clean up references to prevent memory leaks"""
+        try:
+            # Clear module cache if it exists
+            if hasattr(module_obj, '__cache__'):
+                module_obj.__cache__.clear()
+            
+            # Clear any global variables that might hold references
+            if hasattr(module_obj, '__dict__'):
+                for key, value in list(module_obj.__dict__.items()):
+                    if not key.startswith('_') and hasattr(value, '__del__'):
+                        try:
+                            delattr(module_obj, key)
+                        except Exception:
+                            pass
+            
+            logger.debug(f"Cleaned up references for module: {module_name}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup module {module_name}: {e}")
     
     def _apply_optimizations(self) -> None:
         """Applique les optimisations de performance"""
-        # Configuration optimisée
-        os.environ['FAST_MODE'] = 'true'
-        os.environ['MVP_DISABLE_LLM'] = 'false'
-        os.environ['MVP_FORCE_AUTOFIX'] = 'true'
+        # Configuration optimisée - respect user settings if provided
+        if not os.getenv('FAST_MODE'):
+            os.environ['FAST_MODE'] = 'true'
+        if not os.getenv('MVP_DISABLE_LLM'):
+            os.environ['MVP_DISABLE_LLM'] = 'false'
+        if not os.getenv('MVP_FORCE_AUTOFIX'):
+            os.environ['MVP_FORCE_AUTOFIX'] = 'true'
         
         # Désactiver les fonctionnalités avancées
         os.environ['ENABLE_FACILITATOR_AGENTS'] = 'false'
@@ -79,10 +126,13 @@ class LightweightMode:
         os.environ['ENABLE_LOCAL_VIDEO'] = 'false'
         os.environ['ENABLE_LOCAL_SOCIAL_IMAGES'] = 'false'
         
-        # Optimiser les ressources
-        os.environ['MAX_SOURCES'] = '6'  # Réduit de 12 à 6
-        os.environ['DEFAULT_N_IDEAS'] = '5'  # Réduit de 10 à 5
-        os.environ['REQUEST_TIMEOUT'] = '30'  # Réduit de 45 à 30
+        # Optimiser les ressources - only if not set by user
+        if not os.getenv('MAX_SOURCES'):
+            os.environ['MAX_SOURCES'] = '6'  # Réduit de 12 à 6
+        if not os.getenv('DEFAULT_N_IDEAS'):
+            os.environ['DEFAULT_N_IDEAS'] = '5'  # Réduit de 10 à 5
+        if not os.getenv('REQUEST_TIMEOUT'):
+            os.environ['REQUEST_TIMEOUT'] = '30'  # Réduit de 45 à 30
         
         # Désactiver MLP et fonctionnalités avancées
         os.environ['MLP_ENABLED'] = 'false'
@@ -193,10 +243,35 @@ class LightweightMode:
         
         return status
     
+    def cleanup(self) -> None:
+        """Clean up disabled modules and restore original state if possible"""
+        logger.info("Cleaning up lightweight mode...")
+        
+        # Restore original modules if we have them
+        if hasattr(self, '_original_modules'):
+            for module_name, original_module in self._original_modules.items():
+                if module_name in sys.modules and isinstance(sys.modules[module_name], _DisabledModule):
+                    try:
+                        if original_module is not None:
+                            sys.modules[module_name] = original_module
+                            logger.debug(f"Restored module: {module_name}")
+                        else:
+                            # If original was None, remove the disabled module
+                            del sys.modules[module_name]
+                            logger.debug(f"Removed disabled module: {module_name}")
+                    except Exception as e:
+                        logger.warning(f"Failed to restore module {module_name}: {e}")
+        
+        # Clear disabled features and original modules references
+        self.disabled_features.clear()
+        if hasattr(self, '_original_modules'):
+            self._original_modules.clear()
+        logger.info("Lightweight mode cleanup completed")
+    
     def suggest_optimizations(self) -> list[str]:
         """Suggère des optimisations supplémentaires"""
         suggestions = [
-            "Utilisez requirements-lightweight.txt pour une installation minimale",
+            "Utilisez requirements/requirements-lightweight.txt pour une installation minimale",
             "Activez le cache web pour réduire les requêtes réseau",
             "Limitez le nombre de sources à analyser (MAX_SOURCES=6)",
             "Utilisez le mode fast pour les tests rapides",
@@ -218,21 +293,33 @@ class _DisabledModule:
     Affiche des messages d'avertissement quand on essaie de l'utiliser
     """
     
+    __slots__ = ('_description', '_disabled')  # Prevent __dict__ creation, reduce memory usage
+    
     def __init__(self, description: str):
         self._description = description
         self._disabled = True
     
     def __getattr__(self, name: str) -> Any:
+        # Generic error message to avoid information disclosure
         raise ImportError(
-            f"⚠️ {self._description} est désactivé en mode lightweight.\n"
-            f"Pour l'activer: export ASMblr_LIGHTWEIGHT=false\n"
-            f"Ou utilisez requirements.txt au lieu de requirements-lightweight.txt"
+            f"Feature disabled in lightweight mode. "
+            f"Set LIGHTWEIGHT_MODE=false to enable."
         )
     
     def __call__(self, *args, **kwargs):
+        # Generic error message to avoid information disclosure
         raise ImportError(
-            f"⚠️ {self._description} est désactivé en mode lightweight"
+            f"Feature disabled in lightweight mode. "
+            f"Set LIGHTWEIGHT_MODE=false to enable."
         )
+    
+    def __del__(self):
+        """Cleanup when the module is garbage collected"""
+        try:
+            del self._description
+            del self._disabled
+        except AttributeError:
+            pass  # Already cleaned up
 
 
 def enable_lightweight_mode() -> None:
@@ -260,20 +347,27 @@ def is_lightweight_mode() -> bool:
     Returns:
         True si le mode lightweight est actif
     """
-    return os.getenv('ASMblr_LIGHTWEIGHT', 'false').lower() == 'true'
+    return (
+        os.getenv('LIGHTWEIGHT_MODE', 'false').lower() == 'true' or
+        os.getenv('ASMblr_LIGHTWEIGHT', 'false').lower() == 'true'
+    )
 
 
-# Instance globale
+# Instance globale avec thread safety
 _lightweight_instance: LightweightMode | None = None
+_instance_lock = threading.Lock()
 
 
 def get_lightweight_manager() -> LightweightMode:
     """
-    Récupère l'instance du gestionnaire lightweight
+    Récupère l'instance du gestionnaire lightweight de manière thread-safe
     """
     global _lightweight_instance
     if _lightweight_instance is None:
-        _lightweight_instance = LightweightMode()
+        with _instance_lock:
+            # Double-check pattern
+            if _lightweight_instance is None:
+                _lightweight_instance = LightweightMode()
     return _lightweight_instance
 
 

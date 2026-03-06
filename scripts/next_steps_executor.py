@@ -470,7 +470,7 @@ pre-commit install
 
 # Setup environment
 echo "🌍 Setting up environment..."
-cp .env.example .env
+cp config/.env.example .env
 
 # Start services
 echo "🏗️ Starting services..."

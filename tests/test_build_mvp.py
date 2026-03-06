@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-import json
 
 import pytest
 
@@ -27,7 +26,7 @@ def stub_ollama(monkeypatch):
 
 def _patch_verifier(monkeypatch, build_success: bool = True, test_success: bool = True):
     verifier = DummyVerifier(build_success=build_success, test_success=test_success)
-    monkeypatch.setattr("app.mvp.builder.MVPVerifier", lambda repo_dir: verifier)
+    monkeypatch.setattr("app.mvp.builder.MVPVerifier", lambda repo_dir, install_timeout=600, build_timeout=300, test_timeout=300, shell=False: verifier)
     return verifier
 
 
@@ -89,10 +88,10 @@ def test_smoke_build_mvp_repo(tmp_path: Path, monkeypatch) -> None:
         repo_dir = cycle_dir.parents[1] / "mvp_repo"  # Go up to smoke-build then mvp_repo
         missing = [path for path in required_files if not (repo_dir / path).exists()]
         ok = len(missing) == 0
-        return ok, f"Return code: {0 if ok else 1}\nbuild {attempt} ok={ok}"
+        return ok, f"Return code: {0 if ok else 1}\nbuild {cycle_key} attempt {attempt} ok={ok}"
 
     def test_runner(cycle_key: str, cycle_dir: Path, attempt: int) -> tuple[bool, str]:
-        return True, f"Return code: 0\nsmoke test {cycle_key} attempt {attempt}"
+        return True, f"Return code: 0\ntest {cycle_key} attempt {attempt} ok=true"
 
     output_dir = settings.runs_dir / "_adhoc" / "smoke-build"
     result = builder.build_from_brief(

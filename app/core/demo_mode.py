@@ -380,9 +380,8 @@ def is_demo_mode_enabled() -> bool:
 def get_demo_manager(base_dir: Path = None) -> DemoModeManager:
     """Get demo mode manager instance"""
     if base_dir is None:
-        from app.core.config import get_settings
-        settings = get_settings()
-        base_dir = settings.base_dir
+        from app.core.config import BASE_DIR
+        base_dir = BASE_DIR
     
     return DemoModeManager(base_dir)
 

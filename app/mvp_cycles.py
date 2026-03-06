@@ -315,20 +315,16 @@ class MVPProgression:
             fix_path = cycle_dir / f"fix_{attempt_index}.log"
             
             try:
-                fix_path.write_text(
-                    f"Auto-fix attempt {attempt_index} for {cycle_key}", encoding="utf-8"
-                )
+                with fix_path.open('w', encoding='utf-8') as f:
+                    f.write(f"Auto-fix attempt {attempt_index} for {cycle_key}")
                 
                 # Attempt auto-fix with error handling
                 try:
                     self._attempt_auto_fix(cycle_key, cycle_dir, attempt_index)
                 except Exception as fix_exc:
                     logger.warning("Auto-fix attempt {} failed: {}", attempt_index, fix_exc)
-                    fix_path.write_text(
-                        f"Auto-fix attempt {attempt_index} error: {fix_exc}\n", 
-                        encoding="utf-8", 
-                        append=True
-                    )
+                    with fix_path.open('a', encoding='utf-8') as f:
+                        f.write(f"\nAuto-fix attempt {attempt_index} error: {fix_exc}")
                 
                 # Run verification with timeout protection
                 try:
@@ -354,11 +350,8 @@ class MVPProgression:
                         
                 except Exception as verify_exc:
                     logger.warning("Verification attempt {} failed: {}", attempt_index, verify_exc)
-                    fix_path.write_text(
-                        f"Verification attempt {attempt_index} error: {verify_exc}\n", 
-                        encoding="utf-8", 
-                        append=True
-                    )
+                    with fix_path.open('a', encoding='utf-8') as f:
+                        f.write(f"\nVerification attempt {attempt_index} error: {verify_exc}")
                     
             except Exception as loop_exc:
                 logger.error("Auto-fix loop iteration {} failed: {}", attempt_index, loop_exc)
@@ -796,7 +789,7 @@ index 0000000..e69de29
             checks.append(
                 {
                     "name": "build_log_clean",
-                    "ok": "Return code: 0" in content and "Error:" not in content,
+                    "ok": "Return code: 0" in content and "Error:" not in content and "FAILED" not in content,
                     "path": "build.log",
                 }
             )
@@ -807,7 +800,7 @@ index 0000000..e69de29
             checks.append(
                 {
                     "name": "test_log_clean",
-                    "ok": "Return code: 0" in content and "Error:" not in content,
+                    "ok": "Return code: 0" in content and "FAIL:" not in content and "AssertionError" not in content,
                     "path": "test.log",
                 }
             )
@@ -861,7 +854,8 @@ index 0000000..e69de29
                     and any(step.get("step") == "test" for step in steps)
                     and any(step.get("step") == "ui_lint" for step in steps)
                 )
-            except Exception:
+            except (json.JSONDecodeError, KeyError, AttributeError) as e:
+                logger.warning(f"Failed to parse automation data: {e}")
                 steps_ok = False
         checks.append({"name": "automation_steps", "ok": steps_ok, "path": "automation.json"})
         return checks
@@ -879,7 +873,8 @@ index 0000000..e69de29
             return
         try:
             data = json.loads(automation_path.read_text(encoding="utf-8"))
-        except Exception:
+        except (json.JSONDecodeError, KeyError, AttributeError) as e:
+            logger.warning(f"Failed to parse automation data: {e}")
             return
         steps = data.get("steps", [])
         steps.append(
@@ -1164,11 +1159,16 @@ index 0000000..e69de29
         log_path = cycle_dir / f"smoke_{attempt}.log"
         if not self.dev_command:
             # Write expected format for log checks
-            log_path.write_text(
-                "Smoke checks skipped: MVP_DEV_COMMAND is empty (expected in test environment).\n"
-                "Result: pass",
-                encoding="utf-8"
-            )
+            try:
+                log_path.write_text(
+                    "Smoke checks skipped: MVP_DEV_COMMAND is empty (expected in test environment).\n"
+                    "Result: pass",
+                    encoding="utf-8"
+                )
+            except (OSError, IOError) as e:
+                logger.error(f"Failed to write smoke check log {log_path}: {e}")
+                return False
+                
             self._record_cycle_step(
                 cycle_dir=cycle_dir,
                 step="smoke",
@@ -1178,15 +1178,19 @@ index 0000000..e69de29
             )
             return True
         dev_log_path = cycle_dir / f"devserver_{attempt}.log"
-        dev_log = dev_log_path.open("w", encoding="utf-8")
-        process = subprocess.Popen(
-            self.dev_command,
-            cwd=self.repo_dir,
-            shell=True,
-            stdout=dev_log,
-            stderr=dev_log,
-            text=True,
-        )
+        try:
+            with dev_log_path.open("w", encoding="utf-8") as dev_log:
+                process = subprocess.Popen(
+                    self.dev_command,
+                    cwd=self.repo_dir,
+                    shell=True,
+                    stdout=dev_log,
+                    stderr=dev_log,
+                    text=True,
+                )
+        except (OSError, IOError) as e:
+            logger.error(f"Failed to create dev log file {dev_log_path}: {e}")
+            return False
         start_time = time.time()
         try:
             checks = self._resolve_smoke_paths()

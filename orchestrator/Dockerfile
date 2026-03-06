@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copier les requirements
-COPY requirements.txt .
-COPY requirements-gateway.txt .
+COPY requirements/requirements.txt .
+COPY requirements/requirements-gateway.txt .
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt

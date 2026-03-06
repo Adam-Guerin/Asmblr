@@ -14,7 +14,7 @@ WORKDIR /app
 
 # Copy requirements
 COPY requirements-test.txt .
-COPY requirements.txt .
+COPY requirements/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements-test.txt

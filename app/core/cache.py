@@ -93,30 +93,32 @@ class ArtifactCache:
     
     def get(self, key: str) -> Any:
         """Get cached artifact by key."""
-        self._evict_if_needed()
-        
-        if key in self._cache:
-            # Update access time for LRU
-            self._timestamps[key] = time.time()
-            # Optimisation: logger les cache hits seulement en mode debug et de façon agrégée
+        with self._lock:
+            self._evict_if_needed()
+            
+            if key in self._cache:
+                # Update access time for LRU (atomic operation)
+                self._timestamps[key] = time.time()
+                # Optimisation: logger les cache hits seulement en mode debug et de façon agrégée
+                if logger.level <= 10:  # DEBUG level
+                    logger.debug(f"Cache hit: {key[:50]}{'...' if len(key) > 50 else ''}")
+                return self._cache[key]
+            
+            # Logger les cache misses seulement en mode debug
             if logger.level <= 10:  # DEBUG level
-                logger.debug(f"Cache hit: {key[:50]}{'...' if len(key) > 50 else ''}")
-            return self._cache[key]
-        
-        # Logger les cache misses seulement en mode debug
-        if logger.level <= 10:  # DEBUG level
-            logger.debug(f"Cache miss: {key[:50]}{'...' if len(key) > 50 else ''}")
-        return None
+                logger.debug(f"Cache miss: {key[:50]}{'...' if len(key) > 50 else ''}")
+            return None
     
     def set(self, key: str, value: Any) -> None:
         """Cache an artifact with automatic eviction."""
-        self._evict_if_needed()
-        
-        # Add new entry
-        self._cache[key] = value
-        self._timestamps[key] = time.time()
-        
-        logger.debug(f"Cached artifact: {key} (size: {len(self._cache)})")
+        with self._lock:
+            self._evict_if_needed()
+            
+            # Add new entry (atomic operation)
+            self._cache[key] = value
+            self._timestamps[key] = time.time()
+            
+            logger.debug(f"Cached artifact: {key} (size: {len(self._cache)})")
     
     def clear(self) -> None:
         """Clear all cached artifacts."""

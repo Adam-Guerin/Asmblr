@@ -263,8 +263,8 @@ if __name__ == "__main__":
         print("📈 90% bug reduction achieved with fixed versions!")
         print("🚀 Ready for production deployment!")
         print("\n📦 Installation options:")
-        print("   pip install -r requirements.txt           # Full version")
-        print("   pip install -r requirements-lightweight.txt # Lightweight version")
+        print("   pip install -r requirements/requirements.txt           # Full version")
+        print("   pip install -r requirements/requirements-lightweight.txt # Lightweight version")
         print("   pip install -e .                          # Development version")
     else:
         print("⚠️ Some tests failed - check dependency issues")

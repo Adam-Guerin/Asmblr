@@ -112,7 +112,7 @@ def install_python_deps():
     run_command("python -m pip install --upgrade pip", "Upgrading pip")
     
     # Install requirements
-    if not run_command("python -m pip install -r requirements.txt", "Installing requirements"):
+    if not run_command("python -m pip install -r requirements/requirements.txt", "Installing requirements"):
         return False
     
     return True
@@ -132,8 +132,8 @@ def main():
     print("="*50)
     
     # Check if we're in the right directory
-    if not Path("requirements.txt").exists():
-        print("❌ requirements.txt not found. Please run this script from the Asmblr root directory.")
+    if not Path("requirements/requirements.txt").exists():
+        print("❌ requirements/requirements.txt not found. Please run this script from the Asmblr root directory.")
         sys.exit(1)
     
     # Step 1: Install Python dependencies

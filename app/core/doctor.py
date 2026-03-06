@@ -36,9 +36,10 @@ def _check_writable(path: Path) -> bool:
 
 def _env_file_status() -> str:
     env_path = BASE_DIR / ".env"
+    env_example_path = BASE_DIR / "config" / ".env.example"
     if env_path.exists():
         return f"found ({env_path})"
-    return f"missing (copy .env.example to {env_path})"
+    return f"missing (copy {env_example_path} to {env_path})"
 
 
 def _format_fix_steps(system: str, settings: Settings) -> list[str]:

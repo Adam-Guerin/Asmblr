@@ -224,7 +224,7 @@ class BackupService:
         backed_up_configs = []
         
         # Backup environment files
-        env_files = [".env", ".env.example", ".env.minimal", ".env.production"]
+        env_files = [".env", "config/.env.example", ".env.minimal", ".env.production"]
         for env_file in env_files:
             env_path = project_root / env_file
             if env_path.exists():

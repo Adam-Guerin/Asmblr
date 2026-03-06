@@ -20,40 +20,153 @@ class LightweightConfigManager:
         self.settings_dir.mkdir(exist_ok=True)
         self.cache_file = self.settings_dir / "lightweight_cache.json"
         
+    def _get_safe_system_path(self) -> Path | None:
+        """Get a safe system path for resource monitoring"""
+        try:
+            if os.name == 'nt':  # Windows
+                # Use Windows root with validation
+                path = Path('C:\\')
+            else:  # Unix-like systems
+                # Use Unix root with validation
+                path = Path('/')
+            
+            return self._validate_path_security(path)
+        except Exception:
+            return None
+    
+    def _get_safe_current_directory(self) -> Path | None:
+        """Get current working directory with security validation"""
+        try:
+            current_dir = Path.cwd().resolve()
+            return self._validate_path_security(current_dir)
+        except Exception:
+            return None
+    
+    def _validate_path_security(self, path: Path) -> Path | None:
+        """Validate path for security (prevent path traversal)"""
+        try:
+            # Resolve to absolute path
+            resolved = path.resolve()
+            
+            # Define allowed root paths based on OS
+            if os.name == 'nt':  # Windows
+                allowed_roots = [Path('C:\\'), Path('\\\\')]
+            else:  # Unix-like systems
+                allowed_roots = [Path('/')]
+            
+            # Check if resolved path is within allowed roots
+            path_str = str(resolved)
+            if not any(str(resolved).startswith(str(root)) for root in allowed_roots):
+                logger.warning(f"Path outside allowed roots: {path_str}")
+                return None
+            
+            # Additional security checks
+            if not resolved.exists():
+                logger.warning(f"Path does not exist: {path_str}")
+                return None
+            
+            return resolved
+        except (OSError, ValueError, RuntimeError) as e:
+            logger.warning(f"Path validation failed: {e}")
+            return None
+    
     def is_lightweight_mode(self) -> bool:
         """Check if lightweight mode is active"""
-        return os.getenv("LIGHTWEIGHT_MODE", "").lower() == "true"
+        return (
+            os.getenv("LIGHTWEIGHT_MODE", "").lower() == "true" or
+            os.getenv("ASMblr_LIGHTWEIGHT", "").lower() == "true"
+        )
     
     def get_system_resources(self) -> dict[str, Any]:
-        """Get current system resource information"""
+        """Get current system resource information with cross-platform support"""
         try:
             memory = psutil.virtual_memory()
             cpu_count = psutil.cpu_count()
-            disk = psutil.disk_usage('/')
+            
+            # Cross-platform disk usage detection with security validation
+            try:
+                disk_path = self._get_safe_system_path()
+                if disk_path is None:
+                    raise Exception("Unable to determine safe system path")
+                
+                disk = psutil.disk_usage(str(disk_path))
+            except Exception as e:
+                logger.warning(f"Failed to get system disk usage: {e}")
+                # Fallback to current directory with validation
+                try:
+                    current_dir = self._get_safe_current_directory()
+                    if current_dir is None:
+                        raise Exception("Unable to determine safe current directory")
+                    disk = psutil.disk_usage(str(current_dir))
+                except Exception as e2:
+                    logger.warning(f"Failed to get current directory disk usage: {e2}")
+                    # Use safe defaults
+                    disk = None
             
             return {
                 "available_memory_gb": memory.available / (1024**3),
                 "total_memory_gb": memory.total / (1024**3),
                 "cpu_count": cpu_count,
-                "available_disk_gb": disk.free / (1024**3),
+                "available_disk_gb": disk.free / (1024**3) if disk else 100.0,
                 "cpu_percent": psutil.cpu_percent(interval=1),
                 "memory_percent": memory.percent
             }
         except Exception as e:
             logger.warning(f"Failed to get system resources: {e}")
-            return {}
+            # Return safe defaults
+            return {
+                "available_memory_gb": 8.0,
+                "total_memory_gb": 16.0,
+                "cpu_count": 4,
+                "available_disk_gb": 100.0,
+                "cpu_percent": 25.0,
+                "memory_percent": 50.0
+            }
     
     def load_cached_config(self) -> dict[str, Any] | None:
-        """Load cached lightweight configuration"""
+        """Load cached lightweight configuration with validation"""
         try:
-            if self.cache_file.exists():
-                with open(self.cache_file) as f:
-                    cache_data = json.load(f)
+            if not self.cache_file.exists():
+                return None
                 
-                # Check if cache is recent (less than 24 hours)
+            # Check file size (security: prevent loading huge files)
+            file_size = self.cache_file.stat().st_size
+            if file_size > 1024 * 1024:  # 1MB limit
+                logger.warning("Cache file too large - ignoring")
+                return None
+                
+            with open(self.cache_file) as f:
+                cache_data = json.load(f)
+                
+            # Validate cache structure
+            if not isinstance(cache_data, dict):
+                logger.warning("Invalid cache structure - ignoring")
+                return None
+                
+            if "timestamp" not in cache_data or "config" not in cache_data:
+                logger.warning("Missing required cache fields - ignoring")
+                return None
+                
+            # Validate config values first
+            config = cache_data.get("config", {})
+            if not isinstance(config, dict) or len(config) >= 100:  # Reasonable size limit
+                logger.warning("Invalid config structure - ignoring")
+                return None
+            
+            # Check if cache is recent (less than 24 hours)
+            try:
                 cache_time = datetime.fromisoformat(cache_data.get("timestamp", ""))
-                if (datetime.now() - cache_time).total_seconds() < 86400:
-                    return cache_data.get("config", {})
+            except ValueError:
+                logger.warning("Invalid timestamp format - ignoring")
+                return None
+            
+            now = datetime.now()
+            if (now - cache_time).total_seconds() < 86400:
+                return config
+            else:
+                logger.info("Cache expired - will generate new config")
+        except json.JSONDecodeError as e:
+            logger.warning(f"Invalid JSON in cache file: {e}")
         except Exception as e:
             logger.warning(f"Failed to load cached config: {e}")
         

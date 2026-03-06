@@ -70,7 +70,7 @@ def install_dependencies():
         return False
     
     # Install requirements
-    if not run_command("python -m pip install -r requirements.txt", "Installing requirements"):
+    if not run_command("python -m pip install -r requirements/requirements.txt", "Installing requirements"):
         return False
     
     print("✅ Dependencies installed successfully")
@@ -176,7 +176,7 @@ def setup_environment():
     
     # Check if .env exists
     env_file = Path(".env")
-    env_example = Path(".env.example")
+    env_example = Path("config/.env.example")
     env_public = Path(".env.public")
     
     if env_file.exists():

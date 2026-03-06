@@ -3,6 +3,7 @@
 from __future__ import annotations
 import streamlit as st
 from dataclasses import dataclass
+from typing import Dict, Any, Optional
 
 
 @dataclass
@@ -31,8 +32,8 @@ class ThemeColors:
 class ThemeManager:
     """Manages UI themes and styling."""
     
-    def __init__(self):
-        self.themes = {
+    def __init__(self) -> None:
+        self.themes: Dict[str, Dict[str, str]] = {
             "light": {
                 "primaryColor": "#FF6B6B",
                 "backgroundColor": "#FFFFFF",
@@ -78,6 +79,7 @@ class ThemeManager:
                 "text_secondary": self.colors.dark_text_secondary,
                 "border": self.colors.dark_border,
                 "primary": theme_config["primaryColor"],
+                "secondary": self.colors.secondary,
                 "success": self.colors.success,
                 "warning": self.colors.warning,
                 "error": self.colors.error
@@ -90,6 +92,7 @@ class ThemeManager:
                 "text_secondary": self.colors.text_secondary,
                 "border": self.colors.border,
                 "primary": theme_config["primaryColor"],
+                "secondary": self.colors.secondary,
                 "success": self.colors.success,
                 "warning": self.colors.warning,
                 "error": self.colors.error
@@ -293,25 +296,33 @@ class ThemeManager:
         """
     
     def apply_theme(self, theme_name: str) -> None:
-        """Apply the selected theme to the Streamlit app."""
+        """Apply the selected theme to the Streamlit app with validation."""
         if theme_name not in self.themes:
+            original_theme = theme_name
             theme_name = "light"
+            import streamlit as st
+            if hasattr(st, 'session_state'):
+                st.warning(f"Theme '{original_theme}' not found. Using default 'light' theme.")
+            else:
+                print(f"⚠️ Theme '{original_theme}' not found. Using default 'light' theme.")
         
         # Apply Streamlit's built-in theme configuration
         theme_config = self.themes[theme_name]
         
         # Inject custom CSS
         css = self.get_theme_css(theme_name)
+        import streamlit as st
         st.markdown(css, unsafe_allow_html=True)
     
     def render_theme_selector(self) -> str:
         """Render theme selector in sidebar."""
+        import streamlit as st
         st.sidebar.subheader("🎨 Thème")
         
         current_theme = st.session_state.get('theme', 'light')
         
         # Theme selection with preview
-        theme_options = {
+        theme_options: Dict[str, str] = {
             "light": "☀️ Clair",
             "dark": "🌙 Sombre", 
             "blue": "💙 Bleu",
@@ -334,7 +345,7 @@ class ThemeManager:
     
     def get_status_color(self, status: str) -> str:
         """Get color for status indicators."""
-        status_colors = {
+        status_colors: Dict[str, str] = {
             "completed": self.colors.success,
             "running": self.colors.primary,
             "failed": self.colors.error,
@@ -345,13 +356,15 @@ class ThemeManager:
     
     def render_progress_stage(self, stage_name: str, status: str, message: str = "") -> None:
         """Render a single progress stage."""
+        import streamlit as st
         status_class = status.lower()
-        icon = {
+        icon_map: Dict[str, str] = {
             "completed": "✅",
             "active": "🔄",
             "failed": "❌",
             "pending": "⏳"
-        }.get(status_class, "⏳")
+        }
+        icon = icon_map.get(status_class, "⏳")
         
         st.markdown(f"""
         <div class="progress-stage {status_class}">
@@ -371,8 +384,9 @@ def get_theme_manager() -> ThemeManager:
     return _global_theme_manager
 
 
-def apply_theme(theme_name: str | None = None) -> None:
+def apply_theme(theme_name: Optional[str] = None) -> None:
     """Apply theme to the current app."""
+    import streamlit as st
     if theme_name is None:
         theme_name = st.session_state.get('theme', 'light')
     

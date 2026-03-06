@@ -254,7 +254,7 @@ class SecurityPolicyChecker:
         """Check environment variables for security issues"""
         try:
             # Check for sensitive data in environment files
-            env_files = ['.env', '.env.example', '.env.production']
+            env_files = ['.env', 'config/.env.example', '.env.production']
             
             sensitive_patterns = [
                 'password', 'secret', 'key', 'token', 'api_key',

@@ -114,10 +114,10 @@ class MaintenanceNightmareFixer:
         
         # Check requirements files
         req_files = [
-            "requirements.txt",
-            "requirements-dev.txt", 
-            "requirements-test.txt",
-            "requirements-core.txt",
+            "requirements/requirements.txt",
+            "requirements/requirements-dev.txt", 
+            "requirements/requirements-test.txt",
+            "requirements/requirements-core.txt",
             "requirements-lightweight.txt",
             "requirements-minimal.txt",
             "requirements-ultra-minimal.txt"
@@ -397,8 +397,8 @@ class MaintenanceNightmareFixer:
 ## Phase 2: Dependency Cleanup (Week 5-6)
 
 ### Requirements Consolidation
-- Keep: requirements.txt (main)
-- Keep: requirements-dev.txt (development)
+- Keep: requirements/requirements.txt (main)
+- Keep: requirements/requirements-dev.txt (development)
 - Remove: All other requirements files
 - Create: requirements/prod.txt, requirements/staging.txt
 
@@ -565,7 +565,7 @@ class MaintenanceAutomator:
             subprocess.run(["pip", "install", "--upgrade", "pip"], check=True)
             
             # Update requirements
-            subprocess.run(["pip", "install", "-r", "requirements.txt"], check=True)
+            subprocess.run(["pip", "install", "-r", "requirements/requirements.txt"], check=True)
             
             # Check for security issues
             subprocess.run(["pip", "audit"], check=True)
@@ -585,7 +585,7 @@ class MaintenanceAutomator:
         critical_files = [
             "app/",
             "config/",
-            "requirements.txt",
+            "requirements/requirements.txt",
             "docker-compose.yml"
         ]
         

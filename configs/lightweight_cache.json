@@ -1,24 +1,28 @@
 {
-  "timestamp": "2026-03-02T18:03:42.629034",
+  "timestamp": "2026-03-06T00:40:20.547163",
   "config": {
-    "DEFAULT_N_IDEAS": "8",
-    "MAX_SOURCES": "8",
-    "MIN_PAGES": "3",
-    "MIN_PAINS": "3",
-    "REQUEST_TIMEOUT": "20",
-    "RETRY_MAX_ATTEMPTS": "3",
-    "RUN_MAX_CONCURRENT": "3",
+    "DEFAULT_N_IDEAS": "5",
+    "MAX_SOURCES": "5",
+    "MIN_PAGES": "2",
+    "MIN_PAINS": "2",
+    "REQUEST_TIMEOUT": "15",
+    "RETRY_MAX_ATTEMPTS": "2",
+    "RUN_MAX_CONCURRENT": "2",
     "WORKER_CONCURRENCY": "2",
-    "API_CONCURRENCY": "8",
+    "API_CONCURRENCY": "5",
     "ENABLE_CACHE": "true",
-    "CACHE_TTL": "3600"
+    "CACHE_TTL": "1800",
+    "ENABLE_LOGO_DIFFUSION": "false",
+    "ENABLE_VIDEO_GENERATION": "false",
+    "ENABLE_SOCIAL_MEDIA": "false",
+    "ENABLE_MONITORING": "false"
   },
   "system_resources": {
-    "available_memory_gb": 3.9852523803710938,
+    "available_memory_gb": 3.877269744873047,
     "total_memory_gb": 31.156780242919922,
     "cpu_count": 12,
-    "available_disk_gb": 1207.909797668457,
-    "cpu_percent": 48.5,
-    "memory_percent": 87.2
+    "available_disk_gb": 1194.399471282959,
+    "cpu_percent": 20.7,
+    "memory_percent": 87.6
   }
 }

@@ -22,7 +22,7 @@ class SecurityScanner:
             r'["\'][A-Za-z0-9_\-\.=+/]{20,}["\']',  # Long base64-like strings
         ]
         
-        self.file_extensions = ['.py', '.yml', '.yaml', '.json', '.env', '.env.example', '.md']
+        self.file_extensions = ['.py', '.yml', '.yaml', '.json', '.env', 'config/.env.example', '.md']
         self.exclude_dirs = ['.git', '__pycache__', 'node_modules', '.venv', 'venv']
         
     def scan_file(self, file_path: Path) -> list[dict]:

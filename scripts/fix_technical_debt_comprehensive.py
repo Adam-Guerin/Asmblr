@@ -256,10 +256,10 @@ class TechnicalDebtFixer:
         
         # Check for multiple requirements files
         req_files = [
-            "requirements.txt",
-            "requirements-dev.txt",
-            "requirements-test.txt",
-            "requirements-core.txt",
+            "requirements/requirements.txt",
+            "requirements/requirements-dev.txt",
+            "requirements/requirements-test.txt",
+            "requirements/requirements-core.txt",
             "requirements-lightweight.txt",
             "requirements-minimal.txt",
             "requirements-ultra-minimal.txt"
@@ -1150,7 +1150,7 @@ cd asmblr
 pip install -r requirements-unified.txt
 
 # Set up environment
-cp .env.example .env
+cp config/.env.example .env
 # Edit .env with your configuration
 
 # Start the application
