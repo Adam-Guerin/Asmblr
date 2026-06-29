@@ -87,7 +87,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile
+        file: ./deployment/Dockerfile
         push: true
         platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
@@ -101,7 +101,7 @@ jobs:
     needs: [detect-changes, build-base]
     strategy:
       matrix:
-        service: [api-gateway, asmblr-core, asmblr-agents, asmblr-media]
+        service: [api-gateway, asmblr-core]
         fail-fast: false
     if: always() && needs.detect-changes.outputs[matrix.service] == 'true' && (needs.build-base.result == 'success' || needs.build-base.result == 'skipped')
     outputs:
@@ -154,7 +154,7 @@ jobs:
     needs: [detect-changes, build-services]
     strategy:
       matrix:
-        service: [api-gateway, asmblr-core, asmblr-agents, asmblr-media]
+        service: [api-gateway, asmblr-core]
         fail-fast: false
     if: always() && (needs.build-services.result == 'success' || needs.build-services.result == 'skipped') && needs.detect-changes.outputs[matrix.service] == 'true'
     steps:
@@ -185,7 +185,7 @@ jobs:
 
     - name: Create performance test environment
       run: |
-        cp docker-compose.optimized.yml docker-compose.test.yml
+        cp deployment/docker-compose.optimized.yml docker-compose.test.yml
         # Update image tags to use newly built images
         sed -i 's|asmblr/asmblr-|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-|g' docker-compose.test.yml
         sed -i 's|:latest|:main-${{ github.sha }}|g' docker-compose.test.yml
@@ -224,6 +224,9 @@ jobs:
     needs: [detect-changes, build-services, security-scan, performance-test]
     if: github.ref == 'refs/heads/develop' && success()
     environment: staging
+    env:
+      API_KEY: ${{ secrets.API_KEY }}
+      SERVICE_API_KEY: ${{ secrets.SERVICE_API_KEY }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -239,11 +242,11 @@ jobs:
       run: |
         echo "🚀 Deploying to staging with multi-arch images..."
         # Update staging docker-compose with new image tags
-        sed -i 's|asmblr/asmblr-|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-|g' docker-compose.staging.yml
-        sed -i 's|:latest|:develop-${{ github.sha }}|g' docker-compose.staging.yml
+        sed -i 's|asmblr/asmblr-|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-|g' deployment/docker-compose.staging.yml
+        sed -i 's|:latest|:develop-${{ github.sha }}|g' deployment/docker-compose.staging.yml
         
         # Deploy
-        docker-compose -f docker-compose.staging.yml up -d
+        docker-compose --project-directory . -f deployment/docker-compose.staging.yml up -d
         
         # Wait for health checks
         timeout 300 bash -c 'until curl -f http://localhost:8000/health; do sleep 5; done'
@@ -259,6 +262,9 @@ jobs:
     needs: [detect-changes, build-services, security-scan, performance-test]
     if: github.ref == 'refs/heads/main' && success()
     environment: production
+    env:
+      API_KEY: ${{ secrets.API_KEY }}
+      SERVICE_API_KEY: ${{ secrets.SERVICE_API_KEY }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4

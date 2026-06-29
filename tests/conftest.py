@@ -9,8 +9,8 @@ from pathlib import Path
 import sys
 import os
 
-# Ajout du répertoire parent au path pour les imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Add the repository root so tests can import the local ``app`` package.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 @pytest.fixture(scope="session")

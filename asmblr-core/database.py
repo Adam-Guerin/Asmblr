@@ -7,6 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, String, DateTime, Text, Integer, JSON
 from datetime import datetime
+import uuid
 
 from app.core.config import get_settings
 
@@ -42,7 +43,7 @@ class Pipeline(Base):
     config = Column(JSON, nullable=True)
     results = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Pipeline(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     def __repr__(self):
         return f"<Pipeline(id={self.id}, topic={self.topic}, status={self.status})>"

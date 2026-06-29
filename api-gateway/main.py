@@ -17,6 +17,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import Counter, Histogram, Gauge, generate_latest
 from loguru import logger
+from service_security import MissingServiceSecretError, secret_is_authorized
 
 # Configuration
 CORE_SERVICE_URL = os.getenv("CORE_SERVICE_URL", "http://asmblr-core:8000")
@@ -25,6 +26,9 @@ MEDIA_SERVICE_URL = os.getenv("MEDIA_SERVICE_URL", "http://asmblr-media:8000")
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/3")
 RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))
 RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
+API_KEY = os.getenv("API_KEY", "")
+SERVICE_API_KEY = os.getenv("SERVICE_API_KEY", "")
+PUBLIC_PATHS = {"/health", "/ready"}
 
 # Métriques Prometheus
 REQUEST_COUNT = Counter('api_gateway_requests_total', 'Total requests', ['method', 'endpoint', 'status'])
@@ -131,6 +135,17 @@ async def middleware(request: Request, call_next):
     """Middleware principal pour le logging, rate limiting et métriques"""
     start_time = time.time()
     client_ip = request.client.host
+
+    if request.url.path not in PUBLIC_PATHS:
+        try:
+            authorized = secret_is_authorized(
+                provided=request.headers.get("X-API-Key", ""),
+                configured=API_KEY,
+            )
+        except MissingServiceSecretError as exc:
+            return JSONResponse(status_code=503, content={"error": str(exc)})
+        if not authorized:
+            return JSONResponse(status_code=401, content={"error": "Unauthorized"})
     
     # Rate limiting
     rate_limit_key = f"rate_limit:{client_ip}"
@@ -201,8 +216,16 @@ async def proxy_request(service_url: str, path: str, method: str,
         url = f"{service_url}{path}"
         
         # Préparer les headers
-        proxy_headers = {k: v for k, v in headers.items() 
-                       if k.lower() not in ['host', 'content-length']}
+        try:
+            secret_is_authorized(provided=SERVICE_API_KEY, configured=SERVICE_API_KEY)
+        except MissingServiceSecretError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        proxy_headers = {
+            k: v
+            for k, v in headers.items()
+            if k.lower() not in {"host", "content-length", "x-service-api-key"}
+        }
+        proxy_headers["X-Service-API-Key"] = SERVICE_API_KEY
         
         # Faire la requête
         response = await http_client.request(

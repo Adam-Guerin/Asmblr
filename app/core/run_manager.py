@@ -8,7 +8,6 @@ from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any
 from collections.abc import Iterable
-import httpx
 import tempfile
 
 
@@ -272,12 +271,15 @@ class RunManager:
         return self.update_state(run_id, stage=stage, completed=completed)
 
     def set_webhook(self, run_id: str, url: str) -> Path:
+        from app.core.runtime_security import validate_webhook_url
+
         run = self.get_run(run_id)
         if not run:
             raise ValueError("Run not found")
         output_dir = Path(run["output_dir"])
         target = output_dir / "webhook.json"
-        target.write_text(json.dumps({"url": url}, indent=2), encoding="utf-8")
+        safe_url = validate_webhook_url(url)
+        target.write_text(json.dumps({"url": safe_url}, indent=2), encoding="utf-8")
         return target
 
     def get_webhook(self, run_id: str) -> str | None:
@@ -295,12 +297,9 @@ class RunManager:
             return None
 
     def _post_webhook(self, url: str, payload: dict) -> None:
-        try:
-            timeout = httpx.Timeout(3.0, connect=2.0, read=3.0, write=3.0, pool=2.0)
-            with httpx.Client(timeout=timeout) as client:
-                client.post(url, json=payload)
-        except Exception:
-            return
+        from app.core.runtime_security import post_webhook
+
+        post_webhook(url, payload, timeout_seconds=3.0)
 
     def maybe_maintenance(self, min_interval_min: int | None = 60) -> dict:
         if min_interval_min is None:

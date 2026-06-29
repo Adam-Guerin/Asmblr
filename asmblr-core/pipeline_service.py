@@ -6,9 +6,9 @@ from typing import Any
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from app.core.database import Pipeline, PipelineStatus
-from app.core.models import (
-    PipelineCreate, PipelineResponse, PipelineUpdate, 
+from database import Pipeline, PipelineExecution
+from models import (
+    PipelineCreate, PipelineResponse, PipelineStatus, PipelineUpdate,
     PipelineExecutionRequest, TopicValidation, PipelineMetrics
 )
 from app.core.error_handler import handle_errors, ValidationException
@@ -255,7 +255,6 @@ class PipelineService:
             self.update_pipeline_status(pipeline_id, PipelineStatus.RUNNING)
             
             # Créer l'enregistrement d'exécution
-            from app.core.database import PipelineExecution
             
             execution = PipelineExecution(
                 pipeline_id=pipeline_id,
@@ -333,7 +332,6 @@ class PipelineService:
             self.update_pipeline_status(pipeline_id, PipelineStatus.FAILED)
             
             # Créer un enregistrement d'erreur
-            from app.core.database import PipelineExecution
             
             error_execution = PipelineExecution(
                 pipeline_id=pipeline_id,
@@ -499,7 +497,6 @@ class PipelineService:
             ).count()
             
             # Compter les exécutions
-            from app.core.database import PipelineExecution
             total_executions = self.db.query(PipelineExecution).count()
             successful_executions = self.db.query(PipelineExecution).filter(
                 PipelineExecution.status == PipelineStatus.COMPLETED

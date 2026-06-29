@@ -42,6 +42,8 @@ services:
       - AGENTS_SERVICE_URL=http://asmblr-agents-1:8002
       - MEDIA_SERVICE_URL=http://asmblr-media-1:8003
       - SERVICE_NAME=api-gateway-1
+      - API_KEY=${API_KEY:?API_KEY is required}
+      - SERVICE_API_KEY=${SERVICE_API_KEY:?SERVICE_API_KEY is required}
       - LOG_LEVEL=INFO
       - RATE_LIMIT_REQUESTS=200
       - RATE_LIMIT_WINDOW=60
@@ -74,6 +76,8 @@ services:
       - AGENTS_SERVICE_URL=http://asmblr-agents-2:8002
       - MEDIA_SERVICE_URL=http://asmblr-media-2:8003
       - SERVICE_NAME=api-gateway-2
+      - API_KEY=${API_KEY:?API_KEY is required}
+      - SERVICE_API_KEY=${SERVICE_API_KEY:?SERVICE_API_KEY is required}
       - LOG_LEVEL=INFO
       - RATE_LIMIT_REQUESTS=200
       - RATE_LIMIT_WINDOW=60
@@ -103,6 +107,7 @@ services:
       - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
       - REDIS_URL=redis://redis-cluster:6379/1
       - SERVICE_NAME=asmblr-core-1
+      - SERVICE_API_KEY=${SERVICE_API_KEY:?SERVICE_API_KEY is required}
       - LOG_LEVEL=INFO
       - ENABLE_MONITORING=true
     volumes:
@@ -133,6 +138,7 @@ services:
       - DATABASE_URL=postgresql://asmblr:${ASMblr_PASSWORD}@postgres-primary:5432/asmblr
       - REDIS_URL=redis://redis-cluster:6379/1
       - SERVICE_NAME=asmblr-core-2
+      - SERVICE_API_KEY=${SERVICE_API_KEY:?SERVICE_API_KEY is required}
       - LOG_LEVEL=INFO
       - ENABLE_MONITORING=true
     volumes:

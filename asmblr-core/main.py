@@ -3,16 +3,20 @@ Asmblr Core Service - Business Logic Microservice
 Logique métier principale d'Asmblr
 """
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from datetime import datetime
 import asyncio
+import os
 
-from app.core.database import get_db
-from app.core.models import PipelineCreate, PipelineResponse, PipelineStatus
-from app.core.pipeline_service import PipelineService
+from service_security import MissingServiceSecretError, secret_is_authorized
+
+from database import get_db
+from models import PipelineCreate, PipelineResponse, PipelineStatus
+from pipeline_service import PipelineService
 from app.core.error_handler import handle_errors, ValidationException
 from app.core.smart_logger import get_smart_logger, LogLevel
 from app.core.config import get_settings
@@ -38,6 +42,23 @@ logger = get_smart_logger()
 
 # Security
 security = HTTPBearer(auto_error=False)
+SERVICE_API_KEY = os.getenv("SERVICE_API_KEY", "")
+
+
+@app.middleware("http")
+async def require_service_auth(request: Request, call_next):
+    if request.url.path == "/health":
+        return await call_next(request)
+    try:
+        authorized = secret_is_authorized(
+            provided=request.headers.get("X-Service-API-Key", ""),
+            configured=SERVICE_API_KEY,
+        )
+    except MissingServiceSecretError as exc:
+        return JSONResponse(status_code=503, content={"error": str(exc)})
+    if not authorized:
+        return JSONResponse(status_code=401, content={"error": "Unauthorized"})
+    return await call_next(request)
 
 
 # Dependency injection

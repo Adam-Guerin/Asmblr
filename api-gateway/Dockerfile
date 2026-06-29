@@ -8,13 +8,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
-COPY requirements-gateway.txt .
+COPY api-gateway/requirements-gateway.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements-gateway.txt
 
 # Copy application code
-COPY . .
+COPY service_security.py .
+COPY api-gateway/main.py .
 
 # Create non-root user
 RUN useradd -m -u 1000 asmblr && chown -R asmblr:asmblr /app

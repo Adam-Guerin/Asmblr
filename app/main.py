@@ -5,7 +5,6 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from pathlib import Path
 import time
-import httpx
 import json
 
 from app.core.config import get_settings, previous_secret_allowed, validate_prod_mode
@@ -21,6 +20,14 @@ from app.core.models import SeedInputs
 from app.core.deploy import deploy_run
 from app.mvp.orchestrator import create_custom_mvp
 from app.mvp.ceo_orchestrator import execute_ceo_vision
+from app.core.runtime_security import (
+    ApiKeyConfigurationError,
+    InvalidWebhookUrlError,
+    api_key_is_authorized,
+    post_webhook,
+    secrets_match,
+    validate_webhook_url,
+)
 
 setup_logging()
 settings = get_settings()
@@ -51,12 +58,13 @@ async def metrics_middleware(request: Request, call_next):
 
 
 def _require_api_key(request: Request) -> None:
-    if not settings.api_key:
-        return
     provided = request.headers.get("X-API-Key", "")
-    if provided == settings.api_key:
-        return
-    if settings.api_key_prev and provided == settings.api_key_prev:
+    try:
+        if api_key_is_authorized(provided=provided, current=settings.api_key):
+            return
+    except ApiKeyConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if settings.api_key_prev and secrets_match(provided, settings.api_key_prev):
         prev_allowed, reason = previous_secret_allowed(
             previous_value=settings.api_key_prev,
             current_value=settings.api_key,
@@ -112,17 +120,17 @@ def _normalize_execution_profile(value: str | None) -> str | None:
 
 
 def _notify_webhook(url: str, payload: dict) -> None:
-    try:
-        timeout = httpx.Timeout(5.0, connect=3.0, read=5.0, write=5.0, pool=3.0)
-        with httpx.Client(timeout=timeout) as client:
-            client.post(url, json=payload)
-    except Exception:
-        return
+    post_webhook(url, payload)
 
 
 @app.post("/run")
 def start_run(req: RunRequest, background: BackgroundTasks, request: Request):
     _require_api_key(request)
+    if req.webhook_url:
+        try:
+            req.webhook_url = validate_webhook_url(req.webhook_url)
+        except InvalidWebhookUrlError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
     limiter_key = settings.api_key or (request.client.host if request.client else "unknown")
     if not run_limiter.allow(limiter_key):
         raise HTTPException(status_code=429, detail="Rate limit exceeded for run creation")

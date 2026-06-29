@@ -11,6 +11,7 @@ from rq.job import Job
 from app.core.config import get_settings
 from app.core.models import SeedInputs
 from app.core.run_manager import RunManager
+from app.core.runtime_security import post_webhook
 
 
 def _queue() -> Queue:
@@ -184,23 +185,13 @@ def run_job(
                 },
             )
         if webhook_url:
-            def _notify_webhook(url: str, payload: dict) -> None:
-                try:
-                    import httpx
-
-                    timeout = httpx.Timeout(5.0, connect=3.0, read=5.0, write=5.0, pool=3.0)
-                    with httpx.Client(timeout=timeout) as client:
-                        client.post(url, json=payload)
-                except Exception:
-                    return
-
             run = RunManager(settings.runs_dir, settings.data_dir).get_run(run_id) or {}
             payload = {
                 "run_id": run_id,
                 "status": run.get("status"),
                 "output_dir": run.get("output_dir"),
             }
-            _notify_webhook(webhook_url, payload)
+            post_webhook(webhook_url, payload)
     finally:
         clear_log_context()
 

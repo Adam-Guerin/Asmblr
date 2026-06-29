@@ -5,8 +5,8 @@ services:
   # API Gateway / Orchestrator
   api-gateway:
     build: 
-      context: ./orchestrator
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: api-gateway/Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -16,6 +16,8 @@ services:
       - AGENTS_SERVICE_URL=http://asmblr-agents:8002
       - MEDIA_SERVICE_URL=http://asmblr-media:8003
       - UI_SERVICE_URL=http://asmblr-ui:3000
+      - API_KEY=${API_KEY:?API_KEY is required}
+      - SERVICE_API_KEY=${SERVICE_API_KEY:?SERVICE_API_KEY is required}
     depends_on:
       - redis
       - postgres
@@ -26,13 +28,14 @@ services:
   # Core Service (Business Logic)
   asmblr-core:
     build:
-      context: ./asmblr-core
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: asmblr-core/Dockerfile
     environment:
       - DATABASE_URL=postgresql://postgres:5432/asmblr
       - REDIS_URL=redis://redis:6379/0
       - API_HOST=0.0.0.0
       - API_PORT=8001
+      - SERVICE_API_KEY=${SERVICE_API_KEY:?SERVICE_API_KEY is required}
     depends_on:
       - redis
       - postgres

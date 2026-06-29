@@ -68,8 +68,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -r requirements-test.txt
+        pip install -r requirements/requirements.txt
+        pip install -r requirements/requirements-test.txt
     
     - name: Lint with Ruff
       run: |
@@ -80,9 +80,9 @@ jobs:
     - name: Run ${{ matrix.test-type }} tests
       run: |
         if [ "${{ matrix.test-type }}" = "unit" ]; then
-          python run_tests.py --type unit --no-html
+          python scripts/run_tests.py --type unit --no-html
         elif [ "${{ matrix.test-type }}" = "integration" ]; then
-          python run_tests.py --type integration --no-html
+          python scripts/run_tests.py --type integration --no-html
         elif [ "${{ matrix.test-type }}" = "performance" ]; then
           pip install pytest-benchmark
           pytest tests/ -k "benchmark" --benchmark-json=benchmark-${{ matrix.python-version }}.json
@@ -125,7 +125,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements/requirements.txt
         if [ "${{ matrix.security-tool }}" = "bandit" ]; then
           pip install bandit
         elif [ "${{ matrix.security-tool }}" = "safety" ]; then
@@ -180,8 +180,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -r requirements-test.txt
+        pip install -r requirements/requirements.txt
+        pip install -r requirements/requirements-test.txt
         pip install pytest-benchmark
     
     - name: Run performance tests
@@ -202,7 +202,7 @@ jobs:
     if: github.event_name == 'push'
     strategy:
       matrix:
-        service: [api-gateway, asmblr-core, asmblr-agents, asmblr-media]
+        service: [api-gateway, asmblr-core]
       fail-fast: false
     
     steps:
@@ -270,10 +270,12 @@ jobs:
         STAGING_ASMblr_PASSWORD=${{ secrets.STAGING_ASMblr_PASSWORD }}
         STAGING_GRAFANA_PASSWORD=${{ secrets.STAGING_GRAFANA_PASSWORD }}
         STAGING_SECRET_KEY=${{ secrets.STAGING_SECRET_KEY }}
+        API_KEY=${{ secrets.API_KEY }}
+        SERVICE_API_KEY=${{ secrets.SERVICE_API_KEY }}
         EOF
         
         # Deploy with health checks
-        docker-compose -f docker-compose.staging.yml --env-file .env.staging up -d
+        docker-compose --project-directory . -f deployment/docker-compose.staging.yml --env-file .env.staging up -d
         
         # Wait for services to be ready
         echo "⏳ Waiting for services to be healthy..."
@@ -288,7 +290,7 @@ jobs:
     - name: Run E2E tests on staging
       run: |
         echo "🧪 Running E2E tests on staging..."
-        docker-compose -f docker-compose.staging.yml run --rm test-runner
+        docker-compose --project-directory . -f deployment/docker-compose.staging.yml run --rm test-runner
     
     - name: Upload E2E test results
       uses: actions/upload-artifact@v4
@@ -362,10 +364,12 @@ jobs:
         S3_BUCKET=${{ secrets.S3_BUCKET }}
         AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        API_KEY=${{ secrets.API_KEY }}
+        SERVICE_API_KEY=${{ secrets.SERVICE_API_KEY }}
         EOF
         
         # Deploy with health checks
-        docker-compose -f docker-compose.production.yml --env-file .env.production up -d
+        docker-compose --project-directory . -f deployment/docker-compose.production.yml --env-file .env.production up -d
         
         # Wait for services to be ready
         echo "⏳ Waiting for services to be healthy..."
